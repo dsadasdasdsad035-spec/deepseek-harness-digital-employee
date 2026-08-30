@@ -1,0 +1,3 @@
+name: Standard test preset
+description: Empty preset for the deterministic project-manager employee fixture.
+order: 1

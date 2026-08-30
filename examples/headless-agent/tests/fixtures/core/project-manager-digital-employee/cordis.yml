@@ -1,0 +1,60 @@
+- id: mock-llm
+  name: './mock-llm.ts'
+
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: project-manager-mock
+    model: project-manager-mock
+
+- id: credentials
+  name: '@deepseek-ai/dsh-credentials-local'
+  config:
+    dshHome: './.dsh-home'
+    watch: false
+
+- id: agent-spine
+  name: '@deepseek-ai/dsh-agent-spine-demo'
+  config:
+    agents: []
+    workspaceContext: false
+    skills:
+      filesystem:
+        dshHome: './.dsh-home'
+
+- id: agent-presets
+  name: '@deepseek-ai/dsh-agent-presets'
+  config:
+    default: standard
+    includeUserRoot: false
+    roots:
+      - path: !!js process.env.DSH_PROJECT_MANAGER_PRESET_ROOT
+        trust: system
+
+- id: mcp-client
+  name: '@deepseek-ai/dsh-mcp-client'
+  config:
+    mode: manager
+
+- id: digital-employees
+  name: '@deepseek-ai/dsh-digital-employee'
+
+- id: project-manager-template
+  name: '../../../../../../packages/examples/project-manager-test-digital-employee/src/index.ts'
+
+- id: project-manager-skills
+  name: '../../../../../../packages/examples/project-manager-test-digital-employee/src/skills.ts'
+
+- id: project-manager-tools
+  name: '../../../../../../packages/examples/project-manager-test-digital-employee/src/tools.ts'
+
+- id: digital-employee-file
+  name: '@deepseek-ai/dsh-digital-employee-file'
+  config:
+    path: './digital-employees.json'
+
+- id: subagents
+  name: '@deepseek-ai/dsh-subagent'
+
+- id: digital-employee-agent
+  name: '@deepseek-ai/dsh-digital-employee-agent'

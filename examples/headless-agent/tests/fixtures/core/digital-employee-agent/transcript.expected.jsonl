@@ -1,0 +1,9 @@
+{"type":"acceptance","stage":"employee-created","displayName":"Ada","state":"inactive"}
+{"type":"acceptance","stage":"chat-started","sessionId":"digital-employee-root","submissionId":"digital-employee-submission"}
+{"type":"acceptance","stage":"ownership-recorded","employeeIdMatches":true,"templateId":"research-assistant","templateVersion":"1.0.0","compositionIdRecorded":true}
+{"type":"acceptance","stage":"first-message-recorded","messageIdMatches":true,"content":"Run the keyless employee task."}
+{"type":"acceptance","stage":"expert-delegated","expertId":"reviewer","mode":"one-shot","result":"Review complete."}
+{"type":"acceptance","stage":"memory-decision","decision":"accepted","content":"Use staged releases."}
+{"type":"acceptance","stage":"capability-denied","expertId":"reviewer","reason":"maximum depth"}
+{"type":"acceptance","stage":"lifecycle-transition","state":"inactive"}
+{"type":"acceptance","stage":"final-result","output":"Ada completed the keyless task."}

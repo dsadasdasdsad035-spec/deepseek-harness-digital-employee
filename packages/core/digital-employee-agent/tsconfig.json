@@ -1,0 +1,51 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../agent"
+    },
+    {
+      "path": "../../preset/agent-presets"
+    },
+    {
+      "path": "../../credentials/credentials"
+    },
+    {
+      "path": "../digital-employee"
+    },
+    {
+      "path": "../scope"
+    },
+    {
+      "path": "../session"
+    },
+    {
+      "path": "../../skill/skill"
+    },
+    {
+      "path": "../../mcp/mcp-client"
+    },
+    {
+      "path": "../../subagent/subagent"
+    },
+    {
+      "path": "../system-prompt"
+    },
+    {
+      "path": "../tools"
+    },
+    {
+      "path": "../../runtime-diagnostics/invariants"
+    }
+  ]
+}

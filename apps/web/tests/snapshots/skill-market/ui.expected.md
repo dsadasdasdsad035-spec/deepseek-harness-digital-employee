@@ -1,0 +1,13 @@
+- listitem:
+  - 'img "marketplace-demo: Promotional image"'
+  - heading "marketplace-demo" [level=3]
+  - text: Marketplace managed
+  - paragraph: Portable marketplace browser fixture 1.0.0
+  - term: Version
+  - definition: 1.0.0
+  - term: Author
+  - definition: DeepSeek Harness
+  - term: Tags
+  - definition: browser portable
+  - 'button "Uninstall: marketplace-demo"':
+    - img

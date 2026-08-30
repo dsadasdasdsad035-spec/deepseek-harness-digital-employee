@@ -1,0 +1,5 @@
+{"type":"acceptance","stage":"composition","skills":["project-planning","risk-review","status-reporting"],"tools":["project_board","project_document"],"mcpServers":["project-data"],"instructions":"project-manager-test-v1","visibleSkills":["project-planning","risk-review","status-reporting"],"visibleTools":["project_board","project_document"],"visibleMcpToolCount":1}
+{"type":"acceptance","stage":"memory-projected","projected":true,"atlasSeed":true}
+{"type":"acceptance","stage":"capabilities-used","projectBoard":true,"projectDocument":true,"projectData":true}
+{"type":"acceptance","stage":"memory-decision","decision":"accepted"}
+{"type":"acceptance","stage":"workflow-complete","output":true,"durableAttribution":true}

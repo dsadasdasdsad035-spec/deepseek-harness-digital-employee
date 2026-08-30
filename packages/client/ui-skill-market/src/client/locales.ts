@@ -1,0 +1,121 @@
+/** Locale bundles for the skill marketplace settings section. */
+
+export type SkillMarketKey =
+  | 'nav' | 'title' | 'intro' | 'searchLabel' | 'searchPlaceholder'
+  | 'uploadTitle' | 'uploadHint' | 'uploadButton' | 'uploadTooLarge' | 'uploadInvalidType'
+  | 'templateDownload'
+  | 'uploadFailed' | 'operationFailed' | 'installing' | 'installed' | 'loading'
+  | 'loadFailed' | 'retry' | 'empty' | 'emptyFiltered' | 'uninstall' | 'uninstalling'
+  | 'uninstallTitle' | 'uninstallDescription' | 'uninstallConfirm'
+  | 'upgradeTitle' | 'upgradeDescription' | 'upgradeVersions' | 'upgradeConfirm'
+  | 'cancel' | 'close' | 'version' | 'author' | 'tags' | 'noTags' | 'managed'
+  | 'bannerAlt' | 'bannerUnavailable' | 'bannerBroken'
+  | 'errorInvalidArchive' | 'errorResourceLimit' | 'errorUnsafeEntry'
+  | 'errorInvalidDescriptor' | 'errorInvalidBanner' | 'errorManagedUpgrade'
+  | 'errorUnmanagedConflict' | 'errorManifestIncompatible' | 'errorNotFound' | 'errorNotManaged'
+
+/** English marketplace settings dictionary. */
+export const en: Record<SkillMarketKey, string> = {
+  nav: 'Skill Market',
+  title: 'Skill Market',
+  intro: 'Browse, install, upgrade, and remove skills managed by this marketplace.',
+  searchLabel: 'Search installed skills',
+  searchPlaceholder: 'Search by name, description, author, or tag',
+  uploadTitle: 'Upload a skill bundle',
+  uploadHint: 'Drop one .zip file here or choose a file. Maximum 10 MiB.',
+  uploadButton: 'Choose .zip',
+  templateDownload: 'Download example ZIP',
+  uploadTooLarge: 'The ZIP is larger than 10 MiB.',
+  uploadInvalidType: 'Choose a file whose name ends in .zip.',
+  uploadFailed: 'The browser could not read this ZIP.',
+  operationFailed: 'The marketplace service is unavailable. Try again.',
+  installing: 'Installing skill...',
+  installed: 'Installed',
+  loading: 'Loading installed skills...',
+  loadFailed: 'Could not load installed skills.',
+  retry: 'Retry',
+  empty: 'No marketplace-managed skills are installed.',
+  emptyFiltered: 'No installed skills match this search.',
+  uninstall: 'Uninstall',
+  uninstalling: 'Uninstalling...',
+  uninstallTitle: 'Uninstall this skill?',
+  uninstallDescription: 'The managed files will be removed after confirmation.',
+  uninstallConfirm: 'Uninstall',
+  upgradeTitle: 'Upgrade managed skill?',
+  upgradeDescription: 'A marketplace-managed skill with this name is already installed.',
+  upgradeVersions: 'Installed and candidate versions',
+  upgradeConfirm: 'Upgrade',
+  cancel: 'Cancel',
+  close: 'Close',
+  version: 'Version',
+  author: 'Author',
+  tags: 'Tags',
+  noTags: 'No tags',
+  managed: 'Marketplace managed',
+  bannerAlt: 'Promotional image',
+  bannerUnavailable: 'No promotional image',
+  bannerBroken: 'Promotional image unavailable',
+  errorInvalidArchive: 'This file is not a valid ZIP archive.',
+  errorResourceLimit: 'This bundle exceeds a marketplace safety limit.',
+  errorUnsafeEntry: 'This bundle contains an unsafe file path or entry.',
+  errorInvalidDescriptor: 'SKILL.md is missing or has invalid metadata.',
+  errorInvalidBanner: 'The promotional image is missing, unsafe, or unsupported.',
+  errorManagedUpgrade: 'This managed skill requires upgrade confirmation.',
+  errorUnmanagedConflict: 'A hand-managed skill already uses this name and cannot be replaced.',
+  errorManifestIncompatible: 'This skill uses an unsupported marketplace manifest and cannot be replaced.',
+  errorNotFound: 'This managed skill no longer exists.',
+  errorNotManaged: 'This skill is no longer managed by the marketplace.',
+}
+
+/** Simplified Chinese marketplace settings dictionary. */
+export const zh: Record<SkillMarketKey, string> = {
+  nav: '技能市场',
+  title: '技能市场',
+  intro: '浏览、安装、升级和卸载由此市场管理的技能。',
+  searchLabel: '搜索已安装技能',
+  searchPlaceholder: '按名称、描述、作者或标签搜索',
+  uploadTitle: '上传技能包',
+  uploadHint: '拖入一个 .zip 文件，或选择文件。最大 10 MiB。',
+  uploadButton: '选择 .zip',
+  templateDownload: '下载示例 ZIP',
+  uploadTooLarge: 'ZIP 文件超过 10 MiB。',
+  uploadInvalidType: '请选择文件名以 .zip 结尾的文件。',
+  uploadFailed: '浏览器无法读取此 ZIP 文件。',
+  operationFailed: '技能市场服务暂不可用，请重试。',
+  installing: '正在安装技能...',
+  installed: '安装完成',
+  loading: '正在加载已安装技能...',
+  loadFailed: '无法加载已安装技能。',
+  retry: '重试',
+  empty: '尚未安装由市场管理的技能。',
+  emptyFiltered: '没有已安装技能匹配当前搜索。',
+  uninstall: '卸载',
+  uninstalling: '正在卸载...',
+  uninstallTitle: '卸载此技能？',
+  uninstallDescription: '确认后将删除由市场管理的技能文件。',
+  uninstallConfirm: '卸载',
+  upgradeTitle: '升级托管技能？',
+  upgradeDescription: '已安装同名且由市场管理的技能。',
+  upgradeVersions: '已安装版本与候选版本',
+  upgradeConfirm: '升级',
+  cancel: '取消',
+  close: '关闭',
+  version: '版本',
+  author: '作者',
+  tags: '标签',
+  noTags: '暂无标签',
+  managed: '由市场管理',
+  bannerAlt: '宣传图',
+  bannerUnavailable: '暂无宣传图',
+  bannerBroken: '宣传图不可用',
+  errorInvalidArchive: '此文件不是有效的 ZIP 压缩包。',
+  errorResourceLimit: '此技能包超过市场安全限制。',
+  errorUnsafeEntry: '此技能包包含不安全的路径或文件项。',
+  errorInvalidDescriptor: 'SKILL.md 缺失或元数据无效。',
+  errorInvalidBanner: '宣传图缺失、不安全或格式不受支持。',
+  errorManagedUpgrade: '此托管技能需要确认升级。',
+  errorUnmanagedConflict: '同名手动管理技能已存在，市场不能替换它。',
+  errorManifestIncompatible: '此技能使用不兼容的市场清单，不能替换。',
+  errorNotFound: '此托管技能已不存在。',
+  errorNotManaged: '此技能已不再由市场管理。',
+}
