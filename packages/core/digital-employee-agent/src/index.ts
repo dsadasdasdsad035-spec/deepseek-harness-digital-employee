@@ -196,7 +196,7 @@ export class DigitalEmployeeAgent extends Service {
         + `"${request.employeeId}"`,
       )
     }
-    const mcpServers = await this.resolveMcpServers(employee)
+    const mcpServers = await this.resolveMcpServers(employee, request.sessionId)
     const memoryProjection = request.memory === undefined
       ? undefined
       : projectMemory(await this.ctx.digitalEmployees.queryMemory({
@@ -502,7 +502,9 @@ export class DigitalEmployeeAgent extends Service {
     }
     skills.restrict({ allow: employee.authority.skills })
     tools.restrict({ allow: employee.authority.tools })
-    const resolvedMcpServers = mcpServers ?? await this.resolveMcpServers(employee)
+    const resolvedMcpServers = mcpServers ?? (employee.mcpServers.length === 0
+      ? []
+      : await this.resolveMcpServers(employee, requireMcpSessionId(agentCtx)))
     for (const config of resolvedMcpServers) {
       const mcpClients = this.ctx.get('mcpClients')
       if (mcpClients === undefined) {
@@ -542,10 +544,14 @@ export class DigitalEmployeeAgent extends Service {
     }
   }
 
-  private async resolveMcpServers(employee: ResolvedDigitalEmployee): Promise<readonly McpServerConfig[]> {
+  private async resolveMcpServers(
+    employee: ResolvedDigitalEmployee,
+    sessionId: SessionId,
+  ): Promise<readonly McpServerConfig[]> {
     return await Promise.all(employee.mcpServers.map(async server => await resolveMcpServer(
       this.ctx,
       employee.instance.id,
+      sessionId,
       server,
     )))
   }
@@ -580,9 +586,14 @@ export class DigitalEmployeeAgent extends Service {
         `digital employee "${employeeId}" expert "${expertId}" requires unavailable MCP server "${missing}"`,
       )
     }
-    const resolvedMcpServers = await Promise.all(
-      declarations.map(server => resolveMcpServer(this.ctx, employeeId, server)),
-    )
+    const resolvedMcpServers = declarations.length === 0
+      ? []
+      : await Promise.all(declarations.map(server => resolveMcpServer(
+        this.ctx,
+        employeeId,
+        requireMcpSessionId(childCtx),
+        server,
+      )))
     const mcpClients = this.ctx.get('mcpClients')
     if (resolvedMcpServers.length > 0 && mcpClients === undefined) {
       throw new Error('digital employee MCP composition requires the mcpClients manager')
@@ -748,9 +759,12 @@ function parseMcpToolName(
 async function resolveMcpServer(
   ctx: Context,
   employeeId: DigitalEmployeeInstanceId,
+  sessionId: SessionId,
   server: DigitalEmployeeMcpServer,
 ): Promise<McpServerConfig> {
-  const serverName = `de-${createHash('sha256').update(`${employeeId}:${server.id}`).digest('hex').slice(0, 24)}`
+  const serverName = `de-${createHash('sha256').update(
+    `${employeeId}:${sessionId}:${server.id}`,
+  ).digest('hex').slice(0, 24)}`
   const common = {
     serverName,
     toolCallTimeoutMs: server.toolCallTimeoutMs ?? 60_000,
@@ -778,6 +792,14 @@ async function resolveMcpServer(
       ...await resolveCredentials(ctx, server.headerCredentials, server.id),
     },
   }
+}
+
+function requireMcpSessionId(agentCtx: Context): SessionId {
+  const agent = agentCtx.agent
+  if (agent === undefined) {
+    throw new Error('digital employee MCP composition requires a scoped Agent')
+  }
+  return agent.id
 }
 
 async function resolveCredentials(

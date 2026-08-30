@@ -16,6 +16,8 @@ The assembled headless fixture starts an isolated employee through the existing 
 
 The Web development bundle registers the template, skills, tools, and MCP manager so the digital employee management workspace can create and activate a `Project Manager (Test)` instance for manual verification.
 
+Each MCP client instance name is derived from the employee, Agent Session, and MCP declaration. Root employee sessions and expert child sessions can therefore mount the same declared MCP server concurrently.
+
 ## Alternatives considered
 
 - **Mock every result inside one test**: this would not prove that the template's package-owned declarations resolve and mount on an employee Agent.
@@ -24,4 +26,4 @@ The Web development bundle registers the template, skills, tools, and MCP manage
 
 ## Consequences
 
-Digital employee composition has a deterministic reference package that exercises every declared capability kind through normal runtime wiring and is discoverable in the Web development management workspace. The fixture remains intentionally narrow: it uses fixed Atlas data, grants no experts or generic subagents, and does not represent a production project-management integration.
+Digital employee composition has a deterministic reference package that exercises every declared capability kind through normal runtime wiring and is discoverable in the Web development management workspace. Concurrent sessions receive separate MCP client instances while retaining the same employee authorization. The fixture remains intentionally narrow: it uses fixed Atlas data, grants no experts or generic subagents, and does not represent a production project-management integration.

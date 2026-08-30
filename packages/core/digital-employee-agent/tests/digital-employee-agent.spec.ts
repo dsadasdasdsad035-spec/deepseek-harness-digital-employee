@@ -279,7 +279,10 @@ describe('DigitalEmployeeAgent', () => {
     const ctx = new Context()
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: createAgent } as never)
-    ctx.provide('digitalEmployees', { resolve: () => Promise.resolve(employee) } as never)
+    ctx.provide('digitalEmployees', {
+      resolve: () => Promise.resolve(employee),
+      appendAudit: () => Promise.resolve(),
+    } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', { drainContinuableDescendants } as never)
     ctx.provide('systemPrompt', {} as never)
@@ -343,6 +346,79 @@ describe('DigitalEmployeeAgent', () => {
     })).rejects.toThrow('credential reference "GITHUB_TOKEN"')
     expect(resolveCredential).toHaveBeenCalledWith('GITHUB_TOKEN')
     expect(createAgent).not.toHaveBeenCalled()
+  })
+
+  it('uses distinct MCP server names for concurrent tasks of one employee', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-task-mcp-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Coordinate project delivery.', 'utf8')
+    const base = resolved(root, 'alpha', 'Alpha')
+    const declaration = {
+      id: 'project-data',
+      transport: 'streamable-http' as const,
+      url: 'https://mcp.example.test',
+      headers: {},
+      headerCredentials: {},
+    }
+    const employee = {
+      ...base,
+      template: {
+        ...base.template,
+        mcpServers: [declaration],
+        capabilities: { ...base.template.capabilities, mcpServers: ['project-data'] },
+      },
+      authority: { ...base.authority, mcpServers: ['project-data'] },
+      mcpServers: [declaration],
+    } satisfies ResolvedDigitalEmployee
+    const mounted: string[] = []
+    const ctx = new Context()
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', {
+      create: async (request: {
+        sessionId: SessionId
+        setup: (agentCtx: Context) => Promise<void>
+      }) => {
+        const agentCtx = new Context()
+        agentCtx.provide('agent', {
+          id: request.sessionId,
+          session: { id: request.sessionId, append: () => {} },
+        } as never)
+        agentCtx.provide('skills', { restrict: () => {} } as never)
+        agentCtx.provide('systemPrompt', { section: () => {} } as never)
+        agentCtx.provide('tools', { restrict: () => {} } as never)
+        await request.setup(agentCtx)
+        return { agent: agentCtx.agent, dispose: async () => {} }
+      },
+    } as never)
+    ctx.provide('credentials', { resolve: () => Promise.resolve({ value: 'unused' }) } as never)
+    ctx.provide('digitalEmployees', {
+      resolve: () => Promise.resolve(employee),
+      appendAudit: () => Promise.resolve(),
+    } as never)
+    ctx.provide('mcpClients', {
+      mount: (_agentCtx: Context, config: { serverName: string }) => {
+        mounted.push(config.serverName)
+        return Promise.resolve()
+      },
+    } as never)
+    ctx.provide('skills', { restrict: () => {} } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('systemPrompt', { section: () => {} } as never)
+    ctx.provide('tools', { restrict: () => {} } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+
+    await ctx.digitalEmployeeAgent.createTask({
+      employeeId: employee.instance.id,
+      sessionId: SessionId('employee-task-one'),
+    })
+    await ctx.digitalEmployeeAgent.createTask({
+      employeeId: employee.instance.id,
+      sessionId: SessionId('employee-task-two'),
+    })
+
+    expect(mounted).toHaveLength(2)
+    expect(mounted[0]).toMatch(/^de-/)
+    expect(mounted[1]).toMatch(/^de-/)
+    expect(mounted[0]).not.toBe(mounted[1])
   })
 
   it('resolves an authorized expert into a named subagent composition', async () => {

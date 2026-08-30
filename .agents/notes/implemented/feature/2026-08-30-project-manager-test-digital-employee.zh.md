@@ -16,6 +16,8 @@ Status: implemented
 
 Web 开发 bundle 注册该模板、skills、tools 和 MCP manager，使数字员工管理工作区可以创建并激活 `Project Manager (Test)` 实例进行手动验证。
 
+每个 MCP 客户端实例名称由员工、Agent Session 和 MCP 声明共同派生。因此，根数字员工会话和专家子会话可以并发挂载同一项已声明的 MCP server。
+
 ## 考虑过的替代方案
 
 - **在单个测试内 mock 所有结果**：这不能证明模板的包内声明能在员工 Agent 上解析和挂载。
@@ -24,4 +26,4 @@ Web 开发 bundle 注册该模板、skills、tools 和 MCP manager，使数字�
 
 ## 结果
 
-数字员工组合拥有一个通过正常运行时接线覆盖所有声明能力类型、并能在 Web 开发管理工作区中发现的确定性参考包。该夹具保持刻意狭窄：它使用固定 Atlas 数据，不授予专家 agent 或通用 subagent，也不代表生产项目管理集成。
+数字员工组合拥有一个通过正常运行时接线覆盖所有声明能力类型、并能在 Web 开发管理工作区中发现的确定性参考包。并发会话获得独立的 MCP 客户端实例，同时保持相同的员工授权。该夹具保持刻意狭窄：它使用固定 Atlas 数据，不授予专家 agent 或通用 subagent，也不代表生产项目管理集成。
