@@ -83,6 +83,58 @@ async function harness(
 }
 
 describe('FileDigitalEmployeeProvider', () => {
+  it('initializes template-owned long-term memory for each created employee', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-seed-'))
+    const { ctx } = await harness(join(root, 'employees.json'))
+    const seededTemplate = {
+      ...template,
+      id: createDigitalEmployeeTemplateId('seeded-analyst'),
+      memorySeeds: [{
+        content: 'Atlas delivery uses a staged release with an explicit rollback owner.',
+        tags: ['atlas', 'delivery'],
+        sensitive: false,
+        provenance: {
+          source: 'seeded-analyst',
+          recordedAt: '2026-08-31T00:00:00.000Z',
+        },
+      }],
+    } as unknown as DigitalEmployeeTemplate
+    ctx.digitalEmployees.registerTemplate(seededTemplate)
+
+    const first = await ctx.digitalEmployees.create({
+      templateId: seededTemplate.id,
+      templateVersion: seededTemplate.version,
+      displayName: 'First seeded analyst',
+      grants: seededTemplate.capabilities,
+    })
+    const second = await ctx.digitalEmployees.create({
+      templateId: seededTemplate.id,
+      templateVersion: seededTemplate.version,
+      displayName: 'Second seeded analyst',
+      grants: seededTemplate.capabilities,
+    })
+
+    await expect(ctx.digitalEmployees.queryMemory({
+      employeeId: first.id,
+      text: 'rollback',
+      scopes: ['long-term'],
+      limit: 10,
+    })).resolves.toEqual([expect.objectContaining({
+      employeeId: first.id,
+      content: 'Atlas delivery uses a staged release with an explicit rollback owner.',
+      provenance: expect.objectContaining({ source: 'seeded-analyst' }),
+    })])
+    await expect(ctx.digitalEmployees.queryMemory({
+      employeeId: second.id,
+      text: 'rollback',
+      scopes: ['long-term'],
+      limit: 10,
+    })).resolves.toEqual([expect.objectContaining({
+      employeeId: second.id,
+      content: 'Atlas delivery uses a staged release with an explicit rollback owner.',
+    })])
+  })
+
   it('persists independent instances and restores them from schema version 1', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-'))
     const path = join(root, 'employees.json')

@@ -601,7 +601,7 @@ describe('DigitalEmployeeAgent', () => {
       },
       delegation: {
         mode: 'one-shot' as const,
-        maxDepth: 1,
+        maxDepth: 0,
         maxConcurrency: 1,
         timeoutMs: 30_000,
       },
@@ -799,7 +799,10 @@ describe('DigitalEmployeeAgent', () => {
           ...baseExpert.employeeAuthority,
           experts: [expertId, ...baseExpert.employeeAuthority.experts],
         },
-        delegation: baseExpert.employeeDelegation,
+        delegation: {
+          ...baseExpert.employeeDelegation,
+          maxDepth: 1,
+        },
         depth: 1,
         activeDelegations: 0,
       },

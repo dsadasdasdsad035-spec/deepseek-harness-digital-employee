@@ -119,6 +119,18 @@ export interface DigitalEmployeeTemplateDisplay {
   readonly banner?: string
 }
 
+/** Non-secret long-term memory materialized for each newly created template instance. */
+export interface DigitalEmployeeTemplateMemorySeed {
+  readonly content: string
+  readonly tags: readonly string[]
+  readonly sensitive: false
+  readonly retentionDays?: number
+  readonly provenance: {
+    readonly source: string
+    readonly recordedAt: string
+  }
+}
+
 /** Immutable versioned template contributed by a trusted plugin. */
 export interface DigitalEmployeeTemplate {
   readonly id: DigitalEmployeeTemplateId
@@ -128,6 +140,7 @@ export interface DigitalEmployeeTemplate {
   readonly instructions: DigitalEmployeeInstructionSource
   readonly preset: string
   readonly mcpServers?: readonly DigitalEmployeeMcpServer[]
+  readonly memorySeeds?: readonly DigitalEmployeeTemplateMemorySeed[]
   readonly capabilities: DigitalEmployeeAuthority
   readonly experts: readonly DigitalEmployeeExpert[]
   readonly delegation: DigitalEmployeeDelegationPolicy

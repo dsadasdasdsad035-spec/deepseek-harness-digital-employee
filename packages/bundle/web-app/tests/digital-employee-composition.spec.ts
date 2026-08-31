@@ -5,6 +5,10 @@ import { fileURLToPath } from 'node:url'
 import * as yaml from 'js-yaml'
 import { describe, expect, it } from 'vitest'
 import { entryListSchema } from '@deepseek-ai/cordis-plugin-include'
+import {
+  PROJECT_MANAGER_TEMPLATE,
+  PROJECT_MANAGER_TEMPLATE_V1,
+} from '@deepseek-ai/dsh-project-manager-test-digital-employee'
 
 interface BundleRow {
   id?: string
@@ -62,6 +66,18 @@ describe('dsh-web-app digital employee composition', () => {
       '@deepseek-ai/dsh-project-manager-test-digital-employee': 'workspace:^',
       '@deepseek-ai/dsh-host-digital-employee-management': 'workspace:^',
       '@deepseek-ai/dsh-client-ui-digital-employees': 'workspace:^',
+    })
+    expect([PROJECT_MANAGER_TEMPLATE_V1.version, PROJECT_MANAGER_TEMPLATE.version]).toEqual(['1.0.0', '1.1.0'])
+    expect(PROJECT_MANAGER_TEMPLATE.memorySeeds).toEqual([expect.objectContaining({ sensitive: false })])
+    expect(PROJECT_MANAGER_TEMPLATE.capabilities.experts).toEqual(['risk-reviewer'])
+    expect(PROJECT_MANAGER_TEMPLATE.experts[0]).toMatchObject({
+      id: 'risk-reviewer',
+      capabilities: {
+        mcpServers: ['project-data'],
+        experts: [],
+        allowSubagents: false,
+      },
+      delegation: { maxDepth: 0 },
     })
   })
 })

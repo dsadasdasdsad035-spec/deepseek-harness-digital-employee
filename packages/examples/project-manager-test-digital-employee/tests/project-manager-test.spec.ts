@@ -3,7 +3,13 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import DigitalEmployees from '@deepseek-ai/dsh-digital-employee'
 import { describe, expect, it } from 'vitest'
-import { apply, PROJECT_MANAGER_TEMPLATE, PROJECT_MEMORY_SEED, PROJECT_SKILLS } from '../src/index.ts'
+import {
+  apply,
+  PROJECT_MANAGER_TEMPLATE,
+  PROJECT_MANAGER_TEMPLATE_V1,
+  PROJECT_MEMORY_SEED,
+  PROJECT_SKILLS,
+} from '../src/index.ts'
 
 describe('project-manager test digital employee', () => {
   it('registers the complete deterministic project-manager capability set', async () => {
@@ -17,6 +23,17 @@ describe('project-manager test digital employee', () => {
     )
 
     expect(template).toEqual(PROJECT_MANAGER_TEMPLATE)
+    expect(ctx.digitalEmployees.getTemplate(
+      PROJECT_MANAGER_TEMPLATE_V1.id,
+      PROJECT_MANAGER_TEMPLATE_V1.version,
+    )).toEqual(PROJECT_MANAGER_TEMPLATE_V1)
+    expect(PROJECT_MANAGER_TEMPLATE_V1).toMatchObject({
+      version: '1.0.0',
+      capabilities: { experts: [] },
+      experts: [],
+      delegation: { maxDepth: 0 },
+    })
+    expect(PROJECT_MANAGER_TEMPLATE_V1).not.toHaveProperty('memorySeeds')
     expect(PROJECT_SKILLS.map(skill => skill.name)).toEqual([
       'project-planning',
       'risk-review',
@@ -26,9 +43,23 @@ describe('project-manager test digital employee', () => {
       skills: PROJECT_SKILLS.map(skill => skill.name),
       tools: ['project_board', 'project_document'],
       mcpServers: ['project-data'],
-      experts: [],
+      experts: ['risk-reviewer'],
       allowSubagents: false,
     })
+    expect(template?.memorySeeds).toEqual([PROJECT_MEMORY_SEED])
+    expect(template?.experts).toEqual([expect.objectContaining({
+      id: 'risk-reviewer',
+      name: 'Risk Reviewer',
+      capabilities: {
+        skills: ['risk-review'],
+        tools: ['project_board', 'project_document'],
+        mcpServers: ['project-data'],
+        experts: [],
+        allowSubagents: false,
+      },
+      memoryAccess: ['long-term'],
+      delegation: { mode: 'one-shot', maxDepth: 0, maxConcurrency: 1, timeoutMs: 30_000 },
+    })])
     expect(template?.mcpServers).toEqual([expect.objectContaining({
       id: 'project-data',
       transport: 'stdio',

@@ -3835,7 +3835,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'DigitalEmployeeTemplate',
-    declaration: 'export interface DigitalEmployeeTemplate {\n    readonly id: DigitalEmployeeTemplateId;\n    readonly version: string;\n    readonly display: DigitalEmployeeTemplateDisplay;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly preset: string;\n    readonly mcpServers?: readonly DigitalEmployeeMcpServer[];\n    readonly capabilities: DigitalEmployeeAuthority;\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
+    declaration: 'export interface DigitalEmployeeTemplate {\n    readonly id: DigitalEmployeeTemplateId;\n    readonly version: string;\n    readonly display: DigitalEmployeeTemplateDisplay;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly preset: string;\n    readonly mcpServers?: readonly DigitalEmployeeMcpServer[];\n    readonly memorySeeds?: readonly DigitalEmployeeTemplateMemorySeed[];\n    readonly capabilities: DigitalEmployeeAuthority;\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
   },
   {
     name: 'DigitalEmployeeTemplateDisplay',
@@ -3844,6 +3844,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'DigitalEmployeeTemplateId',
     declaration: 'export type DigitalEmployeeTemplateId = Branded<\'DigitalEmployeeTemplateId\'>;',
+  },
+  {
+    name: 'DigitalEmployeeTemplateMemorySeed',
+    declaration: 'export interface DigitalEmployeeTemplateMemorySeed {\n    readonly content: string;\n    readonly tags: readonly string[];\n    readonly sensitive: false;\n    readonly retentionDays?: number;\n    readonly provenance: {\n        readonly source: string;\n        readonly recordedAt: string;\n    };\n}',
   },
   {
     name: 'DigitalEmployeeTemplateReferenceValidator',

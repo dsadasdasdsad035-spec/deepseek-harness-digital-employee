@@ -216,6 +216,24 @@ describe('digital employee contracts', () => {
 
   it('validates complete templates and rejects malformed or inconsistent experts', () => {
     expect(DigitalEmployeeTemplateSchema(template)).toEqual(template)
+    expect(DigitalEmployeeTemplateSchema({
+      ...template,
+      memorySeeds: [{
+        content: 'Keep rollback ownership explicit.',
+        tags: ['delivery'],
+        sensitive: false,
+        provenance: { source: 'fixture-seed', recordedAt: '2026-08-31T00:00:00.000Z' },
+      }],
+    })).toMatchObject({ memorySeeds: [expect.objectContaining({ sensitive: false })] })
+    expect(() => DigitalEmployeeTemplateSchema({
+      ...template,
+      memorySeeds: [{
+        content: 'Never store this.',
+        tags: [],
+        sensitive: true,
+        provenance: { source: 'fixture-seed', recordedAt: '2026-08-31T00:00:00.000Z' },
+      }],
+    })).toThrow('sensitive must be false')
     expect(() => DigitalEmployeeTemplateSchema({ ...template, version: '' })).toThrow('version')
     expect(() => DigitalEmployeeTemplateSchema({
       ...template,

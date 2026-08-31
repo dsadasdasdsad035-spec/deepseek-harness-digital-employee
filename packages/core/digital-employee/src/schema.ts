@@ -14,6 +14,7 @@ import type {
   DigitalEmployeeLifecycleState,
   DigitalEmployeeMcpServer,
   DigitalEmployeeTemplate,
+  DigitalEmployeeTemplateMemorySeed,
 } from './types.ts'
 
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -42,6 +43,8 @@ export const DigitalEmployeeTemplateSchema = (value: unknown): DigitalEmployeeTe
   const capabilities = authority(template.capabilities, `digital employee template "${id}" capabilities`)
   const mcpServers = array(template.mcpServers ?? [], `digital employee template "${id}" mcpServers`)
     .map((server, index) => mcpServer(server, id, index))
+  const memorySeeds = array(template.memorySeeds ?? [], `digital employee template "${id}" memorySeeds`)
+    .map((seed, index) => memorySeed(seed, id, index))
   const mcpServerIds = new Set(mcpServers.map(server => server.id))
   if (mcpServerIds.size !== mcpServers.length) {
     throw new Error(`digital employee template "${id}" has duplicate MCP server ids`)
@@ -68,9 +71,29 @@ export const DigitalEmployeeTemplateSchema = (value: unknown): DigitalEmployeeTe
     instructions: instruction(template.instructions, `digital employee template "${id}" instructions`),
     preset: identifier(template.preset, `digital employee template "${id}" preset`),
     ...(template.mcpServers === undefined ? {} : { mcpServers }),
+    ...(template.memorySeeds === undefined ? {} : { memorySeeds }),
     capabilities,
     experts,
     delegation: delegation(template.delegation, `digital employee template "${id}" delegation`),
+  }
+}
+
+function memorySeed(value: unknown, templateId: string, index: number): DigitalEmployeeTemplateMemorySeed {
+  const label = `digital employee template "${templateId}" memory seed ${index}`
+  const seed = record(value, label)
+  if (seed.sensitive !== false) throw new Error(`${label} sensitive must be false`)
+  const provenance = record(seed.provenance, `${label} provenance`)
+  return {
+    content: text(seed.content, `${label} content`),
+    tags: identifiers(seed.tags, `${label} tags`),
+    sensitive: false,
+    ...(seed.retentionDays === undefined
+      ? {}
+      : { retentionDays: positiveInteger(seed.retentionDays, `${label} retentionDays`) }),
+    provenance: {
+      source: text(provenance.source, `${label} provenance source`),
+      recordedAt: text(provenance.recordedAt, `${label} provenance recordedAt`),
+    },
   }
 }
 

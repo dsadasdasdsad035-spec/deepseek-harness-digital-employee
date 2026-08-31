@@ -1008,11 +1008,12 @@ function resolveChildAuthority(
   if (!parent.capabilities.experts.includes(expert.id)) {
     throw new Error(`parent Agent does not authorize expert "${expert.id}"`)
   }
+  // Expert depth is relative to the child; providers enforce an absolute Session depth.
   const delegation = {
     maxDepth: Math.min(
       expert.employeeDelegation.maxDepth,
-      expert.delegation.maxDepth,
       parent.delegation.maxDepth,
+      parent.depth + expert.delegation.maxDepth + 1,
     ),
     maxConcurrency: Math.min(
       expert.employeeDelegation.maxConcurrency,

@@ -16,7 +16,7 @@ const tsconfigPath = fileURLToPath(new URL('../../../tsconfig.json', import.meta
 const refreshing = process.env.DSH_SNAPSHOT === 'refresh'
 
 describe('project-manager digital employee assembled snapshot', () => {
-  it('covers the declared skills, tools, MCP data, memory projection, and durable decision', async () => {
+  it('covers management creation, initialized memory, bounded risk review, scoped MCP data, and the root result', async () => {
     const result = await runLoaderSmoke({
       label: 'project-manager digital employee snapshot',
       tempDirPrefix: 'dsh-project-manager-employee-',
@@ -39,6 +39,10 @@ describe('project-manager digital employee assembled snapshot', () => {
     expect(transcript).toContain('"stage":"workflow-complete"')
     expect(transcript).toContain('"projected":true')
     expect(transcript).toContain('"durableAttribution":true')
+    expect(transcript).toContain('"stage":"management-created"')
+    expect(transcript).toContain('"stage":"risk-review-delegated"')
+    expect(transcript).toContain('"expertMcp":true')
+    expect(transcript).toContain('"stage":"expert-descendant-denied"')
     if (refreshing) await writeFile(expectedPath, transcript)
     expect(transcript).toBe(await readFile(expectedPath, 'utf8'))
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)

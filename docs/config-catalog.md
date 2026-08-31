@@ -595,7 +595,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/core/digital-employee-file/src/index.ts:46`](../packages/core/digital-employee-file/src/index.ts)
+Source: [`packages/core/digital-employee-file/src/index.ts:47`](../packages/core/digital-employee-file/src/index.ts)
 
 <a id="deepseek-aidsh-e2b"></a>
 

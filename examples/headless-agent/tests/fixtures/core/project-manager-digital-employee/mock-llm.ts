@@ -1,15 +1,24 @@
 import type { Context } from '@deepseek-ai/cordis'
-import { CallId, LlmAdapter, type StreamChunk } from '@deepseek-ai/dsh-llm'
+import {
+  CallId,
+  LlmAdapter,
+  type GenerateOptions,
+  type StreamChunk,
+} from '@deepseek-ai/dsh-llm'
 
 class ProjectManagerMockAdapter extends LlmAdapter {
-  private calls = 0
+  private rootCalls = 0
+  private reviewerCalls = 0
 
-  async * stream(): AsyncIterable<StreamChunk> {
-    const tool = [
-      'project_board',
-      'project_document',
-      'mcp__project-data__project_snapshot',
-    ][this.calls++]
+  async * stream(options: GenerateOptions): AsyncIterable<StreamChunk> {
+    const isRiskReviewer = options.system?.includes('Risk Reviewer') === true
+    const tool = isRiskReviewer
+      ? ['mcp__project-data__project_snapshot'][this.reviewerCalls++]
+      : [
+        'project_board',
+        'project_document',
+        'mcp__project-data__project_snapshot',
+      ][this.rootCalls++]
     if (tool !== undefined) {
       yield { type: 'block-start', index: 0, blockType: 'tool-call' }
       yield {
@@ -17,7 +26,7 @@ class ProjectManagerMockAdapter extends LlmAdapter {
         index: 0,
         block: {
           type: 'tool-call',
-          id: CallId(`project-manager-tool-${this.calls}`),
+          id: CallId(`project-manager-tool-${isRiskReviewer ? this.reviewerCalls : this.rootCalls}`),
           name: tool,
           arguments: '{}',
         },

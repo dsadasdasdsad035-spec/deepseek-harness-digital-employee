@@ -6,6 +6,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { resolve } from 'node:path'
 import {
+  createExpertId,
   createDigitalEmployeeTemplateId,
   type DigitalEmployeeTemplate,
 } from '@deepseek-ai/dsh-digital-employee'
@@ -24,8 +25,8 @@ export const PROJECT_MEMORY_SEED = {
   },
 } as const
 
-/** Immutable template used only by offline project-manager composition tests. */
-export const PROJECT_MANAGER_TEMPLATE: DigitalEmployeeTemplate = {
+/** Original immutable fixture revision retained for existing employee instances. */
+export const PROJECT_MANAGER_TEMPLATE_V1: DigitalEmployeeTemplate = {
   id: createDigitalEmployeeTemplateId('project-manager-test'),
   version: '1.0.0',
   display: {
@@ -65,11 +66,58 @@ export const PROJECT_MANAGER_TEMPLATE: DigitalEmployeeTemplate = {
   },
 }
 
+/** Current complete fixture revision with deterministic memory and risk review delegation. */
+export const PROJECT_MANAGER_TEMPLATE: DigitalEmployeeTemplate = {
+  ...PROJECT_MANAGER_TEMPLATE_V1,
+  version: '1.1.0',
+  instructions: {
+    ...PROJECT_MANAGER_TEMPLATE_V1.instructions,
+    revision: 'project-manager-test-v1.1',
+  },
+  memorySeeds: [PROJECT_MEMORY_SEED],
+  capabilities: {
+    ...PROJECT_MANAGER_TEMPLATE_V1.capabilities,
+    experts: [createExpertId('risk-reviewer')],
+  },
+  experts: [{
+    id: createExpertId('risk-reviewer'),
+    name: 'Risk Reviewer',
+    responsibility: 'Review delivery risks, owners, mitigations, and review points.',
+    instructions: {
+      kind: 'file',
+      root: ROOT,
+      path: 'experts/risk-reviewer/AGENTS.md',
+      revision: 'project-manager-risk-reviewer-v1',
+    },
+    modelSettings: {},
+    capabilities: {
+      skills: ['risk-review'],
+      tools: ['project_board', 'project_document'],
+      mcpServers: ['project-data'],
+      experts: [],
+      allowSubagents: false,
+    },
+    memoryAccess: ['long-term'],
+    delegation: {
+      mode: 'one-shot',
+      maxDepth: 0,
+      maxConcurrency: 1,
+      timeoutMs: 30_000,
+    },
+  }],
+  delegation: {
+    maxDepth: 1,
+    maxConcurrency: 1,
+    timeoutMs: 30_000,
+  },
+}
+
 export const name = 'project-manager-test-digital-employee'
 export const inject = ['digitalEmployees']
 
 /** Register the immutable project-manager test template for this plugin lifetime. */
 export function apply(ctx: Context): void {
+  ctx.digitalEmployees.registerTemplate(PROJECT_MANAGER_TEMPLATE_V1)
   ctx.digitalEmployees.registerTemplate(PROJECT_MANAGER_TEMPLATE)
 }
 

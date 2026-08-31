@@ -597,7 +597,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/core/digital-employee-file/src/index.ts:46`](../packages/core/digital-employee-file/src/index.ts)
+来源： [`packages/core/digital-employee-file/src/index.ts:47`](../packages/core/digital-employee-file/src/index.ts)
 
 <a id="deepseek-aidsh-e2b"></a>
 

@@ -1,4 +1,7 @@
-{"type":"acceptance","stage":"composition","skills":["project-planning","risk-review","status-reporting"],"tools":["project_board","project_document"],"mcpServers":["project-data"],"instructions":"project-manager-test-v1","visibleSkills":["project-planning","risk-review","status-reporting"],"visibleTools":["project_board","project_document"],"visibleMcpToolCount":1}
+{"type":"acceptance","stage":"management-created","templateVersions":["1.0.0","1.1.0"],"templateVersion":"1.1.0","initializedMemory":[{"content":"Atlas delivery uses a staged release with an explicit rollback owner.","source":"project-manager-test-seed"}],"experts":["risk-reviewer"]}
+{"type":"acceptance","stage":"risk-review-delegated","expertId":"risk-reviewer","mode":"one-shot","expertMcp":true,"result":"Atlas: Pilot is at risk; Chen owns acceptance criteria; use the staged rollback plan."}
+{"type":"acceptance","stage":"expert-descendant-denied","denied":true,"noDescendantSession":true}
+{"type":"acceptance","stage":"composition","skills":["project-planning","risk-review","status-reporting"],"tools":["project_board","project_document"],"mcpServers":["project-data"],"instructions":"project-manager-test-v1.1","visibleSkills":["project-planning","risk-review","status-reporting"],"visibleTools":["project_board","project_document"],"visibleMcpToolCount":1}
 {"type":"acceptance","stage":"memory-projected","projected":true,"atlasSeed":true}
 {"type":"acceptance","stage":"capabilities-used","projectBoard":true,"projectDocument":true,"projectData":true}
 {"type":"acceptance","stage":"memory-decision","decision":"accepted"}

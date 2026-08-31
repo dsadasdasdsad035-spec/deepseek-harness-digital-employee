@@ -10,11 +10,11 @@ Status: implemented
 
 ## 决策
 
-`@deepseek-ai/dsh-project-manager-test-digital-employee` 提供离线的 `project-manager-test` 模板。模板拥有静态 Atlas skills、project-board 与 project-document 工具、stdio project-data MCP server、项目经理指令和有界种子记忆。
+`@deepseek-ai/dsh-project-manager-test-digital-employee` 提供离线的 `project-manager-test` 模板。它保留 `1.0.0` 供已有员工使用，并为新员工发布 `1.1.0`。新修订会在创建员工的同一持久化更新中写入一条带有包内溯源的非敏感 Atlas 长期记忆。
 
-组装后的 headless 夹具通过现有数字员工 Consumer 启动隔离员工。其确定性 transcript 记录解析出的能力列表、记忆投影、工具和 MCP 使用，以及持久化项目决策结果。
+根项目经理拥有静态 Atlas skills、project-board 与 project-document 工具、stdio project-data MCP server 和项目经理指令。它可以向包内 Risk Reviewer 委派一次审查。该专家仅拥有 risk-review skill、项目证据工具、project-data MCP 访问权限和长期记忆访问权限；其零额外深度预算、空专家列表和禁用的通用 subagent 会阻止后代委派。
 
-Web 开发 bundle 注册该模板、skills、tools 和 MCP manager，使数字员工管理工作区可以创建并激活 `Project Manager (Test)` 实例进行手动验证。
+组装后的 headless fixture 通过 Host 管理网关创建员工，并记录模板列表、已初始化记忆、专家发现、已委派的风险审查、作用域化专家 MCP 使用、被拒绝的后代委派和持久化根结果。Web 开发 bundle 注册该模板、skills、tools 和 MCP manager，使数字员工管理工作区可以创建并激活 `Project Manager (Test)` 实例。
 
 每个 MCP 客户端实例名称由员工、Agent Session 和 MCP 声明共同派生。因此，根数字员工会话和专家子会话可以并发挂载同一项已声明的 MCP server。
 
@@ -26,4 +26,4 @@ Web 开发 bundle 注册该模板、skills、tools 和 MCP manager，使数字�
 
 ## 结果
 
-数字员工组合拥有一个通过正常运行时接线覆盖所有声明能力类型、并能在 Web 开发管理工作区中发现的确定性参考包。并发会话获得独立的 MCP 客户端实例，同时保持相同的员工授权。该夹具保持刻意狭窄：它使用固定 Atlas 数据，不授予专家 agent 或通用 subagent，也不代表生产项目管理集成。
+数字员工组合拥有一个通过正常运行时接线覆盖模板记忆初始化和有界专家委派、并能在 Web 开发管理工作区中发现的确定性参考包。并发的根会话和专家会话获得独立的 MCP 客户端实例，同时保持相同的员工授权。该 fixture 保持刻意狭窄：它使用固定 Atlas 数据，只授予一个最小权限 Risk Reviewer，不授予通用 subagent，也不代表生产项目管理集成。

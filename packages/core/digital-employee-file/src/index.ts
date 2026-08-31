@@ -31,6 +31,7 @@ import {
   type DigitalEmployeeMemoryQuery,
   type DigitalEmployeeMemoryRecord,
   type DigitalEmployeeProvider,
+  type DigitalEmployeeTemplate,
   type DigitalEmployeeUpgradePreview,
   type ExportDigitalEmployeeRequest,
   type PortableDigitalEmployeeMemory,
@@ -135,6 +136,7 @@ export class FileDigitalEmployeeProvider implements DigitalEmployeeProvider {
         updatedAt: now,
       }
       document.instances.push(instance)
+      document.memories.push(...templateMemorySeeds(template, instance.id))
       return copyInstance(instance)
     })
   }
@@ -458,6 +460,28 @@ export async function apply(ctx: Context, config: Config): Promise<() => void> {
 
 function emptyDocument(): StoredDocument {
   return { schemaVersion: SCHEMA_VERSION, instances: [], memories: [], audits: [] }
+}
+
+function templateMemorySeeds(
+  template: DigitalEmployeeTemplate,
+  employeeId: DigitalEmployeeInstanceId,
+): DigitalEmployeeMemoryRecord[] {
+  return (template.memorySeeds ?? []).map(seed => ({
+    id: createDigitalEmployeeMemoryId(randomUUID()),
+    employeeId,
+    scope: 'long-term',
+    content: seed.content.trim(),
+    tags: [...seed.tags],
+    sensitive: false,
+    ...(seed.retentionDays === undefined
+      ? {}
+      : { expiresAt: new Date(Date.now() + seed.retentionDays * 86_400_000).toISOString() }),
+    provenance: {
+      sessionId: SessionId(`digital-employee-template-seed-${employeeId}`),
+      source: seed.provenance.source,
+      recordedAt: seed.provenance.recordedAt,
+    },
+  }))
 }
 
 async function readDocument(filename: string): Promise<StoredDocument> {

@@ -406,7 +406,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'digital-employee/expert-authorization-denied': DigitalEmployeeExpertAuthorizationDeniedEvent
 ```
 
-来源：[`packages/core/digital-employee/src/types.ts:248`](../packages/core/digital-employee/src/types.ts)
+来源：[`packages/core/digital-employee/src/types.ts:261`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeeexpert-delegation--log-only"></a>
 
@@ -417,7 +417,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'digital-employee/expert-delegation': DigitalEmployeeExpertDelegationEvent
 ```
 
-来源：[`packages/core/digital-employee/src/types.ts:246`](../packages/core/digital-employee/src/types.ts)
+来源：[`packages/core/digital-employee/src/types.ts:259`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeeexpert-result--log-only"></a>
 
@@ -428,7 +428,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'digital-employee/expert-result': DigitalEmployeeExpertResultEvent
 ```
 
-来源：[`packages/core/digital-employee/src/types.ts:250`](../packages/core/digital-employee/src/types.ts)
+来源：[`packages/core/digital-employee/src/types.ts:263`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeeidentity--log-only"></a>
 
@@ -453,7 +453,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'digital-employee/instructions': DigitalEmployeeInstructionsEvent
 ```
 
-来源：[`packages/core/digital-employee/src/types.ts:242`](../packages/core/digital-employee/src/types.ts)
+来源：[`packages/core/digital-employee/src/types.ts:255`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeememory-decision--log-only"></a>
 
@@ -464,7 +464,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'digital-employee/memory-decision': DigitalEmployeeMemoryDecisionEvent
 ```
 
-来源：[`packages/core/digital-employee/src/types.ts:252`](../packages/core/digital-employee/src/types.ts)
+来源：[`packages/core/digital-employee/src/types.ts:265`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeememory-projection--log-only"></a>
 
@@ -475,7 +475,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'digital-employee/memory-projection': DigitalEmployeeMemoryProjectionEvent
 ```
 
-来源：[`packages/core/digital-employee/src/types.ts:244`](../packages/core/digital-employee/src/types.ts)
+来源：[`packages/core/digital-employee/src/types.ts:257`](../packages/core/digital-employee/src/types.ts)
 
 ### `feedback/*`
 
