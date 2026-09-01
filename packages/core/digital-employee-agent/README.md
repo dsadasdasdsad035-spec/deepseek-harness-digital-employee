@@ -16,6 +16,8 @@ Named experts use the existing subagent runtime. Delegation records request, den
 
 MCP server and skill references are resolved from the employee's explicit authority. Missing references fail task creation instead of exposing ambient registrations.
 
+An employee with authorized Skills owns a scoped `skill` loader and catalog consumer. The loader is runtime infrastructure rather than a template Tool grant, so the business Tool allowlist cannot hide otherwise authorized Skills; the Skill allowlist still determines every catalog entry and load.
+
 The keyless Loader fixture at `examples/headless-agent/tests/fixtures/core/digital-employee-agent/` registers a trusted template, creates and activates an instance, and runs one root task through the existing Agent loop.
 
 ## Model Experience
@@ -24,7 +26,7 @@ The keyless Loader fixture at `examples/headless-agent/tests/fixtures/core/digit
 
 #### What the model sees
 
-Every request sees the logged employee identity, template and instance personality, versioned instructions, selected memory projection, and completed expert results from `digital-employee/*` events. Tool schemas include only skills, tools, and MCP servers present in the resolved authority.
+Every request sees employee identity from `digital-employee/identity`, versioned instructions from `digital-employee/instructions`, selected memory from `digital-employee/memory-projection`, completed expert results, and the authorized Skill catalog. Tool schemas include authorized business Tools and MCP servers plus the scoped `skill` loader when the employee has Skills.
 
 #### Token effect
 

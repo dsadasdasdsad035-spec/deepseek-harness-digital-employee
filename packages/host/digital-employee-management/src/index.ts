@@ -66,6 +66,7 @@ export type * from './types.ts'
 
 const DEFAULT_SUCCESS_CACHE_MAX_ENTRIES = 256
 const DEFAULT_SUCCESS_CACHE_TTL_MS = 5 * 60_000
+const DEFAULT_AUTOMATIC_MEMORY_LIMIT = 8
 const DEFAULT_STUDIO_FILE = resolve(homedir(), '.deepseek-harness', 'digital-employee-configuration-studio.json')
 
 /** Successful employee-chat idempotency cache configuration. */
@@ -78,6 +79,8 @@ export interface Config {
   successCacheMaxEntries?: number
   /** Milliseconds a completed submission remains reusable. */
   successCacheTtlMs?: number
+  /** Maximum employee long-term memories retrieved for an ordinary chat task. */
+  automaticMemoryLimit?: number
 }
 
 declare module '@deepseek-ai/cordis' {
@@ -105,6 +108,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     studioFile: z.string().default(DEFAULT_STUDIO_FILE),
     successCacheMaxEntries: z.number().step(1).min(1).default(DEFAULT_SUCCESS_CACHE_MAX_ENTRIES),
     successCacheTtlMs: z.number().step(1).min(1).default(DEFAULT_SUCCESS_CACHE_TTL_MS),
+    automaticMemoryLimit: z.number().step(1).min(1).default(DEFAULT_AUTOMATIC_MEMORY_LIMIT),
   })
   private readonly chatStarts = new Map<
     DigitalEmployeeStartChatRequest['submissionId'],
@@ -116,6 +120,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
   >()
   private readonly successCacheMaxEntries: number
   private readonly successCacheTtlMs: number
+  private readonly automaticMemoryLimit: number
   private readonly administrator: boolean
   private readonly configurationStudio: ConfigurationStudioStore
   private readonly studioRoot: string
@@ -127,6 +132,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     const studioFile = resolve(config.studioFile ?? DEFAULT_STUDIO_FILE)
     this.successCacheMaxEntries = config.successCacheMaxEntries ?? DEFAULT_SUCCESS_CACHE_MAX_ENTRIES
     this.successCacheTtlMs = config.successCacheTtlMs ?? DEFAULT_SUCCESS_CACHE_TTL_MS
+    this.automaticMemoryLimit = config.automaticMemoryLimit ?? DEFAULT_AUTOMATIC_MEMORY_LIMIT
     this.administrator = config.administrator ?? false
     this.configurationStudio = new ConfigurationStudioStore(studioFile)
     this.studioRoot = dirname(studioFile)
@@ -164,7 +170,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     request: ListDigitalEmployeeConfigurationAssetsRequest,
   ): Promise<DigitalEmployeeConfigurationAssetCatalog> {
     this.requireAdministrator()
-    const skills = await this.skillsForPreset(request.preset)
+    const { skills } = await this.skillCatalogForPreset(request.preset)
     const skillMarketResult = await this.ctx.get('skillMarket')?.list()
     const toolSchemas = this.ctx.tools.schemas()
     const toolMarketResult = await this.ctx.get('toolMarket')?.list()
@@ -738,8 +744,11 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     const validation = validateDraftBasics(draft)
     const diagnostics = [...validation.diagnostics]
     const skillNames = new Set<string>()
+    let skillScope: Awaited<ReturnType<Context['agentPresets']['standingKeyFor']>> | undefined
     try {
-      for (const skill of await this.skillsForPreset(draft.preset)) skillNames.add(skill.name)
+      const catalog = await this.skillCatalogForPreset(draft.preset)
+      skillScope = catalog.scope
+      for (const skill of catalog.skills) skillNames.add(skill.name)
     } catch {
       diagnostics.push({
         code: 'unavailable-preset',
@@ -759,6 +768,13 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
             code: 'unavailable-skill',
             path: `${authority.path}.skills`,
             message: `Skill "${skill}" is not available in this installation.`,
+          })
+        } else if (skillScope !== undefined
+          && await this.ctx.skills.get(skill, { scope: skillScope }) === undefined) {
+          diagnostics.push({
+            code: 'unloadable-skill',
+            path: `${authority.path}.skills`,
+            message: `Skill "${skill}" is listed by Agent preset "${draft.preset}" but its instructions cannot be loaded.`,
           })
         }
       }
@@ -803,10 +819,10 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
    * @returns Skill summaries visible from the preset scope.
    * @throws a path-free diagnostic when the preset is unavailable or cannot compose.
    */
-  private async skillsForPreset(preset: string): ReturnType<Context['skills']['list']> {
+  private async skillCatalogForPreset(preset: string) {
     try {
       const scope = await this.ctx.agentPresets.standingKeyFor(preset)
-      return await this.ctx.skills.list({ scope })
+      return { scope, skills: await this.ctx.skills.list({ scope }) }
     } catch {
       throw new Error(`Agent preset "${preset}" is unavailable for template configuration.`)
     }
@@ -843,6 +859,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
       content,
       source: { kind: 'user' },
     })
+    const memoryText = taskMemoryText(content)
     const modelSelection = this.ctx.agentDefaultModel.currentSelection()
     const handle = await this.ctx.digitalEmployeeAgent.createTask({
       employeeId: request.employeeId,
@@ -854,6 +871,13 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
       },
       modelSelection,
       initialMessage: message,
+      ...memoryText === undefined ? {} : {
+        memory: {
+          text: memoryText,
+          scopes: ['long-term'],
+          limit: this.automaticMemoryLimit,
+        },
+      },
       signal,
     }, employee)
     try {
@@ -967,6 +991,14 @@ async function durableStartChatContent(
 
 function hasTaskContent(content: DigitalEmployeeStartChatRequest['content']): boolean {
   return content.some(block => block.type === 'image' || block.text.trim() !== '')
+}
+
+function taskMemoryText(content: Awaited<ReturnType<typeof durableStartChatContent>>): string | undefined {
+  const text = content
+    .flatMap(block => block.type === 'text' ? [block.text.trim()] : [])
+    .filter(Boolean)
+    .join('\n\n')
+  return text === '' ? undefined : text
 }
 
 function chatStartFingerprint(request: DigitalEmployeeStartChatRequest): string {

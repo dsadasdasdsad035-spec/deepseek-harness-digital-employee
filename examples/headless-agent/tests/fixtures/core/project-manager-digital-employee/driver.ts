@@ -105,6 +105,11 @@ try {
     atlasSeed: eventText.includes('explicit rollback owner'),
   })
   acceptance('capabilities-used', {
+    skillCatalog: eventText.includes('<available_skills>')
+      && eventText.includes('risk-review')
+      && !eventText.includes('ungranted-skill'),
+    riskReviewSkill: eventText.includes('"name":"skill"')
+      && eventText.includes('Report only observed risks'),
     projectBoard: eventText.includes('project_board'),
     projectDocument: eventText.includes('project_document'),
     projectData: eventText.includes('mcp__project-data__project_snapshot'),

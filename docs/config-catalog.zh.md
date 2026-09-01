@@ -866,10 +866,12 @@ export interface Config {
   successCacheMaxEntries?: number
   /** Milliseconds a completed submission remains reusable. */
   successCacheTtlMs?: number
+  /** Maximum employee long-term memories retrieved for an ordinary chat task. */
+  automaticMemoryLimit?: number
 }
 ```
 
-来源： [`packages/host/digital-employee-management/src/index.ts:70`](../packages/host/digital-employee-management/src/index.ts)
+来源： [`packages/host/digital-employee-management/src/index.ts:73`](../packages/host/digital-employee-management/src/index.ts)
 
 <a id="deepseek-aidsh-host-directory-picker-browse"></a>
 

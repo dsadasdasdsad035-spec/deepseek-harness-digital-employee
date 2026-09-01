@@ -16,6 +16,8 @@
 
 MCP server 与 skill 引用从员工的显式权限中解析。缺少引用时任务创建失败，不会暴露环境中的注册项。
 
+拥有已授权 Skill 的员工会在自身作用域内持有 `skill` 加载器和目录 Consumer。加载器属于运行时基础设施，而不是模板 Tool 授权，因此业务 Tool 白名单不会隐藏原本已授权的 Skill；Skill 白名单仍决定目录中的每个条目和每次加载。
+
 位于 `examples/headless-agent/tests/fixtures/core/digital-employee-agent/` 的无密钥 Loader fixture 注册一个受信任模板，创建并激活实例，再通过现有 agent loop 运行一项根任务。
 
 ## 模型体验
@@ -24,7 +26,7 @@ MCP server 与 skill 引用从员工的显式权限中解析。缺少引用时�
 
 #### 模型看到的内容
 
-每次请求都能看到来自 `digital-employee/*` 事件的已记录员工身份、模板与实例个性、带版本的指令、选定的记忆投影及已完成的专家结果。工具 schema 只包含解析后权限中存在的 skill、工具与 MCP server。
+每次请求都能看到来自 `digital-employee/identity` 的员工身份、来自 `digital-employee/instructions` 的带版本指令、来自 `digital-employee/memory-projection` 的选定记忆、已完成的专家结果及已授权 Skill 目录。工具 schema 包含已授权的业务 Tool 与 MCP server；员工拥有 Skill 时还包含作用域化 `skill` 加载器。
 
 #### Token 影响
 

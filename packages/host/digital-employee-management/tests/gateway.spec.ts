@@ -70,9 +70,15 @@ function harness() {
           { name: 'market-active', description: 'Runtime description.' },
         ]
       }
+      if (options?.scope?.agentPreset === 'unloadable') {
+        return [{ name: 'unloadable-skill', description: 'Metadata without a loadable body.' }]
+      }
       if (options?.scope?.agentPreset === 'restricted') return [{ name: 'restricted-skill' }]
       return [{ name: 'host-global-skill' }]
     }),
+    get: vi.fn(async (name: string) => name === 'unloadable-skill'
+      ? undefined
+      : { name, content: `${name} instructions` }),
   }
   ctx.provide('skills', skills as never)
   ctx.provide('skillMarket', {
@@ -118,10 +124,12 @@ function harness() {
   } as never)
   const agentPresets = {
     defaultId: 'standard',
-    list: vi.fn(async () => [{ id: 'restricted' }, { id: 'standard' }]),
+    list: vi.fn(async () => [{ id: 'restricted' }, { id: 'standard' }, { id: 'unloadable' }]),
     standingKeyFor: vi.fn(async (preset?: string) => {
       if (preset === 'broken') throw new Error(`/private/presets/${preset}/agent.cordis.yml failed to mount`)
-      if (preset !== 'standard' && preset !== 'restricted') throw new Error(`unknown preset: ${preset}`)
+      if (preset !== 'standard' && preset !== 'restricted' && preset !== 'unloadable') {
+        throw new Error(`unknown preset: ${preset}`)
+      }
       return { agentPreset: preset }
     }),
   }
@@ -362,6 +370,44 @@ describe('DigitalEmployeeManagementGateway', () => {
           expect.objectContaining({ code: 'unavailable-mcp-client', path: 'mcpServers' }),
           expect.objectContaining({ code: 'unavailable-preset', path: 'preset' }),
         ]),
+      })
+      await expect(gateway.publishConfigurationDraft({ draftId: draft.id, revision: draft.revision }))
+        .rejects.toThrow('validation diagnostics')
+      await ctx.fiber.dispose()
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('rejects a Skill whose preset metadata cannot load its instructions', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'dsh-configuration-studio-'))
+    try {
+      const { ctx } = harness()
+      await ctx.plugin(DigitalEmployeeManagementGateway, {
+        administrator: true,
+        studioFile: join(directory, 'studio.json'),
+      })
+      const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
+      const draft = await gateway.createConfigurationDraft({
+        templateId: 'unloadable-skill-employee',
+        display: { name: 'Unloadable Skill', description: 'Checks Skill loading.' },
+        instructions: 'Use the configured Skill.',
+        capabilities: {
+          skills: ['unloadable-skill'],
+          tools: [],
+          mcpServers: [],
+          experts: [],
+          allowSubagents: false,
+        },
+        preset: 'unloadable',
+      })
+
+      await expect(gateway.validateConfigurationDraft({ draftId: draft.id })).resolves.toMatchObject({
+        diagnostics: [{
+          code: 'unloadable-skill',
+          path: 'capabilities.skills',
+          message: 'Skill "unloadable-skill" is listed by Agent preset "unloadable" but its instructions cannot be loaded.',
+        }],
       })
       await expect(gateway.publishConfigurationDraft({ draftId: draft.id, revision: draft.revision }))
         .rejects.toThrow('validation diagnostics')

@@ -159,6 +159,17 @@ describe('web e2e: digital employee management through the shipped API', () => {
       grants: FULL_AUTHORITY,
     })
     operationsLeadId = operationsLead.id
+    await scaffold.ctx.digitalEmployees.promoteMemory({
+      employeeId: operationsLeadId,
+      content: `${DIRECT_TASK} Use the recorded release-readiness checklist.`,
+      tags: ['operations', 'launch'],
+      sensitive: false,
+      provenance: {
+        sessionId: 'web-digital-employee-memory-seed' as SessionId,
+        source: 'web-e2e-seed',
+        recordedAt: '2026-09-01T00:00:00.000Z',
+      },
+    })
     await scaffold.ctx.digitalEmployees.activate(operationsLeadId)
     const restrictedObserver = await scaffold.ctx.digitalEmployees.create({
       templateId: TEMPLATE_ID,
@@ -222,10 +233,12 @@ describe('web e2e: digital employee management through the shipped API', () => {
       const loaded = await scaffold.ctx.sessionPersistence.load(directSessionId)
       return {
         owner: loaded.events.find(event => event.type === 'digital-employee/identity')?.data.employeeId,
+        memoryProjected: loaded.events.some(event => event.type === 'digital-employee/memory-projection'),
         prompts: userText(loaded.events),
       }
     }, { timeout: 15_000 }).toEqual({
       owner: operationsLeadId,
+      memoryProjected: true,
       prompts: [DIRECT_TASK],
     })
 

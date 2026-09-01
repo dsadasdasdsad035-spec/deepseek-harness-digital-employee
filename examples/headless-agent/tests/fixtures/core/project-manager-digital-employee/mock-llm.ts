@@ -5,12 +5,13 @@ class ProjectManagerMockAdapter extends LlmAdapter {
   private calls = 0
 
   async * stream(): AsyncIterable<StreamChunk> {
-    const tool = [
-      'project_board',
-      'project_document',
-      'mcp__project-data__project_snapshot',
+    const call = [
+      { name: 'skill', arguments: '{"name":"risk-review"}' },
+      { name: 'project_board', arguments: '{}' },
+      { name: 'project_document', arguments: '{}' },
+      { name: 'mcp__project-data__project_snapshot', arguments: '{}' },
     ][this.calls++]
-    if (tool !== undefined) {
+    if (call !== undefined) {
       yield { type: 'block-start', index: 0, blockType: 'tool-call' }
       yield {
         type: 'block-end',
@@ -18,8 +19,8 @@ class ProjectManagerMockAdapter extends LlmAdapter {
         block: {
           type: 'tool-call',
           id: CallId(`project-manager-tool-${this.calls}`),
-          name: tool,
-          arguments: '{}',
+          name: call.name,
+          arguments: call.arguments,
         },
       }
       yield { type: 'finish', reason: { kind: 'tool-calls' } }

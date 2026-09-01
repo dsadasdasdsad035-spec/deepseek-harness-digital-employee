@@ -33,6 +33,9 @@
       "path": "../../skill/skill"
     },
     {
+      "path": "../../skill/tool-skill"
+    },
+    {
       "path": "../../mcp/mcp-client"
     },
     {

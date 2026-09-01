@@ -15,6 +15,10 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { createScope } from '@deepseek-ai/dsh-scope'
 import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import SystemPrompt, { renderPrompt } from '@deepseek-ai/dsh-system-prompt'
+import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
+import SkillRegistry from '@deepseek-ai/dsh-skill'
+import ToolRuntime from '@deepseek-ai/dsh-tools'
+import * as toolSkill from '@deepseek-ai/dsh-tool-skill'
 import { describe, expect, it, vi } from 'vitest'
 import DigitalEmployeeAgent, {
   digitalEmployeeCompositionId,
@@ -222,6 +226,62 @@ describe('DigitalEmployeeAgent', () => {
     await alpha.dispose()
     expect(renderPrompt(await ctx.systemPrompt.assemble({ scope: alphaKey }))).toBe('')
     await beta.dispose()
+  })
+
+  it('keeps authorized Skill invocation infrastructure outside business Tool grants', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-agent-skill-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Use the authorized planning Skill.', 'utf8')
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(AgentRegistry)
+    await ctx.plugin(SkillRegistry)
+    await ctx.plugin(toolSkill)
+    const inheritedSkillTool = ctx.tools.get('skill')
+    ctx.skills.register({
+      name: 'project-planning',
+      description: 'Plan project delivery.',
+      content: 'Build a milestone plan.',
+      source: 'test',
+    })
+    ctx.skills.register({
+      name: 'ungranted-skill',
+      description: 'Must stay unavailable.',
+      content: 'This instruction must not load.',
+      source: 'test',
+    })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const key = { id: SessionId('employee-skill-task') } as Agent
+    const scope = createScope(ctx, key)
+    const employee = resolved(root, 'alpha', 'Alpha')
+    const authorized = {
+      ...employee,
+      template: {
+        ...employee.template,
+        capabilities: {
+          ...employee.template.capabilities,
+          skills: ['project-planning'],
+        },
+      },
+      authority: {
+        ...employee.authority,
+        skills: ['project-planning'],
+      },
+    } satisfies ResolvedDigitalEmployee
+
+    await ctx.digitalEmployeeAgent.compose(scope.ctx, authorized)
+
+    expect(ctx.tools.get('skill', key)).toBeDefined()
+    expect(ctx.tools.get('skill', key)).not.toBe(inheritedSkillTool)
+    expect(ctx.tools.schemas(key).map(tool => tool.name)).toEqual(['skill'])
+    await expect(ctx.skills.list({ scope: key })).resolves.toEqual([
+      expect.objectContaining({ name: 'project-planning' }),
+    ])
+    await scope.dispose()
+    expect(ctx.tools.get('skill', key)).toBe(inheritedSkillTool)
   })
 
   it('rejects an instruction path that escapes the contributing plugin root', async () => {

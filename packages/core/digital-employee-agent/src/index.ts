@@ -51,6 +51,7 @@ import type { McpServerConfig } from '@deepseek-ai/dsh-mcp-client'
 import type { PostToolDecision, PreToolDecision, ToolExecution } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-credentials'
 import type {} from '@deepseek-ai/dsh-mcp-client'
+import * as toolSkill from '@deepseek-ai/dsh-tool-skill'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -591,6 +592,9 @@ export class DigitalEmployeeAgent extends Service {
     }
     skills.restrict({ allow: employee.authority.skills })
     tools.restrict({ allow: employee.authority.tools })
+    if (employee.authority.skills.length > 0) {
+      await agentCtx.plugin(toolSkill)
+    }
     const resolvedMcpServers = mcpServers ?? (employee.mcpServers.length === 0
       ? []
       : await this.resolveMcpServers(employee, requireMcpSessionId(agentCtx)))

@@ -12,13 +12,13 @@ Remote 方法名在 `digitalEmployees` 内唯一，并直接描述管理操作�
 
 gateway 把所有权威操作委托给 `ctx.digitalEmployees`、`ctx.digitalEmployeeAgent` 与活跃 Agent 注册表。浏览器客户端不会重复实现生命周期、授权、任务归属、记忆、升级或导入验证。
 
-`startChat` 接受调用方生成的 Session ID、一个提交身份，以及非空文本或编码图像。Host 在同一项操作中解析员工当前可用性、快照 `ctx.agentDefaultModel`、使用 Host 进程工作目录创建员工根 Agent、接纳附件，并排入标准的首条用户消息。重复同一提交会共享其已接受结果；使用不同任务数据复用该身份会被拒绝。验证、取消、附件接纳或首条消息失败时，Host 会 dispose 未发布的工作，不会返回可用的空员工 Session。
+`startChat` 接受调用方生成的 Session ID、一个提交身份，以及非空文本或编码图像。Host 在同一项操作中解析员工当前可用性、快照 `ctx.agentDefaultModel`、使用 Host 进程工作目录创建员工根 Agent、接纳附件、根据已接纳文本生成有界且归员工所有的长期记忆查询，并排入标准的首条用户消息。`automaticMemoryLimit` 控制正整数结果上限，默认值为 8；纯图片任务跳过检索。重复同一提交会共享其已接受结果；使用不同任务数据复用该身份会被拒绝。验证、取消、附件接纳、记忆检索或首条消息失败时，Host 会 dispose 未发布的工作，不会返回可用的空员工 Session。
 
 ## 配置工作室
 
 设置 `administrator: true` 可启用仅限本机管理员的模板配置操作。`studioFile` 指定保存可变草稿与发布溯源记录的私有用户 JSON 文件；相对路径相对于 Host 进程工作目录解析。gateway 在创建预览或发布版本时，会在该文件所在目录下实体化根指令与专家指令。
 
-管理员使用 `createConfigurationDraft`、`updateConfigurationDraft`、`validateConfigurationDraft`、`previewConfigurationDraft`、`disposeConfigurationPreview`、`publishConfigurationDraft`、`listConfigurationDrafts` 和 `listConfigurationPublications`。验证会在预览或发布前解析 preset、Skill、Tool、MCP client、凭据引用、权限与委派要求。配置记录只包含凭据引用，不接受也不返回已解析的凭据值。
+管理员使用 `createConfigurationDraft`、`updateConfigurationDraft`、`validateConfigurationDraft`、`previewConfigurationDraft`、`disposeConfigurationPreview`、`publishConfigurationDraft`、`listConfigurationDrafts` 和 `listConfigurationPublications`。验证会在预览或发布前解析 preset、可加载的 Skill 指令、Tool、MCP client、凭据引用、权限与委派要求。配置记录只包含凭据引用，不接受也不返回已解析的凭据值。
 
 `listConfigurationAssets({ preset })` 解析 preset 的 standing 作用域，并按稳定 Skill 名称把其 Skill 目录与可选的 Skill 市场合并。Skill 是否存在于该作用域决定其能否被选择；市场清单提供版本、作者、标签和托管安装来源。preset 解析失败会返回不含路径的诊断，且绝不回退到 Host 全局注册表。验证与发布会重复同一个作用域查询。目录检查不会创建 Agent、Session、turn 或模型请求。
 

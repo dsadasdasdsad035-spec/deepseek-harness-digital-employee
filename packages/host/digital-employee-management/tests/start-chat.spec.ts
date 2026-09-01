@@ -114,7 +114,11 @@ function harness(options: {
 
 async function gatewayFor(
   setup: ReturnType<typeof harness>,
-  config: { successCacheMaxEntries?: number; successCacheTtlMs?: number } = {},
+  config: {
+    automaticMemoryLimit?: number
+    successCacheMaxEntries?: number
+    successCacheTtlMs?: number
+  } = {},
 ): Promise<StartChatGateway> {
   await setup.ctx.plugin(DigitalEmployeeManagementGateway, config)
   return setup.ctx.get('digitalEmployeeManagement') as unknown as StartChatGateway
@@ -134,7 +138,7 @@ function request(overrides: Partial<StartChatRequest> = {}): StartChatRequest {
 describe('DigitalEmployeeManagementGateway startChat', () => {
   it('resolves the employee and admits the first user message before returning the Session', async () => {
     const setup = harness()
-    const gateway = await gatewayFor(setup)
+    const gateway = await gatewayFor(setup, { automaticMemoryLimit: 3 })
     const signal = new AbortController().signal
     const uploadedImage = {
       type: 'image' as const,
@@ -169,6 +173,11 @@ describe('DigitalEmployeeManagementGateway startChat', () => {
         role: 'user',
         source: { kind: 'user' },
       }),
+      memory: {
+        text: 'Prepare the release.',
+        scopes: ['long-term'],
+        limit: 3,
+      },
     }), setup.resolvedEmployee)
     expect(setup.saveImages).toHaveBeenCalledWith([{
       data: new Uint8Array([1, 2, 3]),
@@ -197,6 +206,23 @@ describe('DigitalEmployeeManagementGateway startChat', () => {
     expect(typeof admitted?.id).toBe('string')
     expect(setup.dispose).not.toHaveBeenCalled()
     expect(setup.attachSession).toHaveBeenCalledWith('task-1')
+    await setup.ctx.fiber.dispose()
+  })
+
+  it('skips automatic memory retrieval when the accepted task has no text', async () => {
+    const setup = harness()
+    const gateway = await gatewayFor(setup)
+
+    await gateway.startChat(request({
+      sessionId: SessionId('task-image-only'),
+      submissionId: 'submission-image-only',
+      content: [{ type: 'image', mediaType: 'image/png', data: 'AQID' }],
+    }), new AbortController().signal)
+
+    expect(setup.createTask).toHaveBeenCalledWith(
+      expect.not.objectContaining({ memory: expect.anything() }),
+      setup.resolvedEmployee,
+    )
     await setup.ctx.fiber.dispose()
   })
 
