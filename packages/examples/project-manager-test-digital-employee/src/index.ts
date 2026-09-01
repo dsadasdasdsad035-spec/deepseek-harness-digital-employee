@@ -39,7 +39,7 @@ export const PROJECT_MANAGER_TEMPLATE: DigitalEmployeeTemplate = {
     path: 'AGENTS.md',
     revision: 'project-manager-test-v1',
   },
-  preset: 'standard',
+  preset: 'project-manager-test',
   mcpServers: [{
     id: 'project-data',
     transport: 'stdio',

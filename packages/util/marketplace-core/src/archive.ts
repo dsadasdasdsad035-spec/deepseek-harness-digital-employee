@@ -1,7 +1,16 @@
 /** Bounded hostile-ZIP decoding and inventory. */
 
 import { Unzip, UnzipInflate, UnzipPassThrough } from 'fflate'
-import type { SkillMarketFailure } from './types.ts'
+/** Structured archive-validation failure shared by managed marketplaces. */
+export type ArchiveFailure =
+  | { readonly code: 'invalid-archive'; readonly reason: 'base64' | 'zip' }
+  | {
+    readonly code: 'resource-limit'
+    readonly limit: 'archive-bytes' | 'file-count' | 'entry-bytes' | 'total-bytes'
+    readonly limitValue: number
+    readonly observedValue: number
+    readonly entry?: string | undefined
+  }
 
 /** Maximum decoded ZIP bytes accepted by the Host. */
 export const MAX_ZIP_BYTES = 10 * 1024 * 1024
@@ -33,7 +42,7 @@ export interface InspectedArchive {
 export class ArchiveValidationError extends Error {
   override readonly name = 'ArchiveValidationError'
 
-  constructor(readonly failure: SkillMarketFailure) {
+  constructor(readonly failure: ArchiveFailure) {
     super(failure.code)
   }
 }

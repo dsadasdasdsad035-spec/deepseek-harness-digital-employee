@@ -137,9 +137,9 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     methods: [
       {
         signature: 'async list(): Promise<AgentPreset[]>',
-        description: 'Every preset the configured roots currently supply.',
+        description: 'Every user-visible preset the configured roots currently supply. Internal shipped presets remain addressable through resolve but are omitted from ordinary authoring and session pickers.',
         parameters: [],
-        returns: 'the presets, first-root-wins per id.',
+        returns: 'the visible presets, first-root-wins per id.',
       },
       {
         signature: 'async resolve(id?: string): Promise<AgentPreset>',
@@ -689,6 +689,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the published Agent handle.',
       },
       {
+        signature: 'async createPreviewTask(request: CreateDigitalEmployeePreviewTaskRequest): Promise<AgentHandle>',
+        description: 'Create a temporary, non-persisted preview Agent from a validated synthetic employee.',
+        parameters: [{ name: 'request', description: 'isolated composition, Session identity, and workspace context.' }],
+        returns: 'an owned handle whose disposer terminates the preview and its scoped resources.',
+      },
+      {
         signature: 'async resolveExpert( request: ResolveDigitalEmployeeExpertRequest, ): Promise<ResolvedDigitalEmployeeExpert>',
         description: 'Resolve one enabled expert into a named composition without creating a child Session.',
         parameters: [{ name: 'request', description: 'employee, expert, and optional bounded memory request.' }],
@@ -736,9 +742,9 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'provider-authored terminal result.',
       },
       {
-        signature: 'async compose( agentCtx: Context, employee: ResolvedDigitalEmployee, memoryProjection?: DigitalEmployeeMemoryProjectionEvent, mcpServers?: readonly McpServerConfig[], ): Promise<void>',
+        signature: 'async compose( agentCtx: Context, employee: ResolvedDigitalEmployee, memoryProjection?: DigitalEmployeeMemoryProjectionEvent, mcpServers?: readonly McpServerConfig[], installAudit: boolean = true, ): Promise<void>',
         description: 'Mount the resolved preset and employee-specific prompt sections in one Agent scope.',
-        parameters: [{ name: 'agentCtx', description: 'unpublished scoped Agent context.' }, { name: 'employee', description: 'complete employee resolution produced before Session creation.' }, { name: 'memoryProjection', description: 'exact memory records rendered into this Agent\'s prompt.' }, { name: 'mcpServers', description: 'pre-resolved MCP configurations, or `undefined` to resolve them now.' }],
+        parameters: [{ name: 'agentCtx', description: 'unpublished scoped Agent context.' }, { name: 'employee', description: 'complete employee resolution produced before Session creation.' }, { name: 'memoryProjection', description: 'exact memory records rendered into this Agent\'s prompt.' }, { name: 'mcpServers', description: 'pre-resolved MCP configurations, or `undefined` to resolve them now.' }, { name: 'installAudit', description: 'whether this composition appends durable employee audit records.' }],
       },
     ],
   },
@@ -748,7 +754,66 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Remote-only facade over the owning digital employee services.',
     methods: [
       {
-        signature: '@Remote(\'listTemplates\') listTemplates(): readonly DigitalEmployeeTemplate[]',
+        signature: '@Remote(\'listConfigurationDrafts\') listConfigurationDrafts(): Promise<readonly DigitalEmployeeTemplateDraft[]>',
+        description: 'List unpublished local template drafts for the local administrator.',
+        parameters: [],
+        returns: 'detached draft records ordered by creation time.',
+      },
+      {
+        signature: '@Remote(\'listConfigurationAssets\') async listConfigurationAssets( request: ListDigitalEmployeeConfigurationAssetsRequest, ): Promise<DigitalEmployeeConfigurationAssetCatalog>',
+        description: 'List assets resolvable through the selected Agent preset.',
+        parameters: [{ name: 'request', description: 'preset whose standing scoped composition supplies Skill availability.' }],
+        returns: 'deterministic capability inventory without credential values.',
+        throws: ['a client-safe diagnostic when the preset cannot be composed.'],
+      },
+      {
+        signature: '@Remote(\'listConfigurationPublications\') listConfigurationPublications(): Promise<readonly DigitalEmployeeTemplatePublication[]>',
+        description: 'List immutable local publication provenance for the administrator.',
+        parameters: [],
+        returns: 'detached publication provenance ordered by allocation time.',
+      },
+      {
+        signature: '@Remote(\'createConfigurationDraft\') async createConfigurationDraft( request: CreateDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplateDraft>',
+        description: 'Create one unpublished employee template draft for the local administrator.',
+        parameters: [{ name: 'request', description: 'initial display and instruction fields.' }],
+        returns: 'detached new draft record.',
+      },
+      {
+        signature: '@Remote(\'updateConfigurationDraft\') updateConfigurationDraft(request: UpdateDigitalEmployeeTemplateDraftRequest): Promise<DigitalEmployeeTemplateDraft>',
+        description: 'Update one unpublished draft with optimistic revision control.',
+        parameters: [{ name: 'request', description: 'draft identity, observed revision, and replacement fields.' }],
+        returns: 'committed detached draft.',
+      },
+      {
+        signature: '@Remote(\'deleteConfigurationDraft\') deleteConfigurationDraft(request: DigitalEmployeeTemplateDraftIdentityRequest): Promise<void>',
+        description: 'Discard one unpublished draft.',
+        parameters: [{ name: 'request', description: 'draft identity to discard.' }],
+      },
+      {
+        signature: '@Remote(\'validateConfigurationDraft\') async validateConfigurationDraft( request: DigitalEmployeeTemplateDraftIdentityRequest, ): Promise<DigitalEmployeeTemplateDraftValidation>',
+        description: 'Validate one current draft revision before preview or publication.',
+        parameters: [{ name: 'request', description: 'required draft identity.' }],
+        returns: 'revision-bound actionable diagnostics.',
+      },
+      {
+        signature: '@Remote(\'previewConfigurationDraft\') async previewConfigurationDraft( request: PreviewDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplatePreview>',
+        description: 'Create an isolated temporary preview from one valid current draft revision.',
+        parameters: [{ name: 'request', description: 'draft revision and workspace used for preview composition.' }],
+        returns: 'temporary preview ownership information.',
+      },
+      {
+        signature: '@Remote(\'disposeConfigurationPreview\') async disposeConfigurationPreview( request: DisposeDigitalEmployeeTemplatePreviewRequest, ): Promise<void>',
+        description: 'Dispose one active preview and remove its temporary instruction material.',
+        parameters: [{ name: 'request', description: 'active preview identity to terminate.' }],
+      },
+      {
+        signature: '@Remote(\'publishConfigurationDraft\') async publishConfigurationDraft( request: PublishDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplatePublication>',
+        description: 'Publish one valid draft revision and register it for existing employee workflows.',
+        parameters: [{ name: 'request', description: 'draft identity and revision to publish.' }],
+        returns: 'immutable local version provenance.',
+      },
+      {
+        signature: '@Remote(\'listTemplates\') async listTemplates(): Promise<readonly DigitalEmployeeTemplate[]>',
         description: 'List registered immutable template versions.',
         parameters: [],
         returns: 'registered immutable template versions.',
@@ -766,7 +831,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'employee snapshot.',
       },
       {
-        signature: '@Remote(\'create\') create(request: CreateDigitalEmployeeRequest): Promise<DigitalEmployeeInstance>',
+        signature: '@Remote(\'create\') async create(request: CreateDigitalEmployeeRequest): Promise<DigitalEmployeeInstance>',
         description: 'Create an inactive employee.',
         parameters: [{ name: 'request', description: 'validated instance creation fields.' }],
         returns: 'created inactive employee.',
@@ -1388,6 +1453,48 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Connect one MCP server in a child fiber of the target Context.',
         parameters: [{ name: 'targetCtx', description: 'Context that owns tools, connection, and cleanup.' }, { name: 'config', description: 'fully resolved server connection configuration.' }],
         returns: 'disposer releasing the child fiber and its connection.',
+      },
+    ],
+  },
+  {
+    key: 'mcpMarket',
+    summary: 'Typed Remote gateway and restart-time activation owner.',
+    description: 'Typed Remote gateway and restart-time activation owner.',
+    methods: [
+      {
+        signature: '@Remote(\'list\') list(): Promise<McpMarketListResult>',
+        description: 'List managed MCP packages without credential values.',
+        parameters: [],
+        returns: 'Declared inventory result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'install\') install(request: McpMarketInstallRequest): Promise<McpMarketInstallResult>',
+        description: 'Install or explicitly upgrade one trusted MCP package.',
+        parameters: [{ name: 'request', description: 'Uploaded archive and explicit replacement intent.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'configure\') configure(request: McpMarketConfigureRequest): Promise<McpMarketConfigureResult>',
+        description: 'Persist credential references only.',
+        parameters: [{ name: 'request', description: 'Package identity and descriptor-slot reference mapping.' }],
+        returns: 'Saved references and restart state, or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'uninstall\') uninstall(request: McpMarketUninstallRequest): Promise<McpMarketUninstallResult>',
+        description: 'Uninstall one marketplace-managed MCP package.',
+        parameters: [{ name: 'request', description: 'Managed package identity to remove.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: 'async activateConfigured(): Promise<void>',
+        description: 'Activate configured packages during fresh Host composition. Resolved values remain local to each manager mount call.',
+        parameters: [],
+      },
+      {
+        signature: 'async templateConfigurations(): Promise<readonly McpMarketTemplateConfiguration[]>',
+        description: 'Project configured packages into credential-free template declarations.',
+        parameters: [],
+        returns: 'Safe declarations with availability and provenance metadata.',
       },
     ],
   },
@@ -2426,6 +2533,36 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'toolMarket',
+    summary: 'Typed Remote gateway for trusted Tool package lifecycle operations.',
+    description: 'Typed Remote gateway for trusted Tool package lifecycle operations.',
+    methods: [
+      {
+        signature: '@Remote(\'list\') list(): Promise<ToolMarketListResult>',
+        description: 'List managed packages and current-process availability.',
+        parameters: [],
+        returns: 'Declared inventory result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'install\') install(request: ToolMarketInstallRequest): Promise<ToolMarketInstallResult>',
+        description: 'Install or explicitly upgrade a trusted Tool package.',
+        parameters: [{ name: 'request', description: 'Uploaded archive and explicit replacement intent.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'uninstall\') uninstall(request: ToolMarketUninstallRequest): Promise<ToolMarketUninstallResult>',
+        description: 'Uninstall one marketplace-managed Tool package.',
+        parameters: [{ name: 'request', description: 'Managed package identity to remove.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: 'async activateInstalled(): Promise<void>',
+        description: 'Revalidate and mount trusted packages during fresh Host composition.',
+        parameters: [],
+      },
+    ],
+  },
+  {
     key: 'toolResultPruner',
     summary: 'Deterministic head/middle/tail pruning for current tool-result surface nodes.',
     description: 'Deterministic head/middle/tail pruning for current tool-result surface nodes.',
@@ -3291,7 +3428,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'AgentPreset',
-    declaration: 'export interface AgentPreset {\n    readonly id: string;\n    readonly trust: PresetTrust;\n    readonly path: string;\n    readonly name?: string;\n    readonly description?: string;\n    readonly order?: number;\n    readonly broken?: string;\n}',
+    declaration: 'export interface AgentPreset {\n    readonly id: string;\n    readonly trust: PresetTrust;\n    readonly path: string;\n    readonly name?: string;\n    readonly description?: string;\n    readonly order?: number;\n    readonly visibility: PresetVisibility;\n    readonly broken?: string;\n}',
   },
   {
     name: 'AgentSetup',
@@ -3615,7 +3752,11 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'CreateAgentOptions',
-    declaration: 'export interface CreateAgentOptions {\n    readonly sessionId: SessionId;\n    readonly meta?: {\n        readonly cwd?: string;\n        readonly parentSession?: SessionId;\n        readonly seedLength?: number;\n        readonly origin?: \'subagent\';\n        readonly delegationDepth?: number;\n        readonly agentPreset?: string;\n    };\n    readonly seed?: readonly SessionEvent[];\n    readonly initialMessages?: readonly UserMessage[];\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
+    declaration: 'export interface CreateAgentOptions {\n    readonly sessionId: SessionId;\n    readonly meta?: {\n        readonly cwd?: string;\n        readonly parentSession?: SessionId;\n        readonly seedLength?: number;\n        readonly origin?: \'subagent\';\n        readonly delegationDepth?: number;\n        readonly agentPreset?: string;\n        readonly preview?: true;\n    };\n    readonly seed?: readonly SessionEvent[];\n    readonly initialMessages?: readonly UserMessage[];\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
+  },
+  {
+    name: 'CreateDigitalEmployeePreviewTaskRequest',
+    declaration: 'export interface CreateDigitalEmployeePreviewTaskRequest {\n    readonly employee: ResolvedDigitalEmployee;\n    readonly sessionId: SessionId;\n    readonly workspacePath: string;\n    readonly agentOptions?: AgentOptions;\n    readonly modelSelection?: ModelSelection;\n}',
   },
   {
     name: 'CreateDigitalEmployeeRequest',
@@ -3624,6 +3765,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CreateDigitalEmployeeTaskRequest',
     declaration: 'export interface CreateDigitalEmployeeTaskRequest {\n    readonly employeeId: DigitalEmployeeInstanceId;\n    readonly sessionId: SessionId;\n    readonly meta?: CreateAgentOptions[\'meta\'];\n    readonly agentOptions?: AgentOptions;\n    readonly modelSelection?: ModelSelection;\n    readonly initialMessage?: UserMessage;\n    readonly memory?: Omit<DigitalEmployeeMemoryQuery, \'employeeId\'>;\n    readonly signal?: AbortSignal;\n}',
+  },
+  {
+    name: 'CreateDigitalEmployeeTemplateDraftRequest',
+    declaration: 'export interface CreateDigitalEmployeeTemplateDraftRequest {\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality?: string;\n    readonly preset?: string;\n    readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n    readonly experts?: DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation?: DigitalEmployeeConfigurationDelegation;\n}',
   },
   {
     name: 'CreateGoalRequest',
@@ -3635,7 +3780,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'CreateSessionOptions',
-    declaration: 'export interface CreateSessionOptions {\n    readonly seed?: readonly SessionEvent[];\n    readonly meta?: {\n        readonly cwd?: string;\n        readonly parentSession?: SessionId;\n        readonly createdAt?: number;\n        readonly seedLength?: number;\n        readonly origin?: \'subagent\';\n        readonly delegationDepth?: number;\n        readonly agentPreset?: string;\n    };\n}',
+    declaration: 'export interface CreateSessionOptions {\n    readonly seed?: readonly SessionEvent[];\n    readonly meta?: {\n        readonly cwd?: string;\n        readonly parentSession?: SessionId;\n        readonly createdAt?: number;\n        readonly seedLength?: number;\n        readonly origin?: \'subagent\';\n        readonly delegationDepth?: number;\n        readonly agentPreset?: string;\n        readonly preview?: true;\n    };\n}',
   },
   {
     name: 'CreateTeamTaskRequest',
@@ -3692,6 +3837,42 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'DigitalEmployeeCapabilityChanges',
     declaration: 'export interface DigitalEmployeeCapabilityChanges {\n    readonly skills: readonly string[];\n    readonly tools: readonly string[];\n    readonly mcpServers: readonly string[];\n    readonly experts: readonly ExpertId[];\n    readonly allowSubagents: boolean;\n}',
+  },
+  {
+    name: 'DigitalEmployeeConfigurationAsset',
+    declaration: 'export interface DigitalEmployeeConfigurationAsset {\n    readonly id: DigitalEmployeeConfigurationAssetId;\n    readonly kind: \'skill\' | \'tool\' | \'mcp\';\n    readonly label: string;\n    readonly description?: string;\n    readonly available: boolean;\n    readonly source: string;\n    readonly version?: string | undefined;\n    readonly publisher?: string | undefined;\n    readonly tags?: readonly string[] | undefined;\n    readonly managedByMarket?: boolean | undefined;\n    readonly permissionSummary: readonly string[];\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n    readonly mcpServer?: DigitalEmployeeConfigurationMcpServer | undefined;\n}',
+  },
+  {
+    name: 'DigitalEmployeeConfigurationAssetCatalog',
+    declaration: 'export interface DigitalEmployeeConfigurationAssetCatalog {\n    readonly entries: readonly DigitalEmployeeConfigurationAsset[];\n}',
+  },
+  {
+    name: 'DigitalEmployeeConfigurationAssetId',
+    declaration: 'export type DigitalEmployeeConfigurationAssetId = Branded<\'DigitalEmployeeConfigurationAssetId\'>;',
+  },
+  {
+    name: 'DigitalEmployeeConfigurationAuthority',
+    declaration: 'export interface DigitalEmployeeConfigurationAuthority {\n    readonly skills: string[];\n    readonly tools: string[];\n    readonly mcpServers: string[];\n    readonly experts: string[];\n    readonly allowSubagents: boolean;\n}',
+  },
+  {
+    name: 'DigitalEmployeeConfigurationDelegation',
+    declaration: 'export interface DigitalEmployeeConfigurationDelegation {\n    readonly maxDepth: number;\n    readonly maxConcurrency: number;\n    readonly timeoutMs: number;\n}',
+  },
+  {
+    name: 'DigitalEmployeeConfigurationDiagnostic',
+    declaration: 'export interface DigitalEmployeeConfigurationDiagnostic {\n    readonly code: string;\n    readonly path: string;\n    readonly message: string;\n}',
+  },
+  {
+    name: 'DigitalEmployeeConfigurationExpert',
+    declaration: 'export interface DigitalEmployeeConfigurationExpert {\n    readonly id: string;\n    readonly name: string;\n    readonly responsibility: string;\n    readonly instructions: string;\n    readonly modelSettings: {\n        readonly provider?: string;\n        readonly model?: string;\n        readonly maxTokens?: number;\n    };\n    readonly capabilities: DigitalEmployeeConfigurationAuthority;\n    readonly memoryAccess: (\'task\' | \'session\' | \'long-term\')[];\n    readonly delegation: {\n        readonly mode: \'one-shot\' | \'continuable\';\n        readonly maxDepth: number;\n        readonly maxConcurrency: number;\n        readonly timeoutMs: number;\n    };\n}',
+  },
+  {
+    name: 'DigitalEmployeeConfigurationMcpServer',
+    declaration: 'export type DigitalEmployeeConfigurationMcpServer = {\n    readonly id: string;\n    readonly transport: \'stdio\';\n    readonly command: string;\n    readonly args: string[];\n    readonly env: Record<string, string>;\n    readonly envCredentials: Record<string, string>;\n    readonly cwd: string;\n    readonly toolCallTimeoutMs?: number;\n    readonly failOnStartupError?: boolean;\n} | {\n    readonly id: string;\n    readonly transport: \'streamable-http\';\n    readonly url: string;\n    readonly headers: Record<string, string>;\n    readonly headerCredentials: Record<string, string>;\n    readonly toolCallTimeoutMs?: number;\n    readonly failOnStartupError?: boolean;\n};',
+  },
+  {
+    name: 'DigitalEmployeeConfigurationMemorySeed',
+    declaration: 'export interface DigitalEmployeeConfigurationMemorySeed {\n    readonly content: string;\n    readonly tags: string[];\n    readonly sensitive: boolean;\n    readonly retentionDays?: number;\n}',
   },
   {
     name: 'DigitalEmployeeDelegationPolicy',
@@ -3842,8 +4023,32 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface DigitalEmployeeTemplateDisplay {\n    readonly name: string;\n    readonly description: string;\n    readonly banner?: string;\n}',
   },
   {
+    name: 'DigitalEmployeeTemplateDraft',
+    declaration: 'export interface DigitalEmployeeTemplateDraft {\n    readonly id: DigitalEmployeeTemplateDraftId;\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality: string;\n    readonly preset: string;\n    readonly capabilities: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers: readonly DigitalEmployeeConfigurationMcpServer[];\n    readonly experts: readonly DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds: readonly DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation: DigitalEmployeeConfigurationDelegation;\n    readonly revision: number;\n    readonly createdAt: string;\n    readonly updatedAt: string;\n}',
+  },
+  {
+    name: 'DigitalEmployeeTemplateDraftId',
+    declaration: 'export type DigitalEmployeeTemplateDraftId = Branded<\'DigitalEmployeeTemplateDraftId\'>;',
+  },
+  {
+    name: 'DigitalEmployeeTemplateDraftIdentityRequest',
+    declaration: 'export interface DigitalEmployeeTemplateDraftIdentityRequest {\n    readonly draftId: DigitalEmployeeTemplateDraftId;\n}',
+  },
+  {
+    name: 'DigitalEmployeeTemplateDraftValidation',
+    declaration: 'export interface DigitalEmployeeTemplateDraftValidation {\n    readonly revision: number;\n    readonly diagnostics: readonly DigitalEmployeeConfigurationDiagnostic[];\n}',
+  },
+  {
     name: 'DigitalEmployeeTemplateId',
     declaration: 'export type DigitalEmployeeTemplateId = Branded<\'DigitalEmployeeTemplateId\'>;',
+  },
+  {
+    name: 'DigitalEmployeeTemplatePreview',
+    declaration: 'export interface DigitalEmployeeTemplatePreview {\n    readonly id: string;\n    readonly draftId: DigitalEmployeeTemplateDraftId;\n    readonly revision: number;\n    readonly sessionId: SessionId;\n    readonly state: \'active\' | \'disposed\';\n}',
+  },
+  {
+    name: 'DigitalEmployeeTemplatePublication',
+    declaration: 'export interface DigitalEmployeeTemplatePublication {\n    readonly templateId: string;\n    readonly version: string;\n    readonly draftId: DigitalEmployeeTemplateDraftId;\n    readonly draftRevision: number;\n    readonly publishedAt: string;\n}',
   },
   {
     name: 'DigitalEmployeeTemplateReferenceValidator',
@@ -3872,6 +4077,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'DirectoryRegistrationHandle',
     declaration: 'export interface DirectoryRegistrationHandle {\n    (): void;\n    replace(entries: readonly LlmConfigurableProvider[]): void;\n}',
+  },
+  {
+    name: 'DisposeDigitalEmployeeTemplatePreviewRequest',
+    declaration: 'export interface DisposeDigitalEmployeeTemplatePreviewRequest {\n    readonly previewId: string;\n}',
   },
   {
     name: 'Domain',
@@ -4222,6 +4431,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface KvUnitDescriptor {\n    readonly name: string;\n    readonly version: number;\n    readonly tables: readonly string[];\n    readonly hasGlobal: boolean;\n}',
   },
   {
+    name: 'ListDigitalEmployeeConfigurationAssetsRequest',
+    declaration: 'export interface ListDigitalEmployeeConfigurationAssetsRequest {\n    readonly preset: string;\n}',
+  },
+  {
     name: 'LlmAdapter',
     declaration: 'export abstract class LlmAdapter {\n    providerInfo(provider: string): LlmProviderInfo;\n    providerRetryPolicy(_provider: string): ResolvedRetryPolicy | undefined;\n    listModels(_provider: string): Promise<readonly LlmModelInfo[]>;\n    resolveModel(provider: string, model: string, _signal?: AbortSignal): Promise<LlmResolvedModelInfo>;\n    async prepareCall(provider: string, model: string, signal?: AbortSignal): Promise<PreparedAdapterCall>;\n    abstract stream(options: GenerateOptions): AsyncIterable<StreamChunk>;\n}',
   },
@@ -4320,6 +4533,62 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ManualCompactAgentContext',
     declaration: 'export interface ManualCompactAgentContext extends CompactionAgentContext {\n    runMaintenance<T>(task: (signal: AbortSignal) => Promise<T>): Promise<T>;\n}',
+  },
+  {
+    name: 'McpMarketConfigureRequest',
+    declaration: 'export interface McpMarketConfigureRequest {\n    readonly packageId: McpMarketPackageId;\n    readonly credentialReferences: Readonly<Record<string, string>>;\n}',
+  },
+  {
+    name: 'McpMarketConfigureResult',
+    declaration: 'export type McpMarketConfigureResult = McpMarketResult<{\n    readonly packageId: McpMarketPackageId;\n    readonly credentialReferences: Readonly<Record<string, string>>;\n    readonly restartRequired: true;\n}>;',
+  },
+  {
+    name: 'McpMarketCredentialRequirement',
+    declaration: 'export interface McpMarketCredentialRequirement {\n    readonly slot: string;\n    readonly reference?: string | undefined;\n    readonly configured: boolean;\n    readonly source?: string | undefined;\n}',
+  },
+  {
+    name: 'McpMarketEntry',
+    declaration: 'export interface McpMarketEntry {\n    readonly packageId: McpMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly servers: readonly McpMarketServerEntry[];\n    readonly credentialRequirements: readonly McpMarketCredentialRequirement[];\n    readonly installedAt: number;\n    readonly configured: boolean;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n}',
+  },
+  {
+    name: 'McpMarketFailure',
+    declaration: 'export type McpMarketFailure = {\n    readonly code: \'invalid-archive\';\n    readonly reason: \'base64\' | \'zip\';\n} | {\n    readonly code: \'resource-limit\';\n    readonly limit: \'archive-bytes\' | \'file-count\' | \'entry-bytes\' | \'total-bytes\';\n    readonly limitValue: number;\n    readonly observedValue: number;\n    readonly entry?: string | undefined;\n} | {\n    readonly code: \'invalid-package\';\n    readonly reason: string;\n} | {\n    readonly code: \'untrusted-publisher\' | \'invalid-signature\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'managed-upgrade-required\';\n    readonly packageId: McpMarketPackageId;\n    readonly installedVersion: string;\n    readonly candidateVersion: string;\n} | {\n    readonly code: \'unmanaged-conflict\' | \'manifest-incompatible\' | \'not-found\';\n    readonly packageId: McpMarketPackageId;\n} | {\n    readonly code: \'invalid-credential-reference\';\n    readonly slot: string;\n} | {\n    readonly code: \'missing-credential-reference\';\n    readonly slot: string;\n};',
+  },
+  {
+    name: 'McpMarketInstallRequest',
+    declaration: 'export interface McpMarketInstallRequest {\n    readonly filename: string;\n    readonly archiveBase64: string;\n    readonly replaceExisting?: boolean;\n}',
+  },
+  {
+    name: 'McpMarketInstallResult',
+    declaration: 'export type McpMarketInstallResult = McpMarketResult<{\n    readonly packageId: McpMarketPackageId;\n    readonly operation: \'installed\' | \'upgraded\';\n    readonly restartRequired: true;\n}>;',
+  },
+  {
+    name: 'McpMarketListResult',
+    declaration: 'export type McpMarketListResult = McpMarketResult<{\n    readonly entries: readonly McpMarketEntry[];\n}>;',
+  },
+  {
+    name: 'McpMarketPackageId',
+    declaration: 'export type McpMarketPackageId = Branded<\'McpMarketPackageId\'>;',
+  },
+  {
+    name: 'McpMarketResult',
+    declaration: 'export type McpMarketResult<Value> = {\n    readonly ok: true;\n    readonly value: Value;\n} | {\n    readonly ok: false;\n    readonly error: McpMarketFailure;\n};',
+  },
+  {
+    name: 'McpMarketServerEntry',
+    declaration: 'export interface McpMarketServerEntry {\n    readonly serverName: string;\n    readonly transport: \'streamable-http\';\n    readonly available: boolean;\n}',
+  },
+  {
+    name: 'McpMarketTemplateConfiguration',
+    declaration: 'export interface McpMarketTemplateConfiguration {\n    readonly packageId: McpMarketPackageId;\n    readonly serverName: string;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly declaration: {\n        readonly id: string;\n        readonly transport: \'streamable-http\';\n        readonly url: string;\n        readonly headers: Readonly<Record<string, string>>;\n        readonly headerCredentials: Readonly<Record<string, string>>;\n    };\n}',
+  },
+  {
+    name: 'McpMarketUninstallRequest',
+    declaration: 'export interface McpMarketUninstallRequest {\n    readonly packageId: McpMarketPackageId;\n}',
+  },
+  {
+    name: 'McpMarketUninstallResult',
+    declaration: 'export type McpMarketUninstallResult = McpMarketResult<{\n    readonly packageId: McpMarketPackageId;\n    readonly restartRequired: true;\n}>;',
   },
   {
     name: 'McpServerConfig',
@@ -4478,12 +4747,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type PresetTrust = \'system\' | \'user\';',
   },
   {
+    name: 'PresetVisibility',
+    declaration: 'export type PresetVisibility = \'user\' | \'internal\';',
+  },
+  {
     name: 'PreStepDecision',
     declaration: 'export type PreStepDecision = {\n    kind: \'reject\';\n} | {\n    kind: \'enter\';\n    messages: UserMessage[];\n};',
   },
   {
     name: 'PreToolDecision',
     declaration: 'export type PreToolDecision = {\n    kind: \'allow\';\n} | {\n    kind: \'deny\';\n    reason: string;\n} | {\n    kind: \'ask\';\n    reason?: string;\n};',
+  },
+  {
+    name: 'PreviewDigitalEmployeeTemplateDraftRequest',
+    declaration: 'export interface PreviewDigitalEmployeeTemplateDraftRequest extends DigitalEmployeeTemplateDraftIdentityRequest {\n    readonly revision: number;\n    readonly workspaceId: WorkspaceId;\n}',
   },
   {
     name: 'PreviewDigitalEmployeeUpgradeRequest',
@@ -4532,6 +4809,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'PruneResult',
     declaration: 'export interface PruneResult {\n    readonly pruned: readonly PrunedEntry[];\n    readonly charsRemoved: number;\n}',
+  },
+  {
+    name: 'PublishDigitalEmployeeTemplateDraftRequest',
+    declaration: 'export interface PublishDigitalEmployeeTemplateDraftRequest extends DigitalEmployeeTemplateDraftIdentityRequest {\n    readonly revision: number;\n}',
   },
   {
     name: 'ReadFileLine',
@@ -4803,7 +5084,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SessionHeader',
-    declaration: 'export interface SessionHeader {\n    readonly version: number;\n    readonly id: SessionId;\n    readonly createdAt: number;\n    readonly cwd?: string;\n    readonly parentSession?: SessionId;\n    readonly seedLength?: number;\n    readonly origin?: \'subagent\';\n    readonly delegationDepth?: number;\n    readonly agentPreset?: string;\n}',
+    declaration: 'export interface SessionHeader {\n    readonly version: number;\n    readonly id: SessionId;\n    readonly createdAt: number;\n    readonly cwd?: string;\n    readonly parentSession?: SessionId;\n    readonly seedLength?: number;\n    readonly origin?: \'subagent\';\n    readonly delegationDepth?: number;\n    readonly agentPreset?: string;\n    readonly preview?: true;\n}',
   },
   {
     name: 'SessionId',
@@ -5490,6 +5771,46 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ToolGuard = (execution: Readonly<ToolExecution>) => string | undefined;',
   },
   {
+    name: 'ToolMarketEntry',
+    declaration: 'export interface ToolMarketEntry {\n    readonly packageId: ToolMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly permissions: readonly (\'filesystem-read\' | \'filesystem-write\' | \'network\' | \'subprocess\')[];\n    readonly tools: readonly ToolMarketToolEntry[];\n    readonly installedAt: number;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n}',
+  },
+  {
+    name: 'ToolMarketFailure',
+    declaration: 'export type ToolMarketFailure = {\n    readonly code: \'invalid-archive\';\n    readonly reason: \'base64\' | \'zip\';\n} | {\n    readonly code: \'resource-limit\';\n    readonly limit: \'archive-bytes\' | \'file-count\' | \'entry-bytes\' | \'total-bytes\';\n    readonly limitValue: number;\n    readonly observedValue: number;\n    readonly entry?: string | undefined;\n} | {\n    readonly code: \'invalid-package\';\n    readonly reason: string;\n} | {\n    readonly code: \'untrusted-publisher\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'invalid-signature\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'managed-upgrade-required\';\n    readonly packageId: ToolMarketPackageId;\n    readonly installedVersion: string;\n    readonly candidateVersion: string;\n} | {\n    readonly code: \'unmanaged-conflict\' | \'manifest-incompatible\' | \'not-found\';\n    readonly packageId: ToolMarketPackageId;\n};',
+  },
+  {
+    name: 'ToolMarketInstallRequest',
+    declaration: 'export interface ToolMarketInstallRequest {\n    readonly filename: string;\n    readonly archiveBase64: string;\n    readonly replaceExisting?: boolean;\n}',
+  },
+  {
+    name: 'ToolMarketInstallResult',
+    declaration: 'export type ToolMarketInstallResult = ToolMarketResult<{\n    readonly packageId: ToolMarketPackageId;\n    readonly operation: \'installed\' | \'upgraded\';\n    readonly restartRequired: true;\n}>;',
+  },
+  {
+    name: 'ToolMarketListResult',
+    declaration: 'export type ToolMarketListResult = ToolMarketResult<{\n    readonly entries: readonly ToolMarketEntry[];\n}>;',
+  },
+  {
+    name: 'ToolMarketPackageId',
+    declaration: 'export type ToolMarketPackageId = Branded<\'ToolMarketPackageId\'>;',
+  },
+  {
+    name: 'ToolMarketResult',
+    declaration: 'export type ToolMarketResult<Value> = {\n    readonly ok: true;\n    readonly value: Value;\n} | {\n    readonly ok: false;\n    readonly error: ToolMarketFailure;\n};',
+  },
+  {
+    name: 'ToolMarketToolEntry',
+    declaration: 'export interface ToolMarketToolEntry {\n    readonly name: string;\n    readonly description: string;\n    readonly inputDescription: string;\n    readonly available: boolean;\n}',
+  },
+  {
+    name: 'ToolMarketUninstallRequest',
+    declaration: 'export interface ToolMarketUninstallRequest {\n    readonly packageId: ToolMarketPackageId;\n}',
+  },
+  {
+    name: 'ToolMarketUninstallResult',
+    declaration: 'export type ToolMarketUninstallResult = ToolMarketResult<{\n    readonly packageId: ToolMarketPackageId;\n    readonly restartRequired: true;\n}>;',
+  },
+  {
     name: 'ToolMessageSource',
     declaration: 'export interface ToolMessageSource {\n    kind: \'tool\';\n    callId: CallId;\n}',
   },
@@ -5612,6 +5933,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TypertTypeModel',
     declaration: 'export interface TypertTypeModel {\n    readonly name: string;\n    readonly declaration: string;\n}',
+  },
+  {
+    name: 'UpdateDigitalEmployeeTemplateDraftRequest',
+    declaration: 'export interface UpdateDigitalEmployeeTemplateDraftRequest extends DigitalEmployeeTemplateDraftIdentityRequest {\n    readonly revision: number;\n    readonly patch: {\n        readonly templateId?: string;\n        readonly display?: {\n            readonly name: string;\n            readonly description: string;\n            readonly banner?: string;\n        };\n        readonly instructions?: string;\n        readonly personality?: string;\n        readonly preset?: string;\n        readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n        readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n        readonly experts?: DigitalEmployeeConfigurationExpert[];\n        readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n        readonly delegation?: DigitalEmployeeConfigurationDelegation;\n    };\n}',
   },
   {
     name: 'UpdateTeamTaskRequest',

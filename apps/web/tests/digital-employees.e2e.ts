@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { Browser, Page } from 'playwright'
 import { chromium } from 'playwright'
+import { zipSync } from 'fflate'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
 import {
   createExpertId,
@@ -36,6 +37,28 @@ const RESTRICTED_AUTHORITY: DigitalEmployeeAuthority = {
 }
 const DIRECT_TASK = 'Coordinate the launch readiness review.'
 const MANAGEMENT_TASK = 'Prepare the follow-up operations brief.'
+const ACTIVE_MARKET_SKILL = 'web-market-active'
+const INACTIVE_MARKET_SKILL = 'web-market-inactive'
+
+function skillArchive(name: string, version: string): string {
+  const descriptor = [
+    '---',
+    `name: ${name}`,
+    `description: Web template catalog fixture ${name}.`,
+    'metadata:',
+    '  marketplace:',
+    `    version: "${version}"`,
+    '    author: Web E2E',
+    '    tags:',
+    '      - template',
+    '      - browser',
+    '---',
+    '',
+    'Web template catalog fixture.',
+    '',
+  ].join('\n')
+  return Buffer.from(zipSync({ [`${name}/SKILL.md`]: Buffer.from(descriptor) })).toString('base64')
+}
 
 function userText(events: readonly SessionEvent[]): string[] {
   return events.flatMap(event => event.type === 'user/message' && event.data.source.kind === 'user'
@@ -46,6 +69,12 @@ function userText(events: readonly SessionEvent[]): string[] {
 function employeeSessionIds(scaffold: WebScaffold): SessionId[] {
   return scaffold.ctx.agents.roots().flatMap(agent =>
     agent.session.events.some(event => event.type === 'digital-employee/identity') ? [agent.id] : [])
+}
+
+async function runtimeSessionIds(scaffold: WebScaffold): Promise<string[]> {
+  const ids = new Set<string>(scaffold.ctx.agents.roots().map(agent => agent.id))
+  for (const header of await scaffold.ctx.sessionPersistence.list()) ids.add(header.id)
+  return [...ids].sort()
 }
 
 function template(root: string, version: '1.0.0' | '2.0.0'): DigitalEmployeeTemplate {
@@ -103,14 +132,18 @@ describe('web e2e: digital employee management through the shipped API', () => {
   let tripwire: ReturnType<typeof watchConsole>
   let operationsLeadId: DigitalEmployeeInstanceId
   let restrictedObserverId: DigitalEmployeeInstanceId
+  let modelRequestCount = 0
 
   beforeAll(async () => {
     scaffold = await launchWebScaffold({})
-    scaffold.ctx.on('agent/request', async (_payload, next) => ({
-      ...await next(),
-      provider: 'deepseek-official',
-      model: 'deepseek-v4-flash',
-    }))
+    scaffold.ctx.on('agent/request', async (_payload, next) => {
+      modelRequestCount += 1
+      return {
+        ...await next(),
+        provider: 'deepseek-official',
+        model: 'deepseek-v4-flash',
+      }
+    })
     const templateRoot = join(scaffold.workspaceCwd, 'digital-employee-template')
     await mkdir(templateRoot, { recursive: true })
     await Promise.all([
@@ -134,6 +167,27 @@ describe('web e2e: digital employee management through the shipped API', () => {
       grants: RESTRICTED_AUTHORITY,
     })
     restrictedObserverId = restrictedObserver.id
+    for (const [name, version] of [[ACTIVE_MARKET_SKILL, '1.2.3'], [INACTIVE_MARKET_SKILL, '2.0.0']] as const) {
+      const installed = await scaffold.ctx.skillMarket.install({
+        filename: `${name}.zip`,
+        archiveBase64: skillArchive(name, version),
+      })
+      if (!installed.ok) throw new Error(`failed to install ${name}: ${installed.error.code}`)
+    }
+    for (const draft of await scaffold.ctx.digitalEmployeeManagement.listConfigurationDrafts()) {
+      if (draft.templateId === 'web-market-template') {
+        await scaffold.ctx.digitalEmployeeManagement.deleteConfigurationDraft({ draftId: draft.id })
+      }
+    }
+    await scaffold.ctx.digitalEmployeeManagement.createConfigurationDraft({
+      templateId: 'web-market-template',
+      display: {
+        name: 'Web Market Template',
+        description: 'Exercises marketplace skills in template configuration.',
+      },
+      instructions: 'Use selected marketplace skills.',
+      preset: 'standard',
+    })
     browser = await chromium.launch()
     page = await newEnglishPage(browser)
     tripwire = watchConsole(page)
@@ -253,6 +307,54 @@ describe('web e2e: digital employee management through the shipped API', () => {
     }).toBe(0)
 
     expect(tripwire.warnings).toEqual([])
+    expect(tripwire.pageErrors).toEqual([])
+  }, 90_000)
+
+  it('scopes installed marketplace skills to the template Agent preset', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-digital-employee-template-skills'))
+    const runtimeBefore = {
+      agents: scaffold.ctx.agents.roots().map(agent => agent.id).sort(),
+      modelRequests: modelRequestCount,
+      sessions: await runtimeSessionIds(scaffold),
+    }
+    if (await page.getByRole('tab', { name: 'Template configuration' }).count() === 0) {
+      await page.getByRole('button', { name: 'Digital employees', exact: true }).click()
+    }
+    await page.getByRole('tab', { name: 'Template configuration' }).click()
+    const draftName = page.getByText(/Web Market Template/).first()
+    await draftName.waitFor({ timeout: 15_000 })
+    await draftName.locator('..').getByRole('button', { name: 'Edit', exact: true }).click()
+
+    await page.getByText('Marketplace · 1.2.3 · Web E2E', { exact: true }).waitFor({ timeout: 10_000 })
+    await page.getByText('template · browser', { exact: true }).first().waitFor({ timeout: 10_000 })
+    const active = page.getByRole('checkbox', { name: ACTIVE_MARKET_SKILL })
+    const inactive = page.getByRole('checkbox', { name: INACTIVE_MARKET_SKILL })
+    expect(await active.isEnabled()).toBe(true)
+    expect(await inactive.isEnabled()).toBe(true)
+    await active.check()
+    await page.getByRole('textbox', { name: 'Edit template preset' }).fill('minimal')
+    await expect.poll(() => active.isDisabled(), { timeout: 10_000 }).toBe(false)
+    expect(await active.isChecked()).toBe(true)
+    expect(await inactive.isDisabled()).toBe(true)
+    await page.getByText('Agent preset "minimal" does not expose this installed Skill.', { exact: true })
+      .first().waitFor({ timeout: 10_000 })
+    await page.getByRole('button', { name: 'Save draft', exact: true }).click()
+    await expect.poll(async () => {
+      const drafts = await scaffold.ctx.digitalEmployeeManagement.listConfigurationDrafts()
+      return drafts.find(draft => draft.templateId === 'web-market-template')?.capabilities.skills
+    }, { timeout: 10_000 }).toEqual([ACTIVE_MARKET_SKILL])
+    const validation = await scaffold.ctx.digitalEmployeeManagement.validateConfigurationDraft({
+      draftId: (await scaffold.ctx.digitalEmployeeManagement.listConfigurationDrafts())
+        .find(draft => draft.templateId === 'web-market-template')!.id,
+    })
+    expect(validation.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'unavailable-skill' }),
+    ]))
+    expect({
+      agents: scaffold.ctx.agents.roots().map(agent => agent.id).sort(),
+      modelRequests: modelRequestCount,
+      sessions: await runtimeSessionIds(scaffold),
+    }).toEqual(runtimeBefore)
     expect(tripwire.pageErrors).toEqual([])
   }, 90_000)
 })

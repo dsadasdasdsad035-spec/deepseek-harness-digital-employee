@@ -33,14 +33,17 @@ describe('dsh-web-app digital employee composition', () => {
       name: '@deepseek-ai/dsh-digital-employee-file',
       config: { path: { __jsExpr: "dshHomePath('digital-employees/employees.json')" } },
     })
+    expect(rows.find(row => row.id === 'digital-employee-management')).toEqual({
+      id: 'digital-employee-management',
+      name: '@deepseek-ai/dsh-host-digital-employee-management',
+      config: { administrator: true },
+    })
     expect(ids.indexOf('digital-employees')).toBeLessThan(ids.indexOf('digital-employee-file'))
     expect(ids.indexOf('digital-employees')).toBeLessThan(ids.indexOf('digital-employee-example-template'))
     expect(ids.indexOf('digital-employees')).toBeLessThan(ids.indexOf('project-manager-test-template'))
     expect(ids.indexOf('mcp-client')).toBeLessThan(ids.indexOf('digital-employee-agent'))
     expect(ids.indexOf('digital-employee-example-template')).toBeLessThan(ids.indexOf('digital-employee-file'))
     expect(ids.indexOf('project-manager-test-template')).toBeLessThan(ids.indexOf('digital-employee-file'))
-    expect(ids.indexOf('project-manager-test-skills')).toBeLessThan(ids.indexOf('digital-employee-agent'))
-    expect(ids.indexOf('project-manager-test-tools')).toBeLessThan(ids.indexOf('digital-employee-agent'))
     expect(ids.indexOf('digital-employee-file')).toBeLessThan(ids.indexOf('digital-employee-agent'))
     expect(ids.indexOf('digital-employee-agent')).toBeLessThan(ids.indexOf('digital-employee-management'))
     expect(ids.indexOf('api-remotes')).toBeLessThan(ids.indexOf('ui-digital-employees'))

@@ -1,0 +1,6 @@
+# Package-owned deterministic capabilities for the project-manager test employee.
+- id: project-manager-test-skills
+  name: '@deepseek-ai/dsh-project-manager-test-digital-employee/skills'
+
+- id: project-manager-test-tools
+  name: '@deepseek-ai/dsh-project-manager-test-digital-employee/tools'

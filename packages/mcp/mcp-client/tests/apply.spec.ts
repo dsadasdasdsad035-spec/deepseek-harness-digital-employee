@@ -54,7 +54,9 @@ vi.mock('@modelcontextprotocol/sdk/client/streamableHttp.js', () => ({
 
 // vi.mock is hoisted above static imports, so the module under test sees the
 // mocked SDK even through a static import.
-import { apply, name, inject, Config as ConfigSchema } from '@deepseek-ai/dsh-mcp-client/src/index.ts'
+import {
+  apply, name, inject, Config as ConfigSchema, listMcpServerConfigs,
+} from '@deepseek-ai/dsh-mcp-client/src/index.ts'
 
 // ---- Helpers ----
 
@@ -157,6 +159,24 @@ describe('mcp-client plugin module exports', () => {
       command: 'echo',
       reconnect: { maxAttempts: 0 },
     } as never)).toThrow()
+  })
+})
+
+describe('MCP client inventory', () => {
+  it('lists active server identities without exposing connection values', async () => {
+    const ctx = await mountRegistry()
+    mockConnect.mockResolvedValue(undefined)
+    mockClose.mockImplementation(function (this: { onclose?: () => void }) {
+      this.onclose?.()
+      return Promise.resolve()
+    })
+    mockListTools.mockResolvedValue({ tools: [] })
+
+    await apply(ctx, stdioConfig)
+
+    expect(listMcpServerConfigs(ctx)).toEqual([{ serverName: 'srv', transport: 'stdio' }])
+    await ctx.fiber.dispose()
+    expect(listMcpServerConfigs(ctx)).toEqual([])
   })
 })
 

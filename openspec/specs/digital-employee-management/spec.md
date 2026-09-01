@@ -3,9 +3,7 @@
 ## Purpose
 
 Provide complete creation, operation, upgrade, portability, inspection, and deletion workflows for digital employee instances.
-
 ## Requirements
-
 ### Requirement: Users manage employee lifecycle
 
 The system SHALL support creating, activating, deactivating, inspecting, and deleting employee instances through typed Host and Web client operations.
@@ -45,12 +43,27 @@ The system SHALL export and import employee template references, identity and pe
 
 ### Requirement: Management UI exposes operational state
 
-The Web application SHALL provide employee list, employee details, memory, capabilities, experts, task tree, and audit views with actions appropriate to lifecycle state.
+The Web application SHALL provide employee list, employee details, memory, capabilities, experts, task tree, and audit views with actions appropriate to lifecycle state, SHALL route new employee work through the chat composer, and SHALL provide a separate administrator-only template configuration view.
 
 #### Scenario: User opens a running employee
 
 - **WHEN** the employee has active expert and subagent work
 - **THEN** the details view shows the Agent tree, statuses, and available interruption or continuation actions
+
+#### Scenario: User starts a chat from employee management
+
+- **WHEN** a user invokes `Start chat` for an active employee
+- **THEN** the Web application opens a new-task chat composer with that employee selected without creating an empty Session
+
+#### Scenario: User attempts to start a chat for an inactive employee
+
+- **WHEN** an employee is not active
+- **THEN** the management UI does not offer an enabled `Start chat` action
+
+#### Scenario: Administrator opens the configuration studio
+
+- **WHEN** the local administrator selects the template configuration view
+- **THEN** the Web application shows drafts, published versions, validation results, preview actions, and publishing actions separately from employee instance operations
 
 ### Requirement: User-visible behavior has assembled coverage
 

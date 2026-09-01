@@ -73,6 +73,16 @@ describe('reading display metadata', () => {
     expect(await readPresetMetadata(dir)).toEqual({ name: '标准模式', order: 1 })
   })
 
+  it('reads internal visibility', async () => {
+    const dir = await presetDir('name: 专用模式\nvisibility: internal\n')
+
+    expect(await readPresetMetadata(dir)).toEqual({ name: '专用模式', visibility: 'internal' })
+  })
+
+  it('ignores an unknown visibility', async () => {
+    expect(await readPresetMetadata(await presetDir('visibility: private\n'))).toEqual({})
+  })
+
   it('ignores an order that is not a finite number', async () => {
     expect(await readPresetMetadata(await presetDir('order: first\n'))).toEqual({})
     expect(await readPresetMetadata(await presetDir('order: .inf\n'))).toEqual({})
@@ -97,6 +107,11 @@ describe('rendering display metadata', () => {
 
   it('stores a declared order', () => {
     expect(renderPresetMetadata({ name: '标准模式', order: 1 })).toBe('name: 标准模式\norder: 1\n')
+  })
+
+  it('stores internal visibility', () => {
+    expect(renderPresetMetadata({ name: '专用模式', visibility: 'internal' }))
+      .toBe('name: 专用模式\nvisibility: internal\n')
   })
 
   it('omits an absent field rather than writing it blank', () => {

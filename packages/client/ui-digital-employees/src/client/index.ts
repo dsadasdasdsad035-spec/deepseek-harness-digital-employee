@@ -9,6 +9,7 @@ import { DigitalEmployeeChatController } from './chat.ts'
 import { DigitalEmployeeNav } from './DigitalEmployeeNav.tsx'
 import { DigitalEmployeeWorkspace, type DigitalEmployeeWorkspaceInjected } from './DigitalEmployeeWorkspace.tsx'
 import { DigitalEmployeeStore } from './store.ts'
+import { DigitalEmployeeConfigurationStudioStore } from './configuration-studio.ts'
 
 export { DigitalEmployeeStore } from './store.ts'
 export type {
@@ -18,6 +19,7 @@ export { DigitalEmployeeChatController } from './chat.ts'
 export type { DigitalEmployeeChatDependencies, DigitalEmployeeChatIds } from './chat.ts'
 export { DigitalEmployeeNav } from './DigitalEmployeeNav.tsx'
 export { DigitalEmployeeWorkspace } from './DigitalEmployeeWorkspace.tsx'
+export { DigitalEmployeeConfigurationStudioStore } from './configuration-studio.ts'
 
 /** Required client services and generated namespace. */
 export const inject = [
@@ -28,6 +30,7 @@ export const inject = [
 /** Register one navigation command and one root application workspace for this fiber. */
 export function apply(ctx: ClientContext): void {
   const controller = new DigitalEmployeeStore(ctx.remote.digitalEmployees)
+  const configurationStudio = new DigitalEmployeeConfigurationStudioStore(ctx.remote.digitalEmployees)
   const layout = ctx.layout
   const sessions = ctx.get('sessions') as ISessions | undefined
   if (sessions === undefined) throw new Error('ui-digital-employees: sessions service unavailable')
@@ -54,10 +57,20 @@ export function apply(ctx: ClientContext): void {
   }, DigitalEmployeeNav))
   const injected = (): DigitalEmployeeWorkspaceInjected => ({
     controller,
-    hooks: { snapshot: controller.store },
+    configurationStudio,
+    hooks: { snapshot: controller.store, configurationSnapshot: configurationStudio.store },
     close: () => { layout.closeApplication() },
     startChat: (employeeId) => {
       void chat.openComposer(employeeId).catch((error: unknown) => { controller.reportError(error) })
+    },
+    previewWorkspace: () => {
+      const workspaces = ctx.workspaces.list.getSnapshot()
+      const current = sessions.list.getSnapshot().current
+      return (current === undefined
+        ? undefined
+        : workspaces.items.find(workspace => workspace.sessionIds.includes(current))?.workspaceId)
+        ?? workspaces.recentWorkspaceId
+        ?? workspaces.items.at(0)?.workspaceId
     },
   })
   ctx.slots.inject('shell.application', () => ctx.slots.register({

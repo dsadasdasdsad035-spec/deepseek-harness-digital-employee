@@ -10,55 +10,55 @@ const _deepseek_ai_dsh_skill_market_skillMarket_banner_result$schema = z.union([
   'code': z.literal("invalid-archive").readonly(),
   'reason': z.union([z.literal("base64"), z.literal("zip")]).readonly(),
 }), z.object({
-  'code': z.literal("resource-limit").readonly(),
-  'limit': z.union([z.literal("archive-bytes"), z.literal("file-count"), z.literal("entry-bytes"), z.literal("total-bytes"), z.literal("banner-bytes")]).readonly(),
-  'limitValue': z.number().readonly(),
-  'observedValue': z.number().readonly(),
-  'entry': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("unsafe-entry").readonly(),
-  'entry': z.string().readonly(),
-  'reason': z.union([z.literal("path"), z.literal("duplicate"), z.literal("unsupported-type"), z.literal("layout")]).readonly(),
+  'code': z.literal("invalid-banner").readonly(),
+  'reason': z.union([z.literal("missing"), z.literal("not-regular"), z.literal("path"), z.literal("signature-mismatch"), z.literal("too-large"), z.literal("unsupported-media")]).readonly(),
+  'path': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("invalid-descriptor").readonly(),
   'reason': z.string().readonly(),
-  'field': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("invalid-banner").readonly(),
-  'reason': z.union([z.literal("path"), z.literal("missing"), z.literal("not-regular"), z.literal("unsupported-media"), z.literal("signature-mismatch"), z.literal("too-large")]).readonly(),
-  'path': z.union([z.undefined(), z.string()]).readonly().optional(),
+  'field': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("managed-upgrade-required").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'installedVersion': z.union([z.undefined(), z.string()]).readonly().optional(),
-  'candidateVersion': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("unmanaged-conflict").readonly(),
-  'skillId': z.intersection(z.string(), z.unknown()).readonly(),
+  'installedVersion': z.union([z.string(), z.undefined()]).readonly().optional(),
+  'candidateVersion': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("manifest-incompatible").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'schemaVersion': z.union([z.undefined(), z.number()]).readonly().optional(),
+  'schemaVersion': z.union([z.number(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("not-found").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
 }), z.object({
   'code': z.literal("not-managed").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'reason': z.union([z.literal("missing-manifest"), z.literal("malformed-manifest"), z.literal("name-mismatch")]).readonly(),
+  'reason': z.union([z.literal("malformed-manifest"), z.literal("missing-manifest"), z.literal("name-mismatch")]).readonly(),
+}), z.object({
+  'code': z.literal("resource-limit").readonly(),
+  'limit': z.union([z.literal("archive-bytes"), z.literal("banner-bytes"), z.literal("entry-bytes"), z.literal("file-count"), z.literal("total-bytes")]).readonly(),
+  'limitValue': z.number().readonly(),
+  'observedValue': z.number().readonly(),
+  'entry': z.union([z.string(), z.undefined()]).readonly().optional(),
+}), z.object({
+  'code': z.literal("unmanaged-conflict").readonly(),
+  'skillId': z.intersection(z.string(), z.unknown()).readonly(),
+}), z.object({
+  'code': z.literal("unsafe-entry").readonly(),
+  'entry': z.string().readonly(),
+  'reason': z.union([z.literal("duplicate"), z.literal("layout"), z.literal("path"), z.literal("unsupported-type")]).readonly(),
 })]).readonly(),
 }), z.object({
   'ok': z.literal(true).readonly(),
   'value': z.object({
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'mediaType': z.union([z.literal("image/png"), z.literal("image/jpeg"), z.literal("image/webp"), z.literal("image/gif")]).readonly(),
+  'mediaType': z.union([z.literal("image/gif"), z.literal("image/jpeg"), z.literal("image/png"), z.literal("image/webp")]).readonly(),
   'dataBase64': z.string().readonly(),
 }).readonly(),
 })])
 const _deepseek_ai_dsh_skill_market_skillMarket_install_parameter_0$schema = z.object({
   'filename': z.string().readonly(),
   'archiveBase64': z.string().readonly(),
-  'replaceExisting': z.union([z.undefined(), z.literal(false), z.literal(true)]).readonly().optional(),
+  'replaceExisting': z.union([z.literal(false), z.literal(true), z.undefined()]).readonly().optional(),
 })
 const _deepseek_ai_dsh_skill_market_skillMarket_install_result$schema = z.union([z.object({
   'ok': z.literal(false).readonly(),
@@ -66,42 +66,42 @@ const _deepseek_ai_dsh_skill_market_skillMarket_install_result$schema = z.union(
   'code': z.literal("invalid-archive").readonly(),
   'reason': z.union([z.literal("base64"), z.literal("zip")]).readonly(),
 }), z.object({
-  'code': z.literal("resource-limit").readonly(),
-  'limit': z.union([z.literal("archive-bytes"), z.literal("file-count"), z.literal("entry-bytes"), z.literal("total-bytes"), z.literal("banner-bytes")]).readonly(),
-  'limitValue': z.number().readonly(),
-  'observedValue': z.number().readonly(),
-  'entry': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("unsafe-entry").readonly(),
-  'entry': z.string().readonly(),
-  'reason': z.union([z.literal("path"), z.literal("duplicate"), z.literal("unsupported-type"), z.literal("layout")]).readonly(),
+  'code': z.literal("invalid-banner").readonly(),
+  'reason': z.union([z.literal("missing"), z.literal("not-regular"), z.literal("path"), z.literal("signature-mismatch"), z.literal("too-large"), z.literal("unsupported-media")]).readonly(),
+  'path': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("invalid-descriptor").readonly(),
   'reason': z.string().readonly(),
-  'field': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("invalid-banner").readonly(),
-  'reason': z.union([z.literal("path"), z.literal("missing"), z.literal("not-regular"), z.literal("unsupported-media"), z.literal("signature-mismatch"), z.literal("too-large")]).readonly(),
-  'path': z.union([z.undefined(), z.string()]).readonly().optional(),
+  'field': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("managed-upgrade-required").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'installedVersion': z.union([z.undefined(), z.string()]).readonly().optional(),
-  'candidateVersion': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("unmanaged-conflict").readonly(),
-  'skillId': z.intersection(z.string(), z.unknown()).readonly(),
+  'installedVersion': z.union([z.string(), z.undefined()]).readonly().optional(),
+  'candidateVersion': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("manifest-incompatible").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'schemaVersion': z.union([z.undefined(), z.number()]).readonly().optional(),
+  'schemaVersion': z.union([z.number(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("not-found").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
 }), z.object({
   'code': z.literal("not-managed").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'reason': z.union([z.literal("missing-manifest"), z.literal("malformed-manifest"), z.literal("name-mismatch")]).readonly(),
+  'reason': z.union([z.literal("malformed-manifest"), z.literal("missing-manifest"), z.literal("name-mismatch")]).readonly(),
+}), z.object({
+  'code': z.literal("resource-limit").readonly(),
+  'limit': z.union([z.literal("archive-bytes"), z.literal("banner-bytes"), z.literal("entry-bytes"), z.literal("file-count"), z.literal("total-bytes")]).readonly(),
+  'limitValue': z.number().readonly(),
+  'observedValue': z.number().readonly(),
+  'entry': z.union([z.string(), z.undefined()]).readonly().optional(),
+}), z.object({
+  'code': z.literal("unmanaged-conflict").readonly(),
+  'skillId': z.intersection(z.string(), z.unknown()).readonly(),
+}), z.object({
+  'code': z.literal("unsafe-entry").readonly(),
+  'entry': z.string().readonly(),
+  'reason': z.union([z.literal("duplicate"), z.literal("layout"), z.literal("path"), z.literal("unsupported-type")]).readonly(),
 })]).readonly(),
 }), z.object({
   'ok': z.literal(true).readonly(),
@@ -116,42 +116,42 @@ const _deepseek_ai_dsh_skill_market_skillMarket_list_result$schema = z.union([z.
   'code': z.literal("invalid-archive").readonly(),
   'reason': z.union([z.literal("base64"), z.literal("zip")]).readonly(),
 }), z.object({
-  'code': z.literal("resource-limit").readonly(),
-  'limit': z.union([z.literal("archive-bytes"), z.literal("file-count"), z.literal("entry-bytes"), z.literal("total-bytes"), z.literal("banner-bytes")]).readonly(),
-  'limitValue': z.number().readonly(),
-  'observedValue': z.number().readonly(),
-  'entry': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("unsafe-entry").readonly(),
-  'entry': z.string().readonly(),
-  'reason': z.union([z.literal("path"), z.literal("duplicate"), z.literal("unsupported-type"), z.literal("layout")]).readonly(),
+  'code': z.literal("invalid-banner").readonly(),
+  'reason': z.union([z.literal("missing"), z.literal("not-regular"), z.literal("path"), z.literal("signature-mismatch"), z.literal("too-large"), z.literal("unsupported-media")]).readonly(),
+  'path': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("invalid-descriptor").readonly(),
   'reason': z.string().readonly(),
-  'field': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("invalid-banner").readonly(),
-  'reason': z.union([z.literal("path"), z.literal("missing"), z.literal("not-regular"), z.literal("unsupported-media"), z.literal("signature-mismatch"), z.literal("too-large")]).readonly(),
-  'path': z.union([z.undefined(), z.string()]).readonly().optional(),
+  'field': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("managed-upgrade-required").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'installedVersion': z.union([z.undefined(), z.string()]).readonly().optional(),
-  'candidateVersion': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("unmanaged-conflict").readonly(),
-  'skillId': z.intersection(z.string(), z.unknown()).readonly(),
+  'installedVersion': z.union([z.string(), z.undefined()]).readonly().optional(),
+  'candidateVersion': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("manifest-incompatible").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'schemaVersion': z.union([z.undefined(), z.number()]).readonly().optional(),
+  'schemaVersion': z.union([z.number(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("not-found").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
 }), z.object({
   'code': z.literal("not-managed").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'reason': z.union([z.literal("missing-manifest"), z.literal("malformed-manifest"), z.literal("name-mismatch")]).readonly(),
+  'reason': z.union([z.literal("malformed-manifest"), z.literal("missing-manifest"), z.literal("name-mismatch")]).readonly(),
+}), z.object({
+  'code': z.literal("resource-limit").readonly(),
+  'limit': z.union([z.literal("archive-bytes"), z.literal("banner-bytes"), z.literal("entry-bytes"), z.literal("file-count"), z.literal("total-bytes")]).readonly(),
+  'limitValue': z.number().readonly(),
+  'observedValue': z.number().readonly(),
+  'entry': z.union([z.string(), z.undefined()]).readonly().optional(),
+}), z.object({
+  'code': z.literal("unmanaged-conflict").readonly(),
+  'skillId': z.intersection(z.string(), z.unknown()).readonly(),
+}), z.object({
+  'code': z.literal("unsafe-entry").readonly(),
+  'entry': z.string().readonly(),
+  'reason': z.union([z.literal("duplicate"), z.literal("layout"), z.literal("path"), z.literal("unsupported-type")]).readonly(),
 })]).readonly(),
 }), z.object({
   'ok': z.literal(true).readonly(),
@@ -159,9 +159,9 @@ const _deepseek_ai_dsh_skill_market_skillMarket_list_result$schema = z.union([z.
   'entries': z.array(z.object({
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
   'description': z.string().readonly(),
-  'version': z.union([z.undefined(), z.string()]).readonly().optional(),
-  'author': z.union([z.undefined(), z.string()]).readonly().optional(),
-  'tags': z.union([z.undefined(), z.array(z.string())]).readonly().optional(),
+  'version': z.union([z.string(), z.undefined()]).readonly().optional(),
+  'author': z.union([z.string(), z.undefined()]).readonly().optional(),
+  'tags': z.union([z.array(z.string()), z.undefined()]).readonly().optional(),
   'installedAt': z.number().readonly(),
   'hasBanner': z.boolean().readonly(),
 })).readonly(),
@@ -176,42 +176,42 @@ const _deepseek_ai_dsh_skill_market_skillMarket_uninstall_result$schema = z.unio
   'code': z.literal("invalid-archive").readonly(),
   'reason': z.union([z.literal("base64"), z.literal("zip")]).readonly(),
 }), z.object({
-  'code': z.literal("resource-limit").readonly(),
-  'limit': z.union([z.literal("archive-bytes"), z.literal("file-count"), z.literal("entry-bytes"), z.literal("total-bytes"), z.literal("banner-bytes")]).readonly(),
-  'limitValue': z.number().readonly(),
-  'observedValue': z.number().readonly(),
-  'entry': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("unsafe-entry").readonly(),
-  'entry': z.string().readonly(),
-  'reason': z.union([z.literal("path"), z.literal("duplicate"), z.literal("unsupported-type"), z.literal("layout")]).readonly(),
+  'code': z.literal("invalid-banner").readonly(),
+  'reason': z.union([z.literal("missing"), z.literal("not-regular"), z.literal("path"), z.literal("signature-mismatch"), z.literal("too-large"), z.literal("unsupported-media")]).readonly(),
+  'path': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("invalid-descriptor").readonly(),
   'reason': z.string().readonly(),
-  'field': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("invalid-banner").readonly(),
-  'reason': z.union([z.literal("path"), z.literal("missing"), z.literal("not-regular"), z.literal("unsupported-media"), z.literal("signature-mismatch"), z.literal("too-large")]).readonly(),
-  'path': z.union([z.undefined(), z.string()]).readonly().optional(),
+  'field': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("managed-upgrade-required").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'installedVersion': z.union([z.undefined(), z.string()]).readonly().optional(),
-  'candidateVersion': z.union([z.undefined(), z.string()]).readonly().optional(),
-}), z.object({
-  'code': z.literal("unmanaged-conflict").readonly(),
-  'skillId': z.intersection(z.string(), z.unknown()).readonly(),
+  'installedVersion': z.union([z.string(), z.undefined()]).readonly().optional(),
+  'candidateVersion': z.union([z.string(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("manifest-incompatible").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'schemaVersion': z.union([z.undefined(), z.number()]).readonly().optional(),
+  'schemaVersion': z.union([z.number(), z.undefined()]).readonly().optional(),
 }), z.object({
   'code': z.literal("not-found").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
 }), z.object({
   'code': z.literal("not-managed").readonly(),
   'skillId': z.intersection(z.string(), z.unknown()).readonly(),
-  'reason': z.union([z.literal("missing-manifest"), z.literal("malformed-manifest"), z.literal("name-mismatch")]).readonly(),
+  'reason': z.union([z.literal("malformed-manifest"), z.literal("missing-manifest"), z.literal("name-mismatch")]).readonly(),
+}), z.object({
+  'code': z.literal("resource-limit").readonly(),
+  'limit': z.union([z.literal("archive-bytes"), z.literal("banner-bytes"), z.literal("entry-bytes"), z.literal("file-count"), z.literal("total-bytes")]).readonly(),
+  'limitValue': z.number().readonly(),
+  'observedValue': z.number().readonly(),
+  'entry': z.union([z.string(), z.undefined()]).readonly().optional(),
+}), z.object({
+  'code': z.literal("unmanaged-conflict").readonly(),
+  'skillId': z.intersection(z.string(), z.unknown()).readonly(),
+}), z.object({
+  'code': z.literal("unsafe-entry").readonly(),
+  'entry': z.string().readonly(),
+  'reason': z.union([z.literal("duplicate"), z.literal("layout"), z.literal("path"), z.literal("unsupported-type")]).readonly(),
 })]).readonly(),
 }), z.object({
   'ok': z.literal(true).readonly(),

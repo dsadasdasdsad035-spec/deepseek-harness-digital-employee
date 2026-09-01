@@ -103,6 +103,25 @@ async function collect(iterable: AsyncIterable<RpcRequest<MuxFrame>>, count: num
 }
 
 describe('mux live view computation', () => {
+  it('keeps preview sessions out of the ordinary session event stream', async () => {
+    const { ctx } = await harness()
+    const api = createApiProxy(ctx, { defaultModelSelection: () => ({ provider: 'p', model: 'm' }), cwd: '/tmp' })
+    const abort = new AbortController()
+    const iterator = api.events.mux({ rpcId: RpcId('preview-mux'), payload: {} }, abort.signal)[Symbol.asyncIterator]()
+    const next = iterator.next()
+    const preview = ctx.sessions.create('preview-session' as SessionId, { meta: { preview: true } })
+    expect(preview.header.preview).toBe(true)
+    preview.append('turn/start', { turn: 1 })
+
+    const outcome = await Promise.race([
+      next,
+      new Promise((resolve) => { setTimeout(() => { resolve(undefined) }, 20) }),
+    ])
+    expect(outcome).toBeUndefined()
+    abort.abort()
+    await iterator.return?.()
+  })
+
   it('attaches the three standard card views, omits view without a presenter, soft-falls on throw', async () => {
     const { ctx } = await harness()
     const api = createApiProxy(ctx, { defaultModelSelection: () => ({ provider: 'p', model: 'm' }), cwd: '/tmp' })
