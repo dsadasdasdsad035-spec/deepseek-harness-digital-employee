@@ -159,6 +159,48 @@ describe('McpMarketGateway', () => {
     await ctx.fiber.dispose()
   })
 
+  it('rolls back earlier servers when a later server in the package fails to mount', async () => {
+    const installRoot = await mkdtemp(join(tmpdir(), 'dsh-mcp-market-'))
+    roots.push(installRoot)
+    const { privateKey, publicKey } = generateKeyPairSync('ed25519')
+    const disposeFirst = vi.fn(async () => {})
+    const mount = vi.fn()
+      .mockResolvedValueOnce(disposeFirst)
+      .mockRejectedValueOnce(new Error('second server failed'))
+    const ctx = new Context()
+    ctx.provide('mcpClients', { mount } as never)
+    ctx.provide('credentials', {
+      resolve: vi.fn(async () => ({ value: 'Bearer resolved-secret', source: 'memory' })),
+      describe: vi.fn(async () => ({ configured: true, source: 'memory', writable: true })),
+    } as never)
+    await ctx.plugin(McpMarketGateway, {
+      installRoot,
+      trustedPublishers: [{
+        id: 'deepseek-local',
+        publicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      }],
+    })
+    const gateway = ctx.get('mcpMarket') as McpMarketGateway
+    await gateway.install({
+      filename: 'project-tracker.zip',
+      archiveBase64: signedArchive(privateKey, ['project-tracker', 'project-tracker-secondary']),
+    })
+    await gateway.configure({
+      packageId: 'project-tracker' as never,
+      credentialReferences: { PROJECT_TRACKER_TOKEN: 'PROJECT_TRACKER_TOKEN' },
+    })
+
+    await gateway.activateConfigured()
+
+    expect(mount).toHaveBeenCalledTimes(2)
+    expect(disposeFirst).toHaveBeenCalledOnce()
+    await expect(gateway.list()).resolves.toMatchObject({
+      ok: true,
+      value: { entries: [{ available: false }] },
+    })
+    await ctx.fiber.dispose()
+  })
+
   it('serializes configuration and uninstall mutations for the same package', async () => {
     const installRoot = await mkdtemp(join(tmpdir(), 'dsh-mcp-market-'))
     roots.push(installRoot)
@@ -204,7 +246,10 @@ describe('McpMarketGateway', () => {
   })
 })
 
-function signedArchive(privateKey: ReturnType<typeof generateKeyPairSync>['privateKey']): string {
+function signedArchive(
+  privateKey: ReturnType<typeof generateKeyPairSync>['privateKey'],
+  serverIds: readonly string[] = ['project-tracker'],
+): string {
   const unsigned = parseMcpPackageDescriptor({
     format: 1,
     kind: 'mcp',
@@ -213,13 +258,13 @@ function signedArchive(privateKey: ReturnType<typeof generateKeyPairSync>['priva
     display: { name: 'Project tracker', description: 'Reads project tickets.' },
     publisher: { id: 'deepseek-local', signature: 'pending' },
     files: {},
-    servers: [{
-      id: 'project-tracker',
+    servers: serverIds.map(id => ({
+      id,
       transport: 'streamable-http',
       url: 'https://mcp.example.test',
       headers: { Authorization: '' },
       credentialReferences: { Authorization: 'PROJECT_TRACKER_TOKEN' },
-    }],
+    })),
   })
   const signature = sign(null, descriptorSignaturePayload(unsigned), privateKey).toString('base64')
   return Buffer.from(zipSync({

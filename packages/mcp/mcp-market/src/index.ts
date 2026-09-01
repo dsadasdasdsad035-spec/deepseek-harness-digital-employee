@@ -125,6 +125,8 @@ export class McpMarketGateway extends TypertRemoteService {
     this.activeServerNames.clear()
     const configurations = await this.service.configurations()
     for (const [packageId, references] of Object.entries(configurations).sort(([left], [right]) => left.localeCompare(right))) {
+      const packageDisposers: Array<() => Promise<void>> = []
+      const packageServerNames: string[] = []
       try {
         const descriptor = await this.service.descriptor(packageId)
         for (const server of descriptor.servers) {
@@ -144,14 +146,27 @@ export class McpMarketGateway extends TypertRemoteService {
             toolCallTimeoutMs: 60_000,
             failOnStartupError: false,
           })
-          this.disposers.push(dispose)
-          this.activeServerNames.add(server.id)
+          packageDisposers.push(dispose)
+          packageServerNames.push(server.id)
         }
+        this.disposers.push(...packageDisposers)
+        for (const serverName of packageServerNames) this.activeServerNames.add(serverName)
         this.service.setDiagnostic(packageId)
       } catch (error: unknown) {
+        const rollbackFailures: unknown[] = []
+        for (const dispose of packageDisposers.reverse()) {
+          try {
+            await dispose()
+          } catch (rollbackError: unknown) {
+            rollbackFailures.push(rollbackError)
+          }
+        }
+        const diagnostic = rollbackFailures.length === 0
+          ? error
+          : new AggregateError([error, ...rollbackFailures], 'MCP package activation and rollback failed')
         this.service.setDiagnostic(
           packageId,
-          error instanceof Error ? error.message : 'MCP package activation failed',
+          diagnostic instanceof Error ? diagnostic.message : 'MCP package activation failed',
         )
       }
     }

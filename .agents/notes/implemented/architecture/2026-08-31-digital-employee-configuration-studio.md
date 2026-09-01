@@ -10,9 +10,9 @@ Local administrators need to author reusable digital employee templates without 
 
 ## Decision
 
-The management Host enables the configuration studio only when its local `administrator` configuration is true. A private `studioFile` stores mutable drafts and publication provenance, while the existing digital employee registry owns immutable runnable versions. Each publication revalidates the selected draft revision, materializes authored root and expert instructions into a version-owned directory, and registers the resulting file-backed template version.
+The management Host enables the configuration studio only when its local `administrator` configuration is true. A private `studioFile` stores mutable drafts and publication provenance, while the existing digital employee registry owns immutable runnable versions. Each publication revalidates the selected draft revision, materializes authored root and expert instructions into a version-owned directory, and registers the resulting file-backed template version. Durable publication is the commit point: a failed `studioFile` write unregisters the candidate and removes its materialized directory, so a retry receives the same next version.
 
-Preview composition uses the same employee Agent Consumer with a temporary instance, preview-marked Session, isolated ownership, and a temporary materialization directory. Disposal removes the Agent and files. Preview Sessions stay out of ordinary Session subscriptions and do not persist employee memory.
+Preview composition uses the same employee Agent Consumer with a temporary instance, preview-marked Session, isolated ownership, and a temporary materialization directory. Explicit disposal or management-plugin teardown waits for the Agent to stop and removes the files. Published template registrations are also owned by the management plugin and leave the runtime registry during teardown. Preview Sessions stay out of ordinary Session subscriptions and do not persist employee memory.
 
 Locally published versions remain selectable through the existing template list, employee creation, and explicit upgrade review. Memory seeds are stored with the publication and promoted with configuration provenance only after the employee instance exists. If any seed cannot be promoted, creation deletes the new instance.
 
@@ -25,4 +25,4 @@ Locally published versions remain selectable through the existing template list,
 
 ## Consequences
 
-Administrators get a local authoring workflow without a browser-held credential store or mutable template versions. Ordinary users keep the existing operations workspace. Publishing creates material owned by a concrete version, previews clean up deterministically, and upgrades retain their explicit review step. Focused Host and Web tests plus an assembled keyless snapshot pin draft validation, preview disposal, version resolution, creation-time memory promotion, and upgrade review.
+Administrators get a local authoring workflow without a browser-held credential store or mutable template versions. Ordinary users keep the existing operations workspace. Publishing creates material owned by a concrete version, failed commits leave no registered version, previews and registrations clean up deterministically, and upgrades retain their explicit review step. Focused Host and Web tests plus an assembled keyless snapshot pin draft validation, commit rollback, teardown disposal, version resolution, creation-time memory promotion, and upgrade review.

@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-31-tool-and-mcp-marketplace.md
-2026-08-31-tool-and-mcp-marketplace.md: c6cbd4941726072e6f4aa827d5882e58671bcbcf
-2026-08-31-tool-and-mcp-marketplace.zh.md: c7547fbcc666e1d0d2ed0be61b91b4ad23e86c32
+2026-08-31-tool-and-mcp-marketplace.md: b85d78037f9500a56aebcf63ab6f97f850c05aa3
+2026-08-31-tool-and-mcp-marketplace.zh.md: c7d0370f7f9e1ecd09cbdd2158e44c37f7a16fea

@@ -1,11 +1,12 @@
 import { Context } from '@deepseek-ai/cordis'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { access, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import { describe, expect, it, vi } from 'vitest'
 import DigitalEmployeeManagementGateway from '../src/index.ts'
+import { ConfigurationStudioStore } from '../src/configuration-studio.ts'
 
 const workspace = {
   id: 'workspace-1',
@@ -591,6 +592,35 @@ describe('DigitalEmployeeManagementGateway', () => {
     }
   })
 
+  it('rolls back prepared publication work when durable persistence fails', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'dsh-configuration-studio-'))
+    const studioFile = join(directory, 'studio.json')
+    let writes = 0
+    const persist = vi.fn(async (...args: Parameters<typeof import('@deepseek-ai/dsh-atomic-write')['writeFileAtomic']>) => {
+      writes += 1
+      if (writes === 2) throw new Error('disk full')
+      const { writeFileAtomic } = await import('@deepseek-ai/dsh-atomic-write')
+      await writeFileAtomic(...args)
+    })
+    try {
+      const store = new ConfigurationStudioStore(studioFile, persist)
+      const draft = await store.create({
+        templateId: 'operations-assistant',
+        display: { name: 'Operations Assistant', description: 'Coordinates delivery work.' },
+        instructions: 'Coordinate delivery work.',
+      }, 'draft-1' as never)
+      const rollback = vi.fn(async () => {})
+
+      await expect(store.publish(draft.id, draft.revision, async () => rollback)).rejects.toThrow('disk full')
+      expect(rollback).toHaveBeenCalledOnce()
+      await expect(store.listPublications()).resolves.toEqual([])
+      await expect(store.publish(draft.id, draft.revision, async () => () => {}))
+        .resolves.toMatchObject({ version: '0.1.1' })
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
   it('starts and disposes an isolated preview for a validated current draft', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'dsh-configuration-studio-'))
     try {
@@ -631,6 +661,44 @@ describe('DigitalEmployeeManagementGateway', () => {
         dispose: expect.any(Function),
       })
       await ctx.fiber.dispose()
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('disposes active previews and published template registrations with its owning fiber', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'dsh-configuration-studio-'))
+    try {
+      const { ctx, digitalEmployees, digitalEmployeeAgent } = harness()
+      const disposeTemplate = vi.fn()
+      const disposePreview = vi.fn(async () => {})
+      digitalEmployees.registerTemplate.mockReturnValue(disposeTemplate)
+      digitalEmployeeAgent.createPreviewTask.mockResolvedValue({
+        agent: { id: 'preview-session' },
+        dispose: disposePreview,
+      })
+      await ctx.plugin(DigitalEmployeeManagementGateway, {
+        administrator: true,
+        studioFile: join(directory, 'studio.json'),
+      })
+      const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
+      const draft = await gateway.createConfigurationDraft({
+        templateId: 'operations-assistant',
+        display: { name: 'Operations Assistant', description: 'Coordinates delivery work.' },
+        instructions: 'Coordinate delivery work.',
+      })
+      await gateway.publishConfigurationDraft({ draftId: draft.id, revision: draft.revision })
+      const preview = await gateway.previewConfigurationDraft({
+        draftId: draft.id,
+        revision: draft.revision,
+        workspaceId: workspace.id as never,
+      })
+
+      await ctx.fiber.dispose()
+
+      expect(disposePreview).toHaveBeenCalledOnce()
+      expect(disposeTemplate).toHaveBeenCalledOnce()
+      await expect(access(join(directory, 'digital-employee-previews', preview.id))).rejects.toThrow()
     } finally {
       await rm(directory, { recursive: true, force: true })
     }

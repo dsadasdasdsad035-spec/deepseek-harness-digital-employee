@@ -119,7 +119,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
   private readonly administrator: boolean
   private readonly configurationStudio: ConfigurationStudioStore
   private readonly studioRoot: string
-  private readonly registeredPublications = new Set<string>()
+  private readonly registeredPublications = new Map<string, () => Promise<void> | void>()
   private readonly previews = new Map<string, { readonly handle: AgentHandle; readonly root: string }>()
 
   constructor(ctx: Context, config: Config = {}) {
@@ -130,6 +130,18 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     this.administrator = config.administrator ?? false
     this.configurationStudio = new ConfigurationStudioStore(studioFile)
     this.studioRoot = dirname(studioFile)
+    ctx.effect(() => async () => {
+      const previews = [...this.previews.values()]
+      this.previews.clear()
+      const registrations = [...this.registeredPublications.values()].reverse()
+      this.registeredPublications.clear()
+      const results = await Promise.allSettled([
+        ...previews.map(preview => this.disposePreview(preview)),
+        ...registrations.map(dispose => Promise.resolve().then(dispose)),
+      ])
+      const failures = results.flatMap(result => result.status === 'rejected' ? [result.reason] : [])
+      if (failures.length > 0) throw new AggregateError(failures, 'digital employee management teardown failed')
+    }, 'digital-employee-management.lifecycle')
   }
 
   /** List unpublished local template drafts for the local administrator.
@@ -398,6 +410,10 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     const preview = this.previews.get(request.previewId)
     if (preview === undefined) throw new Error(`digital employee configuration preview "${request.previewId}" is unavailable`)
     this.previews.delete(request.previewId)
+    await this.disposePreview(preview)
+  }
+
+  private async disposePreview(preview: { readonly handle: AgentHandle; readonly root: string }): Promise<void> {
     try {
       await preview.handle.dispose()
     } finally {
@@ -423,21 +439,35 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
         throw new Error('digital employee configuration draft has validation diagnostics')
       }
       const root = join(this.studioRoot, 'digital-employee-templates', publishedDraft.templateId, candidate.version)
-      await mkdir(root, { recursive: true, mode: 0o700 })
-      const materialized = await materializeDraft(root, publishedDraft)
-      this.ctx.digitalEmployees.registerTemplate({
-        id: createDigitalEmployeeTemplateId(publishedDraft.templateId),
-        version: candidate.version,
-        display: publishedDraft.display,
-        personality: publishedDraft.personality,
-        instructions: materialized.instructions,
-        preset: publishedDraft.preset,
-        mcpServers: publishedDraft.mcpServers as never,
-        capabilities: publishedDraft.capabilities as never,
-        experts: materialized.experts,
-        delegation: publishedDraft.delegation,
-      })
-      this.registeredPublications.add(`${candidate.templateId}\u0000${candidate.version}`)
+      const key = `${candidate.templateId}\u0000${candidate.version}`
+      try {
+        await mkdir(root, { recursive: true, mode: 0o700 })
+        const materialized = await materializeDraft(root, publishedDraft)
+        const dispose = this.ctx.digitalEmployees.registerTemplate({
+          id: createDigitalEmployeeTemplateId(publishedDraft.templateId),
+          version: candidate.version,
+          display: publishedDraft.display,
+          personality: publishedDraft.personality,
+          instructions: materialized.instructions,
+          preset: publishedDraft.preset,
+          mcpServers: publishedDraft.mcpServers as never,
+          capabilities: publishedDraft.capabilities as never,
+          experts: materialized.experts,
+          delegation: publishedDraft.delegation,
+        })
+        this.registeredPublications.set(key, dispose)
+        return async () => {
+          this.registeredPublications.delete(key)
+          try {
+            await dispose()
+          } finally {
+            await rm(root, { recursive: true, force: true })
+          }
+        }
+      } catch (error: unknown) {
+        await rm(root, { recursive: true, force: true })
+        throw error
+      }
     })
     return publication
   }
@@ -788,8 +818,8 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
       if (this.registeredPublications.has(key)) continue
       const draft = publication.draft
       const root = join(this.studioRoot, 'digital-employee-templates', publication.templateId, publication.version)
-      this.ctx.digitalEmployees.registerTemplate(await localTemplate(root, publication.version, draft))
-      this.registeredPublications.add(key)
+      const dispose = this.ctx.digitalEmployees.registerTemplate(await localTemplate(root, publication.version, draft))
+      this.registeredPublications.set(key, dispose)
     }
   }
 

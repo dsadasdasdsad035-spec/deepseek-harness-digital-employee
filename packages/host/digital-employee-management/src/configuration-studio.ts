@@ -38,13 +38,25 @@ interface StoredPublication extends DigitalEmployeeTemplatePublication {
   readonly draft: DigitalEmployeeTemplateDraft
 }
 
+interface Mutation<T> {
+  readonly document: StoredConfigurationStudio
+  readonly value: T
+  readonly rollback?: () => Promise<void> | void
+}
+
 /** Persist local administrator drafts with atomic read-modify-write operations. */
 export class ConfigurationStudioStore {
   private document: StoredConfigurationStudio = { format: 1, drafts: [], publications: [] }
   private readonly ready: Promise<void>
 
-  /** @param filename - private user-owned JSON document. */
-  constructor(private readonly filename: string) {
+  /**
+   * @param filename - private user-owned JSON document.
+   * @param persist - atomic persistence implementation, overridable for failure-path tests.
+   */
+  constructor(
+    private readonly filename: string,
+    private readonly persist: typeof writeFileAtomic = writeFileAtomic,
+  ) {
     this.ready = this.load()
   }
 
@@ -160,13 +172,16 @@ export class ConfigurationStudioStore {
    * Atomically reserve the next immutable local version for one current draft.
    * @param id - draft identity to publish.
    * @param revision - current draft revision required for publication.
-   * @param prepare - materializes and registers the immutable runtime version.
+   * @param prepare - materializes and registers the immutable runtime version, returning its rollback.
    * @returns stored publication provenance.
    */
   async publish(
     id: DigitalEmployeeTemplateDraft['id'],
     revision: number,
-    prepare: (draft: DigitalEmployeeTemplateDraft, publication: StoredPublication) => Promise<void>,
+    prepare: (
+      draft: DigitalEmployeeTemplateDraft,
+      publication: StoredPublication,
+    ) => Promise<() => Promise<void> | void>,
   ): Promise<StoredPublication> {
     await this.ready
     return await this.mutate(async (document) => {
@@ -178,8 +193,12 @@ export class ConfigurationStudioStore {
         templateId: draft.templateId, version, draftId: draft.id, draftRevision: draft.revision,
         publishedAt: new Date().toISOString(), draft: copyDraft(draft),
       }
-      await prepare(copyDraft(draft), publication)
-      return { document: { ...document, publications: [...document.publications, publication] }, value: publication }
+      const rollback = await prepare(copyDraft(draft), publication)
+      return {
+        document: { ...document, publications: [...document.publications, publication] },
+        value: publication,
+        rollback,
+      }
     })
   }
 
@@ -194,16 +213,22 @@ export class ConfigurationStudioStore {
   private async mutate<T>(
     operation: (
       document: StoredConfigurationStudio,
-    ) => { document: StoredConfigurationStudio; value: T } | Promise<{
-      document: StoredConfigurationStudio
-      value: T
-    }>,
+    ) => Mutation<T> | Promise<Mutation<T>>,
   ): Promise<T> {
     await mkdir(dirname(this.filename), { recursive: true, mode: 0o700 })
     return await withFileLock(this.filename, async () => {
       await this.load()
       const next = await operation(this.document)
-      await writeFileAtomic(this.filename, `${JSON.stringify(next.document)}\n`, { mode: 0o600, dirMode: 0o700 })
+      try {
+        await this.persist(this.filename, `${JSON.stringify(next.document)}\n`, { mode: 0o600, dirMode: 0o700 })
+      } catch (error: unknown) {
+        try {
+          await next.rollback?.()
+        } catch (rollbackError: unknown) {
+          throw new AggregateError([error, rollbackError], 'configuration studio persistence and rollback failed')
+        }
+        throw error
+      }
       this.document = next.document
       return next.value
     })
