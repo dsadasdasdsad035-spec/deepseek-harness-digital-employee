@@ -60,6 +60,8 @@
     "apps/web/tests/skill-user-invoke.e2e.ts",
     "apps/web/tests/digital-employees.e2e.ts",
     "apps/web/tests/skill-market.e2e.ts",
+    "apps/web/tests/marketplace-digital-employee.e2e.spec.ts",
+    "apps/web/tests/marketplace-mcp-fixture.ts",
     "packages/client/ui-skill-market/templates/archive.ts",
     "apps/web/tests/permission-policy-context.e2e.ts",
     "apps/web/tests/access-confirmation.e2e.ts",

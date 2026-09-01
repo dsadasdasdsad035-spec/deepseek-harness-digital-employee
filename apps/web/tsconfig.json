@@ -73,6 +73,7 @@
     "tests/skill-user-invoke.e2e.ts",
     "tests/digital-employees.e2e.ts",
     "tests/skill-market.e2e.ts",
+    "tests/marketplace-digital-employee.e2e.spec.ts",
     "tests/permission-policy-context.e2e.ts",
     "tests/access-confirmation.e2e.ts",
     "tests/agent-preset-selection.e2e.ts",
