@@ -36,6 +36,11 @@ export interface PresetMetadata {
    * can read in capability order while authored ones stay alphabetical.
    */
   readonly order?: number
+  /**
+   * Exclude a shipped capability preset from ordinary authoring and session
+   * pickers while keeping it addressable by exact id.
+   */
+  readonly visibility?: 'internal'
 }
 
 /** A non-empty trimmed string, or undefined for anything else. */
@@ -77,10 +82,12 @@ export async function readPresetMetadata(directory: string): Promise<PresetMetad
   const order = typeof record.order === 'number' && Number.isFinite(record.order)
     ? record.order
     : undefined
+  const visibility = record.visibility === 'internal' ? record.visibility : undefined
   return {
     ...name === undefined ? {} : { name },
     ...description === undefined ? {} : { description },
     ...order === undefined ? {} : { order },
+    ...visibility === undefined ? {} : { visibility },
   }
 }
 
@@ -95,11 +102,12 @@ export async function readPresetMetadata(directory: string): Promise<PresetMetad
 export function renderPresetMetadata(metadata: PresetMetadata): string | undefined {
   const name = text(metadata.name)
   const description = text(metadata.description)
-  const { order } = metadata
-  if (name === undefined && description === undefined && order === undefined) return undefined
+  const { order, visibility } = metadata
+  if (name === undefined && description === undefined && order === undefined && visibility === undefined) return undefined
   return yaml.dump({
     ...name === undefined ? {} : { name },
     ...description === undefined ? {} : { description },
     ...order === undefined ? {} : { order },
+    ...visibility === undefined ? {} : { visibility },
   }, { lineWidth: -1 })
 }

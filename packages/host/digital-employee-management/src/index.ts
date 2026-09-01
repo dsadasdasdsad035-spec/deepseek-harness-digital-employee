@@ -32,6 +32,7 @@ import { listMcpServerConfigs } from '@deepseek-ai/dsh-mcp-client'
 import type {} from '@deepseek-ai/dsh-mcp-market'
 import type {} from '@deepseek-ai/dsh-agent-presets'
 import type {} from '@deepseek-ai/dsh-skill'
+import type {} from '@deepseek-ai/dsh-skill-market'
 import type {} from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-tool-market'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
@@ -49,6 +50,7 @@ import type {
   DigitalEmployeeTaskTreeEntry,
   DigitalEmployeeTaskTreeRequest,
   DigitalEmployeeConfigurationAssetCatalog,
+  ListDigitalEmployeeConfigurationAssetsRequest,
   DigitalEmployeeTemplateDraft,
   DigitalEmployeeTemplateDraftValidation,
   DigitalEmployeeTemplatePublication,
@@ -140,13 +142,18 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
   }
 
   /**
-   * List currently resolvable assets for administrator template selection.
+   * List assets resolvable through the selected Agent preset.
+   * @param request - preset whose standing scoped composition supplies Skill availability.
    * @returns deterministic capability inventory without credential values.
+   * @throws a client-safe diagnostic when the preset cannot be composed.
    */
   @Remote('listConfigurationAssets')
-  async listConfigurationAssets(): Promise<DigitalEmployeeConfigurationAssetCatalog> {
+  async listConfigurationAssets(
+    request: ListDigitalEmployeeConfigurationAssetsRequest,
+  ): Promise<DigitalEmployeeConfigurationAssetCatalog> {
     this.requireAdministrator()
-    const skills = await this.ctx.skills.list()
+    const skills = await this.skillsForPreset(request.preset)
+    const skillMarketResult = await this.ctx.get('skillMarket')?.list()
     const toolSchemas = this.ctx.tools.schemas()
     const toolMarketResult = await this.ctx.get('toolMarket')?.list()
     const managedTools = new Map(
@@ -157,22 +164,42 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     )
     const managedMcp = await this.ctx.get('mcpMarket')?.templateConfigurations() ?? []
     const managedMcpNames = new Set(managedMcp.map(entry => entry.serverName))
+    const runtimeSkills = new Map(skills.map(skill => [skill.name, skill] as const))
+    const managedSkills = new Map(
+      skillMarketResult?.ok === true
+        ? skillMarketResult.value.entries.map(skill => [skill.skillId as string, skill] as const)
+        : [],
+    )
+    const skillNames = new Set([...runtimeSkills.keys(), ...managedSkills.keys()])
     const mcpServers = new Set(listMcpServerConfigs(this.ctx).map(server => server.serverName))
     for (const tool of toolSchemas) {
       const serverName = /^mcp__([^_].*?)__/.exec(tool.name)?.[1]
       if (serverName !== undefined) mcpServers.add(serverName)
     }
     const entries = [
-      ...skills.map(skill => ({
-        id: `skill:${skill.name}` as never,
-        kind: 'skill' as const,
-        label: skill.name,
-        ...skill.description === undefined ? {} : { description: skill.description },
-        available: true,
-        source: 'skill-registry',
-        permissionSummary: [],
-        restartRequired: false,
-      })),
+      ...[...skillNames].map((name) => {
+        const runtime = runtimeSkills.get(name)
+        const managed = managedSkills.get(name)
+        const description = managed?.description ?? runtime?.description
+        const available = runtime !== undefined
+        return {
+          id: `skill:${name}` as never,
+          kind: 'skill' as const,
+          label: name,
+          ...(description === undefined ? {} : { description }),
+          available,
+          source: managed === undefined ? 'skill-registry' : 'skill-market',
+          ...(managed?.version === undefined ? {} : { version: managed.version }),
+          ...(managed?.author === undefined ? {} : { publisher: managed.author }),
+          ...(managed?.tags === undefined ? {} : { tags: managed.tags }),
+          managedByMarket: managed !== undefined,
+          permissionSummary: [],
+          restartRequired: managed !== undefined && !available,
+          ...(managed !== undefined && !available
+            ? { diagnostic: `Agent preset "${request.preset}" does not expose this installed Skill.` }
+            : {}),
+        }
+      }),
       ...toolSchemas.map((tool) => {
         const managed = managedTools.get(tool.name)
         return {
@@ -681,19 +708,16 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     const validation = validateDraftBasics(draft)
     const diagnostics = [...validation.diagnostics]
     const skillNames = new Set<string>()
-    const skills = this.ctx.get('skills')
-    if (skills !== undefined) {
-      for (const skill of await skills.list()) skillNames.add(skill.name)
-    }
-    const tools = this.ctx.get('tools')
-    const presets = this.ctx.get('agentPresets')
-    if (presets === undefined || !(await presets.list()).some(preset => preset.id === draft.preset && preset.broken === undefined)) {
+    try {
+      for (const skill of await this.skillsForPreset(draft.preset)) skillNames.add(skill.name)
+    } catch {
       diagnostics.push({
         code: 'unavailable-preset',
         path: 'preset',
-        message: `Agent preset "${draft.preset}" is not available in this installation.`,
+        message: `Agent preset "${draft.preset}" is not available for template configuration.`,
       })
     }
+    const tools = this.ctx.get('tools')
     const authorities = [
       { path: 'capabilities', value: draft.capabilities },
       ...draft.experts.map(expert => ({ path: `experts.${expert.id}.capabilities`, value: expert.capabilities })),
@@ -741,6 +765,21 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
       }
     }
     return { revision: draft.revision, diagnostics }
+  }
+
+  /**
+   * Resolve Skill summaries from one preset's standing composition.
+   * @param preset - selected Agent preset identity.
+   * @returns Skill summaries visible from the preset scope.
+   * @throws a path-free diagnostic when the preset is unavailable or cannot compose.
+   */
+  private async skillsForPreset(preset: string): ReturnType<Context['skills']['list']> {
+    try {
+      const scope = await this.ctx.agentPresets.standingKeyFor(preset)
+      return await this.ctx.skills.list({ scope })
+    } catch {
+      throw new Error(`Agent preset "${preset}" is unavailable for template configuration.`)
+    }
   }
 
   private async registerPublishedTemplates(): Promise<void> {

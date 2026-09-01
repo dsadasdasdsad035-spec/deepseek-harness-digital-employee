@@ -1667,8 +1667,11 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
   async function listVisibleSessionSummaries(signal?: AbortSignal): Promise<SessionSummary[]> {
     signal?.throwIfAborted()
     const workspaceIdsBySession = new Map<SessionId, WorkspaceId>()
-    for (const workspace of ctx.workspaceRegistry.list()) {
-      for (const sessionId of workspace.sessionIds) workspaceIdsBySession.set(sessionId, workspace.id)
+    const workspaceRegistry = ctx.get('workspaceRegistry')
+    if (workspaceRegistry !== undefined) {
+      for (const workspace of workspaceRegistry.list()) {
+        for (const sessionId of workspace.sessionIds) workspaceIdsBySession.set(sessionId, workspace.id)
+      }
     }
     const withWorkspace = (summary: SessionSummary): SessionSummary => {
       const workspaceId = workspaceIdsBySession.get(summary.sessionId)

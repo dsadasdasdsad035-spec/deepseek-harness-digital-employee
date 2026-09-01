@@ -44,8 +44,6 @@ describe('dsh-web-app digital employee composition', () => {
     expect(ids.indexOf('mcp-client')).toBeLessThan(ids.indexOf('digital-employee-agent'))
     expect(ids.indexOf('digital-employee-example-template')).toBeLessThan(ids.indexOf('digital-employee-file'))
     expect(ids.indexOf('project-manager-test-template')).toBeLessThan(ids.indexOf('digital-employee-file'))
-    expect(ids.indexOf('project-manager-test-skills')).toBeLessThan(ids.indexOf('digital-employee-agent'))
-    expect(ids.indexOf('project-manager-test-tools')).toBeLessThan(ids.indexOf('digital-employee-agent'))
     expect(ids.indexOf('digital-employee-file')).toBeLessThan(ids.indexOf('digital-employee-agent'))
     expect(ids.indexOf('digital-employee-agent')).toBeLessThan(ids.indexOf('digital-employee-management'))
     expect(ids.indexOf('api-remotes')).toBeLessThan(ids.indexOf('ui-digital-employees'))

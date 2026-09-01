@@ -200,7 +200,7 @@ export interface PresetRoot {
 export type PresetTrust = 'system' | 'user'
 ```
 
-Source: [`packages/preset/agent-presets/src/preset.ts:52`](../packages/preset/agent-presets/src/preset.ts)
+Source: [`packages/preset/agent-presets/src/preset.ts:60`](../packages/preset/agent-presets/src/preset.ts)
 
 <a id="deepseek-aidsh-agent-spine-demo"></a>
 
@@ -851,7 +851,7 @@ Source: [`packages/host/apiproxy/src/index.ts:41`](../packages/host/apiproxy/src
 
 ## `@deepseek-ai/dsh-host-digital-employee-management`
 
-Requires: `agentDefaultModel` · `agents` · `attachments` · `digitalEmployeeAgent` · `digitalEmployees` · `workspaceRegistry`
+Requires: `agentDefaultModel` · `agentPresets` · `agents` · `attachments` · `digitalEmployeeAgent` · `digitalEmployees` · `skills` · `tools` · `workspaceRegistry`
 
 ```ts config-catalog
 /** Successful employee-chat idempotency cache configuration. */
@@ -867,7 +867,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/host/digital-employee-management/src/index.ts:70`](../packages/host/digital-employee-management/src/index.ts)
+Source: [`packages/host/digital-employee-management/src/index.ts:72`](../packages/host/digital-employee-management/src/index.ts)
 
 <a id="deepseek-aidsh-host-directory-picker-browse"></a>
 

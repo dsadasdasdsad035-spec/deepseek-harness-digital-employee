@@ -24,6 +24,20 @@ let ctx: Context | undefined
 try {
   ctx = await boot('digital-employee-configuration-studio-e2e', resolveConfigPath(configPath, undefined))
   const workspaceId = WorkspaceId('digital-employee-configuration-studio-workspace')
+  const assetCatalog = await ctx.digitalEmployeeManagement.listConfigurationAssets({
+    preset: 'digital-employee-minimal',
+  })
+  acceptance('skill-catalog-merged', {
+    skills: assetCatalog.entries.filter(entry => entry.kind === 'skill').map(entry => ({
+      name: entry.label,
+      available: entry.available,
+      source: entry.source,
+      version: entry.version,
+      publisher: entry.publisher,
+      tags: entry.tags,
+      restartRequired: entry.restartRequired,
+    })),
+  })
   const draft = await ctx.digitalEmployeeManagement.createConfigurationDraft({
     templateId: 'studio-assistant',
     display: {

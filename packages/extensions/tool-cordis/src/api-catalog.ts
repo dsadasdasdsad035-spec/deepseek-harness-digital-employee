@@ -137,9 +137,9 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     methods: [
       {
         signature: 'async list(): Promise<AgentPreset[]>',
-        description: 'Every preset the configured roots currently supply.',
+        description: 'Every user-visible preset the configured roots currently supply. Internal shipped presets remain addressable through resolve but are omitted from ordinary authoring and session pickers.',
         parameters: [],
-        returns: 'the presets, first-root-wins per id.',
+        returns: 'the visible presets, first-root-wins per id.',
       },
       {
         signature: 'async resolve(id?: string): Promise<AgentPreset>',
@@ -760,10 +760,11 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'detached draft records ordered by creation time.',
       },
       {
-        signature: '@Remote(\'listConfigurationAssets\') async listConfigurationAssets(): Promise<DigitalEmployeeConfigurationAssetCatalog>',
-        description: 'List currently resolvable assets for administrator template selection.',
-        parameters: [],
+        signature: '@Remote(\'listConfigurationAssets\') async listConfigurationAssets( request: ListDigitalEmployeeConfigurationAssetsRequest, ): Promise<DigitalEmployeeConfigurationAssetCatalog>',
+        description: 'List assets resolvable through the selected Agent preset.',
+        parameters: [{ name: 'request', description: 'preset whose standing scoped composition supplies Skill availability.' }],
         returns: 'deterministic capability inventory without credential values.',
+        throws: ['a client-safe diagnostic when the preset cannot be composed.'],
       },
       {
         signature: '@Remote(\'listConfigurationPublications\') listConfigurationPublications(): Promise<readonly DigitalEmployeeTemplatePublication[]>',
@@ -772,7 +773,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'detached publication provenance ordered by allocation time.',
       },
       {
-        signature: '@Remote(\'createConfigurationDraft\') createConfigurationDraft( request: CreateDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplateDraft>',
+        signature: '@Remote(\'createConfigurationDraft\') async createConfigurationDraft( request: CreateDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplateDraft>',
         description: 'Create one unpublished employee template draft for the local administrator.',
         parameters: [{ name: 'request', description: 'initial display and instruction fields.' }],
         returns: 'detached new draft record.',
@@ -3427,7 +3428,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'AgentPreset',
-    declaration: 'export interface AgentPreset {\n    readonly id: string;\n    readonly trust: PresetTrust;\n    readonly path: string;\n    readonly name?: string;\n    readonly description?: string;\n    readonly order?: number;\n    readonly broken?: string;\n}',
+    declaration: 'export interface AgentPreset {\n    readonly id: string;\n    readonly trust: PresetTrust;\n    readonly path: string;\n    readonly name?: string;\n    readonly description?: string;\n    readonly order?: number;\n    readonly visibility: PresetVisibility;\n    readonly broken?: string;\n}',
   },
   {
     name: 'AgentSetup',
@@ -3839,7 +3840,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'DigitalEmployeeConfigurationAsset',
-    declaration: 'export interface DigitalEmployeeConfigurationAsset {\n    readonly id: DigitalEmployeeConfigurationAssetId;\n    readonly kind: \'skill\' | \'tool\' | \'mcp\';\n    readonly label: string;\n    readonly description?: string;\n    readonly available: boolean;\n    readonly source: string;\n    readonly version?: string | undefined;\n    readonly publisher?: string | undefined;\n    readonly permissionSummary: readonly string[];\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n    readonly mcpServer?: DigitalEmployeeConfigurationMcpServer | undefined;\n}',
+    declaration: 'export interface DigitalEmployeeConfigurationAsset {\n    readonly id: DigitalEmployeeConfigurationAssetId;\n    readonly kind: \'skill\' | \'tool\' | \'mcp\';\n    readonly label: string;\n    readonly description?: string;\n    readonly available: boolean;\n    readonly source: string;\n    readonly version?: string | undefined;\n    readonly publisher?: string | undefined;\n    readonly tags?: readonly string[] | undefined;\n    readonly managedByMarket?: boolean | undefined;\n    readonly permissionSummary: readonly string[];\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n    readonly mcpServer?: DigitalEmployeeConfigurationMcpServer | undefined;\n}',
   },
   {
     name: 'DigitalEmployeeConfigurationAssetCatalog',
@@ -4430,6 +4431,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface KvUnitDescriptor {\n    readonly name: string;\n    readonly version: number;\n    readonly tables: readonly string[];\n    readonly hasGlobal: boolean;\n}',
   },
   {
+    name: 'ListDigitalEmployeeConfigurationAssetsRequest',
+    declaration: 'export interface ListDigitalEmployeeConfigurationAssetsRequest {\n    readonly preset: string;\n}',
+  },
+  {
     name: 'LlmAdapter',
     declaration: 'export abstract class LlmAdapter {\n    providerInfo(provider: string): LlmProviderInfo;\n    providerRetryPolicy(_provider: string): ResolvedRetryPolicy | undefined;\n    listModels(_provider: string): Promise<readonly LlmModelInfo[]>;\n    resolveModel(provider: string, model: string, _signal?: AbortSignal): Promise<LlmResolvedModelInfo>;\n    async prepareCall(provider: string, model: string, signal?: AbortSignal): Promise<PreparedAdapterCall>;\n    abstract stream(options: GenerateOptions): AsyncIterable<StreamChunk>;\n}',
   },
@@ -4740,6 +4745,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'PresetTrust',
     declaration: 'export type PresetTrust = \'system\' | \'user\';',
+  },
+  {
+    name: 'PresetVisibility',
+    declaration: 'export type PresetVisibility = \'user\' | \'internal\';',
   },
   {
     name: 'PreStepDecision',

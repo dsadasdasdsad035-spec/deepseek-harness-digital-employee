@@ -20,6 +20,8 @@ Set `administrator: true` to enable local-only template configuration operations
 
 Administrators use `createConfigurationDraft`, `updateConfigurationDraft`, `validateConfigurationDraft`, `previewConfigurationDraft`, `disposeConfigurationPreview`, `publishConfigurationDraft`, `listConfigurationDrafts`, and `listConfigurationPublications`. Validation resolves preset, Skill, Tool, MCP client, credential-reference, authority, and delegation requirements before preview or publication. Configuration records carry credential references only; resolved credential values are neither accepted nor returned.
 
+`listConfigurationAssets({ preset })` resolves the preset's standing scope and merges its Skill catalog with the optional Skill marketplace by stable Skill name. Scoped runtime presence determines whether a Skill can be selected; marketplace inventory supplies version, author, tags, and managed-installation provenance. Preset resolution failure rejects with a path-free diagnostic and never falls back to the Host-global registry. Validation and publication repeat the same scoped lookup. Catalog inspection creates no Agent, Session, turn, or model request.
+
 Publishing assigns an immutable local version that the existing `listTemplates`, employee creation, and `previewUpgrade` operations resolve. A preview creates an isolated marked Session and temporary instruction files; disposing it removes both without adding an employee instance, memory, export, or normal management view. Long-term memory seeds in a local publication are promoted when an employee is created. A rejected seed rolls back the new employee so creation never leaves a partial configured instance.
 
 ## Model Experience

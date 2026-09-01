@@ -20,6 +20,8 @@ gateway 把所有权威操作委托给 `ctx.digitalEmployees`、`ctx.digitalEmpl
 
 管理员使用 `createConfigurationDraft`、`updateConfigurationDraft`、`validateConfigurationDraft`、`previewConfigurationDraft`、`disposeConfigurationPreview`、`publishConfigurationDraft`、`listConfigurationDrafts` 和 `listConfigurationPublications`。验证会在预览或发布前解析 preset、Skill、Tool、MCP client、凭据引用、权限与委派要求。配置记录只包含凭据引用，不接受也不返回已解析的凭据值。
 
+`listConfigurationAssets({ preset })` 解析 preset 的 standing 作用域，并按稳定 Skill 名称把其 Skill 目录与可选的 Skill 市场合并。Skill 是否存在于该作用域决定其能否被选择；市场清单提供版本、作者、标签和托管安装来源。preset 解析失败会返回不含路径的诊断，且绝不回退到 Host 全局注册表。验证与发布会重复同一个作用域查询。目录检查不会创建 Agent、Session、turn 或模型请求。
+
 发布会分配不可变的本地版本，既有的 `listTemplates`、员工创建和 `previewUpgrade` 操作均可解析该版本。预览会创建隔离且带标记的 Session 与临时指令文件；dispose 后会同时删除两者，不会新增员工实例、记忆、导出内容或普通管理视图。本地发布版本中的长期记忆种子会在创建员工时提升为长期记忆。任一记忆种子被拒绝时，系统会回滚新员工，因此创建不会留下部分配置的实例。
 
 ## 模型体验

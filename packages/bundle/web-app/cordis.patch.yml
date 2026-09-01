@@ -140,12 +140,6 @@
     - id: project-manager-test-template
       name: '@deepseek-ai/dsh-project-manager-test-digital-employee'
 
-    - id: project-manager-test-skills
-      name: '@deepseek-ai/dsh-project-manager-test-digital-employee/skills'
-
-    - id: project-manager-test-tools
-      name: '@deepseek-ai/dsh-project-manager-test-digital-employee/tools'
-
     - id: digital-employee-file
       name: '@deepseek-ai/dsh-digital-employee-file'
       config:

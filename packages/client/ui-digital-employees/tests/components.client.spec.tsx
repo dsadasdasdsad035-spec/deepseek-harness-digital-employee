@@ -9,6 +9,7 @@ describe('DigitalEmployeeWorkspace', () => {
   it('renders operational views and requests confirmed deletion', () => {
     const controller = {
       load: vi.fn(),
+      loadAssets: vi.fn(() => Promise.resolve()),
       select: vi.fn(),
       setView: vi.fn(),
       requestDelete: vi.fn(),
@@ -297,6 +298,7 @@ describe('DigitalEmployeeWorkspace', () => {
     }
     const configuration = {
       load: vi.fn(),
+      loadAssets: vi.fn(() => Promise.resolve()),
       create: vi.fn(() => Promise.resolve()),
       update: vi.fn(() => Promise.resolve()),
       validate: vi.fn(() => Promise.resolve()),
@@ -331,6 +333,39 @@ describe('DigitalEmployeeWorkspace', () => {
           label: 'release-notes',
           description: 'Prepare release notes.',
           available: true,
+          source: 'skill-market',
+          version: '1.4.0',
+          publisher: 'Release Team',
+          tags: ['release', 'writing'],
+          managedByMarket: true,
+          permissionSummary: [],
+          restartRequired: false,
+        },
+        {
+          id: 'skill:local-planning',
+          kind: 'skill',
+          label: 'local-planning',
+          description: 'Plan local work.',
+          available: true,
+          source: 'skill-registry',
+          managedByMarket: false,
+          permissionSummary: [],
+          restartRequired: false,
+        },
+        {
+          id: 'skill:installed-inactive',
+          kind: 'skill',
+          label: 'installed-inactive',
+          description: 'Installed skill awaiting activation.',
+          available: false,
+          source: 'skill-market',
+          version: '2.0.0',
+          publisher: 'Planning Team',
+          tags: ['planning'],
+          managedByMarket: true,
+          permissionSummary: [],
+          restartRequired: true,
+          diagnostic: 'Restart the Host to activate this installed Skill.',
         },
         {
           id: 'tool:workspace_lookup',
@@ -338,14 +373,23 @@ describe('DigitalEmployeeWorkspace', () => {
           label: 'workspace_lookup',
           description: 'Inspect a workspace.',
           available: true,
+          source: 'tool-registry',
+          permissionSummary: [],
+          restartRequired: false,
         },
         {
           id: 'mcp:project-tracker',
           kind: 'mcp',
           label: 'project-tracker',
           available: true,
+          source: 'mcp-registry',
+          permissionSummary: [],
+          restartRequired: false,
         },
       ],
+      assetStatus: 'ready',
+      assetError: null,
+      assetPreset: 'headless',
     }
     const result = render(
       <DigitalEmployeeWorkspace
@@ -366,7 +410,13 @@ describe('DigitalEmployeeWorkspace', () => {
     expect(result.getByRole('button', { name: 'Validate' })).toBeTruthy()
     expect(result.getByRole('button', { name: 'Publish' })).toBeTruthy()
     fireEvent.click(result.getByRole('button', { name: 'Edit' }))
+    expect(result.getByText('Marketplace · 1.4.0 · Release Team')).toBeTruthy()
+    expect(result.getByText('release · writing')).toBeTruthy()
+    expect(result.getByText('Local skill')).toBeTruthy()
+    expect(result.getByText('Restart the Host to activate this installed Skill.')).toBeTruthy()
+    expect((result.getByRole('checkbox', { name: 'installed-inactive' }) as HTMLInputElement).disabled).toBe(true)
     fireEvent.click(result.getByRole('checkbox', { name: 'release-notes' }))
+    fireEvent.click(result.getByRole('checkbox', { name: 'local-planning' }))
     fireEvent.click(result.getByRole('checkbox', { name: 'workspace_lookup' }))
     fireEvent.click(result.getByRole('checkbox', { name: 'project-tracker' }))
     fireEvent.change(result.getByRole('textbox', { name: 'Search skills' }), { target: { value: 'unknown' } })
@@ -381,7 +431,7 @@ describe('DigitalEmployeeWorkspace', () => {
       patch: expect.objectContaining({
         personality: 'Direct and practical.',
         capabilities: expect.objectContaining({
-          skills: ['release-notes'],
+          skills: ['release-notes', 'local-planning'],
           tools: ['workspace_lookup'],
           mcpServers: ['project-tracker'],
         }),
@@ -409,6 +459,7 @@ describe('DigitalEmployeeWorkspace', () => {
     const update = vi.fn(() => Promise.resolve())
     const configuration = {
       load: vi.fn(),
+      loadAssets: vi.fn(() => Promise.resolve()),
       update,
       validate: vi.fn(),
       preview: vi.fn(),
@@ -447,6 +498,9 @@ describe('DigitalEmployeeWorkspace', () => {
           kind: 'skill',
           label: 'retired-skill',
           available: false,
+          source: 'skill-registry',
+          permissionSummary: [],
+          restartRequired: false,
           diagnostic: 'Skill is no longer installed.',
         },
         {
@@ -454,6 +508,9 @@ describe('DigitalEmployeeWorkspace', () => {
           kind: 'mcp',
           label: 'static-server',
           available: false,
+          source: 'mcp-registry',
+          permissionSummary: [],
+          restartRequired: false,
           diagnostic: 'This MCP client cannot be published safely.',
         },
       ],
@@ -522,6 +579,9 @@ describe('DigitalEmployeeWorkspace', () => {
       preview: null,
       diagnostics: {},
       assets: [],
+      assetStatus: 'error',
+      assetError: 'digital employee configuration administrator mode is disabled',
+      assetPreset: null,
     }
     const result = render(
       <DigitalEmployeeWorkspace

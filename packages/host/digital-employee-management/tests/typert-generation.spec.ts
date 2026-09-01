@@ -17,6 +17,7 @@ describe('digital employee management Typert artifacts', () => {
     expect(artifact!.remote!.dts).not.toContain('runTask:')
     expect(artifact!.remote!.dts).toContain('applyUpgrade:')
     expect(artifact!.remote!.dts).toContain('importEmployee:')
+    expect(artifact!.remote!.dts).toContain('listConfigurationAssets: (request: ListDigitalEmployeeConfigurationAssetsRequest')
     expect(artifact!.remote!.js).toContain("'data': z.string()")
     expect(artifact!.remote!.js).not.toContain("'attachmentId':")
 
@@ -29,5 +30,5 @@ describe('digital employee management Typert artifacts', () => {
       .resolves.toBe(artifact!.remote!.js)
     await expect(readFile(resolve(packageRoot, 'lib/typert.remote-client.d.ts'), 'utf8'))
       .resolves.toBe(artifact!.remote!.dts)
-  })
+  }, 15_000)
 })

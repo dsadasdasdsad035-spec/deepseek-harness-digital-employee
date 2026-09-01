@@ -13,9 +13,9 @@
     - button "Agent 预设":
       - img
       - text: Agent 预设
-    - button "技能市场":
+    - button "市场":
       - img
-      - text: 技能市场
+      - text: 市场
   - button "打开配置文件"
   - button "关闭":
     - img

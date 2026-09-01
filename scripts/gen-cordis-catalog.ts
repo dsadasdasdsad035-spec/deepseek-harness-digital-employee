@@ -709,6 +709,7 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   McpMarketUninstallRequest: 'marketplace Remote request is owned by packages/mcp/mcp-market/README.md',
   McpMarketUninstallResult: 'marketplace Remote result is owned by packages/mcp/mcp-market/README.md',
   DigitalEmployeeConfigurationAssetCatalog: 'administrator capability catalog is owned by docs/user/guide/digital-employees.md',
+  ListDigitalEmployeeConfigurationAssetsRequest: 'administrator capability request is owned by packages/host/digital-employee-management/README.md',
   WorkflowAgentEndInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',
   WorkflowAgentInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',
   WorkflowResultInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',

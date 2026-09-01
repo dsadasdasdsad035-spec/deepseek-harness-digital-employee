@@ -158,6 +158,7 @@ describe('copying a preset', () => {
       id: 'gone',
       trust: 'user' as const,
       path: join(userRoot, 'gone', COMPOSITION_FILE),
+      visibility: 'user' as const,
     }
 
     // The source vanished between resolve and copy: the half-made target is

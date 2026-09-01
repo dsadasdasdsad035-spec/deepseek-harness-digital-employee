@@ -36,6 +36,10 @@ export interface DigitalEmployeeConfigurationAsset {
   readonly version?: string | undefined
   /** Trusted publisher identity when marketplace-managed. */
   readonly publisher?: string | undefined
+  /** Marketplace tags shown to administrators when available. */
+  readonly tags?: readonly string[] | undefined
+  /** Whether installation lifecycle is owned by a marketplace. */
+  readonly managedByMarket?: boolean | undefined
   /** Permission, credential, or input summaries shown before authorization. */
   readonly permissionSummary: readonly string[]
   /** Whether a fresh Host is required before this capability becomes available. */
@@ -50,6 +54,12 @@ export interface DigitalEmployeeConfigurationAsset {
 export interface DigitalEmployeeConfigurationAssetCatalog {
   /** Entries ordered by capability class and label. */
   readonly entries: readonly DigitalEmployeeConfigurationAsset[]
+}
+
+/** Selected Agent preset whose scoped capabilities are inspected. @typert schema */
+export interface ListDigitalEmployeeConfigurationAssetsRequest {
+  /** Agent preset selected by the draft being edited. */
+  readonly preset: string
 }
 
 /** Browser-safe explicit capability set. */

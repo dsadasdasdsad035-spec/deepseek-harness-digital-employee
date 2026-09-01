@@ -12,7 +12,7 @@ The workspace lists registered templates and durable instances, exposes lifecycl
 
 Destructive operations require an explicit UI confirmation. Upgrade apply follows preview, import creates a fresh inactive instance, and exported artifacts contain no credentials.
 
-When the Host enables local administrator configuration, the workspace adds a separate **Template configuration** tab beside **Employee operations**. It lists drafts and publications, edits template metadata, root instructions, capability declarations, MCP references, expert definitions, and memory seeds, then shows validation diagnostics before preview or publish. Credential values never appear in this view. Preview state is temporary; published versions return to the existing template picker and upgrade-review flows. When the Host does not expose configuration operations, ordinary users see only the unchanged employee workspace.
+When the Host enables local administrator configuration, the workspace adds a separate **Template configuration** tab beside **Employee operations**. It lists drafts and publications, edits template metadata, root instructions, capability declarations, MCP references, expert definitions, and memory seeds, then shows validation diagnostics before preview or publish. Opening a draft and changing its preset reloads Skill availability from that preset. A bounded loading state and request generation guard prevent stale results from authorizing selections. Failed refreshes disable new Skill selection while selected unavailable names remain visible and removable. Skill rows show marketplace or local provenance, version, author, tags, and activation guidance; drafts persist only stable Skill names.
 
 ## Chat Entry
 

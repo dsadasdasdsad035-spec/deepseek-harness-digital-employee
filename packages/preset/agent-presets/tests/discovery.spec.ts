@@ -77,6 +77,7 @@ describe('preset discovery', () => {
       id: 'minimal',
       trust: 'system',
       path: join(SYSTEM.path, 'minimal', COMPOSITION_FILE),
+      visibility: 'user',
     })
   })
 

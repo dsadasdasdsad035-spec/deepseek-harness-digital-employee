@@ -48,11 +48,14 @@ describe('DigitalEmployeeConfigurationStudioStore', () => {
     const remote = {
       listConfigurationDrafts: vi.fn(() => ok([])),
       listConfigurationPublications: vi.fn(() => ok([])),
-      listConfigurationAssets: vi.fn(() => ok({ entries: [{
+      listConfigurationAssets: vi.fn(({ preset }: { preset: string }) => ok({ entries: [{
         id: 'skill:release-notes',
         kind: 'skill',
         label: 'release-notes',
         available: true,
+        source: preset,
+        permissionSummary: [],
+        restartRequired: false,
       }] })),
       createConfigurationDraft: vi.fn(() => ok({
         id: 'draft-1', templateId: 'operations-assistant', revision: 1,
@@ -79,6 +82,7 @@ describe('DigitalEmployeeConfigurationStudioStore', () => {
     const store = new DigitalEmployeeConfigurationStudioStore(remote as never)
 
     await store.load()
+    await store.loadAssets('headless')
     await store.create({
       templateId: 'operations-assistant',
       display: { name: 'Operations Assistant', description: 'Coordinates delivery.' },
@@ -96,6 +100,65 @@ describe('DigitalEmployeeConfigurationStudioStore', () => {
       diagnostics: {},
       preview: null,
       assets: [{ id: 'skill:release-notes', kind: 'skill', label: 'release-notes', available: true }],
+    })
+  })
+
+  it('keeps the newest preset catalog when responses settle out of order', async () => {
+    let resolveHeadless!: (value: Awaited<ReturnType<typeof ok<{ entries: never[] }>>>) => void
+    const headless = new Promise<Awaited<ReturnType<typeof ok<{ entries: never[] }>>>>((resolve) => {
+      resolveHeadless = resolve
+    })
+    const remote = {
+      listConfigurationAssets: vi.fn(({ preset }: { preset: string }) => preset === 'headless'
+        ? headless
+        : ok({ entries: [{
+          id: 'skill:restricted',
+          kind: 'skill',
+          label: 'restricted',
+          available: true,
+          source: 'skill-registry',
+          permissionSummary: [],
+          restartRequired: false,
+        }] })),
+    }
+    const store = new DigitalEmployeeConfigurationStudioStore(remote as never)
+
+    const stale = store.loadAssets('headless')
+    await store.loadAssets('restricted')
+    resolveHeadless({ ok: true, value: { entries: [] } })
+    await stale
+
+    expect(store.store.getSnapshot()).toMatchObject({
+      assetStatus: 'ready',
+      assetPreset: 'restricted',
+      assets: [expect.objectContaining({ label: 'restricted' })],
+    })
+  })
+
+  it('retains the last catalog as non-authoritative display data after preset resolution fails', async () => {
+    const remote = {
+      listConfigurationAssets: vi.fn(({ preset }: { preset: string }) => preset === 'broken'
+        ? Promise.resolve({ ok: false as const, error: { message: 'Preset unavailable' } })
+        : ok({ entries: [{
+          id: 'skill:release-notes',
+          kind: 'skill',
+          label: 'release-notes',
+          available: true,
+          source: 'skill-registry',
+          permissionSummary: [],
+          restartRequired: false,
+        }] })),
+    }
+    const store = new DigitalEmployeeConfigurationStudioStore(remote as never)
+
+    await store.loadAssets('headless')
+    await store.loadAssets('broken')
+
+    expect(store.store.getSnapshot()).toMatchObject({
+      assetStatus: 'error',
+      assetError: 'Preset unavailable',
+      assetPreset: 'broken',
+      assets: [expect.objectContaining({ label: 'release-notes' })],
     })
   })
 })

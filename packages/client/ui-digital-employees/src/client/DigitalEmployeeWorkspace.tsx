@@ -316,7 +316,10 @@ function ConfigurationSummary({ controller, previewWorkspace, useSnapshot }: {
           <li key={draft.id}>
             <span>{draft.display.name} · r{draft.revision}</span>
             <div className={css.actions}>
-              <Button size="sm" onClick={() => { setEditing(draft) }}>Edit</Button>
+              <Button size="sm" onClick={() => {
+                setEditing(draft)
+                void controller.loadAssets(draft.preset)
+              }}>Edit</Button>
               <Button size="sm" onClick={() => { void controller.validate(draft.id) }}>Validate</Button>
               <Button size="sm" disabled={workspaceId === undefined} onClick={() => {
                 if (workspaceId !== undefined) void controller.preview(draft, workspaceId)
@@ -335,12 +338,14 @@ function ConfigurationSummary({ controller, previewWorkspace, useSnapshot }: {
         <DraftEditor
           draft={editing}
           assets={state.assets}
+          assetStatus={state.assetStatus}
+          assetError={state.assetError}
           controller={controller}
           onClose={() => { setEditing(null) }}
           onSaved={() => { setEditing(null) }}
         />
       )}
-      {state.preview === undefined || state.preview === null ? null : (
+      {state.preview === null ? null : (
         <div className={css.actions}>
           <span>Preview session: {state.preview.sessionId}</span>
           <Button size="sm" onClick={() => { void controller.disposePreview() }}>Stop preview</Button>
@@ -362,9 +367,11 @@ function ConfigurationSummary({ controller, previewWorkspace, useSnapshot }: {
   )
 }
 
-function DraftEditor({ draft, assets, controller, onClose, onSaved }: {
+function DraftEditor({ draft, assets, assetStatus, assetError, controller, onClose, onSaved }: {
   draft: DigitalEmployeeTemplateDraft
   assets: readonly DigitalEmployeeConfigurationAsset[]
+  assetStatus: 'idle' | 'loading' | 'ready' | 'error'
+  assetError: string | null
   controller: DigitalEmployeeConfigurationStudioStore
   onClose: () => void
   onSaved: () => void
@@ -409,11 +416,18 @@ function DraftEditor({ draft, assets, controller, onClose, onSaved }: {
         <input aria-label="Edit template name" value={name} onChange={(event) => { setName(event.target.value) }} />
         <input aria-label="Edit template description" value={description} onChange={(event) => { setDescription(event.target.value) }} />
         <input aria-label="Edit template personality" value={personality} onChange={(event) => { setPersonality(event.target.value) }} />
-        <input aria-label="Edit template preset" value={preset} onChange={(event) => { setPreset(event.target.value) }} />
+        <input aria-label="Edit template preset" value={preset} onChange={(event) => {
+          const next = event.target.value
+          setPreset(next)
+          void controller.loadAssets(next.trim())
+        }} />
       </div>
+      {assetStatus === 'loading' ? <p className={css.empty}>Loading skills for this preset...</p> : null}
+      {assetStatus === 'error' ? <p className={css.error} role="alert">{assetError ?? 'Unable to load preset skills.'}</p> : null}
       <textarea aria-label="Edit template instructions" value={instructions} onChange={(event) => { setInstructions(event.target.value) }} />
       <CapabilitySelectors
         assets={assets}
+        allowNewSelections={assetStatus === 'ready'}
         value={capabilities}
         mcpServers={mcpServers}
         onChange={setCapabilities}
@@ -430,8 +444,9 @@ function DraftEditor({ draft, assets, controller, onClose, onSaved }: {
   )
 }
 
-function CapabilitySelectors({ assets, value, mcpServers, onChange, onMcpServersChange }: {
+function CapabilitySelectors({ assets, allowNewSelections, value, mcpServers, onChange, onMcpServersChange }: {
   assets: readonly DigitalEmployeeConfigurationAsset[]
+  allowNewSelections: boolean
   value: DigitalEmployeeConfigurationAuthority
   mcpServers: readonly import('@deepseek-ai/dsh-api-remotes/client').DigitalEmployeeConfigurationMcpServer[]
   onChange: (value: DigitalEmployeeConfigurationAuthority) => void
@@ -452,7 +467,7 @@ function CapabilitySelectors({ assets, value, mcpServers, onChange, onMcpServers
     mcp: 'MCP clients',
   }
   const update = (kind: DigitalEmployeeConfigurationAsset['kind'], id: string, checked: boolean): void => {
-    const current = selected[kind] ?? []
+    const current = selected[kind]
     const next = checked
       ? [...current, id]
       : current.filter(candidate => candidate !== id)
@@ -474,13 +489,13 @@ function CapabilitySelectors({ assets, value, mcpServers, onChange, onMcpServers
       <h3>Capabilities</h3>
       <input aria-label="Search skills" value={search} onChange={(event) => { setSearch(event.target.value) }} placeholder="Search capabilities" />
       {(['skill', 'tool', 'mcp'] as const).map((kind) => {
-        const label = labels[kind] ?? kind
+        const label = labels[kind]
         const visible = assets.filter(asset => asset.kind === kind && (
           normalizedSearch === ''
           || asset.label.toLocaleLowerCase().includes(normalizedSearch)
           || asset.description?.toLocaleLowerCase().includes(normalizedSearch) === true
         ))
-        const selectedIds = selected[kind] ?? []
+        const selectedIds = selected[kind]
         const unresolved = selectedIds.filter(id => !assets.some(asset => asset.kind === kind && asset.label === id))
         return (
           <section key={kind} className={css.list} aria-label={label}>
@@ -493,14 +508,21 @@ function CapabilitySelectors({ assets, value, mcpServers, onChange, onMcpServers
                       type="checkbox"
                       aria-label={asset.label}
                       checked={selectedIds.includes(asset.label)}
-                      disabled={!asset.available && !selectedIds.includes(asset.label)}
+                      disabled={(!allowNewSelections || !asset.available) && !selectedIds.includes(asset.label)}
                       onChange={(event) => { update(kind, asset.label, event.target.checked) }}
                     />
                     <span>{asset.label}</span>
                   </label>
                   {asset.description === undefined ? null : <small>{asset.description}</small>}
-                  <small>{asset.source ?? 'registry'}{asset.version === undefined ? '' : ` · ${asset.version}`}{asset.publisher === undefined ? '' : ` · ${asset.publisher}`}</small>
-                  {(asset.permissionSummary ?? []).length === 0 ? null : <small>{asset.permissionSummary.join(' · ')}</small>}
+                  <small>
+                    {asset.kind === 'skill'
+                      ? asset.managedByMarket === true ? 'Marketplace' : 'Local skill'
+                      : asset.source}
+                    {asset.version === undefined ? '' : ` · ${asset.version}`}
+                    {asset.publisher === undefined ? '' : ` · ${asset.publisher}`}
+                  </small>
+                  {asset.tags === undefined || asset.tags.length === 0 ? null : <small>{asset.tags.join(' · ')}</small>}
+                  {asset.permissionSummary.length === 0 ? null : <small>{asset.permissionSummary.join(' · ')}</small>}
                   {asset.available ? null : <small>{asset.diagnostic ?? 'Unavailable'}</small>}
                 </li>
               ))}</ul>

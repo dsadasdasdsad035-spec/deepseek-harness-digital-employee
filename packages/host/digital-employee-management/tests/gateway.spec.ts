@@ -61,8 +61,49 @@ function harness() {
   ctx.provide('workspaceRegistry', {
     get: (id: string) => id === workspace.id ? workspace : undefined,
   } as never)
-  ctx.provide('skills', {
-    list: vi.fn(async () => [{ name: 'available-skill' }]),
+  const skills = {
+    list: vi.fn(async (options?: { scope?: { agentPreset?: string } }) => {
+      if (options?.scope?.agentPreset === 'standard') {
+        return [
+          { name: 'available-skill' },
+          { name: 'market-active', description: 'Runtime description.' },
+        ]
+      }
+      if (options?.scope?.agentPreset === 'restricted') return [{ name: 'restricted-skill' }]
+      return [{ name: 'host-global-skill' }]
+    }),
+  }
+  ctx.provide('skills', skills as never)
+  ctx.provide('skillMarket', {
+    list: vi.fn(async () => ({
+      ok: true,
+      value: {
+        entries: [
+          {
+            skillId: 'market-inactive',
+            description: 'Installed but waiting for activation.',
+            version: '2.0.0',
+            author: 'Market Author',
+            tags: ['planning', 'managed'],
+            installedAt: 2,
+            hasBanner: true,
+            installPath: '/private/user/skills/market-inactive',
+            archiveFilename: 'market-inactive.zip',
+          },
+          {
+            skillId: 'market-active',
+            description: 'Marketplace description.',
+            version: '1.2.3',
+            author: 'Market Author',
+            tags: ['managed', 'active'],
+            installedAt: 1,
+            hasBanner: false,
+            installPath: '/private/user/skills/market-active',
+            archiveFilename: 'market-active.zip',
+          },
+        ],
+      },
+    })),
   } as never)
   ctx.provide('tools', {
     get: vi.fn((name: string) => name === 'available_tool' ? {} : undefined),
@@ -74,11 +115,17 @@ function harness() {
   ctx.provide('credentials', {
     resolve: vi.fn(async (reference: string) => reference === 'AVAILABLE_TOKEN' ? { value: 'test' } : undefined),
   } as never)
-  ctx.provide('agentPresets', {
+  const agentPresets = {
     defaultId: 'standard',
-    list: vi.fn(async () => [{ id: 'headless' }, { id: 'standard' }]),
-  } as never)
-  return { ctx, digitalEmployees, digitalEmployeeAgent, expert, parent }
+    list: vi.fn(async () => [{ id: 'restricted' }, { id: 'standard' }]),
+    standingKeyFor: vi.fn(async (preset?: string) => {
+      if (preset === 'broken') throw new Error(`/private/presets/${preset}/agent.cordis.yml failed to mount`)
+      if (preset !== 'standard' && preset !== 'restricted') throw new Error(`unknown preset: ${preset}`)
+      return { agentPreset: preset }
+    }),
+  }
+  ctx.provide('agentPresets', agentPresets as never)
+  return { ctx, agentPresets, digitalEmployees, digitalEmployeeAgent, expert, parent, skills }
 }
 
 describe('DigitalEmployeeManagementGateway', () => {
@@ -132,7 +179,7 @@ describe('DigitalEmployeeManagementGateway', () => {
     await ctx.plugin(DigitalEmployeeManagementGateway, { administrator: true })
     const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
 
-    await expect(gateway.listConfigurationAssets()).resolves.toEqual({
+    await expect(gateway.listConfigurationAssets({ preset: 'standard' })).resolves.toEqual({
       entries: [
         {
           id: 'mcp:server' as never, kind: 'mcp', label: 'server', available: false,
@@ -141,7 +188,22 @@ describe('DigitalEmployeeManagementGateway', () => {
         },
         {
           id: 'skill:available-skill' as never, kind: 'skill', label: 'available-skill', available: true,
-          source: 'skill-registry', permissionSummary: [], restartRequired: false,
+          source: 'skill-registry', managedByMarket: false, permissionSummary: [], restartRequired: false,
+        },
+        {
+          id: 'skill:market-active' as never, kind: 'skill', label: 'market-active',
+          description: 'Marketplace description.', available: true,
+          source: 'skill-market', version: '1.2.3', publisher: 'Market Author',
+          tags: ['managed', 'active'], managedByMarket: true,
+          permissionSummary: [], restartRequired: false,
+        },
+        {
+          id: 'skill:market-inactive' as never, kind: 'skill', label: 'market-inactive',
+          description: 'Installed but waiting for activation.', available: false,
+          source: 'skill-market', version: '2.0.0', publisher: 'Market Author',
+          tags: ['planning', 'managed'], managedByMarket: true,
+          permissionSummary: [], restartRequired: true,
+          diagnostic: 'Agent preset "standard" does not expose this installed Skill.',
         },
         {
           id: 'tool:available_tool' as never, kind: 'tool', label: 'available_tool',
@@ -155,6 +217,60 @@ describe('DigitalEmployeeManagementGateway', () => {
         },
       ],
     })
+    const result = await gateway.listConfigurationAssets({ preset: 'standard' })
+    expect(result.entries.filter(entry => entry.label === 'market-active')).toHaveLength(1)
+    expect(JSON.stringify(result)).not.toContain('/private/user/skills')
+    expect(JSON.stringify(result)).not.toContain('.zip')
+    await ctx.fiber.dispose()
+  })
+
+  it('scopes configuration Skill assets to the requested Agent preset without Host-global fallback', async () => {
+    const { agentPresets, ctx, skills } = harness()
+    await ctx.plugin(DigitalEmployeeManagementGateway, { administrator: true })
+    const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
+
+    const standard = await gateway.listConfigurationAssets({ preset: 'standard' })
+    const restricted = await gateway.listConfigurationAssets({ preset: 'restricted' })
+
+    expect(standard.entries.filter(entry => entry.kind === 'skill' && entry.available).map(entry => entry.label))
+      .toEqual(['available-skill', 'market-active'])
+    expect(restricted.entries.filter(entry => entry.kind === 'skill' && entry.available).map(entry => entry.label))
+      .toEqual(['restricted-skill'])
+    expect(standard.entries.some(entry => entry.label === 'restricted-skill')).toBe(false)
+    expect(restricted.entries.some(entry => entry.label === 'available-skill')).toBe(false)
+    expect([...standard.entries, ...restricted.entries].some(entry => entry.label === 'host-global-skill')).toBe(false)
+    expect(agentPresets.standingKeyFor).toHaveBeenNthCalledWith(1, 'standard')
+    expect(agentPresets.standingKeyFor).toHaveBeenNthCalledWith(2, 'restricted')
+    expect(skills.list).toHaveBeenNthCalledWith(1, { scope: { agentPreset: 'standard' } })
+    expect(skills.list).toHaveBeenNthCalledWith(2, { scope: { agentPreset: 'restricted' } })
+    await ctx.fiber.dispose()
+  })
+
+  it('reports a client-safe preset failure and does not inspect Host-global Skills', async () => {
+    const { ctx, skills } = harness()
+    await ctx.plugin(DigitalEmployeeManagementGateway, { administrator: true })
+    const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
+
+    await expect(gateway.listConfigurationAssets({ preset: 'broken' }))
+      .rejects.toThrow('Agent preset "broken"')
+    expect(skills.list).not.toHaveBeenCalled()
+    await ctx.fiber.dispose()
+  })
+
+  it('uses the preset standing lifecycle for concurrent asset reads without creating task runtime', async () => {
+    const { agentPresets, ctx, digitalEmployeeAgent } = harness()
+    await ctx.plugin(DigitalEmployeeManagementGateway, { administrator: true })
+    const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
+
+    const [first, second] = await Promise.all([
+      gateway.listConfigurationAssets({ preset: 'standard' }),
+      gateway.listConfigurationAssets({ preset: 'standard' }),
+    ])
+
+    expect(first).toEqual(second)
+    expect(agentPresets.standingKeyFor).toHaveBeenCalledTimes(2)
+    expect(digitalEmployeeAgent.createTask).not.toHaveBeenCalled()
+    expect(digitalEmployeeAgent.createPreviewTask).not.toHaveBeenCalled()
     await ctx.fiber.dispose()
   })
 

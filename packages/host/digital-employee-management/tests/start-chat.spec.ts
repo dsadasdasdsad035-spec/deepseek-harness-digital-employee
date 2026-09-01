@@ -85,6 +85,7 @@ function harness(options: {
       reasoningEffort: 'high',
     }))),
   } as never)
+  ctx.provide('agentPresets', {} as never)
   ctx.provide('attachments', { saveImages } as never)
   ctx.provide('digitalEmployees', {
     resolve,
@@ -94,6 +95,8 @@ function harness(options: {
   ctx.provide('digitalEmployeeAgent', {
     createTask,
   } as never)
+  ctx.provide('skills', {} as never)
+  ctx.provide('tools', {} as never)
   ctx.provide('workspaceRegistry', {
     get: vi.fn((id: string) => id === workspace.id ? workspace : undefined),
   } as never)

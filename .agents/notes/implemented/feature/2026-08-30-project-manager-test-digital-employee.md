@@ -14,7 +14,9 @@ The minimal digital employee example cannot prove that an employee's declared sk
 
 The assembled headless fixture starts an isolated employee through the existing digital employee Consumer. Its deterministic transcript records the resolved capability list, memory projection, tool and MCP use, and a durable project-decision result.
 
-The Web development bundle registers the template, skills, tools, and MCP manager so the digital employee management workspace can create and activate a `Project Manager (Test)` instance for manual verification.
+The Web development bundle registers the template and MCP manager. The shipped `project-manager-test` Agent preset owns the package's skills and tools, so employee sessions can authorize them without exposing fixture capabilities to ordinary `standard` sessions.
+
+The preset uses internal metadata: exact-id composition remains available to the employee template, while ordinary preset listing and authoring surfaces omit it.
 
 Each MCP client instance name is derived from the employee, Agent Session, and MCP declaration. Root employee sessions and expert child sessions can therefore mount the same declared MCP server concurrently.
 

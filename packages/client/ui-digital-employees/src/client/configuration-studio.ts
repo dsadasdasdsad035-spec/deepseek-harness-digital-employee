@@ -22,16 +22,21 @@ export interface DigitalEmployeeConfigurationStudioState {
   preview: DigitalEmployeeTemplatePreview | null
   diagnostics: Readonly<Record<string, DigitalEmployeeTemplateDraftValidation['diagnostics']>>
   assets: readonly DigitalEmployeeConfigurationAsset[]
+  assetStatus: 'idle' | 'loading' | 'ready' | 'error'
+  assetError: string | null
+  assetPreset: string | null
 }
 
 const INITIAL: DigitalEmployeeConfigurationStudioState = {
   status: 'idle', error: null, drafts: [], publications: [], preview: null, diagnostics: {}, assets: [],
+  assetStatus: 'idle', assetError: null, assetPreset: null,
 }
 
 /** Owns administrator configuration-studio remote operations. */
 export class DigitalEmployeeConfigurationStudioStore {
   /** Observable state shared by the configuration workspace. */
   readonly store: SnapshotStore<DigitalEmployeeConfigurationStudioState> = createSnapshotStore(INITIAL)
+  private assetGeneration = 0
 
   constructor(private readonly remote: Pick<DigitalEmployeeRemote,
     | 'listConfigurationDrafts'
@@ -49,17 +54,15 @@ export class DigitalEmployeeConfigurationStudioStore {
   async load(): Promise<void> {
     this.store.update((state) => { state.status = 'loading'; state.error = null })
     try {
-      const [drafts, publications, assets] = await Promise.all([
-        this.remote.listConfigurationDrafts(), this.remote.listConfigurationPublications(), this.remote.listConfigurationAssets(),
+      const [drafts, publications] = await Promise.all([
+        this.remote.listConfigurationDrafts(), this.remote.listConfigurationPublications(),
       ])
       if (!drafts.ok) throw new Error(drafts.error.message)
       if (!publications.ok) throw new Error(publications.error.message)
-      if (!assets.ok) throw new Error(assets.error.message)
       this.store.update((state) => {
         state.status = 'ready'
         state.drafts = drafts.value
         state.publications = publications.value
-        state.assets = assets.value.entries
       })
     } catch (error) {
       this.store.update((state) => {
@@ -67,6 +70,33 @@ export class DigitalEmployeeConfigurationStudioStore {
         state.error = error instanceof Error ? error.message : String(error)
       })
     }
+  }
+
+  /**
+   * Load assets visible through the selected Agent preset.
+   * @param preset - draft preset currently shown by the editor.
+   */
+  async loadAssets(preset: string): Promise<void> {
+    const generation = ++this.assetGeneration
+    this.store.update((state) => {
+      state.assetStatus = 'loading'
+      state.assetError = null
+      state.assetPreset = preset
+    })
+    const result = await this.remote.listConfigurationAssets({ preset })
+    if (generation !== this.assetGeneration) return
+    if (!result.ok) {
+      this.store.update((state) => {
+        state.assetStatus = 'error'
+        state.assetError = result.error.message
+      })
+      return
+    }
+    this.store.update((state) => {
+      state.assetStatus = 'ready'
+      state.assetError = null
+      state.assets = result.value.entries
+    })
   }
 
   /**

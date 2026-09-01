@@ -1,3 +1,4 @@
+{"type":"acceptance","stage":"skill-catalog-merged","skills":[{"name":"market-active","available":true,"source":"skill-market","version":"1.2.3","publisher":"Snapshot Author","tags":["managed","active"],"restartRequired":false},{"name":"market-inactive","available":false,"source":"skill-market","version":"2.0.0","publisher":"Snapshot Author","tags":["managed","restart"],"restartRequired":true}]}
 {"type":"acceptance","stage":"draft-created","revision":1,"templateId":"studio-assistant"}
 {"type":"acceptance","stage":"draft-validation-result","diagnostics":[]}
 {"type":"acceptance","stage":"draft-validated","diagnostics":0,"revision":1}

@@ -13,9 +13,9 @@
     - button "Agent presets":
       - img
       - text: Agent presets
-    - button "Skill Market":
+    - button "Marketplace":
       - img
-      - text: Skill Market
+      - text: Marketplace
   - button "Open configuration file"
   - button "Close":
     - img

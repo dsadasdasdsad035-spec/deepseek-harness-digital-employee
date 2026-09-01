@@ -157,7 +157,11 @@ export async function scanRoot(root: PresetRoot): Promise<AgentPreset[]> {
     // still mounts, it just shows its id.
     const metadata = await readPresetMetadata(directory)
     found.push({
-      id: child.name, trust: root.trust, path, ...metadata,
+      id: child.name,
+      trust: root.trust,
+      path,
+      ...metadata,
+      visibility: root.trust === 'system' && metadata.visibility === 'internal' ? 'internal' : 'user',
       ...broken === undefined ? {} : { broken },
     })
   }

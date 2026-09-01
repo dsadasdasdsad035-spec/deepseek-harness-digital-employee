@@ -399,8 +399,10 @@ Discovery is unmemoized: `list()` and `resolve()` re-read the roots on every cal
 
 ```ts cordis-catalog
 /**
- * Every preset the configured roots currently supply.
- * @returns the presets, first-root-wins per id.
+ * Every user-visible preset the configured roots currently supply.
+ * Internal shipped presets remain addressable through {@link resolve} but
+ * are omitted from ordinary authoring and session pickers.
+ * @returns the visible presets, first-root-wins per id.
  */
 async list(): Promise<AgentPreset[]>
 
@@ -843,10 +845,12 @@ Remote-only facade over the owning digital employee services.
 @Remote('listConfigurationDrafts') listConfigurationDrafts(): Promise<readonly DigitalEmployeeTemplateDraft[]>
 
 /**
- * List currently resolvable assets for administrator template selection.
+ * List assets resolvable through the selected Agent preset.
+ * @param request - preset whose standing scoped composition supplies Skill availability.
  * @returns deterministic capability inventory without credential values.
+ * @throws a client-safe diagnostic when the preset cannot be composed.
  */
-@Remote('listConfigurationAssets') async listConfigurationAssets(): Promise<DigitalEmployeeConfigurationAssetCatalog>
+@Remote('listConfigurationAssets') async listConfigurationAssets( request: ListDigitalEmployeeConfigurationAssetsRequest, ): Promise<DigitalEmployeeConfigurationAssetCatalog>
 
 /**
  * List immutable local publication provenance for the administrator.
@@ -858,7 +862,7 @@ Remote-only facade over the owning digital employee services.
  * @param request - initial display and instruction fields.
  * @returns detached new draft record.
  */
-@Remote('createConfigurationDraft') createConfigurationDraft( request: CreateDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplateDraft>
+@Remote('createConfigurationDraft') async createConfigurationDraft( request: CreateDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplateDraft>
 
 /**
  * Update one unpublished draft with optimistic revision control.

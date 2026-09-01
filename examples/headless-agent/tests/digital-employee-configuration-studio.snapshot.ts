@@ -37,6 +37,8 @@ describe('digital employee configuration-studio assembled snapshot', () => {
       .filter(line => line.includes('"type":"acceptance"'))
       .join('\n') + '\n'
     expect(transcript).toContain('"stage":"draft-validated"')
+    expect(transcript).toContain('"stage":"skill-catalog-merged"')
+    expect(transcript).toContain('"name":"market-inactive","available":false')
     expect(transcript).toContain('"stage":"preview-disposed"')
     expect(transcript).toContain('"stage":"upgrade-reviewed"')
     if (refreshing) await writeFile(expectedPath, transcript)
