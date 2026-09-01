@@ -95,6 +95,11 @@ class CatalogAttachmentStore extends AttachmentStore {
 const root = resolve(import.meta.dirname, '..')
 const OUT = 'docs/tool-catalog.md'
 
+/** `tool-*` packages that manage tools without registering model-facing schemas. */
+const TOOL_PACKAGE_EXCLUSIONS: Readonly<Record<string, string>> = {
+  'tool-market': 'Installs and inventories Tool plugins; installed plugins own the schemas they register after restart.',
+}
+
 /**
  * Register the descriptor needed to mount schema-producing consumers. Declares
  * the full capability set of the shipped in-process providers so consumers
@@ -636,7 +641,7 @@ export type ToolCatalog = CatalogPackage[]
 export function assertManifestComplete(packages: ToolPackage[] = TOOL_PACKAGES, scanRoot: string = root): void {
   const onDisk = globSync('packages/*/tool-*', { cwd: scanRoot }).map(p => basename(p)).sort()
   const listed = new Set(packages.map(p => p.dir))
-  const missing = onDisk.filter(dir => !listed.has(dir))
+  const missing = onDisk.filter(dir => !listed.has(dir) && TOOL_PACKAGE_EXCLUSIONS[dir] === undefined)
   if (missing.length > 0) {
     throw new Error(
       `gen-tool-catalog: ${missing.length} tool package(s) not in the boot manifest: ${missing.join(', ')}. `

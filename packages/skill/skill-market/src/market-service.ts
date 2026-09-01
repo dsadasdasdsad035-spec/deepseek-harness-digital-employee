@@ -48,7 +48,8 @@ import {
   MAX_EXTRACTED_BYTES,
   MAX_FILE_COUNT,
   MAX_ZIP_BYTES,
-} from './archive.ts'
+  KeyedMutex,
+} from '@deepseek-ai/dsh-marketplace-core'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { parseSkillDescriptor } from '@deepseek-ai/dsh-skill-filesystem'
 import { isSkillName } from '@deepseek-ai/dsh-skill'
@@ -72,7 +73,6 @@ import {
   writeSkillMarketManifest,
   type SkillMarketManifest,
 } from './manifest.ts'
-import { KeyedMutex } from './keyed-mutex.ts'
 import type { SkillMarketBannerMediaType } from './types.ts'
 
 /** 默认安装根：DSH_HOME/skills，与 skill-filesystem 的 USER_DSH_RANK 保持一致。 */

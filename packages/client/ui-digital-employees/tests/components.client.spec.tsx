@@ -277,4 +277,265 @@ describe('DigitalEmployeeWorkspace', () => {
 
     expect((result.getByRole('button', { name: 'Start chat' }) as HTMLButtonElement).disabled).toBe(true)
   })
+
+  it('renders configuration controls only when the administrator studio is ready', () => {
+    const state = {
+      status: 'ready',
+      error: null,
+      templates: [],
+      employees: [],
+      selectedId: null,
+      detail: null,
+      memories: [],
+      experts: [],
+      taskTree: [],
+      audit: [],
+      view: 'overview',
+      busy: null,
+      confirmation: null,
+      exported: null,
+    }
+    const configuration = {
+      load: vi.fn(),
+      create: vi.fn(() => Promise.resolve()),
+      update: vi.fn(() => Promise.resolve()),
+      validate: vi.fn(() => Promise.resolve()),
+      preview: vi.fn(() => Promise.resolve()),
+      disposePreview: vi.fn(() => Promise.resolve()),
+      publish: vi.fn(() => Promise.resolve()),
+      delete: vi.fn(() => Promise.resolve()),
+    }
+    const configurationState = {
+      status: 'ready',
+      error: null,
+      drafts: [{
+        id: 'draft-1',
+        templateId: 'operations-assistant',
+        display: { name: 'Operations Assistant', description: 'Coordinates delivery.' },
+        instructions: 'Coordinate delivery.',
+        personality: 'Helpful.',
+        preset: 'headless',
+        capabilities: { skills: [], tools: [], mcpServers: [], experts: [], allowSubagents: false },
+        mcpServers: [], memorySeeds: [],
+        experts: [],
+        delegation: { maxDepth: 0, maxConcurrency: 1, timeoutMs: 30_000 },
+        revision: 1,
+      }],
+      publications: [],
+      diagnostics: { 'draft-1': [] },
+      preview: null,
+      assets: [
+        {
+          id: 'skill:release-notes',
+          kind: 'skill',
+          label: 'release-notes',
+          description: 'Prepare release notes.',
+          available: true,
+        },
+        {
+          id: 'tool:workspace_lookup',
+          kind: 'tool',
+          label: 'workspace_lookup',
+          description: 'Inspect a workspace.',
+          available: true,
+        },
+        {
+          id: 'mcp:project-tracker',
+          kind: 'mcp',
+          label: 'project-tracker',
+          available: true,
+        },
+      ],
+    }
+    const result = render(
+      <DigitalEmployeeWorkspace
+        controller={{ load: vi.fn(), setView: vi.fn() } as never}
+        configurationStudio={configuration as never}
+        previewWorkspace={() => 'workspace-1'}
+        useSnapshot={((selector: (value: typeof state) => unknown) => selector(state)) as never}
+        useConfigurationSnapshot={((selector: (value: typeof configurationState) => unknown) => selector(configurationState)) as never}
+        close={vi.fn()}
+        startChat={vi.fn()}
+      />,
+    )
+
+    expect(result.getByRole('tab', { name: 'Employee operations' })).toBeTruthy()
+    fireEvent.click(result.getByRole('tab', { name: 'Template configuration' }))
+    expect(result.getByRole('region', { name: 'Template configuration' })).toBeTruthy()
+    expect(result.getByRole('button', { name: 'Create draft' })).toBeTruthy()
+    expect(result.getByRole('button', { name: 'Validate' })).toBeTruthy()
+    expect(result.getByRole('button', { name: 'Publish' })).toBeTruthy()
+    fireEvent.click(result.getByRole('button', { name: 'Edit' }))
+    fireEvent.click(result.getByRole('checkbox', { name: 'release-notes' }))
+    fireEvent.click(result.getByRole('checkbox', { name: 'workspace_lookup' }))
+    fireEvent.click(result.getByRole('checkbox', { name: 'project-tracker' }))
+    fireEvent.change(result.getByRole('textbox', { name: 'Search skills' }), { target: { value: 'unknown' } })
+    expect(result.queryByRole('checkbox', { name: 'unknown' })).toBeNull()
+    fireEvent.change(result.getByRole('textbox', { name: 'Edit template personality' }), {
+      target: { value: 'Direct and practical.' },
+    })
+    fireEvent.click(result.getByRole('button', { name: 'Save draft' }))
+    expect(configuration.update).toHaveBeenCalledWith(expect.objectContaining({
+      draftId: 'draft-1',
+      revision: 1,
+      patch: expect.objectContaining({
+        personality: 'Direct and practical.',
+        capabilities: expect.objectContaining({
+          skills: ['release-notes'],
+          tools: ['workspace_lookup'],
+          mcpServers: ['project-tracker'],
+        }),
+      }),
+    }))
+  })
+
+  it('allows unavailable selections to be removed but prevents new unavailable MCP selections', () => {
+    const state = {
+      status: 'ready',
+      error: null,
+      templates: [],
+      employees: [],
+      selectedId: null,
+      detail: null,
+      memories: [],
+      experts: [],
+      taskTree: [],
+      audit: [],
+      view: 'overview',
+      busy: null,
+      confirmation: null,
+      exported: null,
+    }
+    const update = vi.fn(() => Promise.resolve())
+    const configuration = {
+      load: vi.fn(),
+      update,
+      validate: vi.fn(),
+      preview: vi.fn(),
+      publish: vi.fn(),
+      delete: vi.fn(),
+    }
+    const configurationState = {
+      status: 'ready',
+      error: null,
+      drafts: [{
+        id: 'draft-1',
+        templateId: 'operations-assistant',
+        display: { name: 'Operations Assistant', description: 'Coordinates delivery.' },
+        instructions: 'Coordinate delivery.',
+        personality: 'Helpful.',
+        preset: 'headless',
+        capabilities: {
+          skills: ['retired-skill'],
+          tools: ['missing-tool'],
+          mcpServers: [],
+          experts: [],
+          allowSubagents: false,
+        },
+        mcpServers: [],
+        memorySeeds: [],
+        experts: [],
+        delegation: { maxDepth: 0, maxConcurrency: 1, timeoutMs: 30_000 },
+        revision: 1,
+      }],
+      publications: [],
+      diagnostics: { 'draft-1': [] },
+      preview: null,
+      assets: [
+        {
+          id: 'skill:retired-skill',
+          kind: 'skill',
+          label: 'retired-skill',
+          available: false,
+          diagnostic: 'Skill is no longer installed.',
+        },
+        {
+          id: 'mcp:static-server',
+          kind: 'mcp',
+          label: 'static-server',
+          available: false,
+          diagnostic: 'This MCP client cannot be published safely.',
+        },
+      ],
+    }
+    const result = render(
+      <DigitalEmployeeWorkspace
+        controller={{ load: vi.fn(), setView: vi.fn() } as never}
+        configurationStudio={configuration as never}
+        useSnapshot={((selector: (value: typeof state) => unknown) => selector(state)) as never}
+        useConfigurationSnapshot={((selector: (value: typeof configurationState) => unknown) =>
+          selector(configurationState)) as never}
+        close={vi.fn()}
+        startChat={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(result.getByRole('tab', { name: 'Template configuration' }))
+    fireEvent.click(result.getByRole('button', { name: 'Edit' }))
+
+    const retiredSkill = result.getByRole('checkbox', { name: 'retired-skill' }) as HTMLInputElement
+    expect(retiredSkill.checked).toBe(true)
+    expect(retiredSkill.disabled).toBe(false)
+    fireEvent.click(retiredSkill)
+
+    const staticMcp = result.getByRole('checkbox', { name: 'static-server' }) as HTMLInputElement
+    expect(staticMcp.checked).toBe(false)
+    expect(staticMcp.disabled).toBe(true)
+
+    fireEvent.click(result.getByRole('button', { name: 'Remove' }))
+    fireEvent.click(result.getByRole('button', { name: 'Save draft' }))
+
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({
+      patch: expect.objectContaining({
+        capabilities: expect.objectContaining({
+          skills: [],
+          tools: [],
+          mcpServers: [],
+        }),
+      }),
+    }))
+  })
+
+  it('explains why template configuration is unavailable instead of rendering a blank page', () => {
+    const state = {
+      status: 'ready',
+      error: null,
+      templates: [],
+      employees: [],
+      selectedId: null,
+      detail: null,
+      memories: [],
+      experts: [],
+      taskTree: [],
+      audit: [],
+      view: 'overview',
+      busy: null,
+      confirmation: null,
+      exported: null,
+    }
+    const configuration = { load: vi.fn() }
+    const configurationState = {
+      status: 'error',
+      error: 'digital employee configuration administrator mode is disabled',
+      drafts: [],
+      publications: [],
+      preview: null,
+      diagnostics: {},
+      assets: [],
+    }
+    const result = render(
+      <DigitalEmployeeWorkspace
+        controller={{ load: vi.fn(), setView: vi.fn() } as never}
+        configurationStudio={configuration as never}
+        useSnapshot={((selector: (value: typeof state) => unknown) => selector(state)) as never}
+        useConfigurationSnapshot={((selector: (value: typeof configurationState) => unknown) => selector(configurationState)) as never}
+        close={vi.fn()}
+        startChat={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(result.getByRole('tab', { name: 'Template configuration' }))
+    expect(result.getByRole('region', { name: 'Template configuration' })).toBeTruthy()
+    expect(result.getByRole('alert').textContent).toContain('administrator mode is disabled')
+  })
 })

@@ -14,6 +14,14 @@ gateway 把所有权威操作委托给 `ctx.digitalEmployees`、`ctx.digitalEmpl
 
 `startChat` 接受调用方生成的 Session ID、一个提交身份，以及非空文本或编码图像。Host 在同一项操作中解析员工当前可用性、快照 `ctx.agentDefaultModel`、使用 Host 进程工作目录创建员工根 Agent、接纳附件，并排入标准的首条用户消息。重复同一提交会共享其已接受结果；使用不同任务数据复用该身份会被拒绝。验证、取消、附件接纳或首条消息失败时，Host 会 dispose 未发布的工作，不会返回可用的空员工 Session。
 
+## 配置工作室
+
+设置 `administrator: true` 可启用仅限本机管理员的模板配置操作。`studioFile` 指定保存可变草稿与发布溯源记录的私有用户 JSON 文件；相对路径相对于 Host 进程工作目录解析。gateway 在创建预览或发布版本时，会在该文件所在目录下实体化根指令与专家指令。
+
+管理员使用 `createConfigurationDraft`、`updateConfigurationDraft`、`validateConfigurationDraft`、`previewConfigurationDraft`、`disposeConfigurationPreview`、`publishConfigurationDraft`、`listConfigurationDrafts` 和 `listConfigurationPublications`。验证会在预览或发布前解析 preset、Skill、Tool、MCP client、凭据引用、权限与委派要求。配置记录只包含凭据引用，不接受也不返回已解析的凭据值。
+
+发布会分配不可变的本地版本，既有的 `listTemplates`、员工创建和 `previewUpgrade` 操作均可解析该版本。预览会创建隔离且带标记的 Session 与临时指令文件；dispose 后会同时删除两者，不会新增员工实例、记忆、导出内容或普通管理视图。本地发布版本中的长期记忆种子会在创建员工时提升为长期记忆。任一记忆种子被拒绝时，系统会回滚新员工，因此创建不会留下部分配置的实例。
+
 ## 模型体验
 
 ### 管理操作触发的工作

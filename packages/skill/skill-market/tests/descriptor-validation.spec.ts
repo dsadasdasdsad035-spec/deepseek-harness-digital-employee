@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { inspectZipArchive } from '../src/archive.ts'
+import { inspectZipArchive } from '@deepseek-ai/dsh-marketplace-core'
 import { validateArchive } from '../src/market-service.ts'
 import { buildZip } from './fixtures/zip.ts'
 

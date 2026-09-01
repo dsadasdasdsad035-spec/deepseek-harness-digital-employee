@@ -1289,6 +1289,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
   }
 
   ctx.on('session/event', (session, event) => {
+    if (session.header.preview === true) return
     if (event.type !== 'agent/inbox/spliced') return
     const agent = ctx.agents.get(session.id)
     if (agent?.session !== session) return
@@ -3337,6 +3338,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         const queue = new FrameQueue<RpcRequest<MuxFrame>>()
         muxQueues.add(queue)
         for (const session of ctx.sessions.list()) {
+          if (session.header.preview === true) continue
           subscribeSession(queue, session)
         }
         for (const pending of pendingQuestions.values()) {
@@ -3355,6 +3357,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         // in arrival order per session; a reconnecting client rebuilds its
         // queue view from these alone.
         for (const session of ctx.sessions.list()) {
+          if (session.header.preview === true) continue
           const agent = ctx.agents.get(session.id)
           if (agent?.session === session && agent.inbox.hasPending) {
             queue.push(frame({ type: 'session/queue', sessionId: session.id, items: queueItems(agent) }))
@@ -3367,6 +3370,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         const jobs = ctx.get('jobs')
         if (jobs !== undefined) {
           for (const session of ctx.sessions.list()) {
+            if (session.header.preview === true) continue
             const views = jobViews(jobs.list(ctx.agents.get(session.id)))
             if (views.length > 0) {
               queue.push(frame({ type: 'session/jobs', sessionId: session.id, jobs: views }))
@@ -3379,6 +3383,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         const openCalls = new Map<SessionId, Map<string, { name: string; args: unknown }>>()
         const disposers = [
           ctx.on('session/event', (session: Session, event: SessionEvent) => {
+            if (session.header.preview === true) return
             if (event.type === 'tool/call') {
               const data = event.data as ToolCallData
               try {
@@ -3399,6 +3404,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             queue.push(frame({ type: 'session/event', sessionId: session.id, event, ...view === undefined ? {} : { view } }))
           }),
           ctx.on('session/created', (session: Session) => {
+            if (session.header.preview === true) return
             subscribeSession(queue, session)
             // The subscribe frame clears the client's task mirror, and a
             // session born after the stream opened missed the baseline loop.
@@ -3410,10 +3416,12 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             }
           }),
           ctx.on('session/disposed', (session: Session) => {
+            if (session.header.preview === true) return
             openCalls.delete(session.id)
           }),
           ...jobs === undefined ? [] : [jobs.onJobsChanged((owner) => {
             if (owner !== undefined) {
+              if (owner.session.header.preview === true) return
               // The exact owner instance the fence compares against, so the
               // push stays correct even while that Agent's scope is tearing
               // down and a lookup by id would already miss.
@@ -3423,6 +3431,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             // An unowned task is visible to every caller, so every subscribed
             // session's set changed with it.
             for (const session of ctx.sessions.list()) {
+              if (session.header.preview === true) continue
               queue.push(frame({
                 type: 'session/jobs',
                 sessionId: session.id,
@@ -3450,6 +3459,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         let archivedSessionIds = ctx.workspaceRegistry.archivedSessionIds
         const disposers = [
           ctx.on('session/created', (session: Session) => {
+            if (session.header.preview === true) return
             queue.push(frame({
               type: 'host/session-added',
               sessionId: session.id,
@@ -3461,12 +3471,15 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             }))
           }),
           ctx.on('session/disposed', (session: Session) => {
+            if (session.header.preview === true) return
             queue.push(frame({ type: 'host/session-removed', sessionId: session.id }))
           }),
           ctx.on('agent/status', ({ agent, status }: { agent: Agent; status: AgentStatus }) => {
+            if (agent.session.header.preview === true) return
             queue.push(frame({ type: 'host/session-status', sessionId: agent.id, running: status === 'running' }))
           }),
           ctx.on('agent/error', ({ agent, error }: { agent: Agent; error: unknown }) => {
+            if (agent.session.header.preview === true) return
             queue.push(frame({ type: 'host/agent-error', sessionId: agent.id, message: errorChain(error) }))
           }),
           ctx.on('domain/changed', (change) => {

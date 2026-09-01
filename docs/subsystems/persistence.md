@@ -86,6 +86,8 @@ interface SessionHeader {
    * would replay history the model can no longer act on.
    */
   readonly agentPreset?: string
+  /** Excludes a short-lived local composition from durable persistence and normal session discovery. */
+  readonly preview?: true
 }
 ```
 
@@ -118,6 +120,7 @@ interface CreateSessionOptions {
     readonly origin?: 'subagent'
     readonly delegationDepth?: number
     readonly agentPreset?: string
+    readonly preview?: true
   }
 }
 ```

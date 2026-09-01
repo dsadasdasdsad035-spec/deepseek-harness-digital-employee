@@ -911,6 +911,9 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
+      '@deepseek-ai/dsh-mcp-market':
+        specifier: workspace:^
+        version: link:../../mcp/mcp-market
       '@deepseek-ai/dsh-message-feedback':
         specifier: workspace:^
         version: link:../../feedback/message-feedback
@@ -929,6 +932,9 @@ importers:
       '@deepseek-ai/dsh-skill-market':
         specifier: workspace:^
         version: link:../../skill/skill-market
+      '@deepseek-ai/dsh-tool-market':
+        specifier: workspace:^
+        version: link:../../tool/tool-market
       '@deepseek-ai/dsh-typert-registry':
         specifier: workspace:^
         version: link:../../typert/registry
@@ -1494,6 +1500,9 @@ importers:
       '@deepseek-ai/dsh-mcp-client':
         specifier: workspace:^
         version: link:../../mcp/mcp-client
+      '@deepseek-ai/dsh-mcp-market':
+        specifier: workspace:^
+        version: link:../../mcp/mcp-market
       '@deepseek-ai/dsh-message-feedback':
         specifier: workspace:^
         version: link:../../feedback/message-feedback
@@ -1527,6 +1536,9 @@ importers:
       '@deepseek-ai/dsh-subprocess':
         specifier: workspace:^
         version: link:../../subprocess/subprocess
+      '@deepseek-ai/dsh-tool-market':
+        specifier: workspace:^
+        version: link:../../tool/tool-market
       '@deepseek-ai/dsh-web-frontend':
         specifier: workspace:^
         version: link:../../../apps/web
@@ -5362,6 +5374,9 @@ importers:
 
   packages/host/digital-employee-management:
     dependencies:
+      '@deepseek-ai/dsh-atomic-write':
+        specifier: workspace:^
+        version: link:../../util/atomic-write
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -5375,9 +5390,15 @@ importers:
       '@deepseek-ai/dsh-agent-default-model':
         specifier: workspace:^
         version: link:../../core/agent-default-model
+      '@deepseek-ai/dsh-agent-presets':
+        specifier: workspace:^
+        version: link:../../preset/agent-presets
       '@deepseek-ai/dsh-attachment':
         specifier: workspace:^
         version: link:../../attachment/attachment
+      '@deepseek-ai/dsh-credentials':
+        specifier: workspace:^
+        version: link:../../credentials/credentials
       '@deepseek-ai/dsh-digital-employee':
         specifier: workspace:^
         version: link:../../core/digital-employee
@@ -5390,12 +5411,27 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
+      '@deepseek-ai/dsh-mcp-client':
+        specifier: workspace:^
+        version: link:../../mcp/mcp-client
+      '@deepseek-ai/dsh-mcp-market':
+        specifier: workspace:^
+        version: link:../../mcp/mcp-market
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
+      '@deepseek-ai/dsh-skill':
+        specifier: workspace:^
+        version: link:../../skill/skill
       '@deepseek-ai/dsh-subagent':
         specifier: workspace:^
         version: link:../../subagent/subagent
+      '@deepseek-ai/dsh-tool-market':
+        specifier: workspace:^
+        version: link:../../tool/tool-market
+      '@deepseek-ai/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
       '@deepseek-ai/dsh-typert-generator':
         specifier: workspace:^
         version: link:../../typert/generator
@@ -6131,6 +6167,46 @@ importers:
       '@modelcontextprotocol/server-filesystem':
         specifier: ^2026.7.4
         version: 2026.7.10(zod@4.4.3)
+
+  packages/mcp/mcp-market:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-atomic-write':
+        specifier: workspace:^
+        version: link:../../util/atomic-write
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-credentials':
+        specifier: workspace:^
+        version: link:../../credentials/credentials
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-marketplace-core':
+        specifier: workspace:^
+        version: link:../../util/marketplace-core
+      '@deepseek-ai/dsh-mcp-client':
+        specifier: workspace:^
+        version: link:../mcp-client
+      '@deepseek-ai/dsh-typert-generator':
+        specifier: workspace:^
+        version: link:../../typert/generator
+      '@deepseek-ai/dsh-typert-protocol':
+        specifier: workspace:^
+        version: link:../../typert/protocol
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
 
   packages/plan/plan-mode:
     dependencies:
@@ -7488,6 +7564,9 @@ importers:
 
   packages/skill/skill-market:
     dependencies:
+      '@deepseek-ai/dsh-marketplace-core':
+        specifier: workspace:^
+        version: link:../../util/marketplace-core
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -8583,6 +8662,40 @@ importers:
         specifier: workspace:^
         version: link:../../interaction/user-questions
 
+  packages/tool/tool-market:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-marketplace-core':
+        specifier: workspace:^
+        version: link:../../util/marketplace-core
+      '@deepseek-ai/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
+      '@deepseek-ai/dsh-typert-generator':
+        specifier: workspace:^
+        version: link:../../typert/generator
+      '@deepseek-ai/dsh-typert-protocol':
+        specifier: workspace:^
+        version: link:../../typert/protocol
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
+
   packages/typert/generator:
     dependencies:
       '@jridgewell/gen-mapping':
@@ -8690,6 +8803,15 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+
+  packages/util/marketplace-core:
+    dependencies:
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.3
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
 
   packages/util/native-command:
     devDependencies:

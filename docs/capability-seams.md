@@ -108,15 +108,19 @@ flowchart LR
   pkg_skill_market["skill-market"]
   svc_skillMarket["ctx.skillMarket<br/>Managed skill marketplace gateway"]
   pkg_ui_skill_market["ui-skill-market"]
+  pkg_tool_market["tool-market"]
+  svc_toolMarket["ctx.toolMarket<br/>Managed Tool marketplace gateway"]
+  pkg_digital_employee_management["digital-employee-management"]
+  pkg_mcp_market["mcp-market"]
+  svc_mcpMarket["ctx.mcpMarket<br/>Managed MCP marketplace gateway"]
+  pkg_mcp_client["mcp-client"]
   pkg_digital_employee["digital-employee"]
   svc_digitalEmployees["ctx.digitalEmployees<br/>Digital employee registry and provider seam"]
   pkg_digital_employee_file["digital-employee-file"]
   pkg_digital_employee_agent["digital-employee-agent"]
-  pkg_digital_employee_management["digital-employee-management"]
   svc_digitalEmployeeAgent["ctx.digitalEmployeeAgent<br/>Digital employee Agent composition"]
   svc_digitalEmployeeManagement["ctx.digitalEmployeeManagement<br/>Digital employee Host management gateway"]
   pkg_ui_digital_employees["ui-digital-employees"]
-  pkg_mcp_client["mcp-client"]
   svc_mcpClients["ctx.mcpClients<br/>Dynamic MCP client manager"]
   svc_agents["ctx.agents<br/>Agent service"]
   pkg_acp["acp"]
@@ -263,6 +267,7 @@ flowchart LR
   pkg_lsp --> svc_lsp
   pkg_lsp_local --> svc_lsp
   pkg_mcp_client --> svc_mcpClients
+  pkg_mcp_market --> svc_mcpMarket
   pkg_message_feedback --> svc_messageFeedback
   pkg_modules --> svc_clientModules
   pkg_permission_presets --> svc_permissionPresets
@@ -313,6 +318,7 @@ flowchart LR
   pkg_terminal --> svc_terminals
   pkg_terminal_bash --> svc_terminals
   pkg_token_meter --> svc_tokenMeter
+  pkg_tool_market --> svc_toolMarket
   pkg_tools --> svc_tools
   pkg_typert_registry --> svc_typert
   pkg_user_questions --> svc_userQuestions
@@ -366,6 +372,8 @@ flowchart LR
   svc_llm --> pkg_compaction_basic
   svc_lsp --> pkg_tool_lsp
   svc_mcpClients --> pkg_digital_employee_agent
+  svc_mcpMarket --> pkg_digital_employee_management
+  svc_mcpMarket --> pkg_ui_skill_market
   svc_sandbox --> pkg_bash_sandbox
   svc_sandbox --> pkg_terminal_bash
   svc_sandboxPolicy --> pkg_bash_sandbox
@@ -424,6 +432,8 @@ flowchart LR
   svc_systemPrompt --> pkg_tools
   svc_terminals --> pkg_tool_terminal
   svc_tokenMeter --> pkg_compaction_basic
+  svc_toolMarket --> pkg_digital_employee_management
+  svc_toolMarket --> pkg_ui_skill_market
   svc_toolResultPruner --> pkg_compaction_basic
   svc_tools --> pkg_agent_loop
   svc_tools --> pkg_tool_ask_user
@@ -446,7 +456,9 @@ flowchart LR
   svc_workflowEngine --> pkg_tool_workflow
   svc_workspaceRegistry --> pkg_apiproxy
   svc_fs -. event gate .-> pkg_fs_observation_policy
+  svc_mcpMarket -. event gate .-> pkg_mcp_client
   svc_skillMarket -. event gate .-> pkg_skill_filesystem
+  svc_toolMarket -. event gate .-> pkg_tools
 ```
 
 | ctx key | Role | Owner | Implementations | Direct consumers | Companion plugins | Note |
@@ -482,6 +494,8 @@ flowchart LR
 | `ctx.sessionProjectionCache` | `core` | [`session-projection-cache`](../packages/session/session-projection-cache) | - | [`host-apiproxy`](../packages/host/apiproxy) | - | Durably checkpoints projection unit states per session (throttled + turn/end/detach mandatory points) and serves the cold-read ladder: cache row + persistence tail replay, so listings never load full logs. |
 | `ctx.skills` | `seam` | [`skill`](../packages/skill/skill) | [`skill-badge`](../packages/skill/skill-badge), [`skill-filesystem`](../packages/skill/skill-filesystem) | [`tool-skill`](../packages/skill/tool-skill) | - | Merges provider skill catalogs; tool-skill renders the session-prefix catalog and loads complete skill bodies. |
 | `ctx.skillMarket` | `core` | [`skill-market`](../packages/skill/skill-market) | - | `ui-skill-market` | [`skill-filesystem`](../packages/skill/skill-filesystem) | Owns Host-side archive validation and atomic marketplace mutations; the browser settings section consumes its generated Remote methods, and successful commits invalidate filesystem skill discovery. |
+| `ctx.toolMarket` | `core` | [`tool-market`](../packages/tool/tool-market) | - | `ui-skill-market`, `digital-employee-management` | [`tools`](../packages/core/tools) | Owns signed archive validation and restart-bound Tool package mutations; activated package plugins register their tools through the existing registry. |
+| `ctx.mcpMarket` | `core` | [`mcp-market`](../packages/mcp/mcp-market) | - | `ui-skill-market`, `digital-employee-management` | [`mcp-client`](../packages/mcp/mcp-client) | Owns declarative package lifecycle and credential-reference configuration; a fresh Host composition resolves references and mounts configured servers through the MCP client manager. |
 | `ctx.digitalEmployees` | `seam` | [`digital-employee`](../packages/core/digital-employee) | [`digital-employee-file`](../packages/core/digital-employee-file) | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | - | Owns template and instance lookup, lifecycle mutation, memory, audit, and durable employee records; composition and Host task admission consume the resolved employee state. |
 | `ctx.digitalEmployeeAgent` | `core` | [`digital-employee-agent`](../packages/core/digital-employee-agent) | - | `digital-employee-management` | - | Resolves an active employee into the existing Agent, prompt, skill, tool, MCP, memory, and delegation extension points before creating an employee-owned root Session. |
 | `ctx.digitalEmployeeManagement` | `core` | `digital-employee-management` | - | `ui-digital-employees` | - | Exposes typed management and atomic chat-start Remote operations while delegating durable state and Agent composition to their owning services. |

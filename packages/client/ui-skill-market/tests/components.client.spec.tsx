@@ -15,6 +15,7 @@ import type { SkillMarketEntry, SkillMarketSkillId } from '@deepseek-ai/dsh-api-
 import { SkillMarketSection } from '../src/client/SkillMarketSection.tsx'
 import type { SkillMarketSectionInjected, SkillMarketSectionProps } from '../src/client/SkillMarketSection.tsx'
 import { SkillMarketStore } from '../src/client/store.ts'
+import { McpMarketStore, ToolMarketStore } from '../src/client/package-stores.ts'
 import type { SkillMarketRemote, SkillMarketState } from '../src/client/store.ts'
 import { en } from '../src/client/locales.ts'
 
@@ -78,10 +79,28 @@ function setup(options: SetupOptions = {}) {
     },
   } as SkillMarketRemote
   const store = new SkillMarketStore(remote)
+  const toolStore = new ToolMarketStore({
+    async list() {
+      return { ok: true, value: { ok: true, value: { entries: [] } } }
+    },
+  } as never)
+  const mcpStore = new McpMarketStore({
+    async list() {
+      return { ok: true, value: { ok: true, value: { entries: [] } } }
+    },
+  } as never)
   const props: SkillMarketSectionProps = {
     controller: store,
-    hooks: { snapshot: store.store },
+    toolController: toolStore,
+    mcpController: mcpStore,
+    hooks: {
+      snapshot: store.store,
+      toolSnapshot: toolStore.store,
+      mcpSnapshot: mcpStore.store,
+    },
     useSnapshot: bindSnapshotSelector(store.store),
+    useToolSnapshot: bindSnapshotSelector(toolStore.store),
+    useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
     t: (key: string) => en[key as keyof typeof en],
   } as unknown as SkillMarketSectionProps
   return render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
@@ -263,10 +282,24 @@ describe('SkillMarketSection', () => {
         return { ok: false, error: { code: 'transport', message: 'boom', details: {} } }
       },
     } as SkillMarketRemote)
+    const toolStore = new ToolMarketStore({ list: async () => ({
+      ok: true, value: { ok: true, value: { entries: [] } },
+    }) } as never)
+    const mcpStore = new McpMarketStore({ list: async () => ({
+      ok: true, value: { ok: true, value: { entries: [] } },
+    }) } as never)
     const props: SkillMarketSectionProps = {
       controller: store,
-      hooks: { snapshot: store.store },
+      toolController: toolStore,
+      mcpController: mcpStore,
+      hooks: {
+        snapshot: store.store,
+        toolSnapshot: toolStore.store,
+        mcpSnapshot: mcpStore.store,
+      },
       useSnapshot: bindSnapshotSelector(store.store),
+      useToolSnapshot: bindSnapshotSelector(toolStore.store),
+      useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
       t: (key: string) => en[key as keyof typeof en],
     } as unknown as SkillMarketSectionProps
     render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)

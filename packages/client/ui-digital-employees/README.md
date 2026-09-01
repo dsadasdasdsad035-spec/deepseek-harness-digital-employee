@@ -12,6 +12,8 @@ The workspace lists registered templates and durable instances, exposes lifecycl
 
 Destructive operations require an explicit UI confirmation. Upgrade apply follows preview, import creates a fresh inactive instance, and exported artifacts contain no credentials.
 
+When the Host enables local administrator configuration, the workspace adds a separate **Template configuration** tab beside **Employee operations**. It lists drafts and publications, edits template metadata, root instructions, capability declarations, MCP references, expert definitions, and memory seeds, then shows validation diagnostics before preview or publish. Credential values never appear in this view. Preview state is temporary; published versions return to the existing template picker and upgrade-review flows. When the Host does not expose configuration operations, ordinary users see only the unchanged employee workspace.
+
 ## Chat Entry
 
 At the leading semantic position of a new-task composer, `@` discovery shows employee identity, template, and current availability. Selecting an active employee inserts one structured routing reference carrying the stable instance ID. The reference is omitted from model-visible text, and a composer cannot select a second employee or move its employee owner after task content.

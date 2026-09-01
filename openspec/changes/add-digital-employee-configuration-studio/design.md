@@ -67,6 +67,12 @@ The management UI uses the existing template list and upgrade comparison mechani
 
 Alternative considered: edit published versions in place. Rejected because it would make employee behavior drift and remove the reviewable upgrade boundary.
 
+### Materialize authored instructions before publication
+
+The studio persists draft instruction text in its private document. Publishing writes that text to a version-owned `AGENTS.md` file under the private studio directory and registers the resulting immutable file instruction source with a content digest.
+
+Alternative considered: add an inline instruction source to the runtime template model. Rejected because the runtime already uses file-backed instruction provenance and the new inline form would create a second composition path.
+
 ### Gate the studio through explicit local administrator configuration
 
 The Host configuration has a validated local administrator mode. The Web client receives only the configuration-studio operations it is allowed to invoke, and hides the studio navigation otherwise.

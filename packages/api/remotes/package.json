@@ -77,6 +77,8 @@
     "@deepseek-ai/dsh-session-reference": "workspace:^",
     "@deepseek-ai/dsh-settings": "workspace:^",
     "@deepseek-ai/dsh-skill-market": "workspace:^",
+    "@deepseek-ai/dsh-tool-market": "workspace:^",
+    "@deepseek-ai/dsh-mcp-market": "workspace:^",
     "@deepseek-ai/dsh-typert-registry": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"
   },
@@ -100,6 +102,8 @@
     "@deepseek-ai/dsh-session-reference": "workspace:^",
     "@deepseek-ai/dsh-settings": "workspace:^",
     "@deepseek-ai/dsh-skill-market": "workspace:^",
+    "@deepseek-ai/dsh-tool-market": "workspace:^",
+    "@deepseek-ai/dsh-mcp-market": "workspace:^",
     "@deepseek-ai/dsh-typert-registry": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"
   }

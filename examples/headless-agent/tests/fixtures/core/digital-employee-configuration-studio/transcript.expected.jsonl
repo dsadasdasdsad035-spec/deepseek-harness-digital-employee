@@ -1,0 +1,10 @@
+{"type":"acceptance","stage":"draft-created","revision":1,"templateId":"studio-assistant"}
+{"type":"acceptance","stage":"draft-validation-result","diagnostics":[]}
+{"type":"acceptance","stage":"draft-validated","diagnostics":0,"revision":1}
+{"type":"acceptance","stage":"preview-created","draftIdMatches":true,"state":"active"}
+{"type":"acceptance","stage":"preview-disposed","previewId":true}
+{"type":"acceptance","stage":"first-version-published","version":"0.1.1"}
+{"type":"acceptance","stage":"second-version-published","version":"0.1.2"}
+{"type":"acceptance","stage":"published-versions-resolved","versions":["0.1.1","0.1.2"]}
+{"type":"acceptance","stage":"employee-created","state":"inactive","seededMemory":true}
+{"type":"acceptance","stage":"upgrade-reviewed","currentVersion":"0.1.1","targetVersion":"0.1.2","addedCapabilities":{"skills":[],"tools":[],"mcpServers":[],"experts":[],"allowSubagents":false}}

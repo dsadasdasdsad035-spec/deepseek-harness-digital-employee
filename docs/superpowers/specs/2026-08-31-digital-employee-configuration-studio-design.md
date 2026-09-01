@@ -1,5 +1,7 @@
 # Digital Employee Configuration Studio Design
 
+English | [中文](2026-08-31-digital-employee-configuration-studio-design.zh.md)
+
 ## Purpose
 
 Add a local administrator configuration studio to the existing digital employee management surface.

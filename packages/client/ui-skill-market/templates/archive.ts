@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { lstat, mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,6 +20,9 @@ export const TEMPLATE_ARCHIVE_PATH = join(
   'public',
   TEMPLATE_ARCHIVE_FILENAME,
 )
+/** Checked-in Tool and MCP publisher template assets. */
+export const TOOL_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'tool-market-template.zip')
+export const MCP_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'mcp-market-template.zip')
 
 const TEMPLATE_SOURCE_PATHS = [
   'README.md',
@@ -177,4 +181,53 @@ export async function generateTemplateArchive(
   await mkdir(dirname(outputPath), { recursive: true })
   await writeFile(outputPath, archive)
   return archive
+}
+
+async function generatePackageTemplate(
+  sourceDirectory: string,
+  descriptorName: 'tool-package.json' | 'mcp-package.json',
+  outputPath: string,
+): Promise<Buffer> {
+  const descriptor = JSON.parse(await readFile(join(sourceDirectory, descriptorName), 'utf8')) as {
+    files: Record<string, string>
+  }
+  const readme = await readFile(join(sourceDirectory, 'README.md'))
+  const archiveInput: Zippable = {
+    'README.md': [readme, { mtime: FIXED_MODIFICATION_TIME }],
+  }
+  if (descriptorName === 'tool-package.json') {
+    const entry = await readFile(join(sourceDirectory, 'plugin/index.js'))
+    descriptor.files = {
+      'README.md': createHash('sha256').update(readme).digest('hex'),
+      'plugin/index.js': createHash('sha256').update(entry).digest('hex'),
+    }
+    archiveInput['plugin/index.js'] = [entry, { mtime: FIXED_MODIFICATION_TIME }]
+  } else {
+    descriptor.files = {
+      'README.md': createHash('sha256').update(readme).digest('hex'),
+    }
+  }
+  archiveInput[descriptorName] = [
+    Buffer.from(`${JSON.stringify(descriptor, null, 2)}\n`),
+    { mtime: FIXED_MODIFICATION_TIME },
+  ]
+  const archive = Buffer.from(zipSync(archiveInput, { level: 9 }))
+  await mkdir(dirname(outputPath), { recursive: true })
+  await writeFile(outputPath, archive)
+  return archive
+}
+
+/** Generate all browser-download marketplace templates. */
+export async function generateMarketplaceTemplateArchives(): Promise<void> {
+  await generateTemplateArchive()
+  await generatePackageTemplate(
+    join(packageDirectory, 'templates', 'template-tool'),
+    'tool-package.json',
+    TOOL_TEMPLATE_ARCHIVE_PATH,
+  )
+  await generatePackageTemplate(
+    join(packageDirectory, 'templates', 'template-mcp'),
+    'mcp-package.json',
+    MCP_TEMPLATE_ARCHIVE_PATH,
+  )
 }

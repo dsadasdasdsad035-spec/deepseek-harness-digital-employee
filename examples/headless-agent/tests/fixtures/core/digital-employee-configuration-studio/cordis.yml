@@ -1,0 +1,48 @@
+- id: mock-llm
+  name: './mock-llm.ts'
+
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: digital-employee-configuration-studio-mock
+    model: digital-employee-configuration-studio-mock
+
+- id: agent-spine
+  name: '@deepseek-ai/dsh-agent-spine-demo'
+  config:
+    agents: []
+    workspaceContext: false
+    skills:
+      filesystem:
+        dshHome: './.dsh-home'
+
+- id: attachment-local
+  name: '@deepseek-ai/dsh-attachment-local'
+  config:
+    dshHome: './.dsh-home'
+
+- id: agent-presets
+  name: '@deepseek-ai/dsh-agent-presets'
+  config:
+    default: digital-employee-minimal
+    includeUserRoot: false
+    roots:
+      - path: !!js process.env.DSH_DIGITAL_EMPLOYEE_CONFIGURATION_STUDIO_PRESET_ROOT
+        trust: system
+
+- id: digital-employees
+  name: '@deepseek-ai/dsh-digital-employee'
+
+- id: digital-employee-file
+  name: '@deepseek-ai/dsh-digital-employee-file'
+  config:
+    path: './digital-employees.json'
+
+- id: subagents
+  name: '@deepseek-ai/dsh-subagent'
+
+- id: digital-employee-agent
+  name: '@deepseek-ai/dsh-digital-employee-agent'
+
+- id: digital-employee-management
+  name: './management.ts'

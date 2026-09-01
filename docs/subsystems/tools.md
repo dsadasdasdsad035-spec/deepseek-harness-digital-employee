@@ -493,6 +493,88 @@ async mount(targetCtx: Context, config: McpServerConfig): Promise<() => Promise<
 
 Source: [`packages/mcp/mcp-client/src/index.ts`](../../packages/mcp/mcp-client/src/index.ts)
 
+<a id="ctxmcpmarket--mcpmarketgateway"></a>
+
+### `ctx.mcpMarket` — `McpMarketGateway`
+
+Typed Remote gateway and restart-time activation owner.
+
+```ts cordis-catalog
+/**
+ * List managed MCP packages without credential values.
+ * @returns Declared inventory result or a structured marketplace failure.
+ */
+@Remote('list') list(): Promise<McpMarketListResult>
+
+/**
+ * Install or explicitly upgrade one trusted MCP package.
+ * @param request - Uploaded archive and explicit replacement intent.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('install') install(request: McpMarketInstallRequest): Promise<McpMarketInstallResult>
+
+/**
+ * Persist credential references only.
+ * @param request - Package identity and descriptor-slot reference mapping.
+ * @returns Saved references and restart state, or a structured marketplace failure.
+ */
+@Remote('configure') configure(request: McpMarketConfigureRequest): Promise<McpMarketConfigureResult>
+
+/**
+ * Uninstall one marketplace-managed MCP package.
+ * @param request - Managed package identity to remove.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('uninstall') uninstall(request: McpMarketUninstallRequest): Promise<McpMarketUninstallResult>
+
+/**
+ * Activate configured packages during fresh Host composition.
+ * Resolved values remain local to each manager mount call.
+ */
+async activateConfigured(): Promise<void>
+
+/**
+ * Project configured packages into credential-free template declarations.
+ * @returns Safe declarations with availability and provenance metadata.
+ */
+async templateConfigurations(): Promise<readonly McpMarketTemplateConfiguration[]>
+```
+
+Source: [`packages/mcp/mcp-market/src/index.ts`](../../packages/mcp/mcp-market/src/index.ts)
+
+<a id="ctxtoolmarket--toolmarketgateway"></a>
+
+### `ctx.toolMarket` — `ToolMarketGateway`
+
+Typed Remote gateway for trusted Tool package lifecycle operations.
+
+```ts cordis-catalog
+/**
+ * List managed packages and current-process availability.
+ * @returns Declared inventory result or a structured marketplace failure.
+ */
+@Remote('list') list(): Promise<ToolMarketListResult>
+
+/**
+ * Install or explicitly upgrade a trusted Tool package.
+ * @param request - Uploaded archive and explicit replacement intent.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('install') install(request: ToolMarketInstallRequest): Promise<ToolMarketInstallResult>
+
+/**
+ * Uninstall one marketplace-managed Tool package.
+ * @param request - Managed package identity to remove.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('uninstall') uninstall(request: ToolMarketUninstallRequest): Promise<ToolMarketUninstallResult>
+
+/** Revalidate and mount trusted packages during fresh Host composition. */
+async activateInstalled(): Promise<void>
+```
+
+Source: [`packages/tool/tool-market/src/index.ts`](../../packages/tool/tool-market/src/index.ts)
+
 <a id="ctxtools--toolruntime"></a>
 
 ### `ctx.tools` — `ToolRuntime`

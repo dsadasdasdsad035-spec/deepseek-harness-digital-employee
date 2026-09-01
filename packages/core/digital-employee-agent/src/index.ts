@@ -4,7 +4,7 @@
  */
 
 import { readFile } from 'node:fs/promises'
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import type {
@@ -16,6 +16,7 @@ import type {
   DigitalEmployeeInstructionSource,
   DigitalEmployeeMemoryCandidate,
   DigitalEmployeeMemoryDecision,
+  DigitalEmployeeMemoryRecord,
   DigitalEmployeeMemoryProjectionEvent,
   DigitalEmployeeMemoryQuery,
   DigitalEmployeeMcpServer,
@@ -87,6 +88,20 @@ export interface CreateDigitalEmployeeTaskRequest {
   readonly memory?: Omit<DigitalEmployeeMemoryQuery, 'employeeId'>
   /** Optional cancellation for resolution and unpublished Agent setup. */
   readonly signal?: AbortSignal
+}
+
+/** Input for a short-lived composition preview that never resolves employee memory. */
+export interface CreateDigitalEmployeePreviewTaskRequest {
+  /** Synthetic resolved employee constructed from a validated unpublished template draft. */
+  readonly employee: ResolvedDigitalEmployee
+  /** Shared preview Agent and Session identity. */
+  readonly sessionId: SessionId
+  /** Absolute local workspace path available to the preview. */
+  readonly workspacePath: string
+  /** Optional model and loop configuration for the preview Agent. */
+  readonly agentOptions?: AgentOptions
+  /** Optional complete model selection installed for prompt assembly and request routing. */
+  readonly modelSelection?: ModelSelection
 }
 
 /** Input for resolving one authorized template expert before delegation. */
@@ -163,6 +178,7 @@ export type DigitalEmployeeExpertDelegation =
 export class DigitalEmployeeAgent extends Service {
   static inject = ['agentPresets', 'agents', 'digitalEmployees', 'skills', 'subagents', 'systemPrompt', 'tools']
   private readonly rootHandles = new Map<DigitalEmployeeInstanceId, Set<AgentHandle>>()
+  private readonly previewMemories = new Map<SessionId, DigitalEmployeeMemoryRecord[]>()
 
   constructor(ctx: Context) {
     super(ctx, 'digitalEmployeeAgent')
@@ -176,6 +192,9 @@ export class DigitalEmployeeAgent extends Service {
       const handles = [...(this.rootHandles.get(employeeId) ?? [])]
       await this.ctx.subagents.drainContinuableDescendants(handles.map(handle => handle.agent))
       await Promise.all(handles.map(handle => handle.dispose()))
+    })
+    ctx.on('session/disposed', (session) => {
+      this.previewMemories.delete(session.id)
     })
   }
 
@@ -248,6 +267,50 @@ export class DigitalEmployeeAgent extends Service {
       },
     })
     return this.trackRootHandle(employee.instance.id, handle)
+  }
+
+  /**
+   * Create a temporary, non-persisted preview Agent from a validated synthetic employee.
+   * @param request - isolated composition, Session identity, and workspace context.
+   * @returns an owned handle whose disposer terminates the preview and its scoped resources.
+   */
+  async createPreviewTask(request: CreateDigitalEmployeePreviewTaskRequest): Promise<AgentHandle> {
+    const mcpServers = await this.resolveMcpServers(request.employee, request.sessionId)
+    const agentOptions = request.modelSelection === undefined
+      ? request.agentOptions
+      : {
+        ...request.agentOptions,
+        provider: request.modelSelection.provider,
+        model: request.modelSelection.model,
+      }
+    return await this.ctx.agents.create({
+      sessionId: request.sessionId,
+      meta: {
+        cwd: request.workspacePath,
+        agentPreset: request.employee.template.preset,
+        preview: true,
+      },
+      ...agentOptions === undefined ? {} : { agentOptions },
+      setup: async (agentCtx) => {
+        const agent = agentCtx.agent
+        if (agent === undefined) throw new Error('digital employee preview setup has no scoped Agent')
+        if (request.modelSelection !== undefined) {
+          installModelSelection(agentCtx, { current: request.modelSelection, assembled: undefined })
+        }
+        agent.session.append('digital-employee/identity', {
+          employeeId: request.employee.instance.id,
+          displayName: request.employee.instance.displayName,
+          templateId: request.employee.template.id,
+          templateVersion: request.employee.template.version,
+          compositionId: digitalEmployeeCompositionId(request.employee),
+          personality: request.employee.personality,
+        })
+        agent.session.append('digital-employee/instructions', {
+          revision: request.employee.instructions.revision,
+        })
+        await this.compose(agentCtx, request.employee, undefined, mcpServers, false)
+      },
+    })
   }
 
   /**
@@ -392,6 +455,30 @@ export class DigitalEmployeeAgent extends Service {
     parent: Agent,
     candidate: DigitalEmployeeMemoryCandidate,
   ): Promise<DigitalEmployeeMemoryDecision> {
+    if (parent.session.header?.preview === true) {
+      const memory: DigitalEmployeeMemoryRecord = {
+        id: `preview-memory-${randomUUID()}` as never,
+        employeeId: candidate.employeeId,
+        scope: 'long-term',
+        content: candidate.content,
+        tags: [...candidate.tags],
+        sensitive: candidate.sensitive,
+        ...(candidate.retentionDays === undefined
+          ? {}
+          : { expiresAt: new Date(Date.now() + candidate.retentionDays * 86_400_000).toISOString() }),
+        provenance: { ...candidate.provenance },
+      }
+      const records = this.previewMemories.get(parent.session.id) ?? []
+      records.push(memory)
+      this.previewMemories.set(parent.session.id, records)
+      const decision: DigitalEmployeeMemoryDecision = { kind: 'accepted', memory }
+      parent.session.append('digital-employee/memory-decision', {
+        employeeId: candidate.employeeId,
+        candidate: copyMemoryCandidate(candidate),
+        decision: { kind: 'accepted', memoryId: memory.id },
+      })
+      return decision
+    }
     const decision = await this.ctx.digitalEmployees.promoteMemory(candidate)
     parent.session.append('digital-employee/memory-decision', {
       employeeId: candidate.employeeId,
@@ -486,12 +573,14 @@ export class DigitalEmployeeAgent extends Service {
    * @param employee - complete employee resolution produced before Session creation.
    * @param memoryProjection - exact memory records rendered into this Agent's prompt.
    * @param mcpServers - pre-resolved MCP configurations, or `undefined` to resolve them now.
+   * @param installAudit - whether this composition appends durable employee audit records.
    */
   async compose(
     agentCtx: Context,
     employee: ResolvedDigitalEmployee,
     memoryProjection?: DigitalEmployeeMemoryProjectionEvent,
     mcpServers?: readonly McpServerConfig[],
+    installAudit: boolean = true,
   ): Promise<void> {
     const instructions = await readInstructions(employee)
     await this.ctx.agentPresets.mount(agentCtx, employee.template.preset)
@@ -512,7 +601,7 @@ export class DigitalEmployeeAgent extends Service {
       }
       await mcpClients.mount(agentCtx, config)
     }
-    this.installAudit(agentCtx, employee, resolvedMcpServers)
+    if (installAudit) this.installAudit(agentCtx, employee, resolvedMcpServers)
     const systemPrompt = agentCtx.get('systemPrompt')
     if (systemPrompt === undefined) {
       throw new Error('digital employee Agent composition requires systemPrompt in the Agent scope')

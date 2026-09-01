@@ -33,6 +33,11 @@ describe('dsh-web-app digital employee composition', () => {
       name: '@deepseek-ai/dsh-digital-employee-file',
       config: { path: { __jsExpr: "dshHomePath('digital-employees/employees.json')" } },
     })
+    expect(rows.find(row => row.id === 'digital-employee-management')).toEqual({
+      id: 'digital-employee-management',
+      name: '@deepseek-ai/dsh-host-digital-employee-management',
+      config: { administrator: true },
+    })
     expect(ids.indexOf('digital-employees')).toBeLessThan(ids.indexOf('digital-employee-file'))
     expect(ids.indexOf('digital-employees')).toBeLessThan(ids.indexOf('digital-employee-example-template'))
     expect(ids.indexOf('digital-employees')).toBeLessThan(ids.indexOf('project-manager-test-template'))
