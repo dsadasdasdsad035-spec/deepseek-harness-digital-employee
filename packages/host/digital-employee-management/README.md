@@ -24,6 +24,8 @@ Administrators use `createConfigurationDraft`, `updateConfigurationDraft`, `vali
 
 Publishing assigns an immutable local version that the existing `listTemplates`, employee creation, and `previewUpgrade` operations resolve. A preview creates an isolated marked Session and temporary instruction files; disposing it removes both without adding an employee instance, memory, export, or normal management view. Long-term memory seeds in a local publication are promoted when an employee is created. A rejected seed rolls back the new employee so creation never leaves a partial configured instance.
 
+The Web client refreshes the employee template roster when returning from **Template configuration** to **Employee operations**, so a successfully published version is immediately selectable. Test scaffolds must set `studioFile` inside their owned Harness Home: sharing that file across a Host restart preserves publications, while separate scaffold lifecycles remain isolated.
+
 ## Model Experience
 
 ### Management-triggered work

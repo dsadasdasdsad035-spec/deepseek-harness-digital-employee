@@ -38,6 +38,8 @@ export interface Config {
     /** Ed25519 SPKI public key in PEM form. */
     readonly publicKeyPem: string
   }[]
+  /** Host-owned non-secret endpoint values keyed by descriptor reference. */
+  readonly endpointReferences?: Readonly<Record<string, string>>
 }
 
 declare module '@deepseek-ai/cordis' {
@@ -56,6 +58,7 @@ export class McpMarketGateway extends TypertRemoteService {
       id: z.string().required(),
       publicKeyPem: z.string().required(),
     })).default([]),
+    endpointReferences: z.dict(z.string()).default({}),
   })
   private readonly service: McpMarketService
   private activeServerNames = new Set<string>()
@@ -68,6 +71,7 @@ export class McpMarketGateway extends TypertRemoteService {
       trustedPublishers: config.trustedPublishers,
       activeServerNames: () => [...this.activeServerNames],
       credentialInfo: ref => ctx.credentials.describe(ref),
+      endpointReferences: config.endpointReferences ?? {},
     })
     ctx.effect(() => async () => {
       for (const dispose of this.disposers.reverse()) await dispose()
@@ -141,7 +145,7 @@ export class McpMarketGateway extends TypertRemoteService {
           const dispose = await this.ctx.mcpClients.mount(this.ctx, {
             transport: 'streamable-http',
             serverName: server.id,
-            url: server.url,
+            url: this.service.endpointUrl(server),
             headers,
             toolCallTimeoutMs: 60_000,
             failOnStartupError: false,
@@ -192,6 +196,9 @@ export class McpMarketGateway extends TypertRemoteService {
           const reference = references[slot]
           if (reference !== undefined) headerCredentials[header] = reference
         }
+        const headers = Object.fromEntries(
+          Object.entries(server.headers).filter(([header]) => !(header in server.credentialReferences)),
+        )
         result.push({
           packageId: packageId as never,
           serverName: server.id,
@@ -205,8 +212,8 @@ export class McpMarketGateway extends TypertRemoteService {
           declaration: {
             id: server.id,
             transport: 'streamable-http',
-            url: server.url,
-            headers: server.headers,
+            url: this.service.endpointUrl(server),
+            headers,
             headerCredentials,
           },
         })

@@ -14,6 +14,8 @@ When the Host enables local administrator configuration, choose **Template confi
 
 The Skills selector combines installed marketplace Skills with local runtime Skills. Marketplace rows show version, author, tags, and activation guidance. An installed Skill remains disabled until the Host runtime activates it, while local Skills can be selected immediately. If a draft still names an uninstalled Skill, remove that unavailable reference before validation.
 
+Tool and MCP selectors follow the same availability rule. Install the directly installable examples from **Marketplace** for a local reference workflow, save the MCP credential reference, then restart the Host before selecting restart-bound Tool or MCP assets. The example Tool publisher is test-only and must be trusted explicitly by the development Host; it is not trusted by production defaults.
+
 Preview composes a temporary employee Session and does not change employee instances or durable memories. Publishing creates an immutable local template version that appears in the normal template picker. Existing employees remain pinned until their upgrade is explicitly reviewed and applied.
 
 ## Start an employee chat

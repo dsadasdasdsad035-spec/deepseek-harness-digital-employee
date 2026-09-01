@@ -46,6 +46,54 @@ describe('marketplace package descriptors', () => {
     })).toThrow('must not contain a credential value')
   })
 
+  it('accepts an endpoint reference without embedding a fixed MCP URL', () => {
+    expect(parseMcpPackageDescriptor({
+      format: 1,
+      kind: 'mcp',
+      id: 'marketplace-test-mcp',
+      version: '1.0.0',
+      display: { name: 'Marketplace test MCP', description: 'Offline marketplace fixture.' },
+      publisher: { id: 'deepseek-marketplace-test', signature: 'base64-signature' },
+      files: {},
+      servers: [{
+        id: 'marketplace-test-mcp',
+        transport: 'streamable-http',
+        endpointReference: 'MARKETPLACE_TEST_MCP_ENDPOINT',
+        headers: { Authorization: '' },
+        credentialReferences: { Authorization: 'MARKETPLACE_TEST_MCP_TOKEN' },
+      }],
+    })).toMatchObject({
+      servers: [{ endpointReference: 'MARKETPLACE_TEST_MCP_ENDPOINT' }],
+    })
+  })
+
+  it('requires exactly one fixed URL or endpoint reference per MCP server', () => {
+    const descriptor = {
+      format: 1,
+      kind: 'mcp',
+      id: 'marketplace-test-mcp',
+      version: '1.0.0',
+      display: { name: 'Marketplace test MCP', description: 'Offline marketplace fixture.' },
+      publisher: { id: 'deepseek-marketplace-test', signature: 'base64-signature' },
+      files: {},
+      servers: [{
+        id: 'marketplace-test-mcp',
+        transport: 'streamable-http',
+        headers: {},
+        credentialReferences: {},
+      }],
+    }
+    expect(() => parseMcpPackageDescriptor(descriptor)).toThrow()
+    expect(() => parseMcpPackageDescriptor({
+      ...descriptor,
+      servers: [{
+        ...descriptor.servers[0],
+        url: 'https://mcp.example.test',
+        endpointReference: 'MARKETPLACE_TEST_MCP_ENDPOINT',
+      }],
+    })).toThrow()
+  })
+
   it('accepts only a trusted publisher signature over descriptor bytes', () => {
     const { privateKey, publicKey } = generateKeyPairSync('ed25519')
     const payload = new TextEncoder().encode('descriptor bytes')
@@ -111,8 +159,10 @@ describe('marketplace package descriptors', () => {
       }],
       totalBytes: 11,
     }
-    expect(() => verifyPackageFileHashes(archive, {
-      'plugin/index.js': '0'.repeat(64),
-    })).toThrow('hash mismatch')
+    expect(() => {
+      verifyPackageFileHashes(archive, {
+        'plugin/index.js': '0'.repeat(64),
+      })
+    }).toThrow('hash mismatch')
   })
 })

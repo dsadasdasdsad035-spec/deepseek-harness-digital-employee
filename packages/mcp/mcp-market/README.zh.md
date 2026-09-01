@@ -14,6 +14,8 @@
 
 配置只持久化凭据引用名称。解析后的值仅在 Host 通过 `McpClientManager` 挂载已配置服务时存在；列表、模板目录、诊断和发布数据都不包含这些值。使用凭据的请求头必须具有空的固定值，包含疑似密钥值的请求会被拒绝。
 
+`marketplace-test-mcp.zip` 声明 endpoint 引用 `MARKETPLACE_TEST_MCP_ENDPOINT` 与凭据引用 `MARKETPLACE_TEST_MCP_TOKEN`，不嵌入任一解析值。离线测试把 endpoint 绑定到使用临时端口的本机服务。模板投影会省略由凭据引用拥有的固定请求头项，并且只持久化 `headerCredentials`。
+
 安装、升级、配置和卸载都需要重启。新的 Host 会解析引用、检查服务名唯一性并挂载可用客户端。缺失包、凭据或冲突服务名会保留为明确诊断。
 
 ## Model Experience

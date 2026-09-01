@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer'
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
@@ -113,6 +113,24 @@ describe('SkillMarketGateway', () => {
       join(installRoot, 'demo'),
       join(installRoot, 'demo'),
     ])
+    await ctx.fiber.dispose()
+  })
+
+  it('installs the shipped marketplace test Skill through normal validation', async () => {
+    const installRoot = await mkdtemp(join(tmpdir(), 'dsh-skill-market-gateway-'))
+    roots.push(installRoot)
+    const ctx = gatewayContext()
+    await ctx.plugin(SkillMarketGateway, { installRoot })
+    const gateway = ctx.get('skillMarket') as SkillMarketGateway
+    const archive = await readFile(join(process.cwd(), 'apps/web/public/marketplace-test-skill.zip'))
+
+    await expect(gateway.install({
+      filename: 'marketplace-test-skill.zip',
+      archiveBase64: archive.toString('base64'),
+    })).resolves.toEqual({
+      ok: true,
+      value: { skillId: 'marketplace-test-skill', operation: 'installed' },
+    })
     await ctx.fiber.dispose()
   })
 

@@ -96,6 +96,10 @@ function Loaded({
       setLocalError(error instanceof Error ? error.message : String(error))
     }
   }
+  const showOperations = (): void => {
+    setWorkspaceView('operations')
+    void controller.loadRoster()
+  }
 
   return (
     <main className={css.workspace}>
@@ -155,7 +159,7 @@ function Loaded({
         {state.error === null ? null : <p className={css.error} role="alert">{state.error}</p>}
         {configurationStudio === undefined || useConfigurationSnapshot === undefined ? null : (
           <div className={css.tabs} role="tablist" aria-label="Digital employee workspace">
-            <button type="button" role="tab" aria-selected={workspaceView === 'operations'} onClick={() => { setWorkspaceView('operations') }}>
+            <button type="button" role="tab" aria-selected={workspaceView === 'operations'} onClick={showOperations}>
               Employee operations
             </button>
             <button type="button" role="tab" aria-selected={workspaceView === 'configuration'} onClick={() => { setWorkspaceView('configuration') }}>

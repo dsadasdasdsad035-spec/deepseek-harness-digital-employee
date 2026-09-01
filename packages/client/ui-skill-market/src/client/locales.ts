@@ -4,7 +4,7 @@ export type SkillMarketKey =
   | 'nav' | 'title' | 'intro' | 'searchLabel' | 'searchPlaceholder'
   | 'skillTab' | 'toolTab' | 'mcpTab'
   | 'uploadTitle' | 'uploadHint' | 'uploadButton' | 'uploadTooLarge' | 'uploadInvalidType'
-  | 'templateDownload'
+  | 'templateDownload' | 'authorTemplateDownload' | 'installableExampleDownload'
   | 'uploadFailed' | 'operationFailed' | 'installing' | 'installed' | 'loading'
   | 'loadFailed' | 'retry' | 'empty' | 'emptyFiltered' | 'uninstall' | 'uninstalling'
   | 'uninstallTitle' | 'uninstallDescription' | 'uninstallConfirm'
@@ -39,6 +39,8 @@ export const en: Record<SkillMarketKey, string> = {
   uploadHint: 'Drop one .zip file here or choose a file. Maximum 10 MiB.',
   uploadButton: 'Choose .zip',
   templateDownload: 'Download example ZIP',
+  authorTemplateDownload: 'Download author template',
+  installableExampleDownload: 'Download installable test ZIP',
   uploadTooLarge: 'The ZIP is larger than 10 MiB.',
   uploadInvalidType: 'Choose a file whose name ends in .zip.',
   uploadFailed: 'The browser could not read this ZIP.',
@@ -136,6 +138,8 @@ export const zh: Record<SkillMarketKey, string> = {
   uploadHint: '拖入一个 .zip 文件，或选择文件。最大 10 MiB。',
   uploadButton: '选择 .zip',
   templateDownload: '下载示例 ZIP',
+  authorTemplateDownload: '下载作者模板',
+  installableExampleDownload: '下载可安装测试包',
   uploadTooLarge: 'ZIP 文件超过 10 MiB。',
   uploadInvalidType: '请选择文件名以 .zip 结尾的文件。',
   uploadFailed: '浏览器无法读取此 ZIP 文件。',

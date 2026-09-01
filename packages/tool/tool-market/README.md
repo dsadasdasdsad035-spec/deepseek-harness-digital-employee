@@ -14,6 +14,8 @@ Trusted, restart-bound installation for versioned Tool ZIP packages.
 
 Install of an existing managed identity requires explicit replacement. Install, upgrade, and uninstall report `restartRequired: true`; a fresh Host composition revalidates the installed descriptor, signature, and files before importing the entry plugin. Directories without a compatible marketplace manifest are never replaced or removed.
 
+`marketplace-test-tool.zip` is a directly installable reference package that registers `marketplace_test_echo`. Its fixed Ed25519 keypair is test fixture material: the running marketplace receives only the public key through explicit development or test configuration, and production defaults do not trust it.
+
 ## Model Experience
 
 None, as package installation and inventory do not change prompt projections, model requests, or session logs.

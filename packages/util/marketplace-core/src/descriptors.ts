@@ -41,10 +41,14 @@ export const mcpPackageDescriptorSchema = base.extend({
   servers: z.array(z.object({
     id: identifier,
     transport: z.literal('streamable-http'),
-    url: z.string().url(),
+    url: z.url().optional(),
+    endpointReference: reference.optional(),
     headers: z.record(z.string(), z.string()).default({}),
     credentialReferences: z.record(z.string(), reference).default({}),
-  }).strict()).min(1).max(32),
+  }).strict().refine(
+    server => (server.url === undefined) !== (server.endpointReference === undefined),
+    'MCP server must declare exactly one url or endpointReference',
+  )).min(1).max(32),
 }).strict()
 
 /** Validated executable Tool package descriptor. */

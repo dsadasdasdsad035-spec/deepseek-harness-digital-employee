@@ -13,6 +13,13 @@ export interface McpMarketCredentialRequirement {
   readonly source?: string | undefined
 }
 
+/** Host-owned non-secret endpoint slot state. */
+export interface McpMarketEndpointRequirement {
+  readonly slot: string
+  readonly url?: string | undefined
+  readonly configured: boolean
+}
+
 /** One declared server in a managed MCP package. */
 export interface McpMarketServerEntry {
   readonly serverName: string
@@ -28,6 +35,7 @@ export interface McpMarketEntry {
   readonly version: string
   readonly publisherId: string
   readonly servers: readonly McpMarketServerEntry[]
+  readonly endpointRequirements: readonly McpMarketEndpointRequirement[]
   readonly credentialRequirements: readonly McpMarketCredentialRequirement[]
   readonly installedAt: number
   readonly configured: boolean
@@ -36,7 +44,7 @@ export interface McpMarketEntry {
   readonly diagnostic?: string | undefined
 }
 
-/** Host-internal credential-free declaration safe to persist in a template draft. */
+/** Host-internal declaration safe to persist in a template draft; credential-owned headers appear only in `headerCredentials`. */
 export interface McpMarketTemplateConfiguration {
   readonly packageId: McpMarketPackageId
   readonly serverName: string

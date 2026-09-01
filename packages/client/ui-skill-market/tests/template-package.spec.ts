@@ -4,10 +4,19 @@ import { basename, join } from 'node:path'
 import { unzipSync, zipSync } from 'fflate'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  MCP_EXAMPLE_ARCHIVE_FILENAME,
+  MCP_EXAMPLE_ARCHIVE_PATH,
+  MARKETPLACE_TEST_PUBLISHER,
+  SKILL_EXAMPLE_ARCHIVE_FILENAME,
+  SKILL_EXAMPLE_ARCHIVE_PATH,
   TEMPLATE_ARCHIVE_FILENAME,
   TEMPLATE_ARCHIVE_PATH,
   TEMPLATE_SOURCE_DIRECTORY,
+  TOOL_EXAMPLE_ARCHIVE_FILENAME,
+  TOOL_EXAMPLE_ARCHIVE_PATH,
+  generateMarketplaceExampleArchives,
   generateTemplateArchive,
+  inspectMarketplaceExampleArchive,
   inspectTemplateArchive,
 } from '../templates/archive.ts'
 
@@ -93,5 +102,41 @@ describe('skill-market template package', () => {
       'references/authoring-notes.md': new TextEncoder().encode('Reference.\n'),
       'surprise.md': new TextEncoder().encode('Unexpected.\n'),
     }))).toThrow('unexpected template entry')
+  })
+
+  it('ships deterministic installable Skill, Tool, and MCP examples with stable identities', async () => {
+    const generatedDirectory = await temporaryDirectory()
+    await generateMarketplaceExampleArchives({ outputDirectory: generatedDirectory })
+
+    const examples = [
+      [SKILL_EXAMPLE_ARCHIVE_FILENAME, SKILL_EXAMPLE_ARCHIVE_PATH, 'marketplace-test-skill'],
+      [TOOL_EXAMPLE_ARCHIVE_FILENAME, TOOL_EXAMPLE_ARCHIVE_PATH, 'marketplace-test-tool'],
+      [MCP_EXAMPLE_ARCHIVE_FILENAME, MCP_EXAMPLE_ARCHIVE_PATH, 'marketplace-test-mcp'],
+    ] as const
+    for (const [filename, checkedInPath, identity] of examples) {
+      const generated = await readFile(join(generatedDirectory, filename))
+      await expect(readFile(checkedInPath)).resolves.toEqual(generated)
+      expect(inspectMarketplaceExampleArchive(generated)).toMatchObject({ identity })
+    }
+  })
+
+  it('keeps executable trust explicit and MCP configuration reference-only', async () => {
+    const tool = inspectMarketplaceExampleArchive(await readFile(TOOL_EXAMPLE_ARCHIVE_PATH))
+    expect(tool).toMatchObject({
+      identity: 'marketplace-test-tool',
+      publisherId: MARKETPLACE_TEST_PUBLISHER.id,
+      toolNames: ['marketplace_test_echo'],
+    })
+    expect(MARKETPLACE_TEST_PUBLISHER.publicKeyPem).toContain('BEGIN PUBLIC KEY')
+
+    const mcpArchive = await readFile(MCP_EXAMPLE_ARCHIVE_PATH)
+    const mcp = inspectMarketplaceExampleArchive(mcpArchive)
+    expect(mcp).toMatchObject({
+      identity: 'marketplace-test-mcp',
+      publisherId: MARKETPLACE_TEST_PUBLISHER.id,
+      serverNames: ['marketplace-test-mcp'],
+      credentialSlots: ['MARKETPLACE_TEST_MCP_TOKEN'],
+    })
+    expect(mcpArchive.toString('utf8')).not.toContain('marketplace-test-token')
   })
 })

@@ -1512,6 +1512,8 @@ export interface Config {
     /** Ed25519 SPKI public key in PEM form. */
     readonly publicKeyPem: string
   }[]
+  /** Host-owned non-secret endpoint values keyed by descriptor reference. */
+  readonly endpointReferences?: Readonly<Record<string, string>>
 }
 ```
 

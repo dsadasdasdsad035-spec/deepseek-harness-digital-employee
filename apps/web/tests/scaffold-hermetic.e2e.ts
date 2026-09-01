@@ -5,7 +5,13 @@ import { expect, it } from 'vitest'
 import type {} from '@deepseek-ai/dsh-skill'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-agent-presets'
-import { launchWebScaffold, type WebScaffold } from './scaffold.ts'
+import type {} from '@deepseek-ai/dsh-host-digital-employee-management'
+import {
+  launchRestartableWebScaffold,
+  launchWebScaffold,
+  type RestartableWebScaffold,
+  type WebScaffold,
+} from './scaffold.ts'
 
 async function writeSkill(root: string, name: string): Promise<void> {
   const bundle = join(root, name)
@@ -70,5 +76,35 @@ it('isolates replay skill discovery from every ambient host root', async () => {
       else process.env.DSH_BUNDLED_SKILL_DIR = originalBundled
       await rm(ambient, { recursive: true, force: true })
     }
+  }
+})
+
+it('stops and relaunches a settled Host against the same Harness Home', async () => {
+  let lifecycle: RestartableWebScaffold | undefined
+  let isolated: RestartableWebScaffold | undefined
+  try {
+    lifecycle = await launchRestartableWebScaffold()
+    const first = lifecycle.scaffold
+    await expect(first.ctx.digitalEmployeeManagement.listConfigurationDrafts()).resolves.toEqual([])
+    await first.ctx.digitalEmployeeManagement.createConfigurationDraft({
+      templateId: 'restart-persistence',
+      display: { name: 'Restart persistence', description: 'Persists only inside this lifecycle.' },
+      instructions: 'Retain this draft across the Host restart.',
+    })
+
+    await lifecycle.stop()
+    await expect(fetch(first.baseUrl)).rejects.toThrow()
+
+    const second = await lifecycle.start()
+    expect(second.harnessHome).toBe(first.harnessHome)
+    expect(second.ctx).not.toBe(first.ctx)
+    expect((await fetch(second.baseUrl)).ok).toBe(true)
+    await expect(second.ctx.digitalEmployeeManagement.listConfigurationDrafts()).resolves.toHaveLength(1)
+
+    isolated = await launchRestartableWebScaffold()
+    await expect(isolated.scaffold.ctx.digitalEmployeeManagement.listConfigurationDrafts()).resolves.toEqual([])
+  } finally {
+    await isolated?.close()
+    await lifecycle?.close()
   }
 })

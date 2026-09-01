@@ -48,4 +48,4 @@ e2e 断言应重新运行命令或从外部重新读取文件；对 agent 自身
 
 每项非平凡的模型可见、协议可见或人类可见变更，都必须在同一 PR 中，通过可运行示例所属的快照套件添加或更新无密钥场景。包测试、e2e 断言、mock 与仅测试组合不能取代组装后的 transcript；必要时应扩展 harness。ACP 场景使用 `examples/<name>/tests/snapshots/` 中基于 [`dsh-acp-snapshot`](../packages/test-support/acp-snapshot/README.zh.md) 工厂的场景表（`examples/acp-agent` 为主套件）；`examples/headless-agent` 拥有规范事件 JSONL 快照与回放 fixture。`pwsh-tool-turn` 场景启动真实 `pwsh`，缺少它时跳过。已完成的终端旅程使用 `apps/cli/tests/snapshots/`；瞬态呈现使用包内语义测试，输入、Loader 选择或清理发生变化时还要添加 PTY 覆盖。浏览器旅程使用 `apps/web/tests/snapshots/`。两个 SDK 各自独立投影 agent loop、会话生命周期与 `SessionEventMap`，因此改动其中任何一项都要同时更新两者：`examples/jsonrpc-agent/tests/snapshots/` 负责 TypeScript，`scripts/snapshots/python-sdk-single-exe/` 负责 Python，并在必需的 `python-runtime` CI 中运行。
 
-数字员工改动通过包测试覆盖模板注册、Provider 持久化、生命周期、升级与权限交集；通过组装后的无密钥快照覆盖模型可见身份、记忆、专家委派或拒绝，以及记忆决定；通过 Web 浏览器覆盖管理旅程。新增数字员工 Session 事件时，同时更新两个 SDK 投影。
+数字员工包测试覆盖注册、持久化、生命周期、升级与权限；无密钥快照覆盖模型可见行为；Web 覆盖负责管理旅程。新增 Session 事件时，同时更新两个 SDK 投影。市场参考工作流增加聚焦压缩包与信任测试、能力快照，以及从安装到 `@` 聊天的 Web 覆盖。

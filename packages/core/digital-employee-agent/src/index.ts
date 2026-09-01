@@ -715,7 +715,7 @@ export class DigitalEmployeeAgent extends Service {
     employee: ResolvedDigitalEmployee,
     mcpServers: readonly McpServerConfig[],
   ): void {
-    const agent = agentCtx.get('agent')
+    const agent = optionalScopedAgent(agentCtx)
     if (agent === undefined) return
     const mcpIds = new Map(mcpServers.map((server, index) => [
       server.serverName,
@@ -801,6 +801,17 @@ export class DigitalEmployeeAgent extends Service {
           : { mcpServer: mcp.serverId, operation: mcp.operation }),
       },
     })
+  }
+}
+
+function optionalScopedAgent(ctx: Context): Agent | undefined {
+  try {
+    return ctx.agent
+  } catch (error) {
+    if (error instanceof Error && error.message === 'cannot get property "agent" without inject') {
+      return undefined
+    }
+    throw error
   }
 }
 

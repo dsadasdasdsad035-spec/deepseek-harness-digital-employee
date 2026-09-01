@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
 import { SessionId } from '@deepseek-ai/dsh-session'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import DigitalEmployeeManagementGateway from '../src/index.ts'
 import { ConfigurationStudioStore } from '../src/configuration-studio.ts'
 
@@ -12,6 +12,27 @@ const workspace = {
   id: 'workspace-1',
   path: '/workspace',
   attachSession: vi.fn(async () => {}),
+}
+
+let studioDirectory: string
+
+beforeEach(async () => {
+  studioDirectory = await mkdtemp(join(tmpdir(), 'dsh-configuration-studio-test-'))
+})
+
+afterEach(async () => {
+  await rm(studioDirectory, { recursive: true, force: true })
+})
+
+function administratorConfig() {
+  return {
+    administrator: true,
+    studioFile: join(studioDirectory, 'studio.json'),
+  }
+}
+
+function studioConfig() {
+  return { studioFile: join(studioDirectory, 'studio.json') }
 }
 
 function harness() {
@@ -147,7 +168,7 @@ describe('DigitalEmployeeManagementGateway', () => {
 
   it('keeps configuration drafts behind the local administrator gate', async () => {
     const { ctx } = harness()
-    await ctx.plugin(DigitalEmployeeManagementGateway)
+    await ctx.plugin(DigitalEmployeeManagementGateway, studioConfig())
     const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
 
     expect(() => gateway.listConfigurationDrafts()).toThrow('administrator mode is disabled')
@@ -185,7 +206,7 @@ describe('DigitalEmployeeManagementGateway', () => {
 
   it('lists resolvable assets for administrator template selection', async () => {
     const { ctx } = harness()
-    await ctx.plugin(DigitalEmployeeManagementGateway, { administrator: true })
+    await ctx.plugin(DigitalEmployeeManagementGateway, administratorConfig())
     const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
 
     await expect(gateway.listConfigurationAssets({ preset: 'standard' })).resolves.toEqual({
@@ -233,9 +254,80 @@ describe('DigitalEmployeeManagementGateway', () => {
     await ctx.fiber.dispose()
   })
 
+  it('correlates installed marketplace examples with their active runtime capabilities', async () => {
+    const { ctx } = harness()
+    ctx.provide('toolMarket', {
+      list: vi.fn(async () => ({
+        ok: true,
+        value: {
+          entries: [{
+            packageId: 'marketplace-test-tool',
+            version: '1.0.0',
+            publisherId: 'deepseek-marketplace-test',
+            permissions: [],
+            restartRequired: false,
+            tools: [{
+              name: 'available_tool',
+              description: 'Available tool.',
+              inputDescription: '{"text":"string"}',
+            }],
+          }],
+        },
+      })),
+    } as never)
+    ctx.provide('mcpMarket', {
+      templateConfigurations: vi.fn(async () => [{
+        packageId: 'marketplace-test-mcp',
+        version: '1.0.0',
+        publisherId: 'deepseek-marketplace-test',
+        serverName: 'server',
+        description: 'Marketplace MCP fixture.',
+        available: true,
+        restartRequired: false,
+        declaration: {
+          transport: 'streamable-http',
+          url: 'http://127.0.0.1:43210/mcp',
+          headerCredentials: { Authorization: 'MARKETPLACE_TEST_MCP_TOKEN' },
+        },
+      }]),
+    } as never)
+    await ctx.plugin(DigitalEmployeeManagementGateway, administratorConfig())
+    const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
+
+    const catalog = await gateway.listConfigurationAssets({ preset: 'standard' })
+
+    expect(catalog.entries).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'skill:market-active',
+        source: 'skill-market',
+        version: '1.2.3',
+        publisher: 'Market Author',
+        available: true,
+        restartRequired: false,
+      }),
+      expect.objectContaining({
+        id: 'tool:available_tool',
+        source: 'tool-market:marketplace-test-tool',
+        version: '1.0.0',
+        publisher: 'deepseek-marketplace-test',
+        available: true,
+        restartRequired: false,
+      }),
+      expect.objectContaining({
+        id: 'mcp:server',
+        source: 'mcp-market:marketplace-test-mcp',
+        version: '1.0.0',
+        publisher: 'deepseek-marketplace-test',
+        available: true,
+        restartRequired: false,
+      }),
+    ]))
+    await ctx.fiber.dispose()
+  })
+
   it('scopes configuration Skill assets to the requested Agent preset without Host-global fallback', async () => {
     const { agentPresets, ctx, skills } = harness()
-    await ctx.plugin(DigitalEmployeeManagementGateway, { administrator: true })
+    await ctx.plugin(DigitalEmployeeManagementGateway, administratorConfig())
     const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
 
     const standard = await gateway.listConfigurationAssets({ preset: 'standard' })
@@ -257,7 +349,7 @@ describe('DigitalEmployeeManagementGateway', () => {
 
   it('reports a client-safe preset failure and does not inspect Host-global Skills', async () => {
     const { ctx, skills } = harness()
-    await ctx.plugin(DigitalEmployeeManagementGateway, { administrator: true })
+    await ctx.plugin(DigitalEmployeeManagementGateway, administratorConfig())
     const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
 
     await expect(gateway.listConfigurationAssets({ preset: 'broken' }))
@@ -268,7 +360,7 @@ describe('DigitalEmployeeManagementGateway', () => {
 
   it('uses the preset standing lifecycle for concurrent asset reads without creating task runtime', async () => {
     const { agentPresets, ctx, digitalEmployeeAgent } = harness()
-    await ctx.plugin(DigitalEmployeeManagementGateway, { administrator: true })
+    await ctx.plugin(DigitalEmployeeManagementGateway, administratorConfig())
     const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
 
     const [first, second] = await Promise.all([
@@ -379,6 +471,63 @@ describe('DigitalEmployeeManagementGateway', () => {
     }
   })
 
+  it.each([
+    {
+      name: 'installed but inactive',
+      templateId: 'inactive-marketplace-skill',
+      preset: 'standard',
+      skill: 'market-inactive',
+    },
+    {
+      name: 'uninstalled',
+      templateId: 'uninstalled-marketplace-skill',
+      preset: 'standard',
+      skill: 'marketplace-test-skill-uninstalled',
+    },
+    {
+      name: 'outside the selected preset',
+      templateId: 'preset-scoped-marketplace-skill',
+      preset: 'restricted',
+      skill: 'market-active',
+    },
+  ])('rejects publication when a marketplace example is $name', async ({ templateId, preset, skill }) => {
+    const directory = await mkdtemp(join(tmpdir(), 'dsh-configuration-studio-'))
+    try {
+      const { ctx } = harness()
+      await ctx.plugin(DigitalEmployeeManagementGateway, {
+        administrator: true,
+        studioFile: join(directory, 'studio.json'),
+      })
+      const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
+      const draft = await gateway.createConfigurationDraft({
+        templateId,
+        display: { name: templateId, description: 'Checks marketplace availability.' },
+        instructions: 'Use only available marketplace capabilities.',
+        preset,
+        capabilities: {
+          skills: [skill],
+          tools: [],
+          mcpServers: [],
+          experts: [],
+          allowSubagents: false,
+        },
+      })
+
+      await expect(gateway.validateConfigurationDraft({ draftId: draft.id })).resolves.toMatchObject({
+        diagnostics: [expect.objectContaining({
+          code: 'unavailable-skill',
+          path: 'capabilities.skills',
+          message: `Skill "${skill}" is not available in this installation.`,
+        })],
+      })
+      await expect(gateway.publishConfigurationDraft({ draftId: draft.id, revision: draft.revision }))
+        .rejects.toThrow('validation diagnostics')
+      await ctx.fiber.dispose()
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
   it('rejects a Skill whose preset metadata cannot load its instructions', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'dsh-configuration-studio-'))
     try {
@@ -475,6 +624,103 @@ describe('DigitalEmployeeManagementGateway', () => {
         version: '0.1.1',
         instructions: expect.objectContaining({ path: 'AGENTS.md' }),
       }))
+      await ctx.fiber.dispose()
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
+  it('publishes and activates an employee with the three active marketplace examples', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'dsh-configuration-studio-'))
+    try {
+      const { ctx, digitalEmployees } = harness()
+      ctx.provide('mcpClients', {} as never)
+      digitalEmployees.create.mockResolvedValue({
+        id: 'marketplace-employee',
+        templateId: 'marketplace-reference',
+        templateVersion: '0.1.1',
+        displayName: 'Marketplace Reference',
+        state: 'inactive',
+        grants: {
+          skills: ['market-active'],
+          tools: ['available_tool'],
+          mcpServers: ['server'],
+          experts: [],
+          allowSubagents: false,
+        },
+      })
+      await ctx.plugin(DigitalEmployeeManagementGateway, {
+        administrator: true,
+        studioFile: join(directory, 'studio.json'),
+      })
+      const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
+      const draft = await gateway.createConfigurationDraft({
+        templateId: 'marketplace-reference',
+        display: { name: 'Marketplace Reference', description: 'Exercises installed marketplace capabilities.' },
+        instructions: 'Use the selected marketplace capabilities.',
+        capabilities: {
+          skills: ['market-active'],
+          tools: ['available_tool'],
+          mcpServers: ['server'],
+          experts: [],
+          allowSubagents: false,
+        },
+        mcpServers: [{
+          id: 'server',
+          transport: 'streamable-http',
+          url: 'http://127.0.0.1:43210/mcp',
+          headers: {},
+          headerCredentials: { Authorization: 'AVAILABLE_TOKEN' },
+        }],
+      })
+
+      await expect(gateway.validateConfigurationDraft({ draftId: draft.id }))
+        .resolves.toEqual({ revision: draft.revision, diagnostics: [] })
+      const publication = await gateway.publishConfigurationDraft({
+        draftId: draft.id,
+        revision: draft.revision,
+      })
+      expect(publication).toMatchObject({
+        templateId: 'marketplace-reference',
+        version: '0.1.1',
+      })
+      expect(digitalEmployees.registerTemplate).toHaveBeenCalledWith(expect.objectContaining({
+        id: 'marketplace-reference',
+        version: '0.1.1',
+        capabilities: {
+          skills: ['market-active'],
+          tools: ['available_tool'],
+          mcpServers: ['server'],
+          experts: [],
+          allowSubagents: false,
+        },
+        mcpServers: [expect.objectContaining({
+          id: 'server',
+          headerCredentials: { Authorization: 'AVAILABLE_TOKEN' },
+        })],
+      }))
+
+      const employee = await gateway.create({
+        templateId: 'marketplace-reference' as never,
+        templateVersion: publication.version,
+        displayName: 'Marketplace Reference',
+        grants: {
+          skills: ['market-active'],
+          tools: ['available_tool'],
+          mcpServers: ['server'],
+          experts: [],
+          allowSubagents: false,
+        },
+      })
+      await expect(gateway.activate({ employeeId: employee.id })).resolves.toMatchObject({
+        id: 'marketplace-employee',
+        state: 'active',
+      })
+      expect(digitalEmployees.create).toHaveBeenCalledWith(expect.objectContaining({
+        templateId: 'marketplace-reference',
+        templateVersion: '0.1.1',
+      }))
+      expect(digitalEmployees.activate).toHaveBeenCalledWith('marketplace-employee')
       await ctx.fiber.dispose()
     } finally {
       await rm(directory, { recursive: true, force: true })
@@ -752,7 +998,7 @@ describe('DigitalEmployeeManagementGateway', () => {
 
   it('publishes a single non-conflicting management namespace', async () => {
     const { ctx } = harness()
-    await ctx.plugin(DigitalEmployeeManagementGateway)
+    await ctx.plugin(DigitalEmployeeManagementGateway, studioConfig())
     const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
 
     expect(gateway.typertRemote).toMatchObject({
@@ -770,7 +1016,7 @@ describe('DigitalEmployeeManagementGateway', () => {
 
   it('routes lifecycle, task, memory, expert, upgrade, and portability operations', async () => {
     const { ctx, digitalEmployees, digitalEmployeeAgent, expert, parent } = harness()
-    await ctx.plugin(DigitalEmployeeManagementGateway)
+    await ctx.plugin(DigitalEmployeeManagementGateway, studioConfig())
     const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
 
     await gateway.activate({ employeeId: 'employee-1' as never })
@@ -814,7 +1060,7 @@ describe('DigitalEmployeeManagementGateway', () => {
 
   it('rejects expert control when the declared parent Agent is not live', async () => {
     const { ctx } = harness()
-    await ctx.plugin(DigitalEmployeeManagementGateway)
+    await ctx.plugin(DigitalEmployeeManagementGateway, studioConfig())
     const gateway = ctx.get('digitalEmployeeManagement') as DigitalEmployeeManagementGateway
 
     expect(() => gateway.continueExpert({

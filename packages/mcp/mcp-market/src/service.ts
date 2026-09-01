@@ -30,6 +30,7 @@ import type {
   McpMarketConfigureRequest,
   McpMarketConfigureResult,
   McpMarketCredentialRequirement,
+  McpMarketEndpointRequirement,
   McpMarketEntry,
   McpMarketFailure,
   McpMarketInstallRequest,
@@ -56,6 +57,7 @@ export interface McpMarketServiceOptions {
   readonly trustedPublishers: readonly TrustedPublisher[]
   readonly activeServerNames: () => readonly string[]
   readonly credentialInfo: (ref: CredentialRef) => Promise<CredentialInfo>
+  readonly endpointReferences: Readonly<Record<string, string>>
 }
 
 /** Owns declarative MCP package files and credential-reference configuration. */
@@ -119,6 +121,27 @@ export class McpMarketService {
   }
 
   /**
+   * Resolve a server's fixed URL or Host-owned endpoint reference.
+   * @param server - Parsed server declaration.
+   * @returns Validated Streamable HTTP endpoint.
+   */
+  endpointUrl(server: McpPackageDescriptor['servers'][number]): string {
+    const value = server.url ?? (
+      server.endpointReference === undefined
+        ? undefined
+        : this.options.endpointReferences[server.endpointReference]
+    )
+    if (value === undefined) {
+      throw new Error(`endpoint reference "${server.endpointReference}" is unavailable`)
+    }
+    const endpoint = new URL(value)
+    if (endpoint.protocol !== 'http:' && endpoint.protocol !== 'https:') {
+      throw new Error(`endpoint "${value}" must use HTTP or HTTPS`)
+    }
+    return endpoint.href
+  }
+
+  /**
    * Record an activation diagnostic without credential values.
    * @param packageId - Managed package identity.
    * @param diagnostic - Public diagnostic, or undefined to clear it.
@@ -150,6 +173,7 @@ export class McpMarketService {
             version: manifest.version,
             publisherId: manifest.publisherId,
             servers: [],
+            endpointRequirements: [],
             credentialRequirements: [],
             installedAt: manifest.installedAt,
             configured: false,
@@ -160,6 +184,12 @@ export class McpMarketService {
           continue
         }
         const references = configurations[manifest.id] ?? {}
+        const endpointSlots = [...new Set(descriptor.servers.flatMap(server =>
+          server.endpointReference === undefined ? [] : [server.endpointReference]))].sort()
+        const endpointRequirements: McpMarketEndpointRequirement[] = endpointSlots.map((slot) => {
+          const url = this.options.endpointReferences[slot]
+          return { slot, ...(url === undefined ? {} : { url }), configured: url !== undefined }
+        })
         const slots = [...new Set(descriptor.servers.flatMap(server => Object.values(server.credentialReferences)))].sort()
         const credentialRequirements = await Promise.all(slots.map(async (slot): Promise<McpMarketCredentialRequirement> => {
           const reference = references[slot]
@@ -178,6 +208,7 @@ export class McpMarketService {
           available: active.has(server.id),
         }))
         const configured = credentialRequirements.every(requirement => requirement.reference !== undefined)
+          && endpointRequirements.every(requirement => requirement.configured)
         const available = configured && servers.every(server => server.available)
         const diagnostic = this.diagnostics.get(manifest.id)
         entries.push({
@@ -187,6 +218,7 @@ export class McpMarketService {
           version: manifest.version,
           publisherId: manifest.publisherId,
           servers,
+          endpointRequirements,
           credentialRequirements,
           installedAt: manifest.installedAt,
           configured,

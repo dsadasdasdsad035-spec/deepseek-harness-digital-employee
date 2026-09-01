@@ -83,6 +83,24 @@ function setup() {
 }
 
 describe('unified Marketplace section', () => {
+  it('distinguishes author templates from directly installable examples', async () => {
+    setup()
+    expect(screen.getByRole('link', { name: en.installableExampleDownload }).getAttribute('href'))
+      .toBe('/marketplace-test-skill.zip')
+
+    fireEvent.click(screen.getByRole('tab', { name: en.toolTab }))
+    expect(screen.getByRole('link', { name: en.authorTemplateDownload }).getAttribute('href'))
+      .toBe('/tool-market-template.zip')
+    expect(screen.getByRole('link', { name: en.installableExampleDownload }).getAttribute('href'))
+      .toBe('/marketplace-test-tool.zip')
+
+    fireEvent.click(screen.getByRole('tab', { name: en.mcpTab }))
+    expect(screen.getByRole('link', { name: en.authorTemplateDownload }).getAttribute('href'))
+      .toBe('/mcp-market-template.zip')
+    expect(screen.getByRole('link', { name: en.installableExampleDownload }).getAttribute('href'))
+      .toBe('/marketplace-test-mcp.zip')
+  })
+
   it('shows Tool permissions, search, restart state, and uninstall confirmation', async () => {
     const { toolRemote } = setup()
     fireEvent.click(screen.getByRole('tab', { name: en.toolTab }))

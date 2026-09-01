@@ -430,6 +430,7 @@ describe('DigitalEmployeeAgent', () => {
       mcpServers: [declaration],
     } satisfies ResolvedDigitalEmployee
     const mounted: string[] = []
+    const appendAudit = vi.fn(() => Promise.resolve())
     const ctx = new Context()
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', {
@@ -438,10 +439,10 @@ describe('DigitalEmployeeAgent', () => {
         setup: (agentCtx: Context) => Promise<void>
       }) => {
         const agentCtx = new Context()
-        agentCtx.provide('agent', {
+        Object.defineProperty(agentCtx, 'agent', { value: {
           id: request.sessionId,
           session: { id: request.sessionId, append: () => {} },
-        } as never)
+        } })
         agentCtx.provide('skills', { restrict: () => {} } as never)
         agentCtx.provide('systemPrompt', { section: () => {} } as never)
         agentCtx.provide('tools', { restrict: () => {} } as never)
@@ -452,7 +453,7 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('credentials', { resolve: () => Promise.resolve({ value: 'unused' }) } as never)
     ctx.provide('digitalEmployees', {
       resolve: () => Promise.resolve(employee),
-      appendAudit: () => Promise.resolve(),
+      appendAudit,
     } as never)
     ctx.provide('mcpClients', {
       mount: (_agentCtx: Context, config: { serverName: string }) => {
@@ -479,6 +480,12 @@ describe('DigitalEmployeeAgent', () => {
     expect(mounted[0]).toMatch(/^de-/)
     expect(mounted[1]).toMatch(/^de-/)
     expect(mounted[0]).not.toBe(mounted[1])
+    expect(appendAudit).toHaveBeenCalledTimes(2)
+    expect(appendAudit).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'capabilities.configured',
+      sessionId: 'employee-task-one',
+      agentId: 'employee-task-one',
+    }))
   })
 
   it('resolves an authorized expert into a named subagent composition', async () => {
@@ -712,7 +719,6 @@ describe('DigitalEmployeeAgent', () => {
       label: 'Evidence Critic',
       prompt,
       parent,
-      // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any
       signal: expect.any(AbortSignal),
       agentOptions: baseExpert.agentOptions,
       maxDepth: 1,
@@ -822,7 +828,6 @@ describe('DigitalEmployeeAgent', () => {
           },
         },
       },
-      // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any
       signal: expect.any(AbortSignal),
     })
     expect(append).toHaveBeenNthCalledWith(3, 'digital-employee/expert-delegation', {

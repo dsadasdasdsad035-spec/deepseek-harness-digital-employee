@@ -136,6 +136,7 @@
       config:
         installRoot: !!js dshHomePath('mcp-packages')
         trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
+        endpointReferences: !!js JSON.parse(process.env.DSH_MCP_ENDPOINT_REFERENCES ?? '{}')
 
     - id: project-manager-test-template
       name: '@deepseek-ai/dsh-project-manager-test-digital-employee'

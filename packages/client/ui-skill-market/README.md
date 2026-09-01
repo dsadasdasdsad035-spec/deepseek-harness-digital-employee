@@ -22,6 +22,8 @@ The upload control accepts one `.zip` file and rejects files larger than 10 MiB 
 
 The initial request omits replacement intent. A successful install refreshes inventory and shows a dismissible notice. Only the structured `managed-upgrade-required` outcome opens the confirmation flow and retains the encoded candidate; confirm resubmits with explicit replacement intent, while cancel or section disposal releases it. Unmanaged conflicts and incompatible manifests show refusal states without an override action.
 
+The section offers separate downloads for author templates and directly installable test examples. Author templates contain placeholders and publishing guidance. The `marketplace-test-*` archives have fixed fixture identities for local verification; the Tool example still requires explicit trust for its test-only publisher.
+
 ## Uninstall
 
 Uninstall always requires confirmation. While the request is pending, the matching action is disabled and the section exposes progress. Success releases the corresponding image data, closes confirmation, refreshes inventory, and shows the resulting state. A structured ownership or not-found failure remains visible without assuming that the Host changed the target.

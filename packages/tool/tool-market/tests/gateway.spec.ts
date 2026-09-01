@@ -1,5 +1,5 @@
 import { createHash, generateKeyPairSync, sign } from 'node:crypto'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
@@ -9,6 +9,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { ToolMarketGateway, apply } from '../src/index.ts'
 
 const roots: string[] = []
+const TEST_PUBLISHER = {
+  id: 'deepseek-marketplace-test',
+  publicKeyPem: '-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAVvVFYX/zscUEEadGCx5qApj2V6mmiV8iBQ/9rOHi3bE=\n-----END PUBLIC KEY-----\n',
+} as const
 
 afterEach(async () => {
   await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true })))
@@ -165,9 +169,55 @@ describe('ToolMarketGateway', () => {
     await fresh.fiber.dispose()
     delete (globalThis as { __toolMarketCollisionImported?: boolean }).__toolMarketCollisionImported
   })
+
+  it('installs the shipped Tool example only with explicit test publisher trust', async () => {
+    const archiveBase64 = (await readFile(
+      join(process.cwd(), 'apps/web/public/marketplace-test-tool.zip'),
+    )).toString('base64')
+    const untrustedRoot = await mkdtemp(join(tmpdir(), 'dsh-tool-market-'))
+    roots.push(untrustedRoot)
+    const untrusted = contextWithTools([])
+    await untrusted.plugin(ToolMarketGateway, { installRoot: untrustedRoot, trustedPublishers: [] })
+    await expect((untrusted.get('toolMarket') as ToolMarketGateway).install({
+      filename: 'marketplace-test-tool.zip',
+      archiveBase64,
+    })).resolves.toEqual({
+      ok: false,
+      error: { code: 'untrusted-publisher', publisherId: TEST_PUBLISHER.id },
+    })
+    await untrusted.fiber.dispose()
+
+    const trustedRoot = await mkdtemp(join(tmpdir(), 'dsh-tool-market-'))
+    roots.push(trustedRoot)
+    const trusted = contextWithTools([])
+    await trusted.plugin(ToolMarketGateway, {
+      installRoot: trustedRoot,
+      trustedPublishers: [TEST_PUBLISHER],
+    })
+    await expect((trusted.get('toolMarket') as ToolMarketGateway).install({
+      filename: 'marketplace-test-tool.zip',
+      archiveBase64,
+    })).resolves.toMatchObject({
+      ok: true,
+      value: { packageId: 'marketplace-test-tool', restartRequired: true },
+    })
+    await trusted.fiber.dispose()
+
+    const registered: Array<{ name: string; execute?: (args: { text: string }) => Promise<unknown> }> = []
+    const fresh = contextWithTools([], registered)
+    await apply(fresh, { installRoot: trustedRoot, trustedPublishers: [TEST_PUBLISHER] })
+    expect(registered.map(tool => tool.name)).toContain('marketplace_test_echo')
+    await expect(registered.find(tool => tool.name === 'marketplace_test_echo')?.execute?.({
+      text: 'risk-42',
+    })).resolves.toBe('MARKETPLACE_TEST_TOOL_ECHO:risk-42')
+    await fresh.fiber.dispose()
+  })
 })
 
-function contextWithTools(names: readonly string[]): Context {
+function contextWithTools(
+  names: readonly string[],
+  definitions: Array<{ name: string; execute?: (args: { text: string }) => Promise<unknown> }> = [],
+): Context {
   const ctx = new Context()
   const registered = [...names]
   ctx.provide('tools', {
@@ -176,11 +226,14 @@ function contextWithTools(names: readonly string[]): Context {
       description: `${name} description`,
       parameters: { type: 'object', properties: {} },
     })),
-    register: (tool: { name: string }) => {
+    register: (tool: { name: string; execute?: (args: { text: string }) => Promise<unknown> }) => {
       registered.push(tool.name)
+      definitions.push(tool)
       return () => {
         const index = registered.indexOf(tool.name)
         if (index >= 0) registered.splice(index, 1)
+        const definition = definitions.indexOf(tool)
+        if (definition >= 0) definitions.splice(definition, 1)
       }
     },
   } as never)

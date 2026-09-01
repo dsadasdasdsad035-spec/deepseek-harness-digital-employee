@@ -14,6 +14,8 @@ Managed installation and credential-reference configuration for declarative Stre
 
 Configuration persists only credential reference names. Resolved values exist only while the Host mounts a configured server through `McpClientManager`; list, template catalog, diagnostics, and publication data omit them. A credential-backed header must have an empty fixed value, and requests containing secret-like values are rejected.
 
+`marketplace-test-mcp.zip` declares endpoint reference `MARKETPLACE_TEST_MCP_ENDPOINT` and credential reference `MARKETPLACE_TEST_MCP_TOKEN` without embedding either resolved value. Offline tests bind the endpoint to an ephemeral loopback server. Template projection omits fixed header entries owned by credential references and persists only `headerCredentials`.
+
 Install, upgrade, configuration, and uninstall are restart-bound. A fresh Host resolves references, enforces unique server names, and mounts available clients. Missing packages, credentials, or conflicting server names remain explicit diagnostics.
 
 ## Model Experience

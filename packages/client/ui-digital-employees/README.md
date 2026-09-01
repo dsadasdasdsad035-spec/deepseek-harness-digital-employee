@@ -14,6 +14,8 @@ Destructive operations require an explicit UI confirmation. Upgrade apply follow
 
 When the Host enables local administrator configuration, the workspace adds a separate **Template configuration** tab beside **Employee operations**. It lists drafts and publications, edits template metadata, root instructions, capability declarations, MCP references, expert definitions, and memory seeds, then shows validation diagnostics before preview or publish. Opening a draft and changing its preset reloads Skill availability from that preset. A bounded loading state and request generation guard prevent stale results from authorizing selections. Failed refreshes disable new Skill selection while selected unavailable names remain visible and removable. Skill rows show marketplace or local provenance, version, author, tags, and activation guidance; drafts persist only stable Skill names.
 
+Skill, Tool, and MCP selectors combine active runtime registrations with marketplace metadata. Installed restart-pending assets remain visible but disabled, local non-marketplace Skills remain selectable, and unresolved references retained by an existing draft remain removable. Returning to **Employee operations** refreshes registered templates so a newly published version appears in the creation picker.
+
 ## Chat Entry
 
 At the leading semantic position of a new-task composer, `@` discovery shows employee identity, template, and current availability. Selecting an active employee inserts one structured routing reference carrying the stable instance ID. The reference is omitted from model-visible text, and a composer cannot select a second employee or move its employee owner after task content.

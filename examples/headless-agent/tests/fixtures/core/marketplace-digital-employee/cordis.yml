@@ -1,0 +1,57 @@
+- id: mock-llm
+  name: './mock-llm.ts'
+
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: marketplace-employee-mock
+    model: marketplace-employee-mock
+
+- id: credentials
+  name: '@deepseek-ai/dsh-credentials-local'
+  config:
+    dshHome: './.dsh-home'
+    watch: false
+
+- id: agent-spine
+  name: '@deepseek-ai/dsh-agent-spine-demo'
+  config:
+    agents: []
+    workspaceContext: false
+    skills:
+      filesystem:
+        dshHome: './.dsh-home'
+
+- id: agent-presets
+  name: '@deepseek-ai/dsh-agent-presets'
+  config:
+    default: marketplace-employee
+    includeUserRoot: false
+    roots:
+      - path: !!js process.env.DSH_MARKETPLACE_EMPLOYEE_PRESET_ROOT
+        trust: system
+
+- id: mcp-client
+  name: '@deepseek-ai/dsh-mcp-client'
+  config:
+    mode: manager
+
+- id: digital-employees
+  name: '@deepseek-ai/dsh-digital-employee'
+
+- id: marketplace-capabilities
+  name: './capabilities.ts'
+
+- id: marketplace-template
+  name: './template.ts'
+
+- id: digital-employee-file
+  name: '@deepseek-ai/dsh-digital-employee-file'
+  config:
+    path: './digital-employees.json'
+
+- id: subagents
+  name: '@deepseek-ai/dsh-subagent'
+
+- id: digital-employee-agent
+  name: '@deepseek-ai/dsh-digital-employee-agent'

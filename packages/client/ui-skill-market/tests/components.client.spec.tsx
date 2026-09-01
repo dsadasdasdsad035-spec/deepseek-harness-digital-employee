@@ -103,7 +103,7 @@ function setup(options: SetupOptions = {}) {
     useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
     t: (key: string) => en[key as keyof typeof en],
   } as unknown as SkillMarketSectionProps
-  return render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
+  return render(<SkillMarketSection {...(props)} />)
 }
 
 function fileList(file: File): FileList {
@@ -185,13 +185,16 @@ describe('SkillMarketSection', () => {
     expect(installCalls[0]).toEqual({ filename: 'demo.zip', replaceExisting: false })
   })
 
-  it('offers the shipped skill template as a normal browser download', async () => {
+  it('offers the shipped Skill author template and installable example as browser downloads', async () => {
     setup()
     await waitLoaded()
 
-    const download = screen.getByRole('link', { name: en.templateDownload })
-    expect(download.getAttribute('href')).toBe('/skill-market-template.zip')
-    expect(download.getAttribute('download')).toBe('skill-market-template.zip')
+    const template = screen.getByRole('link', { name: en.authorTemplateDownload })
+    expect(template.getAttribute('href')).toBe('/skill-market-template.zip')
+    expect(template.getAttribute('download')).toBe('skill-market-template.zip')
+    const example = screen.getByRole('link', { name: en.installableExampleDownload })
+    expect(example.getAttribute('href')).toBe('/marketplace-test-skill.zip')
+    expect(example.getAttribute('download')).toBe('marketplace-test-skill.zip')
   })
 
   it('rejects non-.zip files with the localized error', async () => {
@@ -227,7 +230,7 @@ describe('SkillMarketSection', () => {
     })
     // 覆盖 modal 出现
     await waitFor(() => { expect(screen.getByText(en.upgradeTitle)).toBeTruthy() })
-    expect(installCalls.find(call => call.replaceExisting === true)).toBeUndefined()
+    expect(installCalls.find(call =>  call.replaceExisting)).toBeUndefined()
     // 点击「覆盖」按钮
     const overwriteBtn = screen.getByText(en.upgradeConfirm)
     await act(async () => {
@@ -235,7 +238,7 @@ describe('SkillMarketSection', () => {
       await new Promise((resolve) => { setTimeout(resolve, 30) })
     })
     await waitFor(() => {
-      expect(installCalls.find(call => call.replaceExisting === true)).toBeDefined()
+      expect(installCalls.find(call =>  call.replaceExisting)).toBeDefined()
     })
   })
 
@@ -302,7 +305,7 @@ describe('SkillMarketSection', () => {
       useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
       t: (key: string) => en[key as keyof typeof en],
     } as unknown as SkillMarketSectionProps
-    render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
+    render(<SkillMarketSection {...(props)} />)
     await waitFor(() => {
       expect(screen.getByText(en.loadFailed)).toBeTruthy()
       expect(screen.getByText(en.retry)).toBeTruthy()

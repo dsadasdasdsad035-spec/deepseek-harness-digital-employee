@@ -191,6 +191,20 @@ export interface WebScaffold {
   close(): Promise<void>
 }
 
+/** A Web scaffold lifecycle that preserves one Harness Home across Host processes. */
+export interface RestartableWebScaffold {
+  /** The running Host. Access while stopped or closed fails loud. */
+  readonly scaffold: WebScaffold
+  /** Harness Home preserved across {@link stop} and {@link start}. */
+  readonly harnessHome: string
+  /** Stop the current Host while retaining its managed marketplace state. */
+  stop(): Promise<void>
+  /** Start a new settled Host against the preserved Harness Home. */
+  start(): Promise<WebScaffold>
+  /** Stop the Host and remove the lifecycle-owned Harness Home. */
+  close(): Promise<void>
+}
+
 /** Options for {@link launchWebScaffold}. */
 export interface LaunchOptions {
   /**
@@ -300,6 +314,12 @@ export interface LaunchOptions {
   remoteAuthority?: string
   /** Reuse an existing harness home so a second Host can verify user settings across origins. */
   harnessHome?: string
+  /** Explicit marketplace trust, endpoint, and credential inputs for isolated reference workflows. */
+  marketplace?: {
+    readonly trustedPublishers: readonly { readonly id: string; readonly publicKeyPem: string }[]
+    readonly endpointReferences: Readonly<Record<string, string>>
+    readonly credentials: Readonly<Record<string, string>>
+  }
 }
 
 /** Dispose the booted tree and remove both owned temp roots, reporting every independent cleanup failure. */
@@ -361,6 +381,7 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     DSH_HOME: harnessHome,
     DSH_AGENTS_HOME: join(workspaceCwd, '.agents-home'),
     DSH_BUNDLED_SKILL_DIR: join(workspaceCwd, '.bundled-skills'),
+    ...options.marketplace?.credentials,
   }
   const originalSkillRootEnvironment = Object.fromEntries(
     Object.keys(skillRootEnvironment).map(key => [key, process.env[key]]),
@@ -478,6 +499,32 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
       : [{ id: 'connection', config: { trustedHosts: [options.remoteAuthority] } }],
     { id: 'settings', config: { dshHome: harnessHome } },
     { id: 'credentials', config: { dshHome: harnessHome } },
+    {
+      id: 'digital-employee-management',
+      config: {
+        administrator: true,
+        studioFile: join(harnessHome, 'digital-employees', 'configuration-studio.json'),
+      },
+    },
+    ...options.marketplace === undefined
+      ? []
+      : [
+        {
+          id: 'tool-market',
+          config: {
+            installRoot: join(harnessHome, 'tools'),
+            trustedPublishers: options.marketplace.trustedPublishers,
+          },
+        },
+        {
+          id: 'mcp-market',
+          config: {
+            installRoot: join(harnessHome, 'mcp-packages'),
+            trustedPublishers: options.marketplace.trustedPublishers,
+            endpointReferences: options.marketplace.endpointReferences,
+          },
+        },
+      ],
     // The shipped directory-picker row is the -auto chooser, which resolves
     // the interaction from the RUNNING host (display, SSH launch, bind). The
     // lane's goldens are interaction-specific (workspace-management drives
@@ -683,6 +730,71 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
         restoreSkillRootEnvironment()
       }
       if (failures.length > 0) throw new AggregateError(failures, 'web scaffold teardown failed')
+    },
+  }
+}
+
+/**
+ * Boot a Web scaffold whose Harness Home survives an explicit Host restart.
+ * @param options - launch options reused for every Host process.
+ * @returns the restartable lifecycle and its first ready Host.
+ */
+export async function launchRestartableWebScaffold(
+  options: Omit<LaunchOptions, 'harnessHome'> = {},
+): Promise<RestartableWebScaffold> {
+  const harnessHome = await realpath(await mkdtemp(join(tmpdir(), 'dsh-web-e2e-home-')))
+  let active: WebScaffold | undefined
+  let closed = false
+
+  const start = async (): Promise<WebScaffold> => {
+    if (closed) throw new Error('restartable web scaffold is closed')
+    if (active !== undefined) throw new Error('restartable web scaffold is already running')
+    const scaffold = await launchWebScaffold({ ...options, harnessHome })
+    try {
+      const response = await fetch(scaffold.baseUrl)
+      if (!response.ok) {
+        throw new Error(`restartable web scaffold readiness failed with HTTP ${String(response.status)}`)
+      }
+    } catch (error) {
+      await scaffold.close().catch(() => undefined)
+      throw error
+    }
+    active = scaffold
+    return scaffold
+  }
+
+  try {
+    await start()
+  } catch (error) {
+    await rm(harnessHome, { recursive: true, force: true })
+    throw error
+  }
+
+  return {
+    harnessHome,
+    get scaffold(): WebScaffold {
+      if (active === undefined) throw new Error('restartable web scaffold is not running')
+      return active
+    },
+    async stop(): Promise<void> {
+      const stopping = active
+      if (stopping === undefined) return
+      active = undefined
+      await stopping.close()
+    },
+    start,
+    async close(): Promise<void> {
+      if (closed) return
+      closed = true
+      const failures: unknown[] = []
+      const stopping = active
+      active = undefined
+      await stopping?.close().catch((error: unknown) => failures.push(error))
+      await rm(harnessHome, { recursive: true, force: true })
+        .catch((error: unknown) => failures.push(error))
+      if (failures.length > 0) {
+        throw new AggregateError(failures, 'restartable web scaffold teardown failed')
+      }
     },
   }
 }

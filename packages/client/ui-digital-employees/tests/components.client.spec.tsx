@@ -391,9 +391,10 @@ describe('DigitalEmployeeWorkspace', () => {
       assetError: null,
       assetPreset: 'headless',
     }
+    const controller = { load: vi.fn(), loadRoster: vi.fn(), setView: vi.fn() }
     const result = render(
       <DigitalEmployeeWorkspace
-        controller={{ load: vi.fn(), setView: vi.fn() } as never}
+        controller={controller as never}
         configurationStudio={configuration as never}
         previewWorkspace={() => 'workspace-1'}
         useSnapshot={((selector: (value: typeof state) => unknown) => selector(state)) as never}
@@ -406,6 +407,9 @@ describe('DigitalEmployeeWorkspace', () => {
     expect(result.getByRole('tab', { name: 'Employee operations' })).toBeTruthy()
     fireEvent.click(result.getByRole('tab', { name: 'Template configuration' }))
     expect(result.getByRole('region', { name: 'Template configuration' })).toBeTruthy()
+    fireEvent.click(result.getByRole('tab', { name: 'Employee operations' }))
+    expect(controller.loadRoster).toHaveBeenCalledOnce()
+    fireEvent.click(result.getByRole('tab', { name: 'Template configuration' }))
     expect(result.getByRole('button', { name: 'Create draft' })).toBeTruthy()
     expect(result.getByRole('button', { name: 'Validate' })).toBeTruthy()
     expect(result.getByRole('button', { name: 'Publish' })).toBeTruthy()

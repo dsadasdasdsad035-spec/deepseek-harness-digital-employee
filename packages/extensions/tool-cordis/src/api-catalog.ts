@@ -4547,8 +4547,12 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface McpMarketCredentialRequirement {\n    readonly slot: string;\n    readonly reference?: string | undefined;\n    readonly configured: boolean;\n    readonly source?: string | undefined;\n}',
   },
   {
+    name: 'McpMarketEndpointRequirement',
+    declaration: 'export interface McpMarketEndpointRequirement {\n    readonly slot: string;\n    readonly url?: string | undefined;\n    readonly configured: boolean;\n}',
+  },
+  {
     name: 'McpMarketEntry',
-    declaration: 'export interface McpMarketEntry {\n    readonly packageId: McpMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly servers: readonly McpMarketServerEntry[];\n    readonly credentialRequirements: readonly McpMarketCredentialRequirement[];\n    readonly installedAt: number;\n    readonly configured: boolean;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n}',
+    declaration: 'export interface McpMarketEntry {\n    readonly packageId: McpMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly servers: readonly McpMarketServerEntry[];\n    readonly endpointRequirements: readonly McpMarketEndpointRequirement[];\n    readonly credentialRequirements: readonly McpMarketCredentialRequirement[];\n    readonly installedAt: number;\n    readonly configured: boolean;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n}',
   },
   {
     name: 'McpMarketFailure',

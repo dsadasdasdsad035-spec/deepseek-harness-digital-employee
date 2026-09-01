@@ -43,6 +43,12 @@ export const TOOL_TEMPLATE_ARCHIVE_URL = '/tool-market-template.zip'
 export const TOOL_TEMPLATE_ARCHIVE_FILENAME = 'tool-market-template.zip'
 export const MCP_TEMPLATE_ARCHIVE_URL = '/mcp-market-template.zip'
 export const MCP_TEMPLATE_ARCHIVE_FILENAME = 'mcp-market-template.zip'
+export const SKILL_EXAMPLE_ARCHIVE_URL = '/marketplace-test-skill.zip'
+export const SKILL_EXAMPLE_ARCHIVE_FILENAME = 'marketplace-test-skill.zip'
+export const TOOL_EXAMPLE_ARCHIVE_URL = '/marketplace-test-tool.zip'
+export const TOOL_EXAMPLE_ARCHIVE_FILENAME = 'marketplace-test-tool.zip'
+export const MCP_EXAMPLE_ARCHIVE_URL = '/marketplace-test-mcp.zip'
+export const MCP_EXAMPLE_ARCHIVE_FILENAME = 'marketplace-test-mcp.zip'
 
 interface UploaderProps {
   readonly id: string
@@ -53,10 +59,13 @@ interface UploaderProps {
   readonly onPickFile: (file: File) => void
   readonly templateUrl?: string | undefined
   readonly templateFilename?: string | undefined
+  readonly exampleUrl?: string | undefined
+  readonly exampleFilename?: string | undefined
 }
 
 function Uploader({
   id, title, uploading, error, t, onPickFile, templateUrl, templateFilename,
+  exampleUrl, exampleFilename,
 }: UploaderProps): ReactNode {
   const input = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
@@ -113,7 +122,17 @@ function Uploader({
           download={templateFilename}
           onClick={(event) => { event.stopPropagation() }}
         >
-          {t('templateDownload')}
+          {t('authorTemplateDownload')}
+        </a>
+      )}
+      {exampleUrl === undefined ? null : (
+        <a
+          className={css.templateDownload}
+          href={exampleUrl}
+          download={exampleFilename}
+          onClick={(event) => { event.stopPropagation() }}
+        >
+          {t('installableExampleDownload')}
         </a>
       )}
       {error === null ? null : <span className={css.error} role="alert">{error}</span>}
@@ -246,6 +265,8 @@ function SkillPanel({ injected: { controller, useSnapshot, t } }: { injected: Sk
         onPickFile={(file) => { void controller.upload(file) }}
         templateUrl={TEMPLATE_ARCHIVE_URL}
         templateFilename={TEMPLATE_ARCHIVE_FILENAME}
+        exampleUrl={SKILL_EXAMPLE_ARCHIVE_URL}
+        exampleFilename={SKILL_EXAMPLE_ARCHIVE_FILENAME}
       />
       <label className={css.search}>
         <span className={css.visuallyHidden}>{t('searchLabel')}</span>
@@ -470,6 +491,8 @@ function ToolPanel({ injected: {
         onPickFile={(file) => { void controller.upload(file) }}
         templateUrl={TOOL_TEMPLATE_ARCHIVE_URL}
         templateFilename={TOOL_TEMPLATE_ARCHIVE_FILENAME}
+        exampleUrl={TOOL_EXAMPLE_ARCHIVE_URL}
+        exampleFilename={TOOL_EXAMPLE_ARCHIVE_FILENAME}
       />
       <PackageSearch
         label={t('toolSearchLabel')}
@@ -600,6 +623,8 @@ function McpPanel({ injected: {
         onPickFile={(file) => { void controller.upload(file) }}
         templateUrl={MCP_TEMPLATE_ARCHIVE_URL}
         templateFilename={MCP_TEMPLATE_ARCHIVE_FILENAME}
+        exampleUrl={MCP_EXAMPLE_ARCHIVE_URL}
+        exampleFilename={MCP_EXAMPLE_ARCHIVE_FILENAME}
       />
       <PackageSearch
         label={t('mcpSearchLabel')}
