@@ -104,10 +104,16 @@ export class DigitalEmployeeConfigurationStudioStore {
   }
 
   /**
-   * Publish the exact current draft revision and refresh immutable history.
+   * Validate and publish the exact current draft revision, retaining diagnostics instead of submitting invalid content.
    * @param draft - current draft snapshot whose revision is published.
    */
   async publish(draft: DigitalEmployeeTemplateDraft): Promise<void> {
+    const validation = await this.remote.validateConfigurationDraft({ draftId: draft.id })
+    if (!validation.ok) throw new Error(validation.error.message)
+    this.store.update((state) => {
+      state.diagnostics = { ...state.diagnostics, [draft.id]: validation.value.diagnostics }
+    })
+    if (validation.value.diagnostics.length > 0) return
     const result = await this.remote.publishConfigurationDraft({ draftId: draft.id, revision: draft.revision })
     if (!result.ok) throw new Error(result.error.message)
     this.store.update((state) => { state.publications = [...state.publications, result.value] })

@@ -89,10 +89,13 @@ declare module '@deepseek-ai/cordis' {
 export class DigitalEmployeeManagementGateway extends TypertRemoteService {
   static inject = [
     'agentDefaultModel',
+    'agentPresets',
     'agents',
     'attachments',
     'digitalEmployeeAgent',
     'digitalEmployees',
+    'skills',
+    'tools',
     'workspaceRegistry',
   ]
   static Config: z<Config> = z.object({
@@ -249,11 +252,14 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
    * @returns detached new draft record.
    */
   @Remote('createConfigurationDraft')
-  createConfigurationDraft(
+  async createConfigurationDraft(
     request: CreateDigitalEmployeeTemplateDraftRequest,
   ): Promise<DigitalEmployeeTemplateDraft> {
     this.requireAdministrator()
-    return this.configurationStudio.create(request, randomUUID() as DigitalEmployeeTemplateDraft['id'])
+    return await this.configurationStudio.create({
+      ...request,
+      preset: request.preset?.trim() || this.ctx.agentPresets.defaultId,
+    }, randomUUID() as DigitalEmployeeTemplateDraft['id'])
   }
 
   /**

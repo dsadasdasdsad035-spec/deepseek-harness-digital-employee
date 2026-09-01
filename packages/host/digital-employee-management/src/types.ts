@@ -167,7 +167,7 @@ export interface CreateDigitalEmployeeTemplateDraftRequest {
   readonly instructions: string
   /** Personality text composed with the main Agent instructions. */
   readonly personality?: string
-  /** Existing preset used to compose the employee Agent. */
+  /** Existing preset used to compose the employee Agent; omission selects the deployment default. */
   readonly preset?: string
   /** Explicitly authorized capabilities. */
   readonly capabilities?: DigitalEmployeeConfigurationAuthority

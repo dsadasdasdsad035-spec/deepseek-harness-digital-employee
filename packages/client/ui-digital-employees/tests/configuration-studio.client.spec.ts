@@ -6,6 +6,44 @@ function ok<T>(value: T) {
 }
 
 describe('DigitalEmployeeConfigurationStudioStore', () => {
+  it('retains fresh diagnostics instead of publishing an invalid draft', async () => {
+    const draft = {
+      id: 'draft-1', templateId: 'operations-assistant', revision: 1,
+      display: { name: 'Operations Assistant', description: 'Coordinates delivery.' },
+      instructions: 'Coordinate delivery.', personality: 'Helpful.', preset: 'headless',
+      capabilities: { skills: [], tools: [], mcpServers: [], experts: [], allowSubagents: false },
+      mcpServers: [], experts: [], memorySeeds: [],
+      delegation: { maxDepth: 0, maxConcurrency: 1, timeoutMs: 30_000 },
+      createdAt: '2026-08-31T00:00:00.000Z', updatedAt: '2026-08-31T00:00:00.000Z',
+    }
+    const publishConfigurationDraft = vi.fn(() => ok({
+      templateId: draft.templateId,
+      version: '0.1.1',
+      draftId: draft.id,
+      draftRevision: draft.revision,
+      publishedAt: '2026-09-01T00:00:00.000Z',
+    }))
+    const remote = {
+      validateConfigurationDraft: vi.fn(() => ok({
+        revision: draft.revision,
+        diagnostics: [{
+          code: 'unavailable-preset',
+          path: 'preset',
+          message: 'Agent preset "headless" is not available in this installation.',
+        }],
+      })),
+      publishConfigurationDraft,
+    }
+    const store = new DigitalEmployeeConfigurationStudioStore(remote as never)
+
+    await store.publish(draft as never)
+
+    expect(store.store.getSnapshot().diagnostics[draft.id]).toEqual([
+      expect.objectContaining({ code: 'unavailable-preset' }),
+    ])
+    expect(publishConfigurationDraft).not.toHaveBeenCalled()
+  })
+
   it('loads administrator drafts, publication history, and validation diagnostics', async () => {
     const remote = {
       listConfigurationDrafts: vi.fn(() => ok([])),

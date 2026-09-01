@@ -75,12 +75,20 @@ function harness() {
     resolve: vi.fn(async (reference: string) => reference === 'AVAILABLE_TOKEN' ? { value: 'test' } : undefined),
   } as never)
   ctx.provide('agentPresets', {
+    defaultId: 'standard',
     list: vi.fn(async () => [{ id: 'headless' }, { id: 'standard' }]),
   } as never)
   return { ctx, digitalEmployees, digitalEmployeeAgent, expert, parent }
 }
 
 describe('DigitalEmployeeManagementGateway', () => {
+  it('injects the registries read by the configuration asset catalog', () => {
+    expect(DigitalEmployeeManagementGateway.inject).toEqual(expect.arrayContaining([
+      'skills',
+      'tools',
+    ]))
+  })
+
   it('keeps configuration drafts behind the local administrator gate', async () => {
     const { ctx } = harness()
     await ctx.plugin(DigitalEmployeeManagementGateway)
@@ -109,6 +117,7 @@ describe('DigitalEmployeeManagementGateway', () => {
       expect(created).toMatchObject({
         templateId: 'operations-assistant',
         display: { name: 'Operations Assistant' },
+        preset: 'standard',
         revision: 1,
       })
       await expect(gateway.listConfigurationDrafts()).resolves.toEqual([created])
