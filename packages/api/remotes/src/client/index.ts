@@ -10,6 +10,8 @@ import pluginInventoryRemote from '@deepseek-ai/dsh-host-plugin-inventory/remote
 import messageFeedbackRemote from '@deepseek-ai/dsh-message-feedback/remote'
 import sessionReferencesRemote from '@deepseek-ai/dsh-session-reference/remote'
 import skillMarketRemote from '@deepseek-ai/dsh-skill-market/remote'
+import toolMarketRemote from '@deepseek-ai/dsh-tool-market/remote'
+import mcpMarketRemote from '@deepseek-ai/dsh-mcp-market/remote'
 import type { TypertClientRemote } from '@deepseek-ai/dsh-typert-protocol'
 
 export type { TypertClientRemote as ClientRemote } from '@deepseek-ai/dsh-typert-protocol'
@@ -22,6 +24,8 @@ export type {} from '@deepseek-ai/dsh-host-plugin-inventory/remote'
 export type {} from '@deepseek-ai/dsh-message-feedback/remote'
 export type {} from '@deepseek-ai/dsh-session-reference/remote'
 export type {} from '@deepseek-ai/dsh-skill-market/remote'
+export type {} from '@deepseek-ai/dsh-tool-market/remote'
+export type {} from '@deepseek-ai/dsh-mcp-market/remote'
 // The forwarded-event allowlist's selection seat: without it in the consumer's
 // compilation face `TypertRemoteEvent` is `never` and every `$on` call fails.
 export type { ApiRemoteForwardedEvent } from '../types.ts'
@@ -101,10 +105,29 @@ export type { SessionReferenceMentionCandidate } from '@deepseek-ai/dsh-session-
 export type * from '@deepseek-ai/dsh-digital-employee/types'
 export type {
   DigitalEmployeeDeleteMemoryRequest,
+  DigitalEmployeeConfigurationAuthority,
+  DigitalEmployeeConfigurationAsset,
+  DigitalEmployeeConfigurationAssetCatalog,
+  DigitalEmployeeConfigurationDelegation,
+  DigitalEmployeeConfigurationDiagnostic,
+  DigitalEmployeeConfigurationExpert,
+  DigitalEmployeeConfigurationMemorySeed,
+  DigitalEmployeeConfigurationMcpServer,
   DigitalEmployeeExpertContinueContent,
   DigitalEmployeeExpertContinueRequest,
   DigitalEmployeeExpertControlRequest,
   DigitalEmployeeIdentityRequest,
+  DigitalEmployeeTemplateDraft,
+  DigitalEmployeeTemplateDraftId,
+  DigitalEmployeeTemplateDraftIdentityRequest,
+  DigitalEmployeeTemplateDraftValidation,
+  DigitalEmployeeTemplatePreview,
+  CreateDigitalEmployeeTemplateDraftRequest,
+  DisposeDigitalEmployeeTemplatePreviewRequest,
+  PreviewDigitalEmployeeTemplateDraftRequest,
+  PublishDigitalEmployeeTemplateDraftRequest,
+  UpdateDigitalEmployeeTemplateDraftRequest,
+  DigitalEmployeeTemplatePublication,
   DigitalEmployeeStartChatContent,
   DigitalEmployeeStartChatImageContent,
   DigitalEmployeeStartChatRequest,
@@ -132,6 +155,31 @@ export type {
   SkillMarketUninstallResult,
   SkillMarketUninstallValue,
 } from '@deepseek-ai/dsh-skill-market/types'
+export type {
+  ToolMarketEntry,
+  ToolMarketFailure,
+  ToolMarketInstallRequest,
+  ToolMarketInstallResult,
+  ToolMarketListResult,
+  ToolMarketPackageId,
+  ToolMarketToolEntry,
+  ToolMarketUninstallRequest,
+  ToolMarketUninstallResult,
+} from '@deepseek-ai/dsh-tool-market/types'
+export type {
+  McpMarketConfigureRequest,
+  McpMarketConfigureResult,
+  McpMarketCredentialRequirement,
+  McpMarketEntry,
+  McpMarketFailure,
+  McpMarketInstallRequest,
+  McpMarketInstallResult,
+  McpMarketListResult,
+  McpMarketPackageId,
+  McpMarketServerEntry,
+  McpMarketUninstallRequest,
+  McpMarketUninstallResult,
+} from '@deepseek-ai/dsh-mcp-market/types'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -154,7 +202,7 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
     for (const contribution of [
       commandsRemote, goalsRemote, dynamicRemote, fileReferencesRemote,
       digitalEmployeesRemote, pluginInventoryRemote, messageFeedbackRemote,
-      sessionReferencesRemote, skillMarketRemote,
+      sessionReferencesRemote, skillMarketRemote, toolMarketRemote, mcpMarketRemote,
     ]) {
       disposers.push(await ctx.remote.$mount(contribution))
     }

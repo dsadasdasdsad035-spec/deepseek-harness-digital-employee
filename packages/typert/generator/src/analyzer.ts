@@ -1500,9 +1500,18 @@ class FaceAnalyzer {
           return add({ kind: 'literal', value, text: String(value) })
         }
         if (type.isUnionOrIntersection()) {
+          const members = (flags & ts.TypeFlags.Union) === 0
+            ? type.types
+            : [...type.types].sort((left, right) =>
+              this.checker.typeToString(left, authoredType, ts.TypeFormatFlags.NoTruncation)
+                .localeCompare(this.checker.typeToString(
+                  right,
+                  authoredType,
+                  ts.TypeFormatFlags.NoTruncation,
+                )))
           return add({
             kind: (flags & ts.TypeFlags.Union) !== 0 ? 'union' : 'intersection',
-            types: type.types.map(convert),
+            types: members.map(convert),
           })
         }
         if ((flags & ts.TypeFlags.TypeParameter) !== 0) {

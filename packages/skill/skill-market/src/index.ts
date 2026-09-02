@@ -8,7 +8,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import { join } from 'node:path'
 import z from '@deepseek-ai/schemastery'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { ArchiveValidationError } from './archive.ts'
+import { ArchiveValidationError } from '@deepseek-ai/dsh-marketplace-core'
 import { resolveDefaultInstallRoot, SkillMarketService } from './market-service.ts'
 import { SkillMarketError } from './schema.ts'
 import type {

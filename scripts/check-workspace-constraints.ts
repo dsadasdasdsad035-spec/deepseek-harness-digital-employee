@@ -167,6 +167,13 @@ const packageFileExtras: Readonly<Record<string, readonly string[]>> = {
     'AGENTS.md',
     'experts/reviewer/AGENTS.md',
   ],
+  '@deepseek-ai/dsh-project-manager-test-digital-employee': [
+    'lib/tools.js',
+    'lib/skills.js',
+    'lib/project-data-mcp.js',
+    'AGENTS.md',
+    'project-data-mcp.mjs',
+  ],
 }
 
 function sameStringList(actual: readonly string[] | undefined, expected: readonly string[]): boolean {

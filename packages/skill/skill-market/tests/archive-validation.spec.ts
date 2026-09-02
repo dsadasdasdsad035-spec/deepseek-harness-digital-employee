@@ -8,7 +8,7 @@ import {
   MAX_FILE_COUNT,
   MAX_ZIP_BYTES,
   type ArchiveValidationError,
-} from '../src/archive.ts'
+} from '@deepseek-ai/dsh-marketplace-core'
 import { cleanupPrivatePath } from '../src/market-service.ts'
 import { buildDeclaredZip, buildZip } from './fixtures/zip.ts'
 

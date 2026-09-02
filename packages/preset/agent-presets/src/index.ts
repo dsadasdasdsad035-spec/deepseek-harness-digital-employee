@@ -64,7 +64,7 @@ export {
 } from './authoring.ts'
 export { resolveSessionPreset, type PresetBearingSession } from './session.ts'
 export { PresetMountError, UnknownPresetError } from './preset.ts'
-export type { AgentPreset, Config, PresetRoot, PresetTrust } from './preset.ts'
+export type { AgentPreset, Config, PresetRoot, PresetTrust, PresetVisibility } from './preset.ts'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -193,11 +193,14 @@ export class AgentPresets extends Service {
   }
 
   /**
-   * Every preset the configured roots currently supply.
-   * @returns the presets, first-root-wins per id.
+   * Every user-visible preset the configured roots currently supply.
+   * Internal shipped presets remain addressable through {@link resolve} but
+   * are omitted from ordinary authoring and session pickers.
+   * @returns the visible presets, first-root-wins per id.
    */
   async list(): Promise<AgentPreset[]> {
-    return await discoverPresets(this.resolvedRoots)
+    return (await discoverPresets(this.resolvedRoots))
+      .filter(preset => preset.visibility === 'user')
   }
 
   /**
@@ -212,7 +215,7 @@ export class AgentPresets extends Service {
    */
   async resolve(id?: string): Promise<AgentPreset> {
     const wanted = id ?? this.defaultId
-    const presets = await this.list()
+    const presets = await discoverPresets(this.resolvedRoots)
     const found = presets.find(preset => preset.id === wanted)
     if (found === undefined) {
       throw new UnknownPresetError(wanted, presets.map(preset => preset.id))

@@ -35,13 +35,14 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "lib/**/*.js",
-    "lib/types/**/*.d.ts",
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/tools.js",
+    "lib/skills.js",
+    "lib/project-data-mcp.js",
     "AGENTS.md",
     "project-data-mcp.mjs",
-    "README.md",
-    "README.zh.md",
-    "skills/*/SKILL.md"
+    "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {

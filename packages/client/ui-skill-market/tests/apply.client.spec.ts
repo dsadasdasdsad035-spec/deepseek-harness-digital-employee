@@ -25,8 +25,12 @@ async function bench() {
       return { ok: true, value: { ok: true, value: { entries: [] } } }
     },
   }
-  ctx.provide('remote', { skillMarket } as never)
+  const toolMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
+  const mcpMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
+  ctx.provide('remote', { skillMarket, toolMarket, mcpMarket } as never)
   ctx.provide('remote.skillMarket', skillMarket as never)
+  ctx.provide('remote.toolMarket', toolMarket as never)
+  ctx.provide('remote.mcpMarket', mcpMarket as never)
   return { ctx, slots: ctx.get('slots') as SlotRegistry, locale }
 }
 
@@ -41,7 +45,10 @@ function declare(slots: SlotRegistry): () => void {
 
 describe('ui-skill-market apply', () => {
   it('declares the services it uses', () => {
-    expect(inject).toEqual(['slots', 'locale', 'remote', 'remote.skillMarket'])
+    expect(inject).toEqual([
+      'slots', 'locale', 'remote',
+      'remote.skillMarket', 'remote.toolMarket', 'remote.mcpMarket',
+    ])
   })
 
   it('registers the section with id=skill-market and label follows locale', async () => {
@@ -53,13 +60,13 @@ describe('ui-skill-market apply', () => {
     expect(entry.component).toBe(SkillMarketSection)
     expect(entry.options).toMatchObject({ id: 'skill-market', order: 30 })
     // nav thunk 应在 zh 环境下渲染中文标签
-    expect(resolveSlotLabel(entry.options.label)).toBe('技能市场')
+    expect(resolveSlotLabel(entry.options.label)).toBe('市场')
     const injected = entry.inject as unknown as () => import('../src/client/SkillMarketSection.tsx').SkillMarketSectionInjected
-    expect(injected().t('nav')).toBe('技能市场')
+    expect(injected().t('nav')).toBe('市场')
 
     b.locale.setLocale('en')
-    expect(resolveSlotLabel(b.slots.entries('settings.section')[0]!.options.label)).toBe('Skill Market')
-    expect(injected().t('nav')).toBe('Skill Market')
+    expect(resolveSlotLabel(b.slots.entries('settings.section')[0]!.options.label)).toBe('Marketplace')
+    expect(injected().t('nav')).toBe('Marketplace')
   })
 
   it('registers into a declaration that arrives after apply', async () => {
@@ -77,7 +84,7 @@ describe('ui-skill-market apply', () => {
     const fiber = b.ctx.plugin({ inject: [...inject], apply })
     await fiber.await()
     expect(b.slots.entries('settings.section')).toHaveLength(1)
-    expect(b.locale.bind('settings.skill-market')('title')).toBe('技能市场')
+    expect(b.locale.bind('settings.skill-market')('title')).toBe('市场')
     await fiber.dispose()
     expect(b.slots.entries('settings.section')).toHaveLength(0)
     // 字典已注销，重新注册同名命名空间不应抛错
@@ -94,6 +101,8 @@ describe('ui-skill-market apply', () => {
     )()
     expect(injected.controller).toBeDefined()
     expect(injected.hooks.snapshot).toBe(injected.controller.store)
+    expect(injected.hooks.toolSnapshot).toBe(injected.toolController.store)
+    expect(injected.hooks.mcpSnapshot).toBe(injected.mcpController.store)
     expect(typeof injected.controller.load).toBe('function')
     expect(typeof injected.controller.setQuery).toBe('function')
     expect(typeof injected.controller.upload).toBe('function')

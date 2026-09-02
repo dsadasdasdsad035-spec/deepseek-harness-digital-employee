@@ -99,6 +99,8 @@ export interface CreateAgentOptions {
     readonly origin?: 'subagent'
     readonly delegationDepth?: number
     readonly agentPreset?: string
+    /** Excludes a short-lived local composition from durable persistence and normal session discovery. */
+    readonly preview?: true
   }
   /**
    * Initial replay/fork history. A fork supplies a balanced completed-turn

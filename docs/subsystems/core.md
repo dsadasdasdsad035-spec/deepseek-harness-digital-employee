@@ -389,8 +389,10 @@ Discovery is unmemoized: `list()` and `resolve()` re-read the roots on every cal
 
 ```ts cordis-catalog
 /**
- * Every preset the configured roots currently supply.
- * @returns the presets, first-root-wins per id.
+ * Every user-visible preset the configured roots currently supply.
+ * Internal shipped presets remain addressable through {@link resolve} but
+ * are omitted from ordinary authoring and session pickers.
+ * @returns the visible presets, first-root-wins per id.
  */
 async list(): Promise<AgentPreset[]>
 
@@ -738,6 +740,13 @@ Composes a resolved employee through preset and system-prompt extensions.
 async createTask( request: CreateDigitalEmployeeTaskRequest, resolvedEmployee?: ResolvedDigitalEmployee, ): Promise<AgentHandle>
 
 /**
+ * Create a temporary, non-persisted preview Agent from a validated synthetic employee.
+ * @param request - isolated composition, Session identity, and workspace context.
+ * @returns an owned handle whose disposer terminates the preview and its scoped resources.
+ */
+async createPreviewTask(request: CreateDigitalEmployeePreviewTaskRequest): Promise<AgentHandle>
+
+/**
  * Resolve one enabled expert into a named composition without creating a child Session.
  * @param request - employee, expert, and optional bounded memory request.
  * @returns complete expert composition for the existing subagent runtime.
@@ -804,8 +813,9 @@ expertResult(run: SubagentRun): Promise<SubagentResult>
  * @param employee - complete employee resolution produced before Session creation.
  * @param memoryProjection - exact memory records rendered into this Agent's prompt.
  * @param mcpServers - pre-resolved MCP configurations, or `undefined` to resolve them now.
+ * @param installAudit - whether this composition appends durable employee audit records.
  */
-async compose( agentCtx: Context, employee: ResolvedDigitalEmployee, memoryProjection?: DigitalEmployeeMemoryProjectionEvent, mcpServers?: readonly McpServerConfig[], ): Promise<void>
+async compose( agentCtx: Context, employee: ResolvedDigitalEmployee, memoryProjection?: DigitalEmployeeMemoryProjectionEvent, mcpServers?: readonly McpServerConfig[], installAudit: boolean = true, ): Promise<void>
 ```
 
 Types: [DigitalEmployeeInstanceId](../user/guide/digital-employees.md) · [SubagentDescendantListEntry](subagent.md) · [SubagentFollowupOptions](subagent.md) · [SubagentInterruptAuthority](subagent.md) · [SubagentResult](subagent.md) · [SubagentRun](subagent.md) · [SubagentStartRequest](subagent.md)
@@ -819,10 +829,74 @@ Source: [`packages/core/digital-employee-agent/src/index.ts`](../../packages/cor
 Remote-only facade over the owning digital employee services.
 
 ```ts cordis-catalog
+/** List unpublished local template drafts for the local administrator.
+ * @returns detached draft records ordered by creation time.
+ */
+@Remote('listConfigurationDrafts') listConfigurationDrafts(): Promise<readonly DigitalEmployeeTemplateDraft[]>
+
+/**
+ * List assets resolvable through the selected Agent preset.
+ * @param request - preset whose standing scoped composition supplies Skill availability.
+ * @returns deterministic capability inventory without credential values.
+ * @throws a client-safe diagnostic when the preset cannot be composed.
+ */
+@Remote('listConfigurationAssets') async listConfigurationAssets( request: ListDigitalEmployeeConfigurationAssetsRequest, ): Promise<DigitalEmployeeConfigurationAssetCatalog>
+
+/**
+ * List immutable local publication provenance for the administrator.
+ * @returns detached publication provenance ordered by allocation time.
+ */
+@Remote('listConfigurationPublications') listConfigurationPublications(): Promise<readonly DigitalEmployeeTemplatePublication[]>
+
+/** Create one unpublished employee template draft for the local administrator.
+ * @param request - initial display and instruction fields.
+ * @returns detached new draft record.
+ */
+@Remote('createConfigurationDraft') async createConfigurationDraft( request: CreateDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplateDraft>
+
+/**
+ * Update one unpublished draft with optimistic revision control.
+ * @param request - draft identity, observed revision, and replacement fields.
+ * @returns committed detached draft.
+ */
+@Remote('updateConfigurationDraft') updateConfigurationDraft(request: UpdateDigitalEmployeeTemplateDraftRequest): Promise<DigitalEmployeeTemplateDraft>
+
+/**
+ * Discard one unpublished draft.
+ * @param request - draft identity to discard.
+ */
+@Remote('deleteConfigurationDraft') deleteConfigurationDraft(request: DigitalEmployeeTemplateDraftIdentityRequest): Promise<void>
+
+/** Validate one current draft revision before preview or publication.
+ * @param request - required draft identity.
+ * @returns revision-bound actionable diagnostics.
+ */
+@Remote('validateConfigurationDraft') async validateConfigurationDraft( request: DigitalEmployeeTemplateDraftIdentityRequest, ): Promise<DigitalEmployeeTemplateDraftValidation>
+
+/**
+ * Create an isolated temporary preview from one valid current draft revision.
+ * @param request - draft revision and workspace used for preview composition.
+ * @returns temporary preview ownership information.
+ */
+@Remote('previewConfigurationDraft') async previewConfigurationDraft( request: PreviewDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplatePreview>
+
+/**
+ * Dispose one active preview and remove its temporary instruction material.
+ * @param request - active preview identity to terminate.
+ */
+@Remote('disposeConfigurationPreview') async disposeConfigurationPreview( request: DisposeDigitalEmployeeTemplatePreviewRequest, ): Promise<void>
+
+/**
+ * Publish one valid draft revision and register it for existing employee workflows.
+ * @param request - draft identity and revision to publish.
+ * @returns immutable local version provenance.
+ */
+@Remote('publishConfigurationDraft') async publishConfigurationDraft( request: PublishDigitalEmployeeTemplateDraftRequest, ): Promise<DigitalEmployeeTemplatePublication>
+
 /** List registered immutable template versions.
  * @returns registered immutable template versions.
  */
-@Remote('listTemplates') listTemplates(): readonly DigitalEmployeeTemplate[]
+@Remote('listTemplates') async listTemplates(): Promise<readonly DigitalEmployeeTemplate[]>
 
 /** List durable employee instances.
  * @returns durable employee instances.
@@ -839,7 +913,7 @@ Remote-only facade over the owning digital employee services.
  * @param request - validated instance creation fields.
  * @returns created inactive employee.
  */
-@Remote('create') create(request: CreateDigitalEmployeeRequest): Promise<DigitalEmployeeInstance>
+@Remote('create') async create(request: CreateDigitalEmployeeRequest): Promise<DigitalEmployeeInstance>
 
 /** Activate an inactive employee.
  * @param request - employee to activate.

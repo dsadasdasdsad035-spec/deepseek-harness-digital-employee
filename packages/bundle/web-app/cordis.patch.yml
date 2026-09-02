@@ -108,6 +108,14 @@
       config:
         installRoot: !!js dshHomePath('skills')
 
+    # Signed Tool packages are validated and published here, then activated
+    # only by a fresh Host composition.
+    - id: tool-market
+      name: '@deepseek-ai/dsh-tool-market'
+      config:
+        installRoot: !!js dshHomePath('tools')
+        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
+
     # Durable digital employee Definition, file Provider, existing-Agent
     # composition Consumer, and typed management Remote.
     - id: digital-employees
@@ -121,14 +129,16 @@
       config:
         mode: manager
 
+    # Declarative MCP packages persist credential references only. The manager
+    # resolves those references while activating configurations at startup.
+    - id: mcp-market
+      name: '@deepseek-ai/dsh-mcp-market'
+      config:
+        installRoot: !!js dshHomePath('mcp-packages')
+        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
+
     - id: project-manager-test-template
       name: '@deepseek-ai/dsh-project-manager-test-digital-employee'
-
-    - id: project-manager-test-skills
-      name: '@deepseek-ai/dsh-project-manager-test-digital-employee/skills'
-
-    - id: project-manager-test-tools
-      name: '@deepseek-ai/dsh-project-manager-test-digital-employee/tools'
 
     - id: digital-employee-file
       name: '@deepseek-ai/dsh-digital-employee-file'
@@ -140,6 +150,8 @@
 
     - id: digital-employee-management
       name: '@deepseek-ai/dsh-host-digital-employee-management'
+      config:
+        administrator: true
 
     # The API gateway: the transport-agnostic dispatch face every client shape
     # shares. The base layer's agent-default-model service owns the default model.

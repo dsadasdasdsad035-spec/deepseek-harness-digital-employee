@@ -1135,6 +1135,41 @@ describe('DigitalEmployeeAgent', () => {
     })
   })
 
+  it('keeps preview memory out of the durable employee provider', async () => {
+    const promoteMemory = vi.fn()
+    const append = vi.fn()
+    const ctx = new Context()
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { promoteMemory } as never)
+    ctx.provide('skills', { restrict: () => {} } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('systemPrompt', {} as never)
+    ctx.provide('tools', { restrict: () => {} } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const candidate = {
+      employeeId: createDigitalEmployeeInstanceId('preview'),
+      content: 'Discard this preview finding.',
+      tags: ['preview'],
+      sensitive: false,
+      provenance: {
+        sessionId: SessionId('preview'),
+        source: 'preview',
+        recordedAt: '2026-08-31T00:00:00.000Z',
+      },
+    }
+
+    await expect(ctx.digitalEmployeeAgent.promoteMemory(
+      { id: SessionId('preview'), session: { header: { preview: true }, append } } as never,
+      candidate,
+    )).resolves.toMatchObject({ kind: 'accepted', memory: { scope: 'long-term', content: candidate.content } })
+    expect(promoteMemory).not.toHaveBeenCalled()
+    expect(append).toHaveBeenCalledWith('digital-employee/memory-decision', expect.objectContaining({
+      employeeId: candidate.employeeId,
+      decision: expect.objectContaining({ kind: 'accepted' }),
+    }))
+  })
+
   it('rejects unauthorized expert edges and applies the tightest delegation timeout', async () => {
     const expertId = createExpertId('critic')
     const append = vi.fn()

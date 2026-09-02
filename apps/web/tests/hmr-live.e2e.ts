@@ -1,7 +1,7 @@
 /** Published dsh web + pnpm dev:web → browser HMR, with no page reload. */
 
 import { existsSync, globSync } from 'node:fs'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { chromium } from 'playwright'
@@ -72,12 +72,15 @@ it('hot-reloads a real client-plugin source edit without refreshing the page', a
   const world = await mkdtemp(join(tmpdir(), 'dsh-web-hmr-world-'))
   const sourcePath = join(REPO_ROOT, 'packages/client/ui-conversation/src/client/locales.ts')
   const binPath = join(REPO_ROOT, 'apps/cli/lib/bin.js')
+  const webDistPath = join(REPO_ROOT, 'apps/web/dist')
+  const originalWebDistPath = join(world, 'web-dist')
   if (!existsSync(binPath)) throw new Error('HMR browser test needs the built dsh bin; run pnpm run build first')
   const clientBuildEnvironment = readClientBuildRecord(REPO_ROOT).environment
   const clientBundlePaths = globSync('packages/*/*/lib/client.js{,.map}', { cwd: REPO_ROOT })
     .map(path => join(REPO_ROOT, path))
   const originalClientBundles = await Promise.all(clientBundlePaths.map(async path => [path, await readFile(path)] as const))
   const originalSource = await readFile(sourcePath)
+  await cp(webDistPath, originalWebDistPath, { recursive: true })
   const oldText = 'Into the Unknown'
   const sourceNeedle = "'hero.headline': 'Into the Unknown'"
   const newText = `HMR UPDATED ${'x'.repeat(80)}`
@@ -132,6 +135,9 @@ it('hot-reloads a real client-plugin source edit without refreshing the page', a
     await Promise.all(originalClientBundles.map(async ([path, content]) => {
       await writeFile(path, content).catch((error: unknown) => failures.push(error))
     }))
+    await rm(webDistPath, { recursive: true, force: true }).catch((error: unknown) => failures.push(error))
+    await cp(originalWebDistPath, webDistPath, { recursive: true })
+      .catch((error: unknown) => failures.push(error))
     if (host !== undefined) await stopTree(host).catch((error: unknown) => failures.push(error))
     await browser?.close().catch((error: unknown) => failures.push(error))
     await subprocessFiber?.dispose().catch((error: unknown) => failures.push(error))

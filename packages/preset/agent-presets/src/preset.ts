@@ -7,6 +7,9 @@
  */
 export type PresetTrust = 'system' | 'user'
 
+/** Whether ordinary preset pickers offer a preset. */
+export type PresetVisibility = 'user' | 'internal'
+
 /**
  * Ids a preset directory may use.
  *
@@ -31,6 +34,11 @@ export interface AgentPreset {
   readonly description?: string
   /** Declared position within its group; absent sorts after those that declare one. */
   readonly order?: number
+  /**
+   * Whether ordinary preset pickers offer this preset. Internal presets remain
+   * addressable by exact id for capability owners such as digital employees.
+   */
+  readonly visibility: PresetVisibility
   /**
    * Why this preset cannot compose a session, absent when it can. A broken
    * preset stays on the roster — hiding it would leave its directory blocking

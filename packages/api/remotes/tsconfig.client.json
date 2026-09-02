@@ -58,6 +58,12 @@
       "path": "../../skill/skill-market"
     },
     {
+      "path": "../../tool/tool-market"
+    },
+    {
+      "path": "../../mcp/mcp-market"
+    },
+    {
       "path": "../../typert/protocol"
     }
   ]

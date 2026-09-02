@@ -43,6 +43,17 @@ const SERVER_NAME_PATTERN = /^[A-Za-z0-9_-]{1,32}$/
  * shadowing.
  */
 const activeServerNames = new WeakMap<Context, Set<string>>()
+const activeServerConfigs = new WeakMap<Context, Map<string, Pick<McpServerConfig, 'serverName' | 'transport'>>>()
+
+/**
+ * List active MCP client identities without connection parameters or credential values.
+ * @param ctx - Context whose root owns the MCP client reservations.
+ * @returns Active server names and transports in deterministic name order.
+ */
+export function listMcpServerConfigs(ctx: Context): readonly Pick<McpServerConfig, 'serverName' | 'transport'>[] {
+  return [...(activeServerConfigs.get(ctx.root)?.values() ?? [])]
+    .sort((left, right) => left.serverName.localeCompare(right.serverName))
+}
 
 // ---- Config ----
 
@@ -207,7 +218,16 @@ async function applyServer(ctx: Context, config: McpServerConfig): Promise<void>
       )
     }
     names.add(config.serverName)
-    return () => void names.delete(config.serverName)
+    let configs = activeServerConfigs.get(ctx.root)
+    if (configs === undefined) {
+      configs = new Map()
+      activeServerConfigs.set(ctx.root, configs)
+    }
+    configs.set(config.serverName, { serverName: config.serverName, transport: config.transport })
+    return () => {
+      void names.delete(config.serverName)
+      configs?.delete(config.serverName)
+    }
   }, 'mcp-client.serverName')
 
   // The supervisor owns the client/transport generations, the reconnect

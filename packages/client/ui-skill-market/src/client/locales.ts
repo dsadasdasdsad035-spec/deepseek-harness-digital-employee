@@ -2,6 +2,7 @@
 
 export type SkillMarketKey =
   | 'nav' | 'title' | 'intro' | 'searchLabel' | 'searchPlaceholder'
+  | 'skillTab' | 'toolTab' | 'mcpTab'
   | 'uploadTitle' | 'uploadHint' | 'uploadButton' | 'uploadTooLarge' | 'uploadInvalidType'
   | 'templateDownload'
   | 'uploadFailed' | 'operationFailed' | 'installing' | 'installed' | 'loading'
@@ -13,12 +14,25 @@ export type SkillMarketKey =
   | 'errorInvalidArchive' | 'errorResourceLimit' | 'errorUnsafeEntry'
   | 'errorInvalidDescriptor' | 'errorInvalidBanner' | 'errorManagedUpgrade'
   | 'errorUnmanagedConflict' | 'errorManifestIncompatible' | 'errorNotFound' | 'errorNotManaged'
+  | 'toolTitle' | 'toolIntro' | 'toolUploadTitle' | 'toolSearchLabel' | 'toolSearchPlaceholder'
+  | 'toolEmpty' | 'toolEmptyFiltered' | 'publisher' | 'permissions' | 'declaredTools'
+  | 'inputDescription' | 'available' | 'unavailable' | 'restartRequired' | 'restartNotice'
+  | 'mcpTitle' | 'mcpIntro' | 'mcpUploadTitle' | 'mcpSearchLabel' | 'mcpSearchPlaceholder'
+  | 'mcpEmpty' | 'mcpEmptyFiltered' | 'servers' | 'transport' | 'credentialReferences'
+  | 'credentialReferenceLabel' | 'credentialReferencePlaceholder' | 'configured' | 'notConfigured'
+  | 'saveReferences' | 'savingReferences' | 'diagnostic'
+  | 'packageUpgradeTitle' | 'packageUpgradeDescription' | 'packageUninstallTitle'
+  | 'packageUninstallDescription' | 'errorInvalidPackage' | 'errorUntrustedPublisher'
+  | 'errorInvalidSignature' | 'errorInvalidCredentialReference' | 'errorMissingCredentialReference'
 
 /** English marketplace settings dictionary. */
 export const en: Record<SkillMarketKey, string> = {
-  nav: 'Skill Market',
-  title: 'Skill Market',
-  intro: 'Browse, install, upgrade, and remove skills managed by this marketplace.',
+  nav: 'Marketplace',
+  title: 'Marketplace',
+  intro: 'Install and manage Skills, Tools, and MCP integrations.',
+  skillTab: 'Skills',
+  toolTab: 'Tools',
+  mcpTab: 'MCP',
   searchLabel: 'Search installed skills',
   searchPlaceholder: 'Search by name, description, author, or tag',
   uploadTitle: 'Upload a skill bundle',
@@ -65,13 +79,57 @@ export const en: Record<SkillMarketKey, string> = {
   errorManifestIncompatible: 'This skill uses an unsupported marketplace manifest and cannot be replaced.',
   errorNotFound: 'This managed skill no longer exists.',
   errorNotManaged: 'This skill is no longer managed by the marketplace.',
+  toolTitle: 'Tool Market',
+  toolIntro: 'Review executable capabilities and permissions before installing trusted Tool packages.',
+  toolUploadTitle: 'Upload a Tool package',
+  toolSearchLabel: 'Search installed Tool packages',
+  toolSearchPlaceholder: 'Search by package, publisher, tool, or permission',
+  toolEmpty: 'No marketplace-managed Tool packages are installed.',
+  toolEmptyFiltered: 'No installed Tool packages match this search.',
+  publisher: 'Publisher',
+  permissions: 'Permissions',
+  declaredTools: 'Declared tools',
+  inputDescription: 'Input',
+  available: 'Available',
+  unavailable: 'Unavailable',
+  restartRequired: 'Restart required',
+  restartNotice: 'Restart the Host to apply this marketplace change.',
+  mcpTitle: 'MCP Market',
+  mcpIntro: 'Install declarative MCP packages and bind credential references without exposing secret values.',
+  mcpUploadTitle: 'Upload an MCP package',
+  mcpSearchLabel: 'Search installed MCP packages',
+  mcpSearchPlaceholder: 'Search by package, publisher, or server',
+  mcpEmpty: 'No marketplace-managed MCP packages are installed.',
+  mcpEmptyFiltered: 'No installed MCP packages match this search.',
+  servers: 'Servers',
+  transport: 'Transport',
+  credentialReferences: 'Credential references',
+  credentialReferenceLabel: 'Credential reference',
+  credentialReferencePlaceholder: 'Credential name, never a secret value',
+  configured: 'Configured',
+  notConfigured: 'Needs configuration',
+  saveReferences: 'Save references',
+  savingReferences: 'Saving...',
+  diagnostic: 'Diagnostic',
+  packageUpgradeTitle: 'Upgrade managed package?',
+  packageUpgradeDescription: 'A marketplace-managed package with this identity is already installed.',
+  packageUninstallTitle: 'Uninstall this package?',
+  packageUninstallDescription: 'The managed package will be removed after confirmation.',
+  errorInvalidPackage: 'The package descriptor or signed file table is invalid.',
+  errorUntrustedPublisher: 'The package publisher is not trusted by this Host.',
+  errorInvalidSignature: 'The package signature is invalid.',
+  errorInvalidCredentialReference: 'Enter a valid credential reference name, not a secret value.',
+  errorMissingCredentialReference: 'Every required credential slot needs a reference.',
 }
 
 /** Simplified Chinese marketplace settings dictionary. */
 export const zh: Record<SkillMarketKey, string> = {
-  nav: '技能市场',
-  title: '技能市场',
-  intro: '浏览、安装、升级和卸载由此市场管理的技能。',
+  nav: '市场',
+  title: '市场',
+  intro: '安装和管理技能、工具与 MCP 集成。',
+  skillTab: '技能',
+  toolTab: '工具',
+  mcpTab: 'MCP',
   searchLabel: '搜索已安装技能',
   searchPlaceholder: '按名称、描述、作者或标签搜索',
   uploadTitle: '上传技能包',
@@ -118,4 +176,45 @@ export const zh: Record<SkillMarketKey, string> = {
   errorManifestIncompatible: '此技能使用不兼容的市场清单，不能替换。',
   errorNotFound: '此托管技能已不存在。',
   errorNotManaged: '此技能已不再由市场管理。',
+  toolTitle: '工具市场',
+  toolIntro: '安装受信任的工具包前，先审查可执行能力与权限。',
+  toolUploadTitle: '上传工具包',
+  toolSearchLabel: '搜索已安装工具包',
+  toolSearchPlaceholder: '按包、发布者、工具或权限搜索',
+  toolEmpty: '尚未安装由市场管理的工具包。',
+  toolEmptyFiltered: '没有已安装工具包匹配当前搜索。',
+  publisher: '发布者',
+  permissions: '权限',
+  declaredTools: '声明的工具',
+  inputDescription: '入参',
+  available: '可用',
+  unavailable: '不可用',
+  restartRequired: '需要重启',
+  restartNotice: '请重启 Host 以应用本次市场变更。',
+  mcpTitle: 'MCP 市场',
+  mcpIntro: '安装声明式 MCP 包，并绑定凭据引用名称，不展示真实密钥。',
+  mcpUploadTitle: '上传 MCP 包',
+  mcpSearchLabel: '搜索已安装 MCP 包',
+  mcpSearchPlaceholder: '按包、发布者或服务搜索',
+  mcpEmpty: '尚未安装由市场管理的 MCP 包。',
+  mcpEmptyFiltered: '没有已安装 MCP 包匹配当前搜索。',
+  servers: '服务',
+  transport: '传输方式',
+  credentialReferences: '凭据引用',
+  credentialReferenceLabel: '凭据引用',
+  credentialReferencePlaceholder: '填写凭据名称，不要填写真实密钥',
+  configured: '已配置',
+  notConfigured: '需要配置',
+  saveReferences: '保存引用',
+  savingReferences: '正在保存...',
+  diagnostic: '诊断',
+  packageUpgradeTitle: '升级托管包？',
+  packageUpgradeDescription: '已安装同一标识且由市场管理的包。',
+  packageUninstallTitle: '卸载此包？',
+  packageUninstallDescription: '确认后将删除由市场管理的包。',
+  errorInvalidPackage: '包描述符或签名文件表无效。',
+  errorUntrustedPublisher: '此 Host 不信任该包的发布者。',
+  errorInvalidSignature: '包签名无效。',
+  errorInvalidCredentialReference: '请输入有效的凭据引用名称，不要输入真实密钥。',
+  errorMissingCredentialReference: '每个必填凭据槽都需要引用。',
 }

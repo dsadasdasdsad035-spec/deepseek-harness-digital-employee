@@ -1,0 +1,29 @@
+{
+  "format": 1,
+  "kind": "tool",
+  "id": "tool-market-template",
+  "version": "1.0.0",
+  "display": {
+    "name": "Tool market template",
+    "description": "Publisher template for one restart-bound marketplace Tool package."
+  },
+  "publisher": {
+    "id": "replace-with-publisher-id",
+    "signature": "REPLACE_WITH_ED25519_SIGNATURE_BASE64"
+  },
+  "files": {
+    "README.md": "GENERATED_SHA256",
+    "plugin/index.js": "GENERATED_SHA256"
+  },
+  "permissions": [
+    "filesystem-read"
+  ],
+  "tools": [
+    {
+      "name": "marketplace_echo",
+      "description": "Return supplied text.",
+      "inputDescription": "A required text string."
+    }
+  ],
+  "entry": "plugin/index.js"
+}

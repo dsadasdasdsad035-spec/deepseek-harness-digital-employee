@@ -8,6 +8,14 @@ Open **Digital employees** from the Web UI sidebar. The workspace manages durabl
 
 Choose a registered template version, enter a display name and optional personality override, and select grants from the template's declared capabilities. Creation produces an inactive instance pinned to that exact template version. Review the instance, then activate it before starting work.
 
+## Configure templates
+
+When the Host enables local administrator configuration, choose **Template configuration** in the Digital employees workspace. Create a draft with its instructions, capabilities, MCP references, expert definitions, and creation-time memory seeds. Validate the draft before preview or publish; validation reports unavailable references and authority errors without exposing credential values.
+
+The Skills selector combines installed marketplace Skills with local runtime Skills. Marketplace rows show version, author, tags, and activation guidance. An installed Skill remains disabled until the Host runtime activates it, while local Skills can be selected immediately. If a draft still names an uninstalled Skill, remove that unavailable reference before validation.
+
+Preview composes a temporary employee Session and does not change employee instances or durable memories. Publishing creates an immutable local template version that appears in the normal template picker. Existing employees remain pinned until their upgrade is explicitly reviewed and applied.
+
 ## Start an employee chat
 
 Open a new task and type `@` before any task text. The picker shows digital employee identity, template, and availability. Select one active employee, then enter the task and optional images. Employee selection is structured state backed by the stable employee ID; its visible label is not sent to the model.

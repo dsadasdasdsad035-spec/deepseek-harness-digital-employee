@@ -858,6 +858,10 @@ export interface Config {
 ```ts config-catalog
 /** Successful employee-chat idempotency cache configuration. */
 export interface Config {
+  /** Enables administrator-only configuration-studio operations for this local Host. */
+  administrator?: boolean
+  /** Private local file storing drafts and publication provenance. */
+  studioFile?: string
   /** Maximum completed submissions retained for retry lookup. */
   successCacheMaxEntries?: number
   /** Milliseconds a completed submission remains reusable. */
@@ -865,7 +869,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/host/digital-employee-management/src/index.ts:44`](../packages/host/digital-employee-management/src/index.ts)
+来源： [`packages/host/digital-employee-management/src/index.ts:70`](../packages/host/digital-employee-management/src/index.ts)
 
 <a id="deepseek-aidsh-host-directory-picker-browse"></a>
 
@@ -1488,7 +1492,30 @@ export interface ReconnectConfig {
 }
 ```
 
-来源： [`packages/mcp/mcp-client/src/index.ts:107`](../packages/mcp/mcp-client/src/index.ts)
+来源： [`packages/mcp/mcp-client/src/index.ts:118`](../packages/mcp/mcp-client/src/index.ts)
+
+<a id="deepseek-aidsh-mcp-market"></a>
+
+## `@deepseek-ai/dsh-mcp-market`
+
+需要： `credentials` · `mcpClients`
+
+```ts config-catalog
+/** MCP marketplace Host configuration. */
+export interface Config {
+  /** Private user directory containing marketplace-managed MCP packages. */
+  readonly installRoot: string
+  /** Locally trusted Ed25519 publisher keys. */
+  readonly trustedPublishers: {
+    /** Stable publisher identity declared by signed packages. */
+    readonly id: string
+    /** Ed25519 SPKI public key in PEM form. */
+    readonly publicKeyPem: string
+  }[]
+}
+```
+
+来源： [`packages/mcp/mcp-market/src/index.ts:31`](../packages/mcp/mcp-market/src/index.ts)
 
 <a id="deepseek-aidsh-message-feedback"></a>
 
@@ -2737,6 +2764,29 @@ export interface Config {
 
 来源： [`packages/lsp/tool-lsp/src/index.ts:58`](../packages/lsp/tool-lsp/src/index.ts)
 
+<a id="deepseek-aidsh-tool-market"></a>
+
+## `@deepseek-ai/dsh-tool-market`
+
+需要： `tools`
+
+```ts config-catalog
+/** Tool marketplace Host configuration. */
+export interface Config {
+  /** Private user directory containing marketplace-managed Tool packages. */
+  readonly installRoot: string
+  /** Locally trusted Ed25519 publisher keys. */
+  readonly trustedPublishers: {
+    /** Stable publisher identity declared by signed packages. */
+    readonly id: string
+    /** Ed25519 SPKI public key in PEM form. */
+    readonly publicKeyPem: string
+  }[]
+}
+```
+
+来源： [`packages/tool/tool-market/src/index.ts:28`](../packages/tool/tool-market/src/index.ts)
+
 <a id="deepseek-aidsh-tool-pwsh"></a>
 
 ## `@deepseek-ai/dsh-tool-pwsh`
@@ -3409,6 +3459,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-launch-environment` ([`packages/util/launch-environment/src/index.ts`](../packages/util/launch-environment/src/index.ts))
 - `@deepseek-ai/dsh-llm-mock-server` ([`packages/test-support/llm-mock-server/src/index.ts`](../packages/test-support/llm-mock-server/src/index.ts))
 - `@deepseek-ai/dsh-loader-smoke` ([`packages/test-support/loader-smoke/src/index.ts`](../packages/test-support/loader-smoke/src/index.ts))
+- `@deepseek-ai/dsh-marketplace-core` ([`packages/util/marketplace-core/src/index.ts`](../packages/util/marketplace-core/src/index.ts))
 - `@deepseek-ai/dsh-native-command` ([`packages/util/native-command/src/index.ts`](../packages/util/native-command/src/index.ts))
 - `@deepseek-ai/dsh-output-retention` ([`packages/util/output-retention/src/index.ts`](../packages/util/output-retention/src/index.ts))
 - `@deepseek-ai/dsh-sandbox-windows-acl` ([`packages/sandbox/sandbox-windows-acl/src/index.ts`](../packages/sandbox/sandbox-windows-acl/src/index.ts))

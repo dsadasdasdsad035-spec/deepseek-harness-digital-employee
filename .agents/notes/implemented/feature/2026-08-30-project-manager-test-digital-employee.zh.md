@@ -14,7 +14,9 @@ Status: implemented
 
 组装后的 headless 夹具通过现有数字员工 Consumer 启动隔离员工。其确定性 transcript 记录解析出的能力列表、记忆投影、工具和 MCP 使用，以及持久化项目决策结果。
 
-Web 开发 bundle 注册该模板、skills、tools 和 MCP manager，使数字员工管理工作区可以创建并激活 `Project Manager (Test)` 实例进行手动验证。
+Web 开发 bundle 注册该模板与 MCP manager。交付的 `project-manager-test` Agent preset 拥有该包的 skills 和 tools，因此员工会话可以授权这些能力，而普通 `standard` 会话不会暴露测试夹具能力。
+
+该 preset 使用内部元信息：数字员工模板仍可按精确 id 组装它，普通 preset 列表与创作界面则不展示它。
 
 每个 MCP 客户端实例名称由员工、Agent Session 和 MCP 声明共同派生。因此，根数字员工会话和专家子会话可以并发挂载同一项已声明的 MCP server。
 

@@ -336,6 +336,25 @@ describe('the preset roster', () => {
     expect(listed.find(preset => preset.id === 'not-a-preset')?.broken).toMatch(/is missing/)
   })
 
+  it('resolves an internal preset by exact id without listing it', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-preset-internal-'))
+    const presetDir = join(root, 'employee-only')
+    await mkdir(presetDir)
+    await writeFile(join(presetDir, COMPOSITION_FILE), '- id: include\n  name: include\n  config: []\n')
+    await writeFile(join(presetDir, 'preset.yml'), 'visibility: internal\n')
+    const scoped = await harness({
+      default: 'employee-only',
+      roots: [{ path: root, trust: 'system' }],
+      includeUserRoot: false,
+    })
+
+    expect(await scoped.agentPresets.list()).toEqual([])
+    expect(await scoped.agentPresets.resolve('employee-only')).toMatchObject({
+      id: 'employee-only',
+      visibility: 'internal',
+    })
+  })
+
   it('exposes the configured default id', () => {
     expect(ctx.agentPresets.defaultId).toBe('standard')
   })
@@ -690,10 +709,14 @@ describe('editing a composition file', () => {
   it('hands a host reader the standing key without starting an agent', async () => {
     const { scoped } = await editable('cold-read')
 
-    const key = await scoped.agentPresets.standingKeyFor('cold-read')
+    const [key, concurrentKey] = await Promise.all([
+      scoped.agentPresets.standingKeyFor('cold-read'),
+      scoped.agentPresets.standingKeyFor('cold-read'),
+    ])
 
     // The mount exists for the reader; no agent, session, or turn started.
     expect(key).toEqual({ agentPreset: 'cold-read' })
+    expect(concurrentKey).toBe(key)
     expect(livePresetMounts().filter(mount => mount.presetId === 'cold-read')).toHaveLength(1)
     expect(scoped.agents.get(SessionId('cold-read'))).toBeUndefined()
     // A second reader resolves the same generation, not a new mount.
