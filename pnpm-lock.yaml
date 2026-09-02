@@ -1278,6 +1278,37 @@ importers:
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
 
+  packages/bundle/digital-employee-suite:
+    dependencies:
+      '@deepseek-ai/dsh-client-ui-digital-employees':
+        specifier: workspace:^
+        version: link:../../client/ui-digital-employees
+      '@deepseek-ai/dsh-digital-employee':
+        specifier: workspace:^
+        version: link:../../core/digital-employee
+      '@deepseek-ai/dsh-digital-employee-agent':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-agent
+      '@deepseek-ai/dsh-digital-employee-example-template':
+        specifier: workspace:^
+        version: link:../../examples/digital-employee-template
+      '@deepseek-ai/dsh-digital-employee-file':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-file
+      '@deepseek-ai/dsh-host-digital-employee-management':
+        specifier: workspace:^
+        version: link:../../host/digital-employee-management
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/cordis-plugin-loader':
+        specifier: workspace:^
+        version: link:../../../vendor/loader
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+
   packages/bundle/headless:
     dependencies:
       '@deepseek-ai/dsh-cmdline':

@@ -1,0 +1,27 @@
+# Optional extension over dsh-base + dsh-web-app. The Web bundle owns the
+# shared API remotes and Skill/Tool/MCP marketplace rows; this bundle owns only
+# digital employee runtime and UI rows to keep each namespace unique.
+
+- insert:
+    - id: digital-employees
+      name: '@deepseek-ai/dsh-digital-employee'
+
+    - id: digital-employee-example-template
+      name: '@deepseek-ai/dsh-digital-employee-example-template'
+
+    - id: digital-employee-file
+      name: '@deepseek-ai/dsh-digital-employee-file'
+      config:
+        path: !!js dshHomePath('digital-employees/employees.json')
+
+    - id: digital-employee-agent
+      name: '@deepseek-ai/dsh-digital-employee-agent'
+
+    - id: digital-employee-management
+      name: '@deepseek-ai/dsh-host-digital-employee-management'
+      config:
+        administrator: true
+        studioFile: !!js dshHomePath('digital-employees/configuration-studio.json')
+
+    - id: ui-digital-employees
+      name: '@deepseek-ai/dsh-client-ui-digital-employees'
