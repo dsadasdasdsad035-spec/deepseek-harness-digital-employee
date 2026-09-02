@@ -6,12 +6,17 @@ Give each digital employee an explicit, non-escalating set of instructions, skil
 ## Requirements
 ### Requirement: Employee capabilities are explicitly authorized
 
-The system SHALL expose only capabilities present in the intersection of the employee template declaration, employee instance authorization, and calling Agent's inherited permissions.
+The system SHALL expose only capabilities present in the intersection of the employee template declaration, employee instance authorization, calling Agent's inherited permissions, and, for delegated children, the selected expert or subagent policy.
 
 #### Scenario: Authorized capability is composed
 
 - **WHEN** a skill, tool, or MCP service is declared by the template and authorized for the instance and parent Agent
 - **THEN** the employee or expert can use that capability
+
+#### Scenario: Delegated expert receives the capability intersection
+
+- **WHEN** a parent Agent delegates to an expert whose declared capabilities are a subset of the employee and parent grants
+- **THEN** the child receives exactly the intersection and cannot access capabilities outside it
 
 #### Scenario: Child requests an unavailable capability
 
