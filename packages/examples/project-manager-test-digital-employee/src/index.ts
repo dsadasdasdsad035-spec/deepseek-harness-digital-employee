@@ -13,6 +13,7 @@ import {
 import { PROJECT_SKILLS } from './skills.ts'
 
 const ROOT = resolve(import.meta.dirname, '..')
+/** Stable identifier for the fixture's risk-review expert. */
 export const RISK_REVIEW_EXPERT_ID = createExpertId('risk-reviewer')
 
 /** Bounded package-owned memory seed applied by isolated fixture compositions. */
