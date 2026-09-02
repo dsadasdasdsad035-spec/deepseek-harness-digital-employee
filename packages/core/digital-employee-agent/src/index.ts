@@ -62,6 +62,7 @@ declare module '@deepseek-ai/cordis' {
 const IDENTITY_SECTION = 'digital-employee:identity'
 const PERSONALITY_SECTION = 'digital-employee:personality'
 const INSTRUCTIONS_SECTION = 'digital-employee:instructions'
+const SKILL_USAGE_SECTION = 'digital-employee:skill-usage'
 const MEMORY_SECTION = 'digital-employee:memory'
 const EXPERT_COMPOSITION_KEY = 'digitalEmployeeExpert'
 
@@ -628,6 +629,17 @@ export class DigitalEmployeeAgent extends Service {
         instructions,
       ].join('\n'),
     })
+    if (employee.authority.skills.length > 0) {
+      systemPrompt.section({
+        name: SKILL_USAGE_SECTION,
+        order: 35,
+        text: [
+          'Digital employee skill usage',
+          'Use the exact skill name shown in the available skills catalog when loading a skill.',
+          'The `skill` loader loads one skill; do not pass `list` or use it as a catalog operation.',
+        ].join('\n'),
+      })
+    }
     if (memoryProjection !== undefined && memoryProjection.memories.length > 0) {
       systemPrompt.section({
         name: MEMORY_SECTION,

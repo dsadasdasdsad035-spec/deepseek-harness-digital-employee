@@ -277,6 +277,9 @@ describe('DigitalEmployeeAgent', () => {
     expect(ctx.tools.get('skill', key)).toBeDefined()
     expect(ctx.tools.get('skill', key)).not.toBe(inheritedSkillTool)
     expect(ctx.tools.schemas(key).map(tool => tool.name)).toEqual(['skill'])
+    expect(renderPrompt(await scope.ctx.get('systemPrompt')!.assemble({ scope: key }))).toContain(
+      'The `skill` loader loads one skill; do not pass `list`',
+    )
     await expect(ctx.skills.list({ scope: key })).resolves.toEqual([
       expect.objectContaining({ name: 'project-planning' }),
     ])

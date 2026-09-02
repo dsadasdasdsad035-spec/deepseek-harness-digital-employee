@@ -883,17 +883,22 @@ describe('dsh-tool-skill', () => {
     })
 
     const unknown = await ctx.tools.execute({ signal: testToolSignal, callId: CallId('c1'), name: 'skill', arguments: { name: 'missing' } })
-    const invalid = await ctx.tools.execute({ signal: testToolSignal, callId: CallId('c2'), name: 'skill', arguments: { name: 'Bad_Name' } })
-    const disabled = await ctx.tools.execute({ signal: testToolSignal, callId: CallId('c3'), name: 'skill', arguments: { name: 'hidden-skill' } })
-    const modelOnly = await ctx.tools.execute({ signal: testToolSignal, callId: CallId('c4'), name: 'skill', arguments: { name: 'model-only-skill' } })
+    const list = await ctx.tools.execute({ signal: testToolSignal, callId: CallId('c2'), name: 'skill', arguments: { name: 'list' } })
+    const invalid = await ctx.tools.execute({ signal: testToolSignal, callId: CallId('c3'), name: 'skill', arguments: { name: 'Bad_Name' } })
+    const disabled = await ctx.tools.execute({ signal: testToolSignal, callId: CallId('c4'), name: 'skill', arguments: { name: 'hidden-skill' } })
+    const modelOnly = await ctx.tools.execute({ signal: testToolSignal, callId: CallId('c5'), name: 'skill', arguments: { name: 'model-only-skill' } })
 
     expect(unknown.isError).toBe(true)
+    expect(list.isError).toBe(true)
     expect(invalid.isError).toBe(true)
     expect(disabled.isError).toBe(true)
     expect(modelOnly.isError).toBe(false)
     const unknownBlock = unknown.content[0]
     if (unknownBlock?.type !== 'text') throw new Error('expected text tool result')
     expect(unknownBlock.text).toContain('skill "missing" is unknown or no longer available')
+    const listBlock = list.content[0]
+    if (listBlock?.type !== 'text') throw new Error('expected text tool result')
+    expect(listBlock.text).toContain('skill "list" is unknown or no longer available')
   })
 
   it('checks model policy before provider loading and rechecks the loaded definition', async () => {
