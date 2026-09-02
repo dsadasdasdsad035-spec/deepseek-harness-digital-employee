@@ -14,6 +14,8 @@
 
 具名专家使用现有 subagent 运行时。委派会记录请求、拒绝、子级身份与结果事件；可继续的专家仍可通过其父任务寻址。专家的有效权限是专家声明、员工授权与父 Agent 权限三者的交集，而深度、并发和超时限制只能收紧。
 
+当员工拥有已授权专家且运行时存在 subagent provider 时，其 Agent 作用域会暴露 `delegate_to_expert`。模型必须提供精确的专家 ID 和非空任务；工具选择可用 provider，并返回一次性结果或可继续的子会话身份。provider 缺失会返回明确的运行时诊断，工具不会授予解析后员工权限之外的能力。
+
 MCP server 与 skill 引用从员工的显式权限中解析。缺少引用时任务创建失败，不会暴露环境中的注册项。
 
 位于 `examples/headless-agent/tests/fixtures/core/digital-employee-agent/` 的无密钥 Loader fixture 注册一个受信任模板，创建并激活实例，再通过现有 agent loop 运行一项根任务。

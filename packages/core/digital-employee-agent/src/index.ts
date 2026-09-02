@@ -31,7 +31,7 @@ import type {
   ModelSelection,
 } from '@deepseek-ai/dsh-agent'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
-import type { UserMessage } from '@deepseek-ai/dsh-llm'
+import type { ContentBlock, UserMessage } from '@deepseek-ai/dsh-llm'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type {
   ContinuableStart,
@@ -48,6 +48,7 @@ import type {} from '@deepseek-ai/dsh-system-prompt'
 import type {} from '@deepseek-ai/dsh-tools'
 import type { McpServerConfig } from '@deepseek-ai/dsh-mcp-client'
 import type { PostToolDecision, PreToolDecision, ToolExecution } from '@deepseek-ai/dsh-tools'
+import { defineTool } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-credentials'
 import type {} from '@deepseek-ai/dsh-mcp-client'
 
@@ -62,11 +63,13 @@ const PERSONALITY_SECTION = 'digital-employee:personality'
 const INSTRUCTIONS_SECTION = 'digital-employee:instructions'
 const MEMORY_SECTION = 'digital-employee:memory'
 const EXPERT_COMPOSITION_KEY = 'digitalEmployeeExpert'
+const EXPERT_TOOL_NAME = 'delegate_to_expert'
 
 interface DigitalEmployeeExpertComposition {
   readonly employeeId: string
   readonly expertId: string
   readonly mcpServerIds: readonly string[]
+  readonly memoryProjection?: Record<string, unknown>
 }
 
 /** Input for creating one root task Agent owned by a digital employee. */
@@ -332,8 +335,11 @@ export class DigitalEmployeeAgent extends Service {
           employeeId: expert.employeeId,
           expertId: expert.id,
           mcpServerIds: [...effective.capabilities.mcpServers],
+          ...(expert.memoryProjection === undefined
+            ? {}
+            : { memoryProjection: JSON.parse(JSON.stringify(expert.memoryProjection)) as Record<string, unknown> }),
         },
-      },
+      } as unknown as Record<string, import('@deepseek-ai/dsh-session').JsonValue>,
     } satisfies Omit<SubagentStartRequest, 'label' | 'signal'>
     if (expert.delegation.mode === 'one-shot') {
       const run = await this.ctx.subagents.start(request.provider, {
@@ -500,6 +506,7 @@ export class DigitalEmployeeAgent extends Service {
     if (skills === undefined || tools === undefined) {
       throw new Error('digital employee Agent composition requires skills and tools in the Agent scope')
     }
+    this.mountExpertDelegationTool(agentCtx, employee)
     skills.restrict({ allow: employee.authority.skills })
     tools.restrict({ allow: employee.authority.tools })
     const resolvedMcpServers = mcpServers ?? (employee.mcpServers.length === 0
@@ -544,6 +551,68 @@ export class DigitalEmployeeAgent extends Service {
     }
   }
 
+  private mountExpertDelegationTool(
+    agentCtx: Context,
+    employee: ResolvedDigitalEmployee,
+  ): void {
+    if (employee.experts.length === 0) return
+    const scopedTools = agentCtx.get('tools')
+    const subagents = this.ctx.subagents
+    const providerName = subagents.list().includes('spawn') ? 'spawn' : subagents.list()[0] ?? 'spawn'
+    const expertNames = employee.experts.map(expert => `${expert.id}: ${expert.name}`).join(', ')
+    scopedTools?.register(defineTool({
+      name: EXPERT_TOOL_NAME,
+      description: `Delegate a task to an authorized digital employee expert. Available experts: ${expertNames}`,
+      parameters: {
+        expert_id: {
+          type: 'string',
+          required: true,
+          description: 'The exact authorized expert id.',
+        },
+        prompt: {
+          type: 'string',
+          required: true,
+          description: 'A non-empty task for the selected expert.',
+        },
+      },
+      output: {
+        schema: { type: 'string' },
+        render: (_args, value) => [{ type: 'text', text: value }],
+      },
+      isConcurrencySafe: () => true,
+      execute: async (args, exec) => {
+        if (exec.agent === undefined) {
+          throw new Error('delegate_to_expert requires a calling agent')
+        }
+        const result = await this.delegateToExpert({
+          employeeId: employee.instance.id,
+          expertId: args.expert_id as ExpertId,
+          provider: providerName,
+          parent: exec.agent,
+          parentAuthority: {
+            capabilities: employee.authority,
+            delegation: employee.delegation,
+            depth: 0,
+            activeDelegations: 0,
+          },
+          prompt: [{ type: 'text', text: args.prompt }] as ContentBlock[],
+          signal: exec.signal,
+        })
+        if (result.mode === 'continuable') {
+          return `started expert ${result.expert.id} (${result.childId})`
+        }
+        const output = result.run.result
+        const settled = await output
+        return settled.output
+          .filter((block): block is { type: 'text'; text: string } =>
+            typeof block === 'object' && block !== null && !Array.isArray(block)
+            && block.type === 'text' && typeof block.text === 'string')
+          .map(block => block.text)
+          .join('')
+      },
+    }))
+  }
+
   private async resolveMcpServers(
     employee: ResolvedDigitalEmployee,
     sessionId: SessionId,
@@ -569,6 +638,17 @@ export class DigitalEmployeeAgent extends Service {
         `digital employee "${employeeId}" does not authorize expert "${expertId}"`,
       )
     }
+    const skills = childCtx.get('skills')
+    const tools = childCtx.get('tools')
+    if (skills === undefined || tools === undefined) {
+      throw new Error('digital employee expert composition requires skills and tools in the Agent scope')
+    }
+    skills.restrict({
+      allow: expert.capabilities.skills.filter(skill => employee.authority.skills.includes(skill)),
+    })
+    tools.restrict({
+      allow: expert.capabilities.tools.filter(tool => employee.authority.tools.includes(tool)),
+    })
     const authorized = new Set(expert.capabilities.mcpServers)
     const unauthorized = composition.mcpServerIds.find(id =>
       !authorized.has(id) || !employee.authority.mcpServers.includes(id))
@@ -602,6 +682,30 @@ export class DigitalEmployeeAgent extends Service {
       for (const config of resolvedMcpServers) {
         await mcpClients.mount(childCtx, config)
       }
+    }
+    const systemPrompt = childCtx.get('systemPrompt')
+    if (systemPrompt === undefined) {
+      throw new Error('digital employee expert composition requires systemPrompt in the Agent scope')
+    }
+    const instructions = await readInstructionSource(
+      expert.instructions,
+      `digital employee "${employeeId}" expert "${expertId}"`,
+    )
+    systemPrompt.section({
+      name: `${INSTRUCTIONS_SECTION}:expert`,
+      order: 31,
+      text: [
+        `Digital employee expert instructions (revision ${expert.instructions.revision})`,
+        instructions,
+      ].join('\n'),
+    })
+    const memoryProjection = composition.memoryProjection as unknown as DigitalEmployeeMemoryProjectionEvent | undefined
+    if (memoryProjection !== undefined && memoryProjection.memories.length > 0) {
+      systemPrompt.section({
+        name: `${MEMORY_SECTION}:expert`,
+        order: 41,
+        text: renderMemory(memoryProjection),
+      })
     }
     this.installAudit(childCtx, {
       ...employee,

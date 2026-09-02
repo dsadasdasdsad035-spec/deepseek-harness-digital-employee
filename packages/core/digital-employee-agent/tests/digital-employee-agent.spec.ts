@@ -224,6 +224,113 @@ describe('DigitalEmployeeAgent', () => {
     await beta.dispose()
   })
 
+  it('publishes an expert delegation tool in an employee scope with authorized experts', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-expert-tool-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Review carefully.', 'utf8')
+    const register = vi.fn()
+    const employee = {
+      ...resolved(root, 'alpha', 'Alpha'),
+      authority: {
+        ...resolved(root, 'alpha', 'Alpha').authority,
+        experts: [createExpertId('reviewer')],
+      },
+      experts: [{
+        id: createExpertId('reviewer'),
+        name: 'Risk reviewer',
+        responsibility: 'Review project risks.',
+        instructions: { kind: 'file' as const, root, path: 'AGENTS.md', revision: 'reviewer-v1' },
+        modelSettings: {},
+        capabilities: { skills: [], tools: [], mcpServers: [], experts: [], allowSubagents: false },
+        memoryAccess: ['session'] as const,
+        delegation: { mode: 'one-shot' as const, maxDepth: 0, maxConcurrency: 1, timeoutMs: 10_000 },
+      }],
+    } as unknown as ResolvedDigitalEmployee
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+    ctx.provide('skills', { restrict: () => {} } as never)
+    ctx.provide('subagents', {
+      list: () => ['spawn'],
+      getProvider: (name: string) => name === 'spawn' ? { name: 'spawn' } : undefined,
+    } as never)
+    ctx.provide('tools', { restrict: () => {}, register } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const scope = createScope(ctx, { employee: 'alpha' })
+
+    await ctx.digitalEmployeeAgent.compose(scope.ctx, employee)
+
+    expect(register).toHaveBeenCalledTimes(1)
+    expect(register.mock.calls[0]?.[0]).toMatchObject({
+      name: 'delegate_to_expert',
+      description: expect.stringContaining('reviewer'),
+    })
+    await scope.dispose()
+  })
+
+  it('executes the scoped expert tool through the parent Agent and provider', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-expert-execute-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Review carefully.', 'utf8')
+    const register = vi.fn()
+    const employee = {
+      ...resolved(root, 'alpha', 'Alpha'),
+      authority: {
+        ...resolved(root, 'alpha', 'Alpha').authority,
+        experts: [createExpertId('reviewer')],
+      },
+      experts: [{
+        id: createExpertId('reviewer'),
+        name: 'Risk reviewer',
+        responsibility: 'Review project risks.',
+        instructions: { kind: 'file' as const, root, path: 'AGENTS.md', revision: 'reviewer-v1' },
+        modelSettings: {},
+        capabilities: { skills: [], tools: [], mcpServers: [], experts: [], allowSubagents: false },
+        memoryAccess: ['session'] as const,
+        delegation: { mode: 'one-shot' as const, maxDepth: 0, maxConcurrency: 1, timeoutMs: 10_000 },
+      }],
+    } as unknown as ResolvedDigitalEmployee
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+    ctx.provide('skills', { restrict: () => {} } as never)
+    ctx.provide('subagents', {
+      list: () => ['spawn'],
+      getProvider: (name: string) => name === 'spawn' ? { name: 'spawn' } : undefined,
+    } as never)
+    ctx.provide('tools', { restrict: () => {}, register } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const scope = createScope(ctx, { employee: 'alpha' })
+    await ctx.digitalEmployeeAgent.compose(scope.ctx, employee)
+    const tool = register.mock.calls[0]?.[0] as {
+      execute(args: unknown, exec: { agent?: object; signal: AbortSignal }): Promise<unknown>
+    }
+    const parent = { id: SessionId('parent') }
+    const delegate = vi.spyOn(ctx.digitalEmployeeAgent, 'delegateToExpert').mockResolvedValue({
+      mode: 'continuable',
+      expert: employee.experts[0] as never,
+      authority: employee.authority,
+      delegation: employee.delegation,
+      childId: SessionId('child'),
+      messageId: 'message' as never,
+    })
+
+    await expect(tool.execute({
+      expert_id: 'reviewer',
+      prompt: 'Check the pilot risk.',
+    }, { agent: parent, signal: new AbortController().signal })).resolves.toContain('child')
+    expect(delegate).toHaveBeenCalledWith(expect.objectContaining({
+      employeeId: employee.instance.id,
+      expertId: 'reviewer',
+      provider: 'spawn',
+      parent,
+      prompt: [{ type: 'text', text: 'Check the pilot risk.' }],
+    }))
+    await scope.dispose()
+  })
+
   it('rejects an instruction path that escapes the contributing plugin root', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-agent-path-'))
     const ctx = new Context()
@@ -256,7 +363,7 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('digitalEmployees', { resolve: resolveEmployee } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
-    ctx.provide('systemPrompt', {} as never)
+    ctx.provide('systemPrompt', { section: vi.fn() } as never)
     ctx.provide('tools', { restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
 
@@ -285,7 +392,7 @@ describe('DigitalEmployeeAgent', () => {
     } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', { drainContinuableDescendants } as never)
-    ctx.provide('systemPrompt', {} as never)
+    ctx.provide('systemPrompt', { section: vi.fn() } as never)
     ctx.provide('tools', { restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
 
@@ -838,6 +945,7 @@ describe('DigitalEmployeeAgent', () => {
 
   it('mounts only authorized expert MCP clients from non-secret child composition', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-expert-mcp-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Review evidence.', 'utf8')
     const base = resolved(root, 'alpha', 'Alpha')
     const expertId = createExpertId('critic')
     const declaration = {
@@ -902,7 +1010,7 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('mcpClients', { mount } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
-    ctx.provide('systemPrompt', {} as never)
+    ctx.provide('systemPrompt', { section: vi.fn() } as never)
     ctx.provide('tools', { restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const childCtx = createScope(ctx, { child: 'expert' }).ctx

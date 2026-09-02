@@ -26,9 +26,21 @@ describe('project-manager test digital employee', () => {
       skills: PROJECT_SKILLS.map(skill => skill.name),
       tools: ['project_board', 'project_document'],
       mcpServers: ['project-data'],
-      experts: [],
-      allowSubagents: false,
+      experts: [expect.anything()],
+      allowSubagents: true,
     })
+    expect(template?.experts).toEqual([expect.objectContaining({
+      name: 'Risk Review Expert',
+      responsibility: expect.stringContaining('delivery risk'),
+      capabilities: {
+        skills: ['risk-review'],
+        tools: ['project_document'],
+        mcpServers: ['project-data'],
+        experts: [],
+        allowSubagents: false,
+      },
+      memoryAccess: ['task', 'long-term'],
+    })])
     expect(template?.mcpServers).toEqual([expect.objectContaining({
       id: 'project-data',
       transport: 'stdio',

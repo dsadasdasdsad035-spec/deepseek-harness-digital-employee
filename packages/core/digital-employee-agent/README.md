@@ -14,6 +14,8 @@ When `createTask()` receives a memory query, it resolves a bounded employee-owne
 
 Named experts use the existing subagent runtime. Delegation records request, denial, child identity, and result events; continuable experts remain addressable through their parent task. Effective expert authority is the intersection of the expert declaration, employee grants, and parent Agent authority, while depth, concurrency, and timeout limits may only tighten.
 
+When an employee has authorized experts and a subagent provider is available, its Agent scope exposes `delegate_to_expert`. The model must provide the exact expert id and a non-empty prompt; the tool selects the configured provider and returns the one-shot result or continuable child identity. Provider absence remains an explicit runtime diagnostic, and the tool never grants capabilities outside the resolved employee authority.
+
 MCP server and skill references are resolved from the employee's explicit authority. Missing references fail task creation instead of exposing ambient registrations.
 
 The keyless Loader fixture at `examples/headless-agent/tests/fixtures/core/digital-employee-agent/` registers a trusted template, creates and activates an instance, and runs one root task through the existing Agent loop.

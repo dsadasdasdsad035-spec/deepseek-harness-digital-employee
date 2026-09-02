@@ -95,6 +95,7 @@ try {
     skills: template.capabilities.skills,
     tools: template.capabilities.tools,
     mcpServers: template.capabilities.mcpServers,
+    experts: template.capabilities.experts,
     instructions: template.instructions.revision,
     visibleSkills,
     visibleTools: visibleTools.filter(name => !name.startsWith('mcp__')),
@@ -105,6 +106,7 @@ try {
     atlasSeed: eventText.includes('explicit rollback owner'),
   })
   acceptance('capabilities-used', {
+    riskReviewExpert: eventText.includes('risk-reviewer'),
     projectBoard: eventText.includes('project_board'),
     projectDocument: eventText.includes('project_document'),
     projectData: eventText.includes('mcp__project-data__project_snapshot'),

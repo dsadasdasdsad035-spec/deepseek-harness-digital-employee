@@ -12,6 +12,7 @@ import {
   type DigitalEmployeeAuthority,
   type DigitalEmployeeTemplate,
 } from '@deepseek-ai/dsh-digital-employee'
+import { CallId } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import {
   launchWebScaffold, watchConsole, type WebScaffold,
@@ -83,7 +84,7 @@ function template(root: string, version: '1.0.0' | '2.0.0'): DigitalEmployeeTemp
       memoryAccess: ['task', 'session'],
       delegation: {
         mode: 'continuable',
-        maxDepth: 0,
+        maxDepth: 1,
         maxConcurrency: 1,
         timeoutMs: 30_000,
       },
@@ -255,4 +256,50 @@ describe('web e2e: digital employee management through the shipped API', () => {
     expect(tripwire.warnings).toEqual([])
     expect(tripwire.pageErrors).toEqual([])
   }, 90_000)
+
+  it('exposes the model-facing expert delegation tool on an @-started employee session', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-digital-employee-expert'))
+    const parentId = employeeSessionIds(scaffold)[0]
+    expect(parentId).toBeDefined()
+    const parent = scaffold.ctx.agents.get(parentId!)
+    expect(parent).toBeDefined()
+    const tool = scaffold.ctx.tools.get('delegate_to_expert', parent!)
+    expect(tool).toBeDefined()
+
+    const execution = await scaffold.ctx.tools.execute({
+      signal: new AbortController().signal,
+      callId: CallId('web-digital-employee-expert'),
+      name: 'delegate_to_expert',
+      arguments: {
+        expert_id: REVIEWER_ID,
+        prompt: 'Review the launch readiness evidence and return one risk finding.',
+      },
+      agent: parent!,
+    })
+    if (execution.content[0]?.type === 'text') {
+      expect(execution.content[0].text).not.toMatch(/^Error:/)
+    }
+    expect(execution.content[0]).toMatchObject({ type: 'text' })
+
+    await expect.poll(
+      () => scaffold.ctx.digitalEmployeeAgent.listExpertTree(parentId!),
+      { timeout: 30_000 },
+    ).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        kind: 'child',
+        parentId,
+        depth: 1,
+      }),
+    ]))
+    const child = (await scaffold.ctx.digitalEmployeeAgent.listExpertTree(parentId!))
+      .find(entry => entry.kind === 'child')
+    expect(child).toBeDefined()
+    await scaffold.ctx.digitalEmployeeAgent.followupExpert(
+      parent!,
+      child!.id,
+      [{ type: 'text', text: 'Return the updated risk finding.' }],
+      { source: { kind: 'user' }, signal: new AbortController().signal },
+    )
+    expect(tripwire.pageErrors).toEqual([])
+  }, 60_000)
 })

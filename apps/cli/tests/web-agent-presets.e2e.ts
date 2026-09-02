@@ -241,6 +241,24 @@ describe('the shipped Web composition', () => {
         'subagent', 'subagent_fork', 'todo_write', 'update_goal', 'web_search',
         'workflow', 'write',
       ])
+      const subagent = ctx.tools.schemas(handle.agent).find(tool => tool.name === 'subagent')
+      const fork = ctx.tools.schemas(handle.agent).find(tool => tool.name === 'subagent_fork')
+      expect(subagent?.parameters).toMatchObject({
+        type: 'object',
+        properties: expect.objectContaining({
+          description: expect.objectContaining({ type: 'string' }),
+          prompt: expect.objectContaining({ type: 'string' }),
+          run_in_background: expect.objectContaining({ type: 'boolean' }),
+        }),
+      })
+      expect(fork?.parameters).toMatchObject({
+        type: 'object',
+        properties: expect.objectContaining({
+          description: expect.objectContaining({ type: 'string' }),
+          prompt: expect.objectContaining({ type: 'string' }),
+          run_in_background: expect.objectContaining({ type: 'boolean' }),
+        }),
+      })
     } finally {
       await handle.dispose()
     }

@@ -7,11 +7,13 @@ import type { Context } from '@deepseek-ai/cordis'
 import { resolve } from 'node:path'
 import {
   createDigitalEmployeeTemplateId,
+  createExpertId,
   type DigitalEmployeeTemplate,
 } from '@deepseek-ai/dsh-digital-employee'
 import { PROJECT_SKILLS } from './skills.ts'
 
 const ROOT = resolve(import.meta.dirname, '..')
+export const RISK_REVIEW_EXPERT_ID = createExpertId('risk-reviewer')
 
 /** Bounded package-owned memory seed applied by isolated fixture compositions. */
 export const PROJECT_MEMORY_SEED = {
@@ -54,10 +56,35 @@ export const PROJECT_MANAGER_TEMPLATE: DigitalEmployeeTemplate = {
     skills: PROJECT_SKILLS.map(skill => skill.name),
     tools: ['project_board', 'project_document'],
     mcpServers: ['project-data'],
-    experts: [],
-    allowSubagents: false,
+    experts: [RISK_REVIEW_EXPERT_ID],
+    allowSubagents: true,
   },
-  experts: [],
+  experts: [{
+    id: RISK_REVIEW_EXPERT_ID,
+    name: 'Risk Review Expert',
+    responsibility: 'Review delivery risk, evidence, and rollback readiness.',
+    instructions: {
+      kind: 'file',
+      root: ROOT,
+      path: 'risk-reviewer.md',
+      revision: 'project-manager-risk-reviewer-v1',
+    },
+    modelSettings: {},
+    capabilities: {
+      skills: ['risk-review'],
+      tools: ['project_document'],
+      mcpServers: ['project-data'],
+      experts: [],
+      allowSubagents: false,
+    },
+    memoryAccess: ['task', 'long-term'],
+    delegation: {
+      mode: 'one-shot',
+      maxDepth: 1,
+      maxConcurrency: 1,
+      timeoutMs: 30_000,
+    },
+  }],
   delegation: {
     maxDepth: 0,
     maxConcurrency: 1,

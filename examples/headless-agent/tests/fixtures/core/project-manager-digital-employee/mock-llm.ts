@@ -6,6 +6,7 @@ class ProjectManagerMockAdapter extends LlmAdapter {
 
   async * stream(): AsyncIterable<StreamChunk> {
     const tool = [
+      'delegate_to_expert',
       'project_board',
       'project_document',
       'mcp__project-data__project_snapshot',
@@ -19,7 +20,12 @@ class ProjectManagerMockAdapter extends LlmAdapter {
           type: 'tool-call',
           id: CallId(`project-manager-tool-${this.calls}`),
           name: tool,
-          arguments: '{}',
+          arguments: tool === 'delegate_to_expert'
+            ? JSON.stringify({
+              expert_id: 'risk-reviewer',
+              prompt: 'Review the Atlas delivery risk and rollback readiness.',
+            })
+            : '{}',
         },
       }
       yield { type: 'finish', reason: { kind: 'tool-calls' } }
