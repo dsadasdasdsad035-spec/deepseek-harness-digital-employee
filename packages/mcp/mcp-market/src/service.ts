@@ -1,10 +1,13 @@
 /** Declarative MCP package validation, configuration, and managed lifecycle. */
 
-import { lstat, mkdir, readFile } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
+import { lstat, mkdir, readFile, stat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import { z } from 'zod'
 import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import type { CredentialInfo, CredentialRef } from '@deepseek-ai/dsh-credentials'
+import { MCP_SERVER_NAME_PATTERN } from '@deepseek-ai/dsh-mcp-client'
 import {
   ArchiveValidationError,
   decodeArchiveBase64,
@@ -27,6 +30,9 @@ import type {
   TrustedPublisher,
 } from '@deepseek-ai/dsh-marketplace-core'
 import type {
+  McpDirectConfigDeclaration,
+  McpDirectConfigDeleteRequest,
+  McpDirectConfigSaveRequest,
   McpMarketConfigureRequest,
   McpMarketConfigureResult,
   McpMarketCredentialRequirement,
@@ -44,10 +50,59 @@ interface ConfigurationDocument {
   readonly packages: Readonly<Record<string, Readonly<Record<string, string>>>>
 }
 
+/** One persisted user-declared MCP server configuration, reference-only. */
+export interface McpDirectConfigRecord {
+  readonly entryId: string
+  readonly serverName: string
+  readonly declaration: McpDirectConfigDeclaration
+  readonly createdAt: number
+  readonly updatedAt: number
+}
+
+interface DirectConfigDocument {
+  readonly format: 1
+  readonly entries: Readonly<Record<string, McpDirectConfigRecord>>
+}
+
+/**
+ * Direct declarations follow the packaged stdio command rule but may name
+ * absolute paths in arguments: the user vouches for the entry directly, so
+ * there is no signed file table to pin scripts to.
+ */
+const DirectDeclarationSchema = z.discriminatedUnion('transport', [
+  z.object({
+    transport: z.literal('stdio'),
+    command: z.string().regex(/^[A-Za-z0-9._-]+$/),
+    args: z.array(z.string().min(1).max(1024)).min(1).max(64),
+    env: z.record(z.string(), z.string()),
+    envCredentials: z.record(z.string(), z.string()),
+    cwd: z.string().min(1).max(1024),
+  }),
+  z.object({
+    transport: z.literal('streamable-http'),
+    url: z.url(),
+    headers: z.record(z.string(), z.string()),
+    headerCredentials: z.record(z.string(), z.string()),
+  }),
+])
+
+/** Error type the gateway maps to its structured marketplace failure. */
 class McpMarketDomainError extends Error {
   constructor(readonly failure: McpMarketFailure) {
     super('reason' in failure ? `${failure.code}: ${failure.reason}` : failure.code)
   }
+}
+
+export { McpMarketDomainError }
+
+/**
+ * Map a marketplace domain error to its structured failure result.
+ * @param error - Error caught by a Remote gateway method.
+ * @returns The failure result; anything that is not a domain error rethrows.
+ */
+export function asMarketResult(error: unknown): { readonly ok: false; readonly error: McpMarketFailure } {
+  if (error instanceof McpMarketDomainError) return { ok: false, error: error.failure }
+  throw error
 }
 
 /** Runtime dependencies for managed MCP packages. */
@@ -66,10 +121,13 @@ export interface McpMarketServiceOptions {
 export class McpMarketService {
   private readonly mutations = new KeyedMutex<string>()
   private readonly configFile: string
+  private readonly directFile: string
   private readonly diagnostics = new Map<string, string>()
+  private readonly directDiagnostics = new Map<string, string>()
 
   constructor(private readonly options: McpMarketServiceOptions) {
     this.configFile = join(resolve(options.installRoot), '.mcp-configurations.json')
+    this.directFile = join(resolve(options.installRoot), '.mcp-direct-configs.json')
   }
 
   /**
@@ -159,6 +217,7 @@ export class McpMarketService {
         } catch (error: unknown) {
           entries.push({
             packageId: manifest.id as McpMarketPackageId,
+            source: 'package',
             displayName: manifest.id,
             description: 'Installed MCP package failed trust validation.',
             version: manifest.version,
@@ -197,6 +256,7 @@ export class McpMarketService {
         const diagnostic = this.diagnostics.get(manifest.id)
         entries.push({
           packageId: manifest.id as McpMarketPackageId,
+          source: 'package',
           displayName: descriptor.display.name,
           description: descriptor.display.description,
           version: manifest.version,
@@ -211,7 +271,7 @@ export class McpMarketService {
           ...(diagnostic === undefined ? {} : { diagnostic }),
         })
       }
-      return { entries }
+      return { entries: [...entries, ...(await this.directEntriesProjected(active))] }
     })
   }
 
@@ -232,6 +292,7 @@ export class McpMarketService {
       verifyPackageFileHashes(archive, descriptor.files)
       if (!this.options.allowUnsignedPackages) verifyTrust(descriptor, this.options.trustedPublishers)
       this.assertStdioInterpreters(descriptor)
+      await this.assertNoPackageDirectNameConflict(descriptor.servers.map(server => server.id))
       this.assertLocalExecutionConfirmed(descriptor, request.confirmLocalExecution === true)
       return await this.mutations.runExclusive(descriptor.id, async () => {
         const ownership = await readManagedPackage(this.options.installRoot, descriptor.id, 'mcp')
@@ -323,6 +384,307 @@ export class McpMarketService {
         })
         this.diagnostics.delete(packageId)
         return { packageId, restartRequired: true as const }
+      })
+    })
+  }
+
+  /**
+   * Validate one user-declared server configuration without persisting it.
+   * Every save path runs this before mounting; the returned record is the
+   * credential-free form `persistDirectConfig` accepts.
+   * @param request - Server name, declaration, and local-execution confirmation.
+   * @param ownMountedName - Live name currently mounted for the edited entry,
+   * excluded from the live-name conflict check.
+   * @returns Normalized record ready to persist, with a fresh or existing entry id.
+   */
+  async validateDirectConfig(
+    request: McpDirectConfigSaveRequest,
+    ownMountedName?: string,
+  ): Promise<McpDirectConfigRecord> {
+    if (!MCP_SERVER_NAME_PATTERN.test(request.serverName)) {
+      throw new McpMarketDomainError({
+        code: 'invalid-direct-config',
+        reason: `server name "${request.serverName}" must match ${MCP_SERVER_NAME_PATTERN.source}`,
+      })
+    }
+    const parsed = DirectDeclarationSchema.safeParse(request.declaration)
+    if (!parsed.success) {
+      throw new McpMarketDomainError({
+        code: 'invalid-direct-config',
+        reason: parsed.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('; '),
+      })
+    }
+    const declaration = parsed.data as McpDirectConfigDeclaration
+    this.assertDirectSlotReferences(declaration)
+    if (declaration.transport === 'stdio') {
+      if (!this.options.stdioInterpreters.includes(declaration.command)) {
+        throw new McpMarketDomainError({
+          code: 'invalid-direct-config',
+          reason: `stdio command "${declaration.command}" is not an allowed interpreter`,
+        })
+      }
+      if (request.confirmLocalExecution !== true) {
+        throw new McpMarketDomainError({
+          code: 'local-execution-confirmation-required',
+          candidatePermissions: ['subprocess'],
+        })
+      }
+      const cwd = await stat(declaration.cwd).catch(() => undefined)
+      if (cwd?.isDirectory() !== true) {
+        throw new McpMarketDomainError({
+          code: 'invalid-direct-config',
+          reason: `stdio working directory "${declaration.cwd}" does not exist`,
+        })
+      }
+    }
+    const entries = await this.readDirectConfigurations()
+    const existing = request.entryId === undefined
+      ? undefined
+      : entries[request.entryId]
+    if (request.entryId !== undefined && existing === undefined) {
+      throw new McpMarketDomainError({
+        code: 'invalid-direct-config',
+        reason: 'direct configuration entry not found',
+      })
+    }
+    await this.assertDirectServerNameFree(request.serverName, existing?.entryId, ownMountedName)
+    const now = Date.now()
+    return {
+      entryId: existing?.entryId ?? randomUUID(),
+      serverName: request.serverName,
+      declaration,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    }
+  }
+
+  /**
+   * Persist one validated direct configuration record.
+   * @param record - Record returned by `validateDirectConfig`.
+   */
+  async persistDirectConfig(record: McpDirectConfigRecord): Promise<void> {
+    await this.mutations.runExclusive(`direct:${record.entryId}`, async () => {
+      await this.mutateDirectConfigurations((document) => {
+        return { ...document, entries: { ...document.entries, [record.entryId]: record } }
+      })
+    })
+    this.directDiagnostics.delete(record.entryId)
+  }
+
+  /**
+   * Remove one direct configuration record and its diagnostic.
+   * @param request - Entry identity to remove.
+   */
+  async deleteDirectConfig(request: McpDirectConfigDeleteRequest): Promise<void> {
+    await this.mutations.runExclusive(`direct:${request.entryId}`, async () => {
+      const entries = await this.readDirectConfigurations()
+      if (entries[request.entryId] === undefined) {
+        throw new McpMarketDomainError({
+          code: 'invalid-direct-config',
+          reason: 'direct configuration entry not found',
+        })
+      }
+      await this.mutateDirectConfigurations((document) => {
+        const next = Object.fromEntries(
+          Object.entries(document.entries).filter(([candidate]) => candidate !== request.entryId),
+        )
+        return { ...document, entries: next }
+      })
+    })
+    this.directDiagnostics.delete(request.entryId)
+  }
+
+  /**
+   * Read all persisted direct configuration records.
+   * @returns Records in insertion order; resolved values are never present.
+   */
+  async directEntries(): Promise<readonly McpDirectConfigRecord[]> {
+    return Object.values(await this.readDirectConfigurations())
+  }
+
+  /**
+   * Record a direct-entry activation diagnostic without credential values.
+   * @param entryId - Direct configuration entry identity.
+   * @param diagnostic - Public diagnostic, or undefined to clear it.
+   */
+  setDirectDiagnostic(entryId: string, diagnostic?: string): void {
+    if (diagnostic === undefined) this.directDiagnostics.delete(entryId)
+    else this.directDiagnostics.set(entryId, diagnostic)
+  }
+
+  /**
+   * Project direct entries into credential-free inventory rows.
+   * @param active - Live server names from the running Host.
+   * @returns Direct inventory entries appended after package entries.
+   */
+  private async directEntriesProjected(active: ReadonlySet<string>): Promise<readonly McpMarketEntry[]> {
+    const records = await this.directEntries()
+    return Promise.all(records.map(async (record): Promise<McpMarketEntry> => {
+      const slotPairs = record.declaration.transport === 'stdio'
+        ? Object.entries(record.declaration.envCredentials)
+        : Object.entries(record.declaration.headerCredentials)
+      const credentialRequirements = await Promise.all(
+        [...slotPairs].sort(([left], [right]) => left.localeCompare(right))
+          .map(async ([slot, reference]): Promise<McpMarketCredentialRequirement> => {
+            const info = await this.options.credentialInfo(credentialRef(reference))
+            return {
+              slot,
+              reference,
+              configured: info.configured,
+              ...info.source === undefined ? {} : { source: info.source },
+            }
+          }),
+      )
+      const available = active.has(record.serverName) && !this.directDiagnostics.has(record.entryId)
+      return {
+        packageId: record.entryId as McpMarketPackageId,
+        source: 'direct',
+        displayName: record.serverName,
+        description: 'User-declared MCP server configuration.',
+        version: '1.0.0',
+        publisherId: 'direct',
+        servers: [{ serverName: record.serverName, transport: record.declaration.transport, available }],
+        permissions: record.declaration.transport === 'stdio' ? ['subprocess'] : [],
+        credentialRequirements,
+        installedAt: record.createdAt,
+        configured: credentialRequirements.every(requirement => requirement.configured),
+        available,
+        restartRequired: false,
+        declaration: record.declaration,
+        ...this.directDiagnostics.has(record.entryId) ? { diagnostic: this.directDiagnostics.get(record.entryId) } : {},
+      }
+    }))
+  }
+
+  /**
+   * Reject credential slots whose fixed value is non-empty: a slot bound to a
+   * reference must stay empty, and a non-empty value there is a suspected key.
+   * @param declaration - Parsed direct declaration.
+   */
+  private assertDirectSlotReferences(declaration: McpDirectConfigDeclaration): void {
+    const fixed = declaration.transport === 'stdio' ? declaration.env : declaration.headers
+    const references = declaration.transport === 'stdio' ? declaration.envCredentials : declaration.headerCredentials
+    for (const [slot, reference] of Object.entries(references)) {
+      try {
+        credentialRef(reference)
+      } catch {
+        throw new McpMarketDomainError({ code: 'invalid-credential-reference', slot })
+      }
+      if ((fixed[slot] ?? '') !== '') {
+        throw new McpMarketDomainError({
+          code: 'invalid-direct-config',
+          reason: `"${slot}" must not contain a credential value`,
+        })
+      }
+    }
+  }
+
+  /**
+   * Reject a server name held by another direct entry, a live server, or any
+   * installed package's declared servers.
+   * @param serverName - Candidate server name.
+   * @param ownEntryId - Entry identity excluded from the direct-entry check.
+   * @param ownMountedName - Live name mounted for the edited entry, excluded
+   * from the live and declared-package checks so a same-name edit passes.
+   */
+  private async assertDirectServerNameFree(
+    serverName: string,
+    ownEntryId: string | undefined,
+    ownMountedName?: string,
+  ): Promise<void> {
+    const entries = await this.readDirectConfigurations()
+    const direct = Object.values(entries).find(entry => entry.serverName === serverName && entry.entryId !== ownEntryId)
+    if (direct !== undefined) {
+      throw new McpMarketDomainError({
+        code: 'direct-config-conflict', serverName, heldBy: 'direct', holderId: direct.entryId,
+      })
+    }
+    const conflicts = serverName !== ownMountedName
+    const live = conflicts && this.options.activeServerNames().includes(serverName)
+    if (live) {
+      throw new McpMarketDomainError({
+        code: 'direct-config-conflict', serverName, heldBy: 'package', holderId: serverName,
+      })
+    }
+    const declared = conflicts ? await this.declaredPackageServerNames() : new Set<string>()
+    if (declared.has(serverName)) {
+      throw new McpMarketDomainError({
+        code: 'direct-config-conflict', serverName, heldBy: 'package', holderId: serverName,
+      })
+    }
+  }
+
+  /**
+   * Reject package-declared server names colliding with direct entries.
+   * @param serverNames - Server names a package is about to be published under.
+   */
+  private async assertNoPackageDirectNameConflict(serverNames: readonly string[]): Promise<void> {
+    const entries = await this.readDirectConfigurations()
+    const held = new Map(Object.values(entries).map(entry => [entry.serverName, entry.entryId]))
+    for (const name of serverNames) {
+      const holderId = held.get(name)
+      if (holderId !== undefined) {
+        throw new McpMarketDomainError({
+          code: 'direct-config-conflict', serverName: name, heldBy: 'direct', holderId,
+        })
+      }
+    }
+  }
+
+  /**
+   * Collect the server names every installed valid package declares.
+   * @returns Declared names; packages failing validation are skipped because
+   * their servers can never mount.
+   */
+  private async declaredPackageServerNames(): Promise<ReadonlySet<string>> {
+    const names = new Set<string>()
+    const manifests = await listManagedPackages(this.options.installRoot, 'mcp')
+    for (const manifest of manifests) {
+      try {
+        const descriptor = await this.descriptor(manifest.id)
+        for (const server of descriptor.servers) names.add(server.id)
+      } catch {
+        // An invalid package declares nothing mountable, so its names stay free.
+      }
+    }
+    return names
+  }
+
+  /**
+   * Read the persisted direct configuration document.
+   * @returns Parsed document; empty when the file does not exist yet.
+   */
+  private async readDirectConfigurations(): Promise<DirectConfigDocument['entries']> {
+    try {
+      const parsed: unknown = JSON.parse(await readFile(this.directFile, 'utf8'))
+      if (typeof parsed !== 'object' || parsed === null || (parsed as { format?: unknown }).format !== 1) {
+        throw new Error('unsupported MCP direct configuration store')
+      }
+      const entries = (parsed as { entries?: unknown }).entries
+      if (typeof entries !== 'object' || entries === null || Array.isArray(entries)) {
+        throw new Error('invalid MCP direct configuration store')
+      }
+      return entries as DirectConfigDocument['entries']
+    } catch (error: unknown) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return {}
+      throw error
+    }
+  }
+
+  /**
+   * Atomically mutate the persisted direct configuration document.
+   * @param mutate - Pure document transformation.
+   */
+  private async mutateDirectConfigurations(
+    mutate: (document: DirectConfigDocument) => DirectConfigDocument,
+  ): Promise<void> {
+    await mkdir(resolve(this.options.installRoot), { recursive: true, mode: 0o700 })
+    await withFileLock(this.directFile, async () => {
+      const current = await this.readDirectConfigurations()
+      const next = mutate({ format: 1, entries: current })
+      await writeFileAtomic(this.directFile, `${JSON.stringify(next, null, 2)}\n`, {
+        mode: 0o600,
+        dirMode: 0o700,
       })
     })
   }

@@ -37,6 +37,12 @@ const DEFAULT_TOOL_CALL_TIMEOUT_MS = 60_000
 const SERVER_NAME_PATTERN = /^[A-Za-z0-9_-]{1,32}$/
 
 /**
+ * The `serverName` namespace rule shared with Host consumers (marketplace
+ * direct configuration) so every mount path validates names identically.
+ */
+export const MCP_SERVER_NAME_PATTERN = SERVER_NAME_PATTERN
+
+/**
  * Live `serverName` reservations per app, keyed off `ctx.root` (multiple apps
  * in one process — tests — must not see each other's names). A duplicate
  * namespace is a configuration error surfaced at plugin load, never silent
@@ -226,7 +232,7 @@ async function applyServer(ctx: Context, config: McpServerConfig): Promise<void>
     configs.set(config.serverName, { serverName: config.serverName, transport: config.transport })
     return () => {
       void names.delete(config.serverName)
-      configs?.delete(config.serverName)
+      configs.delete(config.serverName)
     }
   }, 'mcp-client.serverName')
 

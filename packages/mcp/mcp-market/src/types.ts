@@ -5,6 +5,12 @@ import type { Branded } from '@deepseek-ai/dsh-brand'
 /** Stable identity of one managed MCP package. */
 export type McpMarketPackageId = Branded<'McpMarketPackageId'>
 
+/** Stable identity of one user-declared direct MCP configuration entry. */
+export type McpDirectConfigEntryId = Branded<'McpDirectConfigEntryId'>
+
+/** Where an inventory entry's servers come from. */
+export type McpMarketEntrySource = 'direct' | 'package'
+
 /** Credential slot state without a resolved value. */
 export interface McpMarketCredentialRequirement {
   readonly slot: string
@@ -23,6 +29,8 @@ export interface McpMarketServerEntry {
 /** One managed MCP package. */
 export interface McpMarketEntry {
   readonly packageId: McpMarketPackageId
+  /** Whether the servers behind this entry are packaged or user-declared. */
+  readonly source: McpMarketEntrySource
   readonly displayName: string
   readonly description: string
   readonly version: string
@@ -34,6 +42,8 @@ export interface McpMarketEntry {
   readonly configured: boolean
   readonly available: boolean
   readonly restartRequired: boolean
+  /** Direct entries only: the credential-free declaration for editing. */
+  readonly declaration?: McpDirectConfigDeclaration | undefined
   readonly diagnostic?: string | undefined
 }
 
@@ -72,6 +82,58 @@ export type McpMarketTemplateDeclaration =
     readonly headers: Readonly<Record<string, string>>
     readonly headerCredentials: Readonly<Record<string, string>>
   }
+
+/**
+ * Credential-free server declaration for one user-declared direct MCP
+ * configuration: fixed values plus credential reference names, never resolved
+ * values. Unlike packaged stdio servers, arguments may name absolute paths on
+ * the user's disk — the user vouches for the entry directly.
+ */
+export type McpDirectConfigDeclaration =
+  | {
+    readonly transport: 'stdio'
+    readonly command: string
+    readonly args: readonly string[]
+    readonly env: Readonly<Record<string, string>>
+    /** Environment variable name to credential reference name. */
+    readonly envCredentials: Readonly<Record<string, string>>
+    readonly cwd: string
+  }
+  | {
+    readonly transport: 'streamable-http'
+    readonly url: string
+    readonly headers: Readonly<Record<string, string>>
+    /** Header name to credential reference name. */
+    readonly headerCredentials: Readonly<Record<string, string>>
+  }
+
+/** Create-or-update request for one user-declared MCP server configuration. */
+export interface McpDirectConfigSaveRequest {
+  /** Existing entry identity; omission creates a new entry. */
+  readonly entryId?: McpDirectConfigEntryId | undefined
+  readonly serverName: string
+  readonly declaration: McpDirectConfigDeclaration
+  /** Explicit user confirmation for stdio declarations that execute local code. */
+  readonly confirmLocalExecution?: boolean
+}
+
+/** Request to remove one user-declared MCP server configuration. */
+export interface McpDirectConfigDeleteRequest {
+  readonly entryId: McpDirectConfigEntryId
+}
+
+/** Save response for one direct MCP configuration entry. */
+export type McpDirectConfigSaveResult = McpMarketResult<{
+  readonly entryId: McpDirectConfigEntryId
+  readonly serverName: string
+  readonly restartRequired: false
+}>
+
+/** Delete response for one direct MCP configuration entry. */
+export type McpDirectConfigDeleteResult = McpMarketResult<{
+  readonly entryId: McpDirectConfigEntryId
+  readonly restartRequired: false
+}>
 
 /** Uploaded MCP ZIP and explicit replacement intent. */
 export interface McpMarketInstallRequest {
@@ -119,6 +181,18 @@ export type McpMarketFailure =
   | { readonly code: 'unmanaged-conflict' | 'manifest-incompatible' | 'not-found'; readonly packageId: McpMarketPackageId }
   | { readonly code: 'invalid-credential-reference'; readonly slot: string }
   | { readonly code: 'missing-credential-reference'; readonly slot: string }
+  | {
+    /** A direct-config save was refused before any mutation or mount. */
+    readonly code: 'invalid-direct-config'
+    readonly reason: string
+  }
+  | {
+    /** A server name is held by a direct entry or a managed package. */
+    readonly code: 'direct-config-conflict'
+    readonly serverName: string
+    readonly heldBy: 'direct' | 'package'
+    readonly holderId: string
+  }
 
 /** Declared business result. */
 export type McpMarketResult<Value> =

@@ -10,8 +10,13 @@ import type {} from '@deepseek-ai/dsh-mcp-client'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import { combineTrustedPublisherRecords, readTrustedPublisherFileSync } from '@deepseek-ai/dsh-marketplace-core'
 import type { McpPackageServer } from '@deepseek-ai/dsh-marketplace-core'
-import { McpMarketService } from './service.ts'
+import { asMarketResult, McpMarketService } from './service.ts'
 import type {
+  McpDirectConfigDeclaration,
+  McpDirectConfigDeleteRequest,
+  McpDirectConfigDeleteResult,
+  McpDirectConfigSaveRequest,
+  McpDirectConfigSaveResult,
   McpMarketConfigureRequest,
   McpMarketConfigureResult,
   McpMarketInstallRequest,
@@ -72,6 +77,7 @@ export class McpMarketGateway extends TypertRemoteService {
   private readonly stdioInterpreters: readonly string[]
   private activeServerNames = new Set<string>()
   private disposers: Array<() => Promise<void>> = []
+  private readonly directMounted = new Map<string, { readonly serverName: string; readonly dispose: () => Promise<void> }>()
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'mcpMarket')
@@ -94,6 +100,10 @@ export class McpMarketGateway extends TypertRemoteService {
       for (const dispose of this.disposers.reverse()) await dispose()
       this.disposers = []
       this.activeServerNames.clear()
+      for (const [entryId, mounted] of this.directMounted) {
+        await mounted.dispose()
+        this.directMounted.delete(entryId)
+      }
     }, 'mcp-market.activations')
   }
 
@@ -134,6 +144,70 @@ export class McpMarketGateway extends TypertRemoteService {
   @Remote('uninstall')
   uninstall(request: McpMarketUninstallRequest): Promise<McpMarketUninstallResult> {
     return this.service.uninstall(request.packageId)
+  }
+
+  /**
+   * Create or update one user-declared MCP server configuration and hot-mount
+   * it. A same-name replacement releases the namespace before the new mount
+   * (the manager rejects concurrent duplicate names); a rename mounts the new
+   * name before releasing the old one, so a failed mount leaves the previous
+   * server live and the record untouched.
+   * @param request - Server name, declaration, and local-execution confirmation.
+   * @returns Saved entry identity, or a structured marketplace failure.
+   */
+  @Remote('saveDirectConfig')
+  async saveDirectConfig(request: McpDirectConfigSaveRequest): Promise<McpDirectConfigSaveResult> {
+    try {
+      const ownMountedName = request.entryId === undefined
+        ? undefined
+        : this.directMounted.get(request.entryId)?.serverName
+      const record = await this.service.validateDirectConfig(request, ownMountedName)
+      const mounted = request.entryId === undefined ? undefined : this.directMounted.get(request.entryId)
+      if (mounted !== undefined && mounted.serverName === record.serverName) {
+        await mounted.dispose()
+        this.releaseDirectMount(mounted.serverName, request.entryId)
+      }
+      let dispose: () => Promise<void>
+      try {
+        dispose = await this.mountDirectDeclaration(record)
+      } catch (error: unknown) {
+        this.service.setDirectDiagnostic(
+          record.entryId,
+          error instanceof Error ? error.message : 'Direct MCP configuration mount failed',
+        )
+        throw error
+      }
+      this.directMounted.set(record.entryId, { serverName: record.serverName, dispose })
+      this.activeServerNames.add(record.serverName)
+      if (mounted !== undefined && mounted.serverName !== record.serverName) {
+        await mounted.dispose()
+        this.releaseDirectMount(mounted.serverName, request.entryId)
+      }
+      await this.service.persistDirectConfig(record)
+      return { ok: true, value: { entryId: record.entryId as never, serverName: record.serverName, restartRequired: false } }
+    } catch (error: unknown) {
+      return asMarketResult(error)
+    }
+  }
+
+  /**
+   * Delete one user-declared MCP server configuration and unmount it.
+   * @param request - Entry identity to remove.
+   * @returns Deletion acknowledgement, or a structured marketplace failure.
+   */
+  @Remote('deleteDirectConfig')
+  async deleteDirectConfig(request: McpDirectConfigDeleteRequest): Promise<McpDirectConfigDeleteResult> {
+    try {
+      await this.service.deleteDirectConfig(request)
+      const mounted = this.directMounted.get(request.entryId)
+      if (mounted !== undefined) {
+        await mounted.dispose()
+        this.releaseDirectMount(mounted.serverName, request.entryId)
+      }
+      return { ok: true, value: { entryId: request.entryId, restartRequired: false } }
+    } catch (error: unknown) {
+      return asMarketResult(error)
+    }
   }
 
   /**
@@ -181,6 +255,82 @@ export class McpMarketGateway extends TypertRemoteService {
         )
       }
     }
+    await this.activateDirectConfigurations()
+  }
+
+  /**
+   * Remount persisted direct configurations during fresh Host composition.
+   * A failing entry keeps its diagnostic; other entries mount independently.
+   */
+  private async activateDirectConfigurations(): Promise<void> {
+    for (const record of await this.service.directEntries()) {
+      try {
+        const dispose = await this.mountDirectDeclaration(record)
+        this.directMounted.set(record.entryId, { serverName: record.serverName, dispose })
+        this.activeServerNames.add(record.serverName)
+        this.service.setDirectDiagnostic(record.entryId)
+      } catch (error: unknown) {
+        this.service.setDirectDiagnostic(
+          record.entryId,
+          error instanceof Error ? error.message : 'Direct MCP configuration activation failed',
+        )
+      }
+    }
+  }
+
+  /**
+   * Mount one direct configuration declaration on the root context, resolving
+   * credential references for its env or header slots.
+   * @param record - Validated direct configuration record.
+   * @returns disposer releasing the mount.
+   */
+  private async mountDirectDeclaration(record: {
+    readonly entryId: string
+    readonly serverName: string
+    readonly declaration: McpDirectConfigDeclaration
+  }): Promise<() => Promise<void>> {
+    const declaration = record.declaration
+    if (declaration.transport === 'stdio') {
+      if (!this.stdioInterpreters.includes(declaration.command)) {
+        throw new Error(`stdio command "${declaration.command}" is not an allowed interpreter`)
+      }
+      const env = { ...declaration.env }
+      for (const [name, reference] of Object.entries(declaration.envCredentials)) {
+        env[name] = await this.resolveReferenceValue(reference)
+      }
+      return await this.ctx.mcpClients.mount(this.ctx.root, {
+        transport: 'stdio',
+        serverName: record.serverName,
+        command: declaration.command,
+        args: [...declaration.args],
+        env,
+        cwd: declaration.cwd,
+        toolCallTimeoutMs: 60_000,
+        failOnStartupError: false,
+      })
+    }
+    const headers = { ...declaration.headers }
+    for (const [header, reference] of Object.entries(declaration.headerCredentials)) {
+      headers[header] = await this.resolveReferenceValue(reference)
+    }
+    return await this.ctx.mcpClients.mount(this.ctx.root, {
+      transport: 'streamable-http',
+      serverName: record.serverName,
+      url: declaration.url,
+      headers,
+      toolCallTimeoutMs: 60_000,
+      failOnStartupError: false,
+    })
+  }
+
+  /**
+   * Forget one disposed direct mount and free its namespace reservation.
+   * @param serverName - Server name the mount held.
+   * @param entryId - Direct configuration entry identity.
+   */
+  private releaseDirectMount(serverName: string, entryId: string | undefined): void {
+    if (entryId !== undefined) this.directMounted.delete(entryId)
+    this.activeServerNames.delete(serverName)
   }
 
   /**
@@ -247,6 +397,15 @@ export class McpMarketGateway extends TypertRemoteService {
   private async resolveSlotValue(slot: string, references: Readonly<Record<string, string>>): Promise<string> {
     const reference = references[slot]
     if (reference === undefined) throw new Error(`credential slot "${slot}" is not configured`)
+    return await this.resolveReferenceValue(reference)
+  }
+
+  /**
+   * Resolve one credential reference to its secret value for a mount call.
+   * @param reference - Credential reference name.
+   * @returns resolved secret value; never persisted.
+   */
+  private async resolveReferenceValue(reference: string): Promise<string> {
     const resolved = await this.ctx.credentials.resolve(credentialRef(reference))
     if (resolved === undefined) throw new Error(`credential reference "${reference}" is unavailable`)
     return resolved.value
