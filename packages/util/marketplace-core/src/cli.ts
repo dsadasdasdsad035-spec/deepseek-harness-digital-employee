@@ -11,7 +11,7 @@ import type { TrustedPublisher } from './descriptors.ts'
 import { readTrustedPublisherFileSync } from './trust-file.ts'
 
 const USAGE = [
-  'Usage: dsh-market-package <source-directory> --kind tool|mcp --publisher-id <id>',
+  'Usage: dsh-market-package <source-directory> --kind tool|mcp|hook --publisher-id <id>',
   '                    (--private-key <path> | --generate-key <path>) [--output <path>]',
   '                    [--trust-file <path>]',
 ].join('\n')
@@ -89,7 +89,7 @@ function parseArguments(args: readonly string[]): ParsedArguments {
   })
   if (positionals.length !== 1) throw new Error('exactly one source directory is required')
   const source = positionals[0] as string
-  if (values.kind !== 'tool' && values.kind !== 'mcp') throw new Error('--kind must be tool or mcp')
+  if (values.kind !== 'tool' && values.kind !== 'mcp' && values.kind !== 'hook') throw new Error('--kind must be tool, mcp, or hook')
   if (typeof values['publisher-id'] !== 'string' || values['publisher-id'] === '') {
     throw new Error('--publisher-id is required')
   }

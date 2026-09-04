@@ -4,6 +4,8 @@ import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type {
   ClientRemote,
+  HookMarketEntry,
+  HookMarketPackageId,
   McpDirectConfigSaveRequest,
   McpMarketEntry,
   McpMarketPackageId,
@@ -574,6 +576,241 @@ function failPackageStore<State extends {
     state.error = error
   })
 }
+
+/* oxlint-disable sonarjs/no-identical-functions -- The hook store mirrors the Tool and MCP stores by design. */
+
+/** Hook marketplace browser snapshot. */
+export interface HookMarketState {
+  status: Status
+  entries: readonly HookMarketEntry[]
+  query: string
+  busy: boolean
+  error: MarketPackageFailure | null
+  restartNotice: HookMarketPackageId | null
+  pendingUpgrade: PendingUpgrade<HookMarketPackageId> | null
+  pendingLocalExecution: PendingLocalExecution | null
+  /** Set once the user confirmed the pending package's local-execution disclosure. */
+  localExecutionConfirmed: boolean
+  pendingUninstall: HookMarketPackageId | null
+  credentialReferences: Readonly<Record<string, Readonly<Record<string, string>>>>
+}
+
+const HOOK_INITIAL: HookMarketState = {
+  status: 'idle',
+  entries: [],
+  query: '',
+  busy: false,
+  error: null,
+  restartNotice: null,
+  pendingUpgrade: null,
+  pendingLocalExecution: null,
+  localExecutionConfirmed: false,
+  pendingUninstall: null,
+  credentialReferences: {},
+}
+
+/**
+ * Filter hook packages by user-visible metadata.
+ * @param entries - Marketplace entries to search.
+ * @param query - Case-insensitive search text.
+ * @returns Entries whose identifiers, display metadata, or hook bindings match.
+ */
+export function filterHookPackages(
+  entries: readonly HookMarketEntry[],
+  query: string,
+): readonly HookMarketEntry[] {
+  const needle = query.trim().toLocaleLowerCase()
+  if (needle === '') return entries
+  return entries.filter(entry => [
+    entry.packageId,
+    entry.displayName,
+    entry.description,
+    entry.publisherId,
+    ...entry.permissions,
+    ...entry.hooks.flatMap(hook => [hook.id, hook.event, hook.matcher ?? '']),
+  ].some(value => value.toLocaleLowerCase().includes(needle)))
+}
+
+/** Hook package lifecycle and credential-reference controller. */
+export class HookMarketStore {
+  /** Observable hook marketplace state. */
+  readonly store: SnapshotStore<HookMarketState> = createSnapshotStore(HOOK_INITIAL)
+
+  constructor(private readonly remote: ClientRemote['hookMarket']) {}
+
+  /** Refresh managed hook packages and their credential-reference state. */
+  async load(): Promise<void> {
+    this.store.update((state) => { state.status = 'loading'; state.error = null })
+    try {
+      const transport = await this.remote.list()
+      if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+      const entries = transport.value.value.entries
+      this.store.update((state) => {
+        state.status = 'ready'
+        state.entries = entries
+        state.credentialReferences = Object.fromEntries(entries.map(entry => [
+          entry.packageId,
+          Object.fromEntries(entry.credentialRequirements.flatMap(requirement =>
+            requirement.reference === undefined ? [] : [[requirement.slot, requirement.reference]])),
+        ]))
+      })
+    } catch {
+      this.fail('operation-failed')
+    }
+  }
+
+  /**
+   * Change the local hook search query.
+   * @param query - Search text to retain in browser state.
+   */
+  setQuery(query: string): void {
+    this.store.update((state) => { state.query = query })
+  }
+
+  /**
+   * Update one unsaved credential reference.
+   * @param packageId - Managed hook package identity.
+   * @param slot - Descriptor-declared credential slot.
+   * @param reference - Credential reference name, never a resolved value.
+   */
+  setCredentialReference(packageId: HookMarketPackageId, slot: string, reference: string): void {
+    this.store.update((state) => {
+      state.credentialReferences = {
+        ...state.credentialReferences,
+        [packageId]: {
+          ...state.credentialReferences[packageId],
+          [slot]: reference,
+        },
+      }
+    })
+  }
+
+  /**
+   * Persist credential references for one managed hook package.
+   * @param packageId - Managed hook package identity.
+   * @param credentialReferences - Descriptor slot to credential reference mapping.
+   */
+  async configure(
+    packageId: HookMarketPackageId,
+    credentialReferences = this.store.getSnapshot().credentialReferences[packageId] ?? {},
+  ): Promise<void> {
+    this.store.update((state) => { state.busy = true; state.error = null })
+    const transport = await this.remote.configure({ packageId, credentialReferences })
+    if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+    const savedReferences = transport.value.value.credentialReferences
+    this.store.update((state) => {
+      state.busy = false
+      state.restartNotice = packageId
+      state.credentialReferences = {
+        ...state.credentialReferences,
+        [packageId]: savedReferences,
+      }
+    })
+    await this.load()
+  }
+
+  /**
+   * Validate and submit one hook ZIP for installation.
+   * @param file - Browser-selected ZIP archive.
+   */
+  async upload(file: File): Promise<void> {
+    await uploadPackage(file, error => this.fail(error), (...args) => this.install(...args))
+  }
+
+  /** Confirm the pending managed hook replacement, if any. */
+  async confirmUpgrade(): Promise<void> {
+    const snapshot = this.store.getSnapshot()
+    const pending = snapshot.pendingUpgrade
+    if (pending === null) return
+    await this.install(pending.filename, pending.archiveBase64, true, snapshot.localExecutionConfirmed)
+  }
+
+  /** Confirm the pending hook package after its local-execution disclosure. */
+  async confirmLocalExecution(): Promise<void> {
+    const pending = this.store.getSnapshot().pendingLocalExecution
+    if (pending === null) return
+    this.store.update((state) => { state.localExecutionConfirmed = true })
+    await this.install(pending.filename, pending.archiveBase64, false, true)
+  }
+
+  /**
+   * Open uninstall confirmation for one hook package.
+   * @param packageId - Managed package to remove.
+   */
+  requestUninstall(packageId: HookMarketPackageId): void {
+    this.store.update((state) => { state.pendingUninstall = packageId })
+  }
+
+  /** Clear pending upgrade and uninstall confirmations. */
+  // oxlint-disable-next-line sonarjs/no-identical-functions -- Package stores expose symmetric lifecycle APIs.
+  cancelConfirmation(): void {
+    cancelPackageConfirmation((mutate) => {
+      this.store.update((state) => {
+        mutate(state)
+      })
+    })
+  }
+
+  /** Remove the hook package awaiting uninstall confirmation. */
+  async confirmUninstall(): Promise<void> {
+    const packageId = this.store.getSnapshot().pendingUninstall
+    if (packageId === null) return
+    const transport = await this.remote.uninstall({ packageId })
+    if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+    this.store.update((state) => {
+      state.pendingUninstall = null
+      state.restartNotice = packageId
+    })
+    await this.load()
+  }
+
+  private async install(
+    filename: string,
+    archiveBase64: string,
+    replaceExisting: boolean,
+    confirmLocalExecution = false,
+  ): Promise<void> {
+    await installPackage({
+      filename,
+      archiveBase64,
+      replaceExisting,
+      confirmLocalExecution,
+      start: () => {
+        this.store.update((state) => { state.busy = true; state.error = null })
+      },
+      remote: () => this.remote.install({ filename, archiveBase64, replaceExisting, confirmLocalExecution }),
+      pending: (packageId) => {
+        this.store.update((state) => {
+          state.busy = false
+          state.pendingUpgrade = { filename, archiveBase64, packageId }
+        })
+      },
+      pendingLocalExecution: (candidatePermissions) => {
+        this.store.update((state) => {
+          state.busy = false
+          state.pendingLocalExecution = { filename, archiveBase64, candidatePermissions }
+        })
+      },
+      installed: (packageId) => {
+        this.store.update((state) => {
+          state.busy = false
+          state.pendingUpgrade = null
+          state.pendingLocalExecution = null
+          state.localExecutionConfirmed = false
+          state.restartNotice = packageId
+        })
+      },
+      fail: error => this.fail(error),
+      load: () => this.load(),
+    })
+  }
+
+  private fail(error: MarketPackageFailure | string): void {
+    failPackageStore(typeof error === 'string' ? { code: error } : error, mutate => this.store.update(mutate))
+  }
+}
+
+/* oxlint-enable sonarjs/no-identical-functions */
 
 function failureCode(value: unknown): MarketPackageFailure {
   if (typeof value !== 'object' || value === null) return { code: 'operation-failed' }

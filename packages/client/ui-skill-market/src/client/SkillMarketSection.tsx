@@ -7,14 +7,14 @@ import {
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
 import type {
-  McpMarketEntry, McpMarketPackageId, SkillMarketEntry, SkillMarketSkillId,
-  ToolMarketEntry, ToolMarketPackageId,
+  HookMarketEntry, HookMarketPackageId, McpMarketEntry, McpMarketPackageId,
+  SkillMarketEntry, SkillMarketSkillId, ToolMarketEntry, ToolMarketPackageId,
 } from '@deepseek-ai/dsh-api-remotes/client'
 import { filterSkills, MAX_UPLOAD_BYTES } from './store.ts'
 import type { SkillMarketStore } from './store.ts'
 import {
-  filterMcpPackages, filterToolPackages, type MarketPackageFailure,
-  type McpMarketStore, type ToolMarketStore,
+  filterHookPackages, filterMcpPackages, filterToolPackages, type MarketPackageFailure,
+  type HookMarketStore, type McpMarketStore, type ToolMarketStore,
 } from './package-stores.ts'
 import type { SkillMarketKey } from './locales.ts'
 import css from './SkillMarketSection.module.css'
@@ -23,10 +23,12 @@ export interface SkillMarketSectionInjected {
   controller: SkillMarketStore
   toolController: ToolMarketStore
   mcpController: McpMarketStore
+  hookController: HookMarketStore
   hooks: {
     snapshot: SkillMarketStore['store']
     toolSnapshot: ToolMarketStore['store']
     mcpSnapshot: McpMarketStore['store']
+    hookSnapshot: HookMarketStore['store']
   }
   t: (key: SkillMarketKey) => string
 }
@@ -43,6 +45,8 @@ export const TOOL_TEMPLATE_ARCHIVE_URL = '/tool-market-template.zip'
 export const TOOL_TEMPLATE_ARCHIVE_FILENAME = 'tool-market-template.zip'
 export const MCP_TEMPLATE_ARCHIVE_URL = '/mcp-market-template.zip'
 export const MCP_TEMPLATE_ARCHIVE_FILENAME = 'mcp-market-template.zip'
+export const HOOK_TEMPLATE_ARCHIVE_URL = '/hook-market-template.zip'
+export const HOOK_TEMPLATE_ARCHIVE_FILENAME = 'hook-market-template.zip'
 
 interface UploaderProps {
   readonly id: string
@@ -174,28 +178,32 @@ function SkillCard({ skill, banner, bannerFailed, busy, t, loadBanner, uninstall
 
 export function SkillMarketSection(props: SkillMarketSectionProps): ReactNode {
   const {
-    controller, toolController, mcpController,
-    useSnapshot, useToolSnapshot, useMcpSnapshot, t,
+    controller, toolController, mcpController, hookController,
+    useSnapshot, useToolSnapshot, useMcpSnapshot, useHookSnapshot, t,
   } = props
   if (
     controller === undefined || toolController === undefined || mcpController === undefined
+    || hookController === undefined
     || useSnapshot === undefined || useToolSnapshot === undefined || useMcpSnapshot === undefined
+    || useHookSnapshot === undefined
     || t === undefined
   ) return null
   return <Loaded injected={{
     controller,
     toolController,
     mcpController,
+    hookController,
     useSnapshot,
     useToolSnapshot,
     useMcpSnapshot,
+    useHookSnapshot,
     t,
   }} />
 }
 
 function Loaded({ injected }: { injected: SkillMarketFace }): ReactNode {
   const { t } = injected
-  const [tab, setTab] = useState<'skill' | 'tool' | 'mcp'>('skill')
+  const [tab, setTab] = useState<'skill' | 'tool' | 'mcp' | 'hooks'>('skill')
   return (
     <section className={css.section} aria-labelledby="marketplace-title">
       <header className={css.header}>
@@ -209,6 +217,7 @@ function Loaded({ injected }: { injected: SkillMarketFace }): ReactNode {
           ['skill', 'skillTab'],
           ['tool', 'toolTab'],
           ['mcp', 'mcpTab'],
+          ['hooks', 'hooksTab'],
         ] as const).map(([id, label]) => (
           <button
             key={id}
@@ -225,6 +234,7 @@ function Loaded({ injected }: { injected: SkillMarketFace }): ReactNode {
       {tab === 'skill' ? <SkillPanel injected={injected} /> : null}
       {tab === 'tool' ? <ToolPanel injected={injected} /> : null}
       {tab === 'mcp' ? <McpPanel injected={injected} /> : null}
+      {tab === 'hooks' ? <HookPanel injected={injected} /> : null}
     </section>
   )
 }
@@ -913,6 +923,152 @@ function McpPanel({ injected: {
         t={t}
       />
     </div>
+  )
+}
+
+function HookPanel({ injected: {
+  hookController: controller, useHookSnapshot: useSnapshot, t,
+} }: { injected: SkillMarketFace }): ReactNode {
+  const state = useSnapshot(value => value)
+  useEffect(() => {
+    if (state.status === 'idle') void controller.load()
+  }, [controller, state.status])
+  const entries = useMemo(() => filterHookPackages(state.entries, state.query), [state.entries, state.query])
+  return (
+    <div className={css.panel} role="tabpanel">
+      <p className={css.intro}>{t('hookIntro')}</p>
+      <Uploader
+        id="hook-market"
+        title={t('hookUploadTitle')}
+        uploading={state.busy}
+        error={state.error === null ? null : marketFailureText(state.error, t)}
+        t={t}
+        onPickFile={(file) => { void controller.upload(file) }}
+        templateUrl={HOOK_TEMPLATE_ARCHIVE_URL}
+        templateFilename={HOOK_TEMPLATE_ARCHIVE_FILENAME}
+        templateLabel="publisherTemplateDownload"
+      />
+      <PackageSearch
+        label={t('hookSearchLabel')}
+        placeholder={t('hookSearchPlaceholder')}
+        value={state.query}
+        onChange={(value) => { controller.setQuery(value) }}
+      />
+      <RestartNotice visible={state.restartNotice !== null} t={t} />
+      <PackageState
+        status={state.status}
+        error={state.error}
+        empty="hookEmpty"
+        emptyFiltered="hookEmptyFiltered"
+        hasEntries={state.entries.length > 0}
+        hasMatches={entries.length > 0}
+        retry={() => { void controller.load() }}
+        t={t}
+      />
+      {state.status === 'ready' && entries.length > 0 ? (
+        <ul className={css.packageCards}>
+          {entries.map(entry => (
+            <HookCard
+              key={entry.packageId}
+              entry={entry}
+              references={state.credentialReferences[entry.packageId] ?? {}}
+              busy={state.busy}
+              setReference={(slot, reference) => { controller.setCredentialReference(entry.packageId, slot, reference) }}
+              configure={() => { void controller.configure(entry.packageId) }}
+              requestUninstall={(packageId) => { controller.requestUninstall(packageId) }}
+              t={t}
+            />
+          ))}
+        </ul>
+      ) : null}
+      <PackageConfirmations
+        pendingUpgrade={state.pendingUpgrade?.packageId ?? null}
+        pendingLocalExecution={state.pendingLocalExecution?.candidatePermissions ?? null}
+        pendingUninstall={state.pendingUninstall}
+        busy={state.busy}
+        cancel={() => { controller.cancelConfirmation() }}
+        confirmUpgrade={() => { void controller.confirmUpgrade() }}
+        confirmLocalExecution={() => { void controller.confirmLocalExecution() }}
+        confirmUninstall={() => { void controller.confirmUninstall() }}
+        t={t}
+      />
+    </div>
+  )
+}
+
+function HookCard({
+  entry, references, busy, setReference, configure, requestUninstall, t,
+}: {
+  readonly entry: HookMarketEntry
+  readonly references: Readonly<Record<string, string>>
+  readonly busy: boolean
+  readonly setReference: (slot: string, reference: string) => void
+  readonly configure: () => void
+  readonly requestUninstall: (packageId: HookMarketPackageId) => void
+  readonly t: (key: SkillMarketKey) => string
+}): ReactNode {
+  return (
+    <li className={css.packageCard} data-hook-package={entry.packageId}>
+      <div className={css.packageHeading}>
+        <div>
+          <h3>{entry.displayName}</h3>
+          <p className={css.packageIdentity}>{entry.packageId} · {entry.version}</p>
+        </div>
+        <span className={css.statusBadge} data-available={entry.available}>
+          {entry.available ? t('available') : entry.configured ? t('restartRequired') : t('notConfigured')}
+        </span>
+      </div>
+      <p className={css.description}>{entry.description}</p>
+      <dl className={css.metadata}>
+        <dt>{t('publisher')}</dt><dd>{entry.publisherId}</dd>
+        <dt>{t('hookEvents')}</dt>
+        <dd>{entry.hooks.map(hook =>
+          `${hook.id} (${hook.event}${hook.matcher === undefined ? '' : `: ${hook.matcher}`}) ${hook.invocable ? t('invocable') : t('passive')}`).join(', ')}</dd>
+        {entry.permissions.length === 0 ? null : (
+          <>
+            <dt>{t('permissions')}</dt>
+            <dd className={css.tags}>
+              {entry.permissions.map(permission => <span className={css.permission} key={permission}>{permission}</span>)}
+            </dd>
+          </>
+        )}
+      </dl>
+      {entry.diagnostic === undefined ? null : (
+        <p className={css.diagnostic} role="status">{t('diagnostic')}: {entry.diagnostic}</p>
+      )}
+      {entry.credentialRequirements.length === 0 ? null : (
+        <fieldset className={css.credentials}>
+          <legend>{t('credentialReferences')}</legend>
+          {entry.credentialRequirements.map(requirement => (
+            <label key={requirement.slot}>
+              <span>{requirement.slot}</span>
+              <input
+                type="text"
+                autoComplete="off"
+                aria-label={`${t('credentialReferenceLabel')}: ${requirement.slot}`}
+                placeholder={t('credentialReferencePlaceholder')}
+                value={references[requirement.slot] ?? ''}
+                onChange={(event) => { setReference(requirement.slot, event.target.value) }}
+              />
+              {requirement.source === undefined ? null : <small>{requirement.source}</small>}
+            </label>
+          ))}
+          <Button size="sm" disabled={busy} onClick={configure}>
+            {busy ? t('savingReferences') : t('saveReferences')}
+          </Button>
+        </fieldset>
+      )}
+      <button
+        type="button"
+        className={css.iconButton}
+        aria-label={`${t('uninstall')}: ${entry.displayName}`}
+        title={t('uninstall')}
+        disabled={busy}
+        onClick={() => { requestUninstall(entry.packageId) }}
+      >
+        <IconTrashOutline16 size={16} />
+      </button>
+    </li>
   )
 }
 

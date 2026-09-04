@@ -12,7 +12,7 @@ import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import { SkillMarketSection } from './SkillMarketSection.tsx'
 import type { SkillMarketSectionInjected } from './SkillMarketSection.tsx'
 import { SkillMarketStore } from './store.ts'
-import { McpMarketStore, ToolMarketStore } from './package-stores.ts'
+import { HookMarketStore, McpMarketStore, ToolMarketStore } from './package-stores.ts'
 import { en, zh, type SkillMarketKey } from './locales.ts'
 
 export type { SkillMarketSectionInjected, SkillMarketSectionProps } from './SkillMarketSection.tsx'
@@ -23,10 +23,12 @@ export {
   arrayBufferToBase64, bannerDataUrl, filterSkills, keyForFailure,
   MAX_UPLOAD_BYTES, SkillMarketStore, validateUploadFile,
 } from './store.ts'
+export { HOOK_TEMPLATE_ARCHIVE_FILENAME, HOOK_TEMPLATE_ARCHIVE_URL } from './SkillMarketSection.tsx'
 export {
-  filterMcpPackages, filterToolPackages, McpMarketStore, ToolMarketStore,
+  filterHookPackages, filterMcpPackages, filterToolPackages,
+  HookMarketStore, McpMarketStore, ToolMarketStore,
 } from './package-stores.ts'
-export type { McpMarketState, ToolMarketState } from './package-stores.ts'
+export type { HookMarketState, McpMarketState, ToolMarketState } from './package-stores.ts'
 export type { SkillMarketKey } from './locales.ts'
 export { TEMPLATE_ARCHIVE_FILENAME, TEMPLATE_ARCHIVE_URL } from './SkillMarketSection.tsx'
 
@@ -41,7 +43,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 export const NS = 'settings.skill-market'
 export const inject = [
   'slots', 'locale', 'remote',
-  'remote.skillMarket', 'remote.toolMarket', 'remote.mcpMarket',
+  'remote.skillMarket', 'remote.toolMarket', 'remote.mcpMarket', 'remote.hookMarket',
 ]
 
 /**
@@ -55,16 +57,19 @@ export function apply(ctx: ClientContext): void {
   const controller = new SkillMarketStore(ctx.remote.skillMarket)
   const toolController = new ToolMarketStore(ctx.remote.toolMarket)
   const mcpController = new McpMarketStore(ctx.remote.mcpMarket)
+  const hookController = new HookMarketStore(ctx.remote.hookMarket)
   ctx.effect(() => () => { controller.dispose() }, 'ui-skill-market: release controller data')
   const t = ctx.locale.bind(NS) as SkillMarketSectionInjected['t']
   const injected = (): SkillMarketSectionInjected => ({
     controller,
     toolController,
     mcpController,
+    hookController,
     hooks: {
       snapshot: controller.store,
       toolSnapshot: toolController.store,
       mcpSnapshot: mcpController.store,
+      hookSnapshot: hookController.store,
     },
     t,
   })

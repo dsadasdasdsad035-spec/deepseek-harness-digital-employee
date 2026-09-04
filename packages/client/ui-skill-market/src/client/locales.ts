@@ -26,6 +26,9 @@ export type SkillMarketKey =
   | 'errorInvalidSignature' | 'errorInvalidCredentialReference' | 'errorMissingCredentialReference'
   | 'localExecutionTitle' | 'localExecutionDescription' | 'localExecutionDisclosure'
   | 'localExecutionConfirm'
+  | 'hooksTab' | 'hookUploadTitle' | 'hookSearchLabel' | 'hookSearchPlaceholder'
+  | 'hookEmpty' | 'hookEmptyFiltered' | 'hookEvents' | 'invocable' | 'passive'
+  | 'hookIntro'
   | 'mcpDirectTitle' | 'mcpDirectIntro' | 'mcpDirectServerName' | 'mcpDirectTransportHttp'
   | 'mcpDirectTransportStdio' | 'mcpDirectUrl' | 'mcpDirectHeaders' | 'mcpDirectHeaderCredentials'
   | 'mcpDirectCommand' | 'mcpDirectArgs' | 'mcpDirectEnv' | 'mcpDirectEnvCredentials'
@@ -129,6 +132,16 @@ export const en: Record<SkillMarketKey, string> = {
   errorInvalidSignature: 'The package signature from "{publisherId}" is invalid.',
   errorInvalidCredentialReference: 'Enter a valid credential reference name, not a secret value.',
   errorMissingCredentialReference: 'Every required credential slot needs a reference.',
+  hookIntro: 'Install hook packages that run shell commands at agent lifecycle points. Hooks execute local code and ask for confirmation before installation.',
+  hooksTab: 'Hooks',
+  hookUploadTitle: 'Upload a hook package',
+  hookSearchLabel: 'Search installed hook packages',
+  hookSearchPlaceholder: 'Search by package, publisher, or event',
+  hookEmpty: 'No marketplace-managed hook packages are installed.',
+  hookEmptyFiltered: 'No installed hook packages match this search.',
+  hookEvents: 'Events',
+  invocable: 'Chat-triggerable',
+  passive: 'Passive',
   localExecutionTitle: 'This package runs local code',
   localExecutionDescription: 'The package declares stdio servers that this Host runs as local subprocesses.',
   localExecutionDisclosure: 'Disclosed permissions',
@@ -252,6 +265,16 @@ export const zh: Record<SkillMarketKey, string> = {
   errorInvalidSignature: '来自“{publisherId}”的包签名无效。',
   errorInvalidCredentialReference: '请输入有效的凭据引用名称，不要输入真实密钥。',
   errorMissingCredentialReference: '每个必填凭据槽都需要引用。',
+  hookIntro: '安装钩子包，在代理生命周期点运行 shell 命令。钩子会执行本地代码，安装前需确认。',
+  hooksTab: '钩子',
+  hookUploadTitle: '上传钩子包',
+  hookSearchLabel: '搜索已安装钩子包',
+  hookSearchPlaceholder: '按包、发布者或事件搜索',
+  hookEmpty: '尚未安装由市场管理的钩子包。',
+  hookEmptyFiltered: '没有已安装钩子包匹配当前搜索。',
+  hookEvents: '事件',
+  invocable: '可聊天触发',
+  passive: '被动',
   localExecutionTitle: '此包将运行本地代码',
   localExecutionDescription: '该包声明了 stdio 服务，Host 会以本地子进程方式运行。',
   localExecutionDisclosure: '已披露权限',

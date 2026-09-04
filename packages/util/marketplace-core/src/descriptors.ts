@@ -68,6 +68,26 @@ const mcpStdioServerSchema = z.object({
   credentialReferences: z.record(z.string(), reference).default({}),
 }).strict()
 
+/** Interception events a hook entry may bind; kept aligned with the bridge surface. */
+export const HOOK_EVENTS = ['UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SessionStart'] as const
+/** One interception event a hook entry may bind. */
+export type HookEvent = typeof HOOK_EVENTS[number]
+const hookEvent = z.enum(HOOK_EVENTS)
+const hookMatcher = z.string().max(256)
+
+/** One shell-hook entry bound to one interception event. */
+const hookEntrySchema = z.object({
+  id: identifier,
+  event: hookEvent,
+  matcher: hookMatcher.optional(),
+  command: bareCommand,
+  args: z.array(stdioArgument).min(1).max(64),
+  env: z.record(z.string(), z.string()).default({}),
+  credentialReferences: z.record(z.string(), reference).default({}),
+  timeoutSec: z.number().min(1).max(3600).optional(),
+  invocable: z.boolean().optional(),
+}).strict()
+
 /** Parsed declarative or stdio MCP package metadata without any credential values. */
 export const mcpPackageDescriptorSchema = base.extend({
   kind: z.literal('mcp'),
@@ -76,14 +96,25 @@ export const mcpPackageDescriptorSchema = base.extend({
     .min(1).max(32),
 }).strict()
 
+/** Parsed shell-hook package metadata without any credential values. */
+export const hookPackageDescriptorSchema = base.extend({
+  kind: z.literal('hook'),
+  permissions: z.array(permissionName).max(16).default([]),
+  hooks: z.array(hookEntrySchema).min(1).max(32),
+}).strict()
+
 /** Validated executable Tool package descriptor. */
 export type ToolPackageDescriptor = z.infer<typeof toolPackageDescriptorSchema>
 /** Validated credential-free MCP descriptor. */
 export type McpPackageDescriptor = z.infer<typeof mcpPackageDescriptorSchema>
 /** One declared MCP server: Streamable HTTP or stdio. */
 export type McpPackageServer = McpPackageDescriptor['servers'][number]
+/** Validated credential-free shell-hook descriptor. */
+export type HookPackageDescriptor = z.infer<typeof hookPackageDescriptorSchema>
+/** One declared shell-hook entry bound to an interception event. */
+export type HookPackageEntry = HookPackageDescriptor['hooks'][number]
 /** Descriptor accepted by shared signature and file-table operations. */
-export type MarketplacePackageDescriptor = ToolPackageDescriptor | McpPackageDescriptor
+export type MarketplacePackageDescriptor = ToolPackageDescriptor | McpPackageDescriptor | HookPackageDescriptor
 
 /** One locally trusted publisher key configured by the Host administrator. */
 export interface TrustedPublisher {
@@ -150,6 +181,45 @@ function withImpliedPermissions(descriptor: McpPackageDescriptor): McpPackageDes
 }
 
 /**
+ * Parse one credential-free hook descriptor.
+ *
+ * Cross-field rules: an environment slot backed by a credential reference must
+ * carry an empty fixed value; every `SessionStart` entry drops its matcher
+ * field (the point has no query subject) and every other entry must declare a
+ * non-empty matcher so an always-on hook cannot ship silently; any hook entry
+ * implies the `subprocess` permission in the returned disclosure.
+ * @param value - Parsed JSON value.
+ * @returns Validated hook descriptor with effective permissions.
+ */
+export function parseHookPackageDescriptor(value: unknown): HookPackageDescriptor {
+  const descriptor = hookPackageDescriptorSchema.parse(value)
+  for (const hook of descriptor.hooks) {
+    for (const [name, fixed] of Object.entries(hook.env)) {
+      if (hook.credentialReferences[name] !== undefined && fixed !== '') {
+        throw new Error(`Hook environment variable "${name}" must not contain a credential value`)
+      }
+    }
+  }
+  type HookEntry = HookPackageDescriptor['hooks'][number]
+  const validated: HookEntry[] = descriptor.hooks.map((hook): HookEntry => {
+    if (hook.event === 'SessionStart') return hook
+    if ((hook.matcher ?? '').trim() === '') throw new Error(`Hook "${hook.id}" must declare a non-empty matcher`)
+    return hook
+  })
+  return withHookImpliedPermissions({ ...descriptor, hooks: validated })
+}
+
+/**
+ * Add the disclosure every hook package carries regardless of declaration.
+ * @param descriptor - Schema-validated hook descriptor.
+ * @returns Descriptor with `subprocess` present.
+ */
+function withHookImpliedPermissions(descriptor: HookPackageDescriptor): HookPackageDescriptor {
+  if (descriptor.permissions.includes('subprocess')) return descriptor
+  return { ...descriptor, permissions: [...descriptor.permissions, 'subprocess'] }
+}
+
+/**
  * Serialize the immutable descriptor fields covered by the detached publisher signature.
  * @param descriptor - Parsed package descriptor.
  * @returns UTF-8 canonical JSON bytes with the signature field omitted.
@@ -167,7 +237,7 @@ export function descriptorSignaturePayload(descriptor: MarketplacePackageDescrip
  */
 export function preparePackageArchive(
   archive: InspectedArchive,
-  descriptorFilename: 'tool-package.json' | 'mcp-package.json',
+  descriptorFilename: 'tool-package.json' | 'mcp-package.json' | 'hook-package.json',
 ): InspectedArchive {
   const seen = new Set<string>()
   const entries: InspectedArchiveEntry[] = archive.entries.map((entry) => {
@@ -205,7 +275,8 @@ export function verifyPackageFileHashes(
   const actual = archive.entries.filter(entry =>
     entry.kind === 'regular'
     && entry.name !== 'tool-package.json'
-    && entry.name !== 'mcp-package.json')
+    && entry.name !== 'mcp-package.json'
+    && entry.name !== 'hook-package.json')
   const actualNames = new Set(actual.map(entry => entry.name))
   for (const entry of actual) {
     const expected = files[entry.name]

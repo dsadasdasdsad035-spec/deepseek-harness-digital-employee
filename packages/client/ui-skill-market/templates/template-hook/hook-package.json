@@ -1,0 +1,29 @@
+{
+  "format": 1,
+  "kind": "hook",
+  "id": "hook-market-template",
+  "version": "1.0.0",
+  "display": {
+    "name": "Hook market template",
+    "description": "Publisher template for marketplace hook packages."
+  },
+  "publisher": {
+    "id": "replace-with-publisher-id",
+    "signature": "REPLACE_WITH_ED25519_SIGNATURE_BASE64"
+  },
+  "files": {
+    "README.md": "GENERATED_SHA256",
+    "hooks/echo.js": "GENERATED_SHA256"
+  },
+  "hooks": [
+    {
+      "id": "echo-hook",
+      "event": "UserPromptSubmit",
+      "matcher": "test-hook",
+      "command": "node",
+      "args": ["hooks/echo.js"],
+      "env": {},
+      "invocable": true
+    }
+  ]
+}

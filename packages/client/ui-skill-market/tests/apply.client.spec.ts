@@ -27,10 +27,12 @@ async function bench() {
   }
   const toolMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
   const mcpMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
-  ctx.provide('remote', { skillMarket, toolMarket, mcpMarket } as never)
+  const hookMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
+  ctx.provide('remote', { skillMarket, toolMarket, mcpMarket, hookMarket } as never)
   ctx.provide('remote.skillMarket', skillMarket as never)
   ctx.provide('remote.toolMarket', toolMarket as never)
   ctx.provide('remote.mcpMarket', mcpMarket as never)
+  ctx.provide('remote.hookMarket', hookMarket as never)
   return { ctx, slots: ctx.get('slots') as SlotRegistry, locale }
 }
 
@@ -47,7 +49,7 @@ describe('ui-skill-market apply', () => {
   it('declares the services it uses', () => {
     expect(inject).toEqual([
       'slots', 'locale', 'remote',
-      'remote.skillMarket', 'remote.toolMarket', 'remote.mcpMarket',
+      'remote.skillMarket', 'remote.toolMarket', 'remote.mcpMarket', 'remote.hookMarket',
     ])
   })
 

@@ -23,6 +23,7 @@ export const TEMPLATE_ARCHIVE_PATH = join(
 /** Checked-in Tool and MCP publisher template assets. */
 export const TOOL_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'tool-market-template.zip')
 export const MCP_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'mcp-market-template.zip')
+export const HOOK_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'hook-market-template.zip')
 
 const TEMPLATE_SOURCE_PATHS = [
   'README.md',
@@ -185,7 +186,7 @@ export async function generateTemplateArchive(
 
 async function generatePackageTemplate(
   sourceDirectory: string,
-  descriptorName: 'tool-package.json' | 'mcp-package.json',
+  descriptorName: 'tool-package.json' | 'mcp-package.json' | 'hook-package.json',
   outputPath: string,
 ): Promise<Buffer> {
   const descriptor = JSON.parse(await readFile(join(sourceDirectory, descriptorName), 'utf8')) as {
@@ -202,6 +203,10 @@ async function generatePackageTemplate(
     const entry = await readFile(join(sourceDirectory, 'plugin/index.js'))
     descriptor.files['plugin/index.js'] = createHash('sha256').update(entry).digest('hex')
     archiveInput['plugin/index.js'] = [entry, { mtime: FIXED_MODIFICATION_TIME }]
+  } else if (descriptorName === 'hook-package.json') {
+    const entry = await readFile(join(sourceDirectory, 'hooks/echo.js'))
+    descriptor.files['hooks/echo.js'] = createHash('sha256').update(entry).digest('hex')
+    archiveInput['hooks/echo.js'] = [entry, { mtime: FIXED_MODIFICATION_TIME }]
   } else {
     const servers = (descriptor as { servers?: Array<{ args?: string[] }> }).servers ?? []
     const localEntries = servers.flatMap(server => server.args ?? []).filter(arg => arg.includes('/'))
@@ -234,5 +239,10 @@ export async function generateMarketplaceTemplateArchives(): Promise<void> {
     join(packageDirectory, 'templates', 'template-mcp'),
     'mcp-package.json',
     MCP_TEMPLATE_ARCHIVE_PATH,
+  )
+  await generatePackageTemplate(
+    join(packageDirectory, 'templates', 'template-hook'),
+    'hook-package.json',
+    HOOK_TEMPLATE_ARCHIVE_PATH,
   )
 }

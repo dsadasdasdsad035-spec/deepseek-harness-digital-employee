@@ -12,6 +12,7 @@ import sessionReferencesRemote from '@deepseek-ai/dsh-session-reference/remote'
 import skillMarketRemote from '@deepseek-ai/dsh-skill-market/remote'
 import toolMarketRemote from '@deepseek-ai/dsh-tool-market/remote'
 import mcpMarketRemote from '@deepseek-ai/dsh-mcp-market/remote'
+import hookMarketRemote from '@deepseek-ai/dsh-hooks-market/remote'
 import type { TypertClientRemote } from '@deepseek-ai/dsh-typert-protocol'
 
 export type { TypertClientRemote as ClientRemote } from '@deepseek-ai/dsh-typert-protocol'
@@ -26,6 +27,7 @@ export type {} from '@deepseek-ai/dsh-session-reference/remote'
 export type {} from '@deepseek-ai/dsh-skill-market/remote'
 export type {} from '@deepseek-ai/dsh-tool-market/remote'
 export type {} from '@deepseek-ai/dsh-mcp-market/remote'
+export type {} from '@deepseek-ai/dsh-hooks-market/remote'
 // The forwarded-event allowlist's selection seat: without it in the consumer's
 // compilation face `TypertRemoteEvent` is `never` and every `$on` call fails.
 export type { ApiRemoteForwardedEvent } from '../types.ts'
@@ -186,6 +188,19 @@ export type {
   McpMarketUninstallRequest,
   McpMarketUninstallResult,
 } from '@deepseek-ai/dsh-mcp-market/types'
+export type {
+  HookMarketConfigureRequest,
+  HookMarketConfigureResult,
+  HookMarketCredentialRequirement,
+  HookMarketEntry,
+  HookMarketFailure,
+  HookMarketInstallRequest,
+  HookMarketInstallResult,
+  HookMarketListResult,
+  HookMarketPackageId,
+  HookMarketUninstallRequest,
+  HookMarketUninstallResult,
+} from '@deepseek-ai/dsh-hooks-market/types'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -208,7 +223,7 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
     for (const contribution of [
       commandsRemote, goalsRemote, dynamicRemote, fileReferencesRemote,
       digitalEmployeesRemote, pluginInventoryRemote, messageFeedbackRemote,
-      sessionReferencesRemote, skillMarketRemote, toolMarketRemote, mcpMarketRemote,
+      sessionReferencesRemote, skillMarketRemote, toolMarketRemote, mcpMarketRemote, hookMarketRemote,
     ]) {
       disposers.push(await ctx.remote.$mount(contribution))
     }

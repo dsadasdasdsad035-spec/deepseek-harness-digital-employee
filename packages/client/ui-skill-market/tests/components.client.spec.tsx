@@ -15,7 +15,7 @@ import type { SkillMarketEntry, SkillMarketSkillId } from '@deepseek-ai/dsh-api-
 import { SkillMarketSection } from '../src/client/SkillMarketSection.tsx'
 import type { SkillMarketSectionInjected, SkillMarketSectionProps } from '../src/client/SkillMarketSection.tsx'
 import { SkillMarketStore } from '../src/client/store.ts'
-import { McpMarketStore, ToolMarketStore } from '../src/client/package-stores.ts'
+import { HookMarketStore, McpMarketStore, ToolMarketStore } from '../src/client/package-stores.ts'
 import type { SkillMarketRemote, SkillMarketState } from '../src/client/store.ts'
 import { en } from '../src/client/locales.ts'
 
@@ -97,14 +97,19 @@ function setup(options: SetupOptions = {}) {
     controller: store,
     toolController: toolStore,
     mcpController: mcpStore,
+    hookController: new HookMarketStore({
+      list: async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }),
+    } as never),
     hooks: {
       snapshot: store.store,
       toolSnapshot: toolStore.store,
       mcpSnapshot: mcpStore.store,
+      hookSnapshot: mcpStore.store,
     },
     useSnapshot: bindSnapshotSelector(store.store),
     useToolSnapshot: bindSnapshotSelector(toolStore.store),
     useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
+    useHookSnapshot: bindSnapshotSelector(mcpStore.store),
     t: (key: string) => en[key as keyof typeof en],
   } as unknown as SkillMarketSectionProps
   return render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
@@ -334,14 +339,23 @@ describe('SkillMarketSection', () => {
       controller: store,
       toolController: toolStore,
       mcpController: mcpStore,
+      hookController: new HookMarketStore({
+        list: async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }),
+        saveDirectConfig: vi.fn(async () => ({
+          ok: true as const,
+          value: { ok: true as const, value: { entryId: 'entry-1', serverName: 'x', restartRequired: false as const } },
+        })),
+      } as never),
       hooks: {
         snapshot: store.store,
         toolSnapshot: toolStore.store,
         mcpSnapshot: mcpStore.store,
+        hookSnapshot: mcpStore.store,
       },
       useSnapshot: bindSnapshotSelector(store.store),
       useToolSnapshot: bindSnapshotSelector(toolStore.store),
       useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
+      useHookSnapshot: bindSnapshotSelector(mcpStore.store),
       t: (key: string) => en[key as keyof typeof en],
     } as unknown as SkillMarketSectionProps
     render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
@@ -374,14 +388,23 @@ describe('SkillMarketSection', () => {
       controller: store,
       toolController: toolStore,
       mcpController: mcpStore,
+      hookController: new HookMarketStore({
+        list: async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }),
+        saveDirectConfig: vi.fn(async () => ({
+          ok: true as const,
+          value: { ok: true as const, value: { entryId: 'entry-1', serverName: 'x', restartRequired: false as const } },
+        })),
+      } as never),
       hooks: {
         snapshot: store.store,
         toolSnapshot: toolStore.store,
         mcpSnapshot: mcpStore.store,
+        hookSnapshot: mcpStore.store,
       },
       useSnapshot: bindSnapshotSelector(store.store),
       useToolSnapshot: bindSnapshotSelector(toolStore.store),
       useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
+      useHookSnapshot: bindSnapshotSelector(mcpStore.store),
       t: (key: string) => en[key as keyof typeof en],
     } as unknown as SkillMarketSectionProps
     render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
@@ -427,14 +450,23 @@ describe('SkillMarketSection', () => {
       controller: store,
       toolController: toolStore,
       mcpController: mcpStore,
+      hookController: new HookMarketStore({
+        list: async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }),
+        saveDirectConfig: vi.fn(async () => ({
+          ok: true as const,
+          value: { ok: true as const, value: { entryId: 'entry-1', serverName: 'x', restartRequired: false as const } },
+        })),
+      } as never),
       hooks: {
         snapshot: store.store,
         toolSnapshot: toolStore.store,
         mcpSnapshot: mcpStore.store,
+        hookSnapshot: mcpStore.store,
       },
       useSnapshot: bindSnapshotSelector(store.store),
       useToolSnapshot: bindSnapshotSelector(toolStore.store),
       useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
+      useHookSnapshot: bindSnapshotSelector(mcpStore.store),
       t: (key: string) => en[key as keyof typeof en],
     } as unknown as SkillMarketSectionProps
     render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)

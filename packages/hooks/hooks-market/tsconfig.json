@@ -1,0 +1,17 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "lib/types" },
+  "include": ["src"],
+  "references": [
+    { "path": "../../../vendor/cordis" },
+    { "path": "../../util/atomic-write" },
+    { "path": "../../util/brand" },
+    { "path": "../../credentials/credentials" },
+    { "path": "../../runtime-diagnostics/invariants" },
+    { "path": "../../util/marketplace-core" },
+    { "path": "../hook-protocol" },
+    { "path": "../../shell/shell" },
+    { "path": "../../core/tools" },
+    { "path": "../../typert/protocol" }
+  ]
+}

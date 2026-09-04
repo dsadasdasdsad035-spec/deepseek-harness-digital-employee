@@ -8,6 +8,7 @@ import { zipSync } from 'fflate'
 import { inspectZipArchive } from './archive.ts'
 import {
   descriptorSignaturePayload,
+  parseHookPackageDescriptor,
   parseMcpPackageDescriptor,
   parseToolPackageDescriptor,
   preparePackageArchive,
@@ -20,14 +21,15 @@ import type {
 } from './descriptors.ts'
 
 /** Package kinds accepted by the publisher toolchain. */
-export type MarketplacePackageKind = 'tool' | 'mcp'
+export type MarketplacePackageKind = 'tool' | 'mcp' | 'hook'
 
 /** Descriptor filename required at the root of each package kind. */
 export const PACKAGE_DESCRIPTOR_FILENAMES: Readonly<
-  Record<MarketplacePackageKind, 'tool-package.json' | 'mcp-package.json'>
+  Record<MarketplacePackageKind, 'tool-package.json' | 'mcp-package.json' | 'hook-package.json'>
 > = {
   tool: 'tool-package.json',
   mcp: 'mcp-package.json',
+  hook: 'hook-package.json',
 }
 
 /** Publisher identities derived from the shipped template placeholder. */
@@ -140,7 +142,9 @@ export async function signMarketplacePackage(
   } as unknown
   const parsed = options.kind === 'tool'
     ? parseToolPackageDescriptor(unsigned)
-    : parseMcpPackageDescriptor(unsigned)
+    : options.kind === 'mcp'
+      ? parseMcpPackageDescriptor(unsigned)
+      : parseHookPackageDescriptor(unsigned)
 
   const privateKey = createPrivateKey(options.privateKeyPem)
   if (privateKey.asymmetricKeyType !== 'ed25519') {
@@ -259,7 +263,9 @@ async function validateBuiltArchive(
   const reparsed = JSON.parse(new TextDecoder().decode(descriptorEntry.bytes)) as unknown
   const descriptor = kind === 'tool'
     ? parseToolPackageDescriptor(reparsed)
-    : parseMcpPackageDescriptor(reparsed)
+    : kind === 'mcp'
+      ? parseMcpPackageDescriptor(reparsed)
+      : parseHookPackageDescriptor(reparsed)
   verifyPackageFileHashes(prepared, descriptor.files)
   /* v8 ignore next 2 -- defensive: the signature was produced from the same bytes */
   if (!verifyPublisherSignature(descriptorSignaturePayload(descriptor), descriptor.publisher.signature, publicKeyPem)) {

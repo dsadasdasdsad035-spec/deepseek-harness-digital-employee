@@ -100,7 +100,7 @@ describe('runMarketPackageCli', () => {
 
     expect(await runMarketPackageCli([])).toMatchObject({ ok: false, message: expect.stringContaining('Usage:') })
     expect(await runMarketPackageCli(['--kind', 'tool'])).toMatchObject({ ok: false, message: expect.stringContaining('exactly one source directory') })
-    expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'plugin'])).toMatchObject({ ok: false, message: expect.stringContaining('--kind must be tool or mcp') })
+    expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'plugin'])).toMatchObject({ ok: false, message: expect.stringContaining('--kind must be tool, mcp, or hook') })
     expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'tool'])).toMatchObject({ ok: false, message: expect.stringContaining('--publisher-id is required') })
     expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'tool', '--publisher-id', 'x']))
       .toMatchObject({ ok: false, message: expect.stringContaining('one of --private-key or --generate-key') })

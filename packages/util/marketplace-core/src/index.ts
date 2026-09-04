@@ -25,14 +25,19 @@ export {
 export type { ManagedPackageManifest, ManagedPackageRead } from './managed-package.ts'
 export {
   descriptorSignaturePayload,
+  parseHookPackageDescriptor,
   parseMcpPackageDescriptor,
   parseToolPackageDescriptor,
   preparePackageArchive,
   resolveTrustedPublisher,
   verifyPackageFileHashes,
   verifyPublisherSignature,
+  HOOK_EVENTS,
 } from './descriptors.ts'
 export type {
+  HookEvent,
+  HookPackageDescriptor,
+  HookPackageEntry,
   MarketplacePackageDescriptor,
   McpPackageDescriptor,
   McpPackageServer,

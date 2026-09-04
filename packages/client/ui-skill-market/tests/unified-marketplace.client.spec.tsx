@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
 import { SkillMarketSection } from '../src/client/SkillMarketSection.tsx'
 import type { SkillMarketSectionProps } from '../src/client/SkillMarketSection.tsx'
-import { McpMarketStore, ToolMarketStore } from '../src/client/package-stores.ts'
+import { HookMarketStore, McpMarketStore, ToolMarketStore } from '../src/client/package-stores.ts'
 import { SkillMarketStore } from '../src/client/store.ts'
 import { en } from '../src/client/locales.ts'
 
@@ -65,20 +65,26 @@ function setup() {
     })),
   }
   const mcp = new McpMarketStore(mcpRemote as never)
-  const props: SkillMarketSectionProps = {
+  const hook = new HookMarketStore({
+    list: async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }),
+  } as never)
+  const props = {
     controller: skill,
     toolController: tool,
     mcpController: mcp,
+    hookController: hook,
     hooks: {
       snapshot: skill.store,
       toolSnapshot: tool.store,
       mcpSnapshot: mcp.store,
+      hookSnapshot: hook.store,
     },
     useSnapshot: bindSnapshotSelector(skill.store),
     useToolSnapshot: bindSnapshotSelector(tool.store),
     useMcpSnapshot: bindSnapshotSelector(mcp.store),
-    t: key => en[key],
-  } as SkillMarketSectionProps
+    useHookSnapshot: bindSnapshotSelector(hook.store),
+    t: (key: keyof typeof en) => en[key],
+  } as unknown as SkillMarketSectionProps
   render(<SkillMarketSection {...props} />)
   return { toolRemote, mcpRemote }
 }

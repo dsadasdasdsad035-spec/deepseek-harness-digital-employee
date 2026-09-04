@@ -141,6 +141,16 @@
         trustedPublishersFile: !!js dshHomePath('market-publishers.json')
         allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
 
+    # Signed hook packages persist credential references only; the employee
+    # composition bridge mounts bound hooks per instance.
+    - id: hooks-market
+      name: '@deepseek-ai/dsh-hooks-market'
+      config:
+        installRoot: !!js dshHomePath('hook-packages')
+        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
+        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
+        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
+
     - id: project-manager-test-template
       name: '@deepseek-ai/dsh-project-manager-test-digital-employee'
 
