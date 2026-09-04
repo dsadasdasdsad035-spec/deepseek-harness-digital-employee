@@ -175,4 +175,74 @@ describe('unified marketplace package stores', () => {
     await store.upload(new File([new Uint8Array([1])], 'bad.zip'))
     expect(store.store.getSnapshot().error).toEqual({ code: 'invalid-signature', publisherId: 'unknown' })
   })
+
+  it('holds a stdio direct-config save until local execution is confirmed, then hot-mounts it', async () => {
+    const save = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { ok: false, error: { code: 'local-execution-confirmation-required' } },
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { ok: true, value: { entryId: 'entry-1', serverName: 'local-fs', restartRequired: false } },
+      })
+    const list = vi.fn(async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }))
+    const remote = {
+      list,
+      install: vi.fn(),
+      uninstall: vi.fn(),
+      configure: vi.fn(),
+      saveDirectConfig: save,
+      deleteDirectConfig: vi.fn(),
+    }
+    const store = new McpMarketStore(remote as never)
+    const request = {
+      serverName: 'local-fs',
+      declaration: {
+        transport: 'stdio', command: 'node', args: ['server.js'],
+        env: { API_TOKEN: '' }, envCredentials: { API_TOKEN: 'LOCAL_TOKEN' }, cwd: '/tmp',
+      },
+    } as const
+    await store.saveDirectConfig(request as never)
+    expect(save.mock.calls[0]?.[0]).not.toHaveProperty('confirmLocalExecution', true)
+    expect(store.store.getSnapshot().pendingDirectLocalExecution).not.toBeNull()
+    await store.confirmDirectLocalExecution()
+    expect(save.mock.calls[1]?.[0]).toMatchObject({ confirmLocalExecution: true })
+    expect(store.store.getSnapshot().pendingDirectLocalExecution).toBeNull()
+  })
+
+  it('deletes a direct-config entry without a restart notice', async () => {
+    const deleteDirectConfig = vi.fn(async () => ({
+      ok: true, value: { ok: true, value: { entryId: 'entry-1', restartRequired: false } },
+    }))
+    const list = vi.fn(async () => ({ ok: true, value: { ok: true, value: { entries: [{
+      packageId: 'entry-1',
+      source: 'direct',
+      displayName: 'remote-notes',
+      description: 'User-declared MCP server configuration.',
+      version: '1.0.0',
+      publisherId: 'direct',
+      servers: [{ serverName: 'remote-notes', transport: 'streamable-http', available: true }],
+      permissions: [],
+      credentialRequirements: [],
+      installedAt: 1,
+      configured: true,
+      available: true,
+      restartRequired: false,
+    }] } } }))
+    const remote = {
+      list,
+      install: vi.fn(),
+      uninstall: vi.fn(),
+      configure: vi.fn(),
+      saveDirectConfig: vi.fn(),
+      deleteDirectConfig,
+    }
+    const store = new McpMarketStore(remote as never)
+    await store.load()
+    store.requestUninstall('entry-1' as never)
+    await store.confirmUninstall()
+    expect(deleteDirectConfig).toHaveBeenCalledWith({ entryId: 'entry-1' })
+    expect(store.store.getSnapshot().restartNotice).toBeNull()
+  })
 })

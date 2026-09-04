@@ -26,6 +26,12 @@ export type SkillMarketKey =
   | 'errorInvalidSignature' | 'errorInvalidCredentialReference' | 'errorMissingCredentialReference'
   | 'localExecutionTitle' | 'localExecutionDescription' | 'localExecutionDisclosure'
   | 'localExecutionConfirm'
+  | 'mcpDirectTitle' | 'mcpDirectIntro' | 'mcpDirectServerName' | 'mcpDirectTransportHttp'
+  | 'mcpDirectTransportStdio' | 'mcpDirectUrl' | 'mcpDirectHeaders' | 'mcpDirectHeaderCredentials'
+  | 'mcpDirectCommand' | 'mcpDirectArgs' | 'mcpDirectEnv' | 'mcpDirectEnvCredentials'
+  | 'mcpDirectCwd' | 'mcpDirectSave' | 'mcpDirectSaving' | 'mcpDirectEdit' | 'mcpDirectCancelEdit'
+  | 'mcpDirectOnePerLine' | 'sourceDirect'
+  | 'errorInvalidDirectConfig' | 'errorDirectConfigConflict'
 
 /** English marketplace settings dictionary. */
 export const en: Record<SkillMarketKey, string> = {
@@ -127,6 +133,27 @@ export const en: Record<SkillMarketKey, string> = {
   localExecutionDescription: 'The package declares stdio servers that this Host runs as local subprocesses.',
   localExecutionDisclosure: 'Disclosed permissions',
   localExecutionConfirm: 'Confirm and install',
+  mcpDirectTitle: 'Add an MCP server',
+  mcpDirectIntro: 'Declare an MCP server directly; it takes effect immediately without restarting the Host. stdio declarations run local code and ask for confirmation first.',
+  mcpDirectServerName: 'Server name',
+  mcpDirectTransportHttp: 'Streamable HTTP',
+  mcpDirectTransportStdio: 'Local stdio',
+  mcpDirectUrl: 'MCP endpoint URL',
+  mcpDirectHeaders: 'Headers (one "Name: value" per line)',
+  mcpDirectHeaderCredentials: 'Header credential references (one "Name: REFERENCE" per line)',
+  mcpDirectCommand: 'Interpreter command',
+  mcpDirectArgs: 'Arguments (one per line)',
+  mcpDirectEnv: 'Environment variables (one "NAME=value" per line)',
+  mcpDirectEnvCredentials: 'Environment credential references (one "NAME=REFERENCE" per line)',
+  mcpDirectCwd: 'Working directory',
+  mcpDirectSave: 'Save server',
+  mcpDirectSaving: 'Saving...',
+  mcpDirectEdit: 'Edit',
+  mcpDirectCancelEdit: 'Cancel editing',
+  mcpDirectOnePerLine: 'One entry per line',
+  sourceDirect: 'Direct',
+  errorInvalidDirectConfig: 'This server declaration is invalid. Check the name, URL, command, and paths.',
+  errorDirectConfigConflict: 'This server name is already used by another server or package.',
 }
 
 /** Simplified Chinese marketplace settings dictionary. */
@@ -229,4 +256,25 @@ export const zh: Record<SkillMarketKey, string> = {
   localExecutionDescription: '该包声明了 stdio 服务，Host 会以本地子进程方式运行。',
   localExecutionDisclosure: '已披露权限',
   localExecutionConfirm: '确认并安装',
+  mcpDirectTitle: '添加 MCP 服务',
+  mcpDirectIntro: '直接声明一个 MCP 服务，保存后立即生效，无需重启 Host。stdio 声明会运行本地代码，保存前需确认。',
+  mcpDirectServerName: '服务名称',
+  mcpDirectTransportHttp: 'Streamable HTTP',
+  mcpDirectTransportStdio: '本地 stdio',
+  mcpDirectUrl: 'MCP 端点 URL',
+  mcpDirectHeaders: '请求头（每行一条“名称: 值”）',
+  mcpDirectHeaderCredentials: '请求头凭据引用（每行一条“名称: 引用”）',
+  mcpDirectCommand: '解释器命令',
+  mcpDirectArgs: '参数（每行一条）',
+  mcpDirectEnv: '环境变量（每行一条“名称=值”）',
+  mcpDirectEnvCredentials: '环境变量凭据引用（每行一条“名称=引用”）',
+  mcpDirectCwd: '工作目录',
+  mcpDirectSave: '保存服务',
+  mcpDirectSaving: '正在保存...',
+  mcpDirectEdit: '编辑',
+  mcpDirectCancelEdit: '取消编辑',
+  mcpDirectOnePerLine: '每行一条',
+  sourceDirect: '直连',
+  errorInvalidDirectConfig: '服务声明无效，请检查名称、URL、命令与路径。',
+  errorDirectConfigConflict: '该服务名称已被其他服务或包占用。',
 }

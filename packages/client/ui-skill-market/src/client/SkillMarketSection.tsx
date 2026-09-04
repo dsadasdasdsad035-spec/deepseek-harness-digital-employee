@@ -388,6 +388,8 @@ function marketFailureText(error: MarketPackageFailure | null, t: (key: SkillMar
     'not-found': 'errorNotFound',
     'invalid-credential-reference': 'errorInvalidCredentialReference',
     'missing-credential-reference': 'errorMissingCredentialReference',
+    'invalid-direct-config': 'errorInvalidDirectConfig',
+    'direct-config-conflict': 'errorDirectConfigConflict',
   }
   const key = keys[error?.code ?? ''] ?? 'operationFailed'
   const text = t(key)
@@ -520,7 +522,7 @@ function ToolPanel({ injected: {
 }
 
 function McpCard({
-  entry, references, busy, setReference, configure, requestUninstall, t,
+  entry, references, busy, setReference, configure, requestUninstall, requestEdit, t,
 }: {
   readonly entry: McpMarketEntry
   readonly references: Readonly<Record<string, string>>
@@ -528,14 +530,16 @@ function McpCard({
   readonly setReference: (slot: string, reference: string) => void
   readonly configure: () => void
   readonly requestUninstall: (packageId: McpMarketPackageId) => void
+  readonly requestEdit: (entry: McpMarketEntry) => void
   readonly t: (key: SkillMarketKey) => string
 }): ReactNode {
+  const direct = entry.source === 'direct'
   return (
-    <li className={css.packageCard} data-mcp-package={entry.packageId}>
+    <li className={css.packageCard} data-mcp-package={entry.packageId} data-source={entry.source}>
       <div className={css.packageHeading}>
         <div>
           <h3>{entry.displayName}</h3>
-          <p className={css.packageIdentity}>{entry.packageId} · {entry.version}</p>
+          <p className={css.packageIdentity}>{direct ? t('sourceDirect') : entry.packageId} · {entry.version}</p>
         </div>
         <span className={css.statusBadge} data-available={entry.available}>
           {entry.available ? t('available') : entry.configured ? t('restartRequired') : t('notConfigured')}
@@ -543,7 +547,7 @@ function McpCard({
       </div>
       <p className={css.description}>{entry.description}</p>
       <dl className={css.metadata}>
-        <dt>{t('publisher')}</dt><dd>{entry.publisherId}</dd>
+        {direct ? null : (<><dt>{t('publisher')}</dt><dd>{entry.publisherId}</dd></>)}
         <dt>{t('servers')}</dt>
         <dd>{entry.servers.map(server => `${server.serverName} (${server.transport})`).join(', ')}</dd>
         {entry.permissions.length === 0 ? null : (
@@ -580,6 +584,18 @@ function McpCard({
           </Button>
         </fieldset>
       )}
+      {direct ? (
+        <button
+          type="button"
+          className={css.iconButton}
+          aria-label={`${t('mcpDirectEdit')}: ${entry.displayName}`}
+          title={t('mcpDirectEdit')}
+          disabled={busy}
+          onClick={() => { requestEdit(entry) }}
+        >
+          {t('mcpDirectEdit')}
+        </button>
+      ) : null}
       <button
         type="button"
         className={css.iconButton}
@@ -594,10 +610,237 @@ function McpCard({
   )
 }
 
+interface DirectFormState {
+  readonly entryId: string | null
+  readonly serverName: string
+  readonly transport: 'streamable-http' | 'stdio'
+  readonly url: string
+  readonly headers: string
+  readonly headerCredentials: string
+  readonly command: string
+  readonly args: string
+  readonly env: string
+  readonly envCredentials: string
+  readonly cwd: string
+}
+
+const EMPTY_DIRECT_FORM: DirectFormState = {
+  entryId: null,
+  serverName: '',
+  transport: 'streamable-http',
+  url: 'https://',
+  headers: '',
+  headerCredentials: '',
+  command: 'node',
+  args: '',
+  env: '',
+  envCredentials: '',
+  cwd: '',
+}
+
+/**
+ * Parse one "Name: value" per line textarea into a record.
+ * @param text - Raw textarea content.
+ * @returns Parsed record; lines without a separator are skipped.
+ */
+function parseColonLines(text: string): Record<string, string> {
+  return Object.fromEntries(text.split('\n').flatMap((line) => {
+    const index = line.indexOf(':')
+    if (index <= 0) return []
+    const name = line.slice(0, index).trim()
+    const value = line.slice(index + 1).trim()
+    return name === '' ? [] : [[name, value]]
+  }))
+}
+
+/**
+ * Parse one "NAME=value" per line textarea into a record.
+ * @param text - Raw textarea content.
+ * @returns Parsed record; lines without `=` are skipped.
+ */
+function parseAssignLines(text: string): Record<string, string> {
+  return Object.fromEntries(text.split('\n').flatMap((line) => {
+    const index = line.indexOf('=')
+    if (index <= 0) return []
+    const name = line.slice(0, index).trim()
+    const value = line.slice(index + 1)
+    return name === '' ? [] : [[name, value]]
+  }))
+}
+
+/**
+ * Parse one direct configuration entry into the prefilled form state.
+ * @param entry - Direct inventory entry to edit.
+ * @returns Form state carrying the entry identity for replacement.
+ */
+function directFormFromEntry(entry: McpMarketEntry): DirectFormState {
+  const declaration = entry.declaration
+  if (declaration === undefined) return EMPTY_DIRECT_FORM
+  if (declaration.transport === 'stdio') {
+    return {
+      entryId: entry.packageId,
+      serverName: entry.servers[0]?.serverName ?? '',
+      transport: 'stdio',
+      url: 'https://',
+      headers: '',
+      headerCredentials: '',
+      command: declaration.command,
+      args: declaration.args.join('\n'),
+      env: Object.entries(declaration.env).map(([name, value]) => `${name}=${value}`).join('\n'),
+      envCredentials: Object.entries(declaration.envCredentials).map(([name, ref]) => `${name}=${ref}`).join('\n'),
+      cwd: declaration.cwd,
+    }
+  }
+  return {
+    entryId: entry.packageId,
+    serverName: entry.servers[0]?.serverName ?? '',
+    transport: 'streamable-http',
+    url: declaration.url,
+    headers: Object.entries(declaration.headers).map(([name, value]) => `${name}: ${value}`).join('\n'),
+    headerCredentials: Object.entries(declaration.headerCredentials).map(([name, ref]) => `${name}: ${ref}`).join('\n'),
+    command: 'node',
+    args: '',
+    env: '',
+    envCredentials: '',
+    cwd: '',
+  }
+}
+
+function DirectConfigForm({
+  form, setForm, busy, onSave, t,
+}: {
+  readonly form: DirectFormState
+  readonly setForm: (next: DirectFormState) => void
+  readonly busy: boolean
+  readonly onSave: (request: {
+    readonly entryId?: string
+    readonly serverName: string
+    readonly declaration: unknown
+  }) => void
+  readonly t: (key: SkillMarketKey) => string
+}): ReactNode {
+  const http = form.transport === 'streamable-http'
+  const declaration = http
+    ? {
+      transport: 'streamable-http',
+      url: form.url.trim(),
+      headers: parseColonLines(form.headers),
+      headerCredentials: parseColonLines(form.headerCredentials),
+    }
+    : {
+      transport: 'stdio',
+      command: form.command.trim(),
+      args: form.args.split('\n').map(line => line.trim()).filter(line => line !== ''),
+      env: parseAssignLines(form.env),
+      envCredentials: parseAssignLines(form.envCredentials),
+      cwd: form.cwd.trim(),
+    }
+  return (
+    <section className={css.panel} aria-label={t('mcpDirectTitle')}>
+      <h2>{t('mcpDirectTitle')}</h2>
+      <p className={css.description}>{t('mcpDirectIntro')}</p>
+      <label className={css.search}>
+        <span>{t('mcpDirectServerName')}</span>
+        <input
+          type="text"
+          autoComplete="off"
+          value={form.serverName}
+          onChange={(event) => { setForm({ ...form, serverName: event.target.value }) }}
+        />
+      </label>
+      <label className={css.search}>
+        <span>{t('transport')}</span>
+        <select
+          value={form.transport}
+          onChange={(event) => { setForm({ ...form, transport: event.target.value as DirectFormState['transport'] }) }}
+        >
+          <option value="streamable-http">{t('mcpDirectTransportHttp')}</option>
+          <option value="stdio">{t('mcpDirectTransportStdio')}</option>
+        </select>
+      </label>
+      {http ? (
+        <>
+          <label className={css.search}>
+            <span>{t('mcpDirectUrl')}</span>
+            <input
+              type="text"
+              autoComplete="off"
+              value={form.url}
+              onChange={(event) => { setForm({ ...form, url: event.target.value }) }}
+            />
+          </label>
+          <label className={css.search}>
+            <span>{t('mcpDirectHeaders')}</span>
+            <textarea rows={2} value={form.headers} onChange={(event) => { setForm({ ...form, headers: event.target.value }) }} />
+          </label>
+          <label className={css.search}>
+            <span>{t('mcpDirectHeaderCredentials')}</span>
+            <textarea
+              rows={2}
+              value={form.headerCredentials}
+              onChange={(event) => { setForm({ ...form, headerCredentials: event.target.value }) }}
+            />
+          </label>
+        </>
+      ) : (
+        <>
+          <label className={css.search}>
+            <span>{t('mcpDirectCommand')}</span>
+            <input
+              type="text"
+              autoComplete="off"
+              value={form.command}
+              onChange={(event) => { setForm({ ...form, command: event.target.value }) }}
+            />
+          </label>
+          <label className={css.search}>
+            <span>{t('mcpDirectArgs')}</span>
+            <textarea rows={2} value={form.args} onChange={(event) => { setForm({ ...form, args: event.target.value }) }} />
+          </label>
+          <label className={css.search}>
+            <span>{t('mcpDirectEnv')}</span>
+            <textarea rows={2} value={form.env} onChange={(event) => { setForm({ ...form, env: event.target.value }) }} />
+          </label>
+          <label className={css.search}>
+            <span>{t('mcpDirectEnvCredentials')}</span>
+            <textarea
+              rows={2}
+              value={form.envCredentials}
+              onChange={(event) => { setForm({ ...form, envCredentials: event.target.value }) }}
+            />
+          </label>
+          <label className={css.search}>
+            <span>{t('mcpDirectCwd')}</span>
+            <input
+              type="text"
+              autoComplete="off"
+              value={form.cwd}
+              onChange={(event) => { setForm({ ...form, cwd: event.target.value }) }}
+            />
+          </label>
+        </>
+      )}
+      <Button
+        disabled={busy || form.serverName.trim() === ''}
+        onClick={() => {
+          onSave({
+            ...(form.entryId === null ? {} : { entryId: form.entryId }),
+            serverName: form.serverName.trim(),
+            declaration,
+          })
+        }}
+      >
+        {busy ? t('mcpDirectSaving') : t('mcpDirectSave')}
+      </Button>
+    </section>
+  )
+}
+
 function McpPanel({ injected: {
   mcpController: controller, useMcpSnapshot: useSnapshot, t,
 } }: { injected: SkillMarketFace }): ReactNode {
   const state = useSnapshot(value => value)
+  const [directForm, setDirectForm] = useState<DirectFormState>(EMPTY_DIRECT_FORM)
   useEffect(() => {
     if (state.status === 'idle') void controller.load()
   }, [controller, state.status])
@@ -614,6 +857,13 @@ function McpPanel({ injected: {
         templateUrl={MCP_TEMPLATE_ARCHIVE_URL}
         templateFilename={MCP_TEMPLATE_ARCHIVE_FILENAME}
         templateLabel="publisherTemplateDownload"
+      />
+      <DirectConfigForm
+        form={directForm}
+        setForm={setDirectForm}
+        busy={state.busy}
+        onSave={(request) => { void controller.saveDirectConfig(request as never) }}
+        t={t}
       />
       <PackageSearch
         label={t('mcpSearchLabel')}
@@ -643,6 +893,7 @@ function McpPanel({ injected: {
               setReference={(slot, reference) => { controller.setCredentialReference(entry.packageId, slot, reference) }}
               configure={() => { void controller.configure(entry.packageId) }}
               requestUninstall={(packageId) => { controller.requestUninstall(packageId) }}
+              requestEdit={(edited) => { setDirectForm(directFormFromEntry(edited)) }}
               t={t}
             />
           ))}
@@ -656,6 +907,8 @@ function McpPanel({ injected: {
         cancel={() => { controller.cancelConfirmation() }}
         confirmUpgrade={() => { void controller.confirmUpgrade() }}
         confirmLocalExecution={() => { void controller.confirmLocalExecution() }}
+        pendingDirectLocalExecution={state.pendingDirectLocalExecution !== null}
+        confirmDirectLocalExecution={() => { void controller.confirmDirectLocalExecution() }}
         confirmUninstall={() => { void controller.confirmUninstall() }}
         t={t}
       />
@@ -665,7 +918,7 @@ function McpPanel({ injected: {
 
 function PackageConfirmations({
   pendingUpgrade, pendingLocalExecution, pendingUninstall, busy, cancel,
-  confirmUpgrade, confirmLocalExecution, confirmUninstall, t,
+  confirmUpgrade, confirmLocalExecution, pendingDirectLocalExecution, confirmDirectLocalExecution, confirmUninstall, t,
 }: {
   readonly pendingUpgrade: string | null
   readonly pendingLocalExecution: readonly string[] | null
@@ -674,6 +927,8 @@ function PackageConfirmations({
   readonly cancel: () => void
   readonly confirmUpgrade: () => void
   readonly confirmLocalExecution?: () => void
+  readonly pendingDirectLocalExecution?: boolean
+  readonly confirmDirectLocalExecution?: () => void
   readonly confirmUninstall: () => void
   readonly t: (key: SkillMarketKey) => string
 }): ReactNode {
@@ -700,6 +955,19 @@ function PackageConfirmations({
           footer={<>
             <Button variant="outline" onClick={cancel}>{t('cancel')}</Button>
             <Button disabled={busy} onClick={confirmLocalExecution}>{t('localExecutionConfirm')}</Button>
+          </>}
+        />
+      )}
+      {confirmDirectLocalExecution === undefined || pendingDirectLocalExecution !== true ? null : (
+        <Modal
+          open
+          onClose={cancel}
+          title={t('localExecutionTitle')}
+          closeLabel={t('close')}
+          description={`${t('localExecutionDescription')} ${t('localExecutionDisclosure')}: subprocess`}
+          footer={<>
+            <Button variant="outline" onClick={cancel}>{t('cancel')}</Button>
+            <Button disabled={busy} onClick={confirmDirectLocalExecution}>{t('localExecutionConfirm')}</Button>
           </>}
         />
       )}

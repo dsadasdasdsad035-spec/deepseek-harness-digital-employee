@@ -167,6 +167,12 @@ export type {
   ToolMarketUninstallResult,
 } from '@deepseek-ai/dsh-tool-market/types'
 export type {
+  McpDirectConfigDeclaration,
+  McpDirectConfigDeleteRequest,
+  McpDirectConfigDeleteResult,
+  McpDirectConfigEntryId,
+  McpDirectConfigSaveRequest,
+  McpDirectConfigSaveResult,
   McpMarketConfigureRequest,
   McpMarketConfigureResult,
   McpMarketCredentialRequirement,

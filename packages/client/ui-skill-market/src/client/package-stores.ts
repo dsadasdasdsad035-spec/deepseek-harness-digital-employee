@@ -4,6 +4,7 @@ import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type {
   ClientRemote,
+  McpDirectConfigSaveRequest,
   McpMarketEntry,
   McpMarketPackageId,
   ToolMarketEntry,
@@ -115,6 +116,8 @@ export interface McpMarketState {
   localExecutionConfirmed: boolean
   pendingUninstall: McpMarketPackageId | null
   credentialReferences: Readonly<Record<string, Readonly<Record<string, string>>>>
+  /** A stdio direct-config save awaiting its local-execution disclosure confirmation. */
+  pendingDirectLocalExecution: McpDirectConfigSaveRequest | null
 }
 
 const TOOL_INITIAL: ToolMarketState = {
@@ -140,6 +143,7 @@ const MCP_INITIAL: McpMarketState = {
   localExecutionConfirmed: false,
   pendingUninstall: null,
   credentialReferences: {},
+  pendingDirectLocalExecution: null,
 }
 
 /** Tool package lifecycle controller. */
@@ -378,6 +382,20 @@ export class McpMarketStore {
   async confirmUninstall(): Promise<void> {
     const packageId = this.store.getSnapshot().pendingUninstall
     if (packageId === null) return
+    const directEntry = this.store.getSnapshot().entries.find(entry =>
+      entry.source === 'direct' && entry.packageId === packageId)
+    if (directEntry !== undefined) {
+      const transport = await this.remote.deleteDirectConfig({ entryId: packageId as never })
+      if (!transport.ok || !transport.value.ok) {
+        this.fail(failureCode(transport))
+        return
+      }
+      this.store.update((state) => {
+        state.pendingUninstall = null
+      })
+      await this.load()
+      return
+    }
     const transport = await this.remote.uninstall({ packageId })
     if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
     this.store.update((state) => {
@@ -385,6 +403,40 @@ export class McpMarketStore {
       state.restartNotice = packageId
     })
     await this.load()
+  }
+
+  /**
+   * Save one user-declared MCP server configuration and hot-mount it.
+   * @param request - Server name, declaration, and local-execution confirmation.
+   * @param confirmed - Whether the disclosure has already been accepted.
+   */
+  async saveDirectConfig(request: McpDirectConfigSaveRequest, confirmed = false): Promise<void> {
+    this.store.update((state) => { state.busy = true; state.error = null })
+    const transport = await this.remote.saveDirectConfig({
+      ...request,
+      ...confirmed ? { confirmLocalExecution: true } : {},
+    })
+    if (!transport.ok || !transport.value.ok) {
+      if (failureCode(transport).code === 'local-execution-confirmation-required') {
+        this.store.update((state) => {
+          state.busy = false
+          state.pendingDirectLocalExecution = request
+        })
+        return
+      }
+      this.fail(failureCode(transport))
+      return
+    }
+    this.store.update((state) => { state.busy = false })
+    await this.load()
+  }
+
+  /** Confirm the pending stdio direct-config save after its disclosure. */
+  async confirmDirectLocalExecution(): Promise<void> {
+    const pending = this.store.getSnapshot().pendingDirectLocalExecution
+    if (pending === null) return
+    this.store.update((state) => { state.pendingDirectLocalExecution = null })
+    await this.saveDirectConfig(pending, true)
   }
 
   // oxlint-disable-next-line sonarjs/no-identical-functions -- Shared lifecycle helper keeps parallel stores consistent.
@@ -466,6 +518,7 @@ function cancelPackageConfirmation(
     state.pendingUninstall = null
     if ('pendingLocalExecution' in state) state.pendingLocalExecution = null
     if ('localExecutionConfirmed' in state) state.localExecutionConfirmed = false
+    if ('pendingDirectLocalExecution' in state) state.pendingDirectLocalExecution = null
   })
 }
 

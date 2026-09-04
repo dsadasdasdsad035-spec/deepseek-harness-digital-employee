@@ -350,6 +350,107 @@ describe('SkillMarketSection', () => {
       expect(screen.getByText(en.retry)).toBeTruthy()
     })
   })
+
+  it('saves a direct HTTP MCP server from the maintenance form', async () => {
+    const saveDirectConfig = vi.fn(async () => ({
+      ok: true as const,
+      value: { ok: true as const, value: { entryId: 'entry-1', serverName: 'remote-notes', restartRequired: false as const } },
+    }))
+    const mcpStore = new McpMarketStore({
+      list: async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }),
+      banner: vi.fn(),
+      install: vi.fn(),
+      uninstall: vi.fn(),
+      configure: vi.fn(),
+      saveDirectConfig,
+    } as never)
+    const store = new SkillMarketStore({ async list() {
+      return { ok: true as const, value: { ok: true as const, value: { entries: [] } } }
+    } } as unknown as SkillMarketRemote)
+    const toolStore = new ToolMarketStore({ list: async () => ({
+      ok: true, value: { ok: true, value: { entries: [] } },
+    }) } as never)
+    const props: SkillMarketSectionProps = {
+      controller: store,
+      toolController: toolStore,
+      mcpController: mcpStore,
+      hooks: {
+        snapshot: store.store,
+        toolSnapshot: toolStore.store,
+        mcpSnapshot: mcpStore.store,
+      },
+      useSnapshot: bindSnapshotSelector(store.store),
+      useToolSnapshot: bindSnapshotSelector(toolStore.store),
+      useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
+      t: (key: string) => en[key as keyof typeof en],
+    } as unknown as SkillMarketSectionProps
+    render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
+    fireEvent.click(screen.getByRole('tab', { name: en.mcpTab }))
+    const nameInput = screen.getByLabelText(en.mcpDirectServerName)
+    await act(async () => {
+      fireEvent.change(nameInput, { target: { value: 'remote-notes' } })
+      fireEvent.change(screen.getByLabelText(en.mcpDirectUrl), { target: { value: 'https://mcp.example.com' } })
+    })
+    fireEvent.click(screen.getByText(en.mcpDirectSave))
+    await waitFor(() => { expect(saveDirectConfig).toHaveBeenCalledTimes(1) })
+    expect((saveDirectConfig.mock.calls as unknown[][])[0]?.[0]).toMatchObject({
+      serverName: 'remote-notes',
+      declaration: {
+        transport: 'streamable-http',
+        url: 'https://mcp.example.com',
+        headers: {},
+        headerCredentials: {},
+      },
+    })
+  })
+
+  it('shows the local-execution disclosure before saving a stdio direct server', async () => {
+    const saveDirectConfig = vi.fn(async () => ({
+      ok: true as const,
+      value: { ok: false as const, error: { code: 'local-execution-confirmation-required' } },
+    }))
+    const mcpStore = new McpMarketStore({
+      list: async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }),
+      banner: vi.fn(),
+      install: vi.fn(),
+      uninstall: vi.fn(),
+      configure: vi.fn(),
+      saveDirectConfig,
+    } as never)
+    const store = new SkillMarketStore({ async list() {
+      return { ok: true as const, value: { ok: true as const, value: { entries: [] } } }
+    } } as unknown as SkillMarketRemote)
+    const toolStore = new ToolMarketStore({ list: async () => ({
+      ok: true, value: { ok: true, value: { entries: [] } },
+    }) } as never)
+    const props: SkillMarketSectionProps = {
+      controller: store,
+      toolController: toolStore,
+      mcpController: mcpStore,
+      hooks: {
+        snapshot: store.store,
+        toolSnapshot: toolStore.store,
+        mcpSnapshot: mcpStore.store,
+      },
+      useSnapshot: bindSnapshotSelector(store.store),
+      useToolSnapshot: bindSnapshotSelector(toolStore.store),
+      useMcpSnapshot: bindSnapshotSelector(mcpStore.store),
+      t: (key: string) => en[key as keyof typeof en],
+    } as unknown as SkillMarketSectionProps
+    render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
+    fireEvent.click(screen.getByRole('tab', { name: en.mcpTab }))
+    fireEvent.change(screen.getByLabelText(en.mcpDirectServerName), { target: { value: 'local-fs' } })
+    fireEvent.change(screen.getByLabelText(en.transport), { target: { value: 'stdio' } })
+    fireEvent.change(screen.getByLabelText(en.mcpDirectCwd), { target: { value: '/tmp' } })
+    fireEvent.click(screen.getByText(en.mcpDirectSave))
+    await waitFor(() => { expect(screen.getByText(en.localExecutionTitle)).toBeTruthy() })
+    const dialog = screen.getByRole('dialog')
+    await act(async () => {
+      fireEvent.click(within(dialog).getByText(en.localExecutionConfirm))
+      await new Promise((resolve) => { setTimeout(resolve, 30) })
+    })
+    expect((saveDirectConfig.mock.calls as unknown[][])[1]?.[0]).toMatchObject({ confirmLocalExecution: true })
+  })
 })
 
 // 抑制未使用变量警告
