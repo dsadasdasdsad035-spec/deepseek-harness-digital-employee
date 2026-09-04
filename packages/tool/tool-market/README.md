@@ -8,6 +8,8 @@ Trusted, restart-bound installation for versioned Tool ZIP packages.
 
 `installRoot` is the private user directory for managed packages. `trustedPublishers` maps each publisher ID to one Ed25519 SPKI public key; duplicate IDs fail during resolution. The Web bundle reads the same records from `DSH_MARKET_TRUSTED_PUBLISHERS`.
 
+`allowUnsignedPackages` (default `false`) is an explicit development override: when enabled, install and restart-time activation skip publisher-trust verification while every archive, descriptor, file-table, ownership, and atomicity rule still applies. The Web bundle enables it unless the launch environment sets `DSH_MARKET_ALLOW_UNSIGNED=0`; setting that value restores strict verification on the next composition.
+
 ## Package lifecycle
 
 `tool-package.json` declares package identity, version, display text, requested permission categories, Tool names and input descriptions, the plugin entry, a SHA-256 table for every non-descriptor file, and a detached publisher signature. Install validates the bounded ZIP, normalized paths, file table, descriptor, and trusted signature before atomically publishing files. It never imports uploaded code.

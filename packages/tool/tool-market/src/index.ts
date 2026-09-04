@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url'
 import z from '@deepseek-ai/schemastery'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import type {} from '@deepseek-ai/dsh-tools'
+import { combineTrustedPublisherRecords, readTrustedPublisherFileSync } from '@deepseek-ai/dsh-marketplace-core'
 import { ToolMarketService } from './service.ts'
 import type {
   ToolMarketInstallRequest,
@@ -35,6 +36,10 @@ export interface Config {
     /** Ed25519 SPKI public key in PEM form. */
     readonly publicKeyPem: string
   }[]
+  /** Explicit local override: accept packages without publisher verification. */
+  readonly allowUnsignedPackages?: boolean
+  /** Optional persistent trusted-publisher file combined with inline records. */
+  readonly trustedPublishersFile?: string
 }
 
 declare module '@deepseek-ai/cordis' {
@@ -53,15 +58,24 @@ export class ToolMarketGateway extends TypertRemoteService {
       id: z.string().required(),
       publicKeyPem: z.string().required(),
     })).default([]),
+    allowUnsignedPackages: z.boolean().default(false),
+    trustedPublishersFile: z.string(),
   })
   private readonly service: ToolMarketService
   private readonly activeToolNames = new Set<string>()
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'toolMarket')
+    const trustFile = config.trustedPublishersFile
+    const fileRecords = trustFile === undefined
+      ? null
+      : readTrustedPublisherFileSync(trustFile)
     this.service = new ToolMarketService({
       installRoot: config.installRoot,
-      trustedPublishers: config.trustedPublishers,
+      trustedPublishers: fileRecords === null || trustFile === undefined
+        ? config.trustedPublishers
+        : combineTrustedPublisherRecords(config.trustedPublishers, fileRecords, trustFile),
+      allowUnsignedPackages: config.allowUnsignedPackages === true,
       activeToolNames: () => [...this.activeToolNames],
     })
   }

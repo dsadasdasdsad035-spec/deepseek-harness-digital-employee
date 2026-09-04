@@ -48,3 +48,6 @@ worktrees/
 .codegraph/
 .codex/
 digital-employees.json
+
+# Repository-root build outputs (npm publish staging)
+/dist/

@@ -4,6 +4,14 @@ English | [中文](README.zh.md)
 
 Edit `tool-package.json`, declare every Tool and requested permission, and keep `plugin/index.js` free of install-time side effects. The Host verifies the ZIP without evaluating code; trusted code activates only after a fresh Host composition.
 
-Before distribution, calculate SHA-256 for every non-descriptor file, write the lowercase hashes into `files`, sign the canonical descriptor payload with Ed25519, and replace the publisher signature placeholder. Configure the matching public key in `DSH_MARKET_TRUSTED_PUBLISHERS`.
+Before distribution, sign the package with the repository CLI. Generate a local Ed25519 publisher key once, then build from the unpacked template directory:
 
-The signature payload is compact JSON for the complete descriptor with `publisher.signature` omitted. Use the repository helper `descriptorSignaturePayload()` to avoid serialization differences.
+```sh
+npx dsh-market-package ./template-tool \
+  --kind tool --publisher-id your-publisher-id \
+  --generate-key ./publisher.pem --output your-package.zip
+```
+
+The CLI computes the SHA-256 `files` table, replaces the publisher placeholders, signs the canonical descriptor payload, and prints the matching `DSH_MARKET_TRUSTED_PUBLISHERS` JSON array on stdout. Persist that record with `--trust-file ~/.dsh/market-publishers.json` so every later Host restart trusts the publisher, or export the printed array in the launching shell for one launch; a publisher id may appear in only one source.
+
+If an older template install blocks Host startup, remove its managed directory (for example `rm -rf ~/.dsh/tools/tool-market-template`) and install the repaired template again; an installed package is never silently replaced by a re-upload.

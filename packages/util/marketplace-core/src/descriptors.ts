@@ -9,6 +9,20 @@ const identifier = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
 const toolName = z.string().regex(/^[A-Za-z0-9_-]+$/)
 const reference = z.string().regex(/^[A-Z][A-Z0-9_]*$/)
 const relativePath = z.string().regex(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._/-]+$/)
+
+/** Permission disclosure names shared by Tool and MCP package descriptors. */
+const permissionName = z.enum(['filesystem-read', 'filesystem-write', 'network', 'subprocess'])
+
+/** Bare interpreter command name; path separators are rejected so only allowlisted runtimes can be named. */
+const bareCommand = z.string().regex(/^[A-Za-z0-9._-]+$/)
+
+/**
+ * One stdio argument token. Slash-containing values are additionally required
+ * to be declared package files by `parseMcpPackageDescriptor`, which pins every
+ * script path to the signed file table; slash-free tokens cannot resolve above
+ * the package working directory.
+ */
+const stdioArgument = z.string().regex(/^[A-Za-z0-9._+=,:@%~/-]+$/)
 const fileHashes = z.record(relativePath, z.string().regex(/^[a-f0-9]{64}$/)).refine(
   files => Object.keys(files).length <= 256,
   'package declares too many files',
@@ -26,7 +40,7 @@ const base = z.object({
 /** Parsed executable Tool package metadata; its code is activated only after Host restart. */
 export const toolPackageDescriptorSchema = base.extend({
   kind: z.literal('tool'),
-  permissions: z.array(z.enum(['filesystem-read', 'filesystem-write', 'network', 'subprocess'])).min(1).max(16),
+  permissions: z.array(permissionName).min(1).max(16),
   tools: z.array(z.object({
     name: toolName,
     description: z.string().min(1).max(512),
@@ -35,22 +49,39 @@ export const toolPackageDescriptorSchema = base.extend({
   entry: relativePath,
 }).strict()
 
-/** Parsed declarative MCP package metadata without any credential values. */
+/** One declarative Streamable HTTP MCP server entry. */
+const mcpHttpServerSchema = z.object({
+  id: identifier,
+  transport: z.literal('streamable-http'),
+  url: z.string().url(),
+  headers: z.record(z.string(), z.string()).default({}),
+  credentialReferences: z.record(z.string(), reference).default({}),
+}).strict()
+
+/** One stdio MCP server entry whose script payload ships inside the package. */
+const mcpStdioServerSchema = z.object({
+  id: identifier,
+  transport: z.literal('stdio'),
+  command: bareCommand,
+  args: z.array(stdioArgument).min(1).max(64),
+  env: z.record(z.string(), z.string()).default({}),
+  credentialReferences: z.record(z.string(), reference).default({}),
+}).strict()
+
+/** Parsed declarative or stdio MCP package metadata without any credential values. */
 export const mcpPackageDescriptorSchema = base.extend({
   kind: z.literal('mcp'),
-  servers: z.array(z.object({
-    id: identifier,
-    transport: z.literal('streamable-http'),
-    url: z.string().url(),
-    headers: z.record(z.string(), z.string()).default({}),
-    credentialReferences: z.record(z.string(), reference).default({}),
-  }).strict()).min(1).max(32),
+  permissions: z.array(permissionName).max(16).default([]),
+  servers: z.array(z.discriminatedUnion('transport', [mcpHttpServerSchema, mcpStdioServerSchema]))
+    .min(1).max(32),
 }).strict()
 
 /** Validated executable Tool package descriptor. */
 export type ToolPackageDescriptor = z.infer<typeof toolPackageDescriptorSchema>
-/** Validated credential-free MCP package descriptor. */
+/** Validated credential-free MCP descriptor. */
 export type McpPackageDescriptor = z.infer<typeof mcpPackageDescriptorSchema>
+/** One declared MCP server: Streamable HTTP or stdio. */
+export type McpPackageServer = McpPackageDescriptor['servers'][number]
 /** Descriptor accepted by shared signature and file-table operations. */
 export type MarketplacePackageDescriptor = ToolPackageDescriptor | McpPackageDescriptor
 
@@ -71,19 +102,51 @@ export function parseToolPackageDescriptor(value: unknown): ToolPackageDescripto
 
 /**
  * Parse one credential-free MCP descriptor.
+ *
+ * Cross-field rules: a header or environment slot backed by a credential
+ * reference must carry an empty fixed value; every slash-containing stdio
+ * argument must be a file in the signed file table; any stdio server implies
+ * the `subprocess` permission in the returned disclosure. The implied
+ * permission is part of the parsed form both the builder signs and the
+ * installer verifies, so signatures stay consistent.
  * @param value - Parsed JSON value.
- * @returns Validated MCP descriptor.
+ * @returns Validated MCP descriptor with effective permissions.
  */
 export function parseMcpPackageDescriptor(value: unknown): McpPackageDescriptor {
   const descriptor = mcpPackageDescriptorSchema.parse(value)
   for (const server of descriptor.servers) {
-    for (const [header, value] of Object.entries(server.headers)) {
-      if (server.credentialReferences[header] !== undefined && value !== '') {
-        throw new Error(`MCP header "${header}" must not contain a credential value`)
+    if (server.transport === 'streamable-http') {
+      for (const [header, fixed] of Object.entries(server.headers)) {
+        if (server.credentialReferences[header] !== undefined && fixed !== '') {
+          throw new Error(`MCP header "${header}" must not contain a credential value`)
+        }
+      }
+      continue
+    }
+    for (const [name, fixed] of Object.entries(server.env)) {
+      if (server.credentialReferences[name] !== undefined && fixed !== '') {
+        throw new Error(`MCP environment variable "${name}" must not contain a credential value`)
+      }
+    }
+    for (const arg of server.args) {
+      if (arg.includes('/') && descriptor.files[arg] === undefined) {
+        throw new Error(`MCP stdio argument "${arg}" is not a declared package file`)
       }
     }
   }
-  return descriptor
+  return withImpliedPermissions(descriptor)
+}
+
+/**
+ * Add the disclosure every stdio package carries regardless of declaration.
+ * @param descriptor - Schema-validated MCP descriptor.
+ * @returns Descriptor with `subprocess` present when any server is stdio.
+ */
+function withImpliedPermissions(descriptor: McpPackageDescriptor): McpPackageDescriptor {
+  if (descriptor.permissions.includes('subprocess')) return descriptor
+  return descriptor.servers.some(server => server.transport === 'stdio')
+    ? { ...descriptor, permissions: [...descriptor.permissions, 'subprocess'] }
+    : descriptor
 }
 
 /**

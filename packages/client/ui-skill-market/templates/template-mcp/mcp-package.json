@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "display": {
     "name": "MCP market template",
-    "description": "Publisher template for one declarative Streamable HTTP MCP package."
+    "description": "Publisher template for Streamable HTTP and stdio MCP packages."
   },
   "publisher": {
     "id": "replace-with-publisher-id",
@@ -24,6 +24,19 @@
       },
       "credentialReferences": {
         "Authorization": "EXAMPLE_MCP_TOKEN"
+      }
+    },
+    {
+      "id": "example-local",
+      "transport": "stdio",
+      "command": "node",
+      "args": ["server/index.js"],
+      "env": {
+        "LOG_LEVEL": "info",
+        "API_TOKEN": ""
+      },
+      "credentialReferences": {
+        "API_TOKEN": "EXAMPLE_MCP_TOKEN"
       }
     }
   ]

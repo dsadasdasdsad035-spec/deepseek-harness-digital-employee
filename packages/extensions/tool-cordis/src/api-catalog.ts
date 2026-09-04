@@ -1487,7 +1487,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
       {
         signature: 'async activateConfigured(): Promise<void>',
-        description: 'Activate configured packages during fresh Host composition. Resolved values remain local to each manager mount call.',
+        description: 'Activate configured packages during fresh Host composition. Resolved values remain local to each manager mount call. Servers mount on the root context, not the gateway\'s service context: the service context sits outside the `tools` service resolution chain, so fibers mounted there cannot register tools.',
         parameters: [],
       },
       {
@@ -4548,15 +4548,15 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'McpMarketEntry',
-    declaration: 'export interface McpMarketEntry {\n    readonly packageId: McpMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly servers: readonly McpMarketServerEntry[];\n    readonly credentialRequirements: readonly McpMarketCredentialRequirement[];\n    readonly installedAt: number;\n    readonly configured: boolean;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n}',
+    declaration: 'export interface McpMarketEntry {\n    readonly packageId: McpMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly servers: readonly McpMarketServerEntry[];\n    readonly permissions: readonly string[];\n    readonly credentialRequirements: readonly McpMarketCredentialRequirement[];\n    readonly installedAt: number;\n    readonly configured: boolean;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n}',
   },
   {
     name: 'McpMarketFailure',
-    declaration: 'export type McpMarketFailure = {\n    readonly code: \'invalid-archive\';\n    readonly reason: \'base64\' | \'zip\';\n} | {\n    readonly code: \'resource-limit\';\n    readonly limit: \'archive-bytes\' | \'file-count\' | \'entry-bytes\' | \'total-bytes\';\n    readonly limitValue: number;\n    readonly observedValue: number;\n    readonly entry?: string | undefined;\n} | {\n    readonly code: \'invalid-package\';\n    readonly reason: string;\n} | {\n    readonly code: \'untrusted-publisher\' | \'invalid-signature\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'managed-upgrade-required\';\n    readonly packageId: McpMarketPackageId;\n    readonly installedVersion: string;\n    readonly candidateVersion: string;\n} | {\n    readonly code: \'unmanaged-conflict\' | \'manifest-incompatible\' | \'not-found\';\n    readonly packageId: McpMarketPackageId;\n} | {\n    readonly code: \'invalid-credential-reference\';\n    readonly slot: string;\n} | {\n    readonly code: \'missing-credential-reference\';\n    readonly slot: string;\n};',
+    declaration: 'export type McpMarketFailure = {\n    readonly code: \'invalid-archive\';\n    readonly reason: \'base64\' | \'zip\';\n} | {\n    readonly code: \'resource-limit\';\n    readonly limit: \'archive-bytes\' | \'file-count\' | \'entry-bytes\' | \'total-bytes\';\n    readonly limitValue: number;\n    readonly observedValue: number;\n    readonly entry?: string | undefined;\n} | {\n    readonly code: \'invalid-package\';\n    readonly reason: string;\n} | {\n    readonly code: \'untrusted-publisher\' | \'invalid-signature\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'managed-upgrade-required\';\n    readonly packageId: McpMarketPackageId;\n    readonly installedVersion: string;\n    readonly candidateVersion: string;\n} | {\n    readonly code: \'local-execution-confirmation-required\';\n    readonly candidatePermissions: readonly string[];\n} | {\n    readonly code: \'unmanaged-conflict\' | \'manifest-incompatible\' | \'not-found\';\n    readonly packageId: McpMarketPackageId;\n} | {\n    readonly code: \'invalid-credential-reference\';\n    readonly slot: string;\n} | {\n    readonly code: \'missing-credential-reference\';\n    readonly slot: string;\n};',
   },
   {
     name: 'McpMarketInstallRequest',
-    declaration: 'export interface McpMarketInstallRequest {\n    readonly filename: string;\n    readonly archiveBase64: string;\n    readonly replaceExisting?: boolean;\n}',
+    declaration: 'export interface McpMarketInstallRequest {\n    readonly filename: string;\n    readonly archiveBase64: string;\n    readonly replaceExisting?: boolean;\n    readonly confirmLocalExecution?: boolean;\n}',
   },
   {
     name: 'McpMarketInstallResult',
@@ -4576,11 +4576,15 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'McpMarketServerEntry',
-    declaration: 'export interface McpMarketServerEntry {\n    readonly serverName: string;\n    readonly transport: \'streamable-http\';\n    readonly available: boolean;\n}',
+    declaration: 'export interface McpMarketServerEntry {\n    readonly serverName: string;\n    readonly transport: \'streamable-http\' | \'stdio\';\n    readonly available: boolean;\n}',
   },
   {
     name: 'McpMarketTemplateConfiguration',
-    declaration: 'export interface McpMarketTemplateConfiguration {\n    readonly packageId: McpMarketPackageId;\n    readonly serverName: string;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly declaration: {\n        readonly id: string;\n        readonly transport: \'streamable-http\';\n        readonly url: string;\n        readonly headers: Readonly<Record<string, string>>;\n        readonly headerCredentials: Readonly<Record<string, string>>;\n    };\n}',
+    declaration: 'export interface McpMarketTemplateConfiguration {\n    readonly packageId: McpMarketPackageId;\n    readonly serverName: string;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly declaration: McpMarketTemplateDeclaration;\n}',
+  },
+  {
+    name: 'McpMarketTemplateDeclaration',
+    declaration: 'export type McpMarketTemplateDeclaration = {\n    readonly id: string;\n    readonly transport: \'stdio\';\n    readonly command: string;\n    readonly args: string[];\n    readonly env: Readonly<Record<string, string>>;\n    readonly envCredentials: Readonly<Record<string, string>>;\n    readonly cwd: string;\n} | {\n    readonly id: string;\n    readonly transport: \'streamable-http\';\n    readonly url: string;\n    readonly headers: Readonly<Record<string, string>>;\n    readonly headerCredentials: Readonly<Record<string, string>>;\n};',
   },
   {
     name: 'McpMarketUninstallRequest',

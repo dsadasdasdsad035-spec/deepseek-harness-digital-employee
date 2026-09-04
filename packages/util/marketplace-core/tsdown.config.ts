@@ -1,0 +1,20 @@
+import { defineConfig } from 'tsdown'
+
+/**
+ * Builds each public entry as a self-contained file admitted by the package
+ * whitelist; `bin` is the `dsh-market-package` publisher CLI.
+ */
+export default defineConfig([
+  {
+    entry: ['lib/types/index.js'], outDir: 'lib', format: ['esm'], platform: 'node', target: 'es2024',
+    fixedExtension: false, outputOptions: { codeSplitting: false }, dts: false, clean: false,
+  },
+  {
+    entry: ['lib/types/invariant.js'], outDir: 'lib', format: ['esm'], platform: 'node', target: 'es2024',
+    fixedExtension: false, outputOptions: { codeSplitting: false }, dts: false, clean: false,
+  },
+  {
+    entry: ['lib/types/bin.js'], outDir: 'lib', format: ['esm'], platform: 'node', target: 'es2024',
+    fixedExtension: false, outputOptions: { codeSplitting: false }, dts: false, clean: false,
+  },
+])

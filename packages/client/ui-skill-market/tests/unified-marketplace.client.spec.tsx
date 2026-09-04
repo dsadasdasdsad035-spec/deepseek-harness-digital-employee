@@ -47,6 +47,7 @@ function setup() {
       version: '1.0.0',
       publisherId: 'deepseek-local',
       servers: [{ serverName: 'project-tracker', transport: 'streamable-http', available: false }],
+      permissions: [],
       credentialRequirements: [{
         slot: 'PROJECT_TRACKER_TOKEN',
         configured: false,
@@ -128,5 +129,49 @@ describe('unified Marketplace section', () => {
     })
     expect(document.body.textContent).not.toContain('resolved-secret')
     expect(await screen.findByText(en.restartNotice)).toBeTruthy()
+  })
+
+  it('discloses subprocess execution and installs a stdio package only after confirmation', async () => {
+    const { mcpRemote } = setup()
+    mcpRemote.install = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        value: {
+          ok: false,
+          error: { code: 'local-execution-confirmation-required', candidatePermissions: ['subprocess'] },
+        },
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: {
+          ok: true,
+          value: { packageId: 'local-suite', operation: 'installed', restartRequired: true },
+        },
+      })
+    fireEvent.click(screen.getByRole('tab', { name: en.mcpTab }))
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]')
+    expect(input).toBeTruthy()
+    const file = new File([new Uint8Array([1])], 'local-suite.zip')
+    const files = {
+      0: file,
+      length: 1,
+      item: () => file,
+    } as unknown as FileList
+    await act(async () => {
+      fireEvent.change(input!, { target: { files } })
+    })
+
+    expect(await screen.findByRole('dialog')).toBeTruthy()
+    expect(screen.getByText(en.localExecutionTitle)).toBeTruthy()
+    expect(screen.getByText(/subprocess/)).toBeTruthy()
+    expect(mcpRemote.install).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: en.localExecutionConfirm }))
+    })
+    await waitFor(() => {
+      expect(mcpRemote.install).toHaveBeenCalledTimes(2)
+      expect(mcpRemote.install.mock.calls[1]?.[0]).toMatchObject({ confirmLocalExecution: true })
+    })
   })
 })

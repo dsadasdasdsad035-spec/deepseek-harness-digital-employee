@@ -43,6 +43,8 @@ class ToolMarketDomainError extends Error {
 export interface ToolMarketServiceOptions {
   readonly installRoot: string
   readonly trustedPublishers: readonly TrustedPublisher[]
+  /** Explicit local override: skip publisher-trust verification. */
+  readonly allowUnsignedPackages: boolean
   readonly activeToolNames: () => readonly string[]
 }
 
@@ -73,7 +75,7 @@ export class ToolMarketService {
       const descriptor = parseDescriptor(new Uint8Array(
         await readFile(join(this.options.installRoot, manifest.id, 'tool-package.json')),
       ))
-      verifyTrust(descriptor, this.options.trustedPublishers)
+      if (!this.options.allowUnsignedPackages) verifyTrust(descriptor, this.options.trustedPublishers)
       const entries = await Promise.all(Object.keys(descriptor.files).map(async name => ({
         name,
         bytes: new Uint8Array(await readFile(join(this.options.installRoot, manifest.id, name))),
@@ -142,7 +144,7 @@ export class ToolMarketService {
       const descriptor = parseDescriptor(descriptorEntry.bytes)
       verifyPackageFileHashes(archive, descriptor.files)
       validatePackageFiles(archive.entries.map(entry => entry.name), descriptor)
-      verifyTrust(descriptor, this.options.trustedPublishers)
+      if (!this.options.allowUnsignedPackages) verifyTrust(descriptor, this.options.trustedPublishers)
       return await this.mutations.runExclusive(descriptor.id, async () => {
         const ownership = await readManagedPackage(this.options.installRoot, descriptor.id, 'tool')
         if (ownership.status === 'managed' && request.replaceExisting !== true) {

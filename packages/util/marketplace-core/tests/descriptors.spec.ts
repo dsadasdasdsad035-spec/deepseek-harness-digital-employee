@@ -46,6 +46,127 @@ describe('marketplace package descriptors', () => {
     })).toThrow('must not contain a credential value')
   })
 
+  it('accepts a mixed-transport MCP package and implies subprocess disclosure', () => {
+    const descriptor = parseMcpPackageDescriptor({
+      format: 1,
+      kind: 'mcp',
+      id: 'mixed-suite',
+      version: '1.0.0',
+      display: { name: 'Mixed suite', description: 'Local and remote MCP servers.' },
+      publisher: { id: 'deepseek-local', signature: 'base64-signature' },
+      files: { 'server/index.js': 'a'.repeat(64) },
+      servers: [
+        {
+          id: 'local-suite',
+          transport: 'stdio',
+          command: 'node',
+          args: ['server/index.js', '--verbose'],
+          env: { LOG_LEVEL: 'info', API_TOKEN: '' },
+          credentialReferences: { API_TOKEN: 'MIXED_SUITE_TOKEN' },
+        },
+        {
+          id: 'remote-suite',
+          transport: 'streamable-http',
+          url: 'https://mcp.example.test',
+          headers: {},
+          credentialReferences: {},
+        },
+      ],
+    })
+    expect(descriptor.permissions).toEqual(['subprocess'])
+    expect(descriptor.servers).toHaveLength(2)
+  })
+
+  it('keeps declarative packages free of an execution disclosure', () => {
+    const descriptor = parseMcpPackageDescriptor({
+      format: 1,
+      kind: 'mcp',
+      id: 'project-tracker',
+      version: '1.0.0',
+      display: { name: 'Project tracker', description: 'Reads project tickets.' },
+      publisher: { id: 'deepseek-local', signature: 'base64-signature' },
+      files: {},
+      servers: [{
+        id: 'project-tracker',
+        transport: 'streamable-http',
+        url: 'https://mcp.example.test',
+        headers: { Authorization: '' },
+        credentialReferences: { Authorization: 'PROJECT_TRACKER_TOKEN' },
+      }],
+    })
+    expect(descriptor.permissions).toEqual([])
+  })
+
+  it('rejects a fixed value on a credential-backed stdio environment slot', () => {
+    expect(() => parseMcpPackageDescriptor({
+      format: 1,
+      kind: 'mcp',
+      id: 'local-suite',
+      version: '1.0.0',
+      display: { name: 'Local suite', description: 'Local MCP server.' },
+      publisher: { id: 'deepseek-local', signature: 'base64-signature' },
+      files: { 'server/index.js': 'a'.repeat(64) },
+      servers: [{
+        id: 'local-suite',
+        transport: 'stdio',
+        command: 'node',
+        args: ['server/index.js'],
+        env: { API_TOKEN: 'secret-value' },
+        credentialReferences: { API_TOKEN: 'LOCAL_SUITE_TOKEN' },
+      }],
+    })).toThrow('MCP environment variable "API_TOKEN" must not contain a credential value')
+  })
+
+  it('rejects stdio script arguments outside the signed file table', () => {
+    const descriptor = {
+      format: 1,
+      kind: 'mcp',
+      id: 'local-suite',
+      version: '1.0.0',
+      display: { name: 'Local suite', description: 'Local MCP server.' },
+      publisher: { id: 'deepseek-local', signature: 'base64-signature' },
+      files: { 'server/index.js': 'a'.repeat(64) },
+      servers: [{
+        id: 'local-suite',
+        transport: 'stdio',
+        command: 'node',
+        args: ['../escape.js'],
+        env: {},
+        credentialReferences: {},
+      }],
+    } as const
+    expect(() => parseMcpPackageDescriptor(descriptor)).toThrow('is not a declared package file')
+    expect(() => parseMcpPackageDescriptor({
+      ...descriptor,
+      servers: [{ ...descriptor.servers[0], args: ['/etc/passwd'] }],
+    })).toThrow('is not a declared package file')
+  })
+
+  it('rejects stdio commands that are not bare interpreter names', () => {
+    const descriptor = {
+      format: 1,
+      kind: 'mcp',
+      id: 'local-suite',
+      version: '1.0.0',
+      display: { name: 'Local suite', description: 'Local MCP server.' },
+      publisher: { id: 'deepseek-local', signature: 'base64-signature' },
+      files: { 'server/index.js': 'a'.repeat(64) },
+      servers: [{
+        id: 'local-suite',
+        transport: 'stdio',
+        command: './server/index.js',
+        args: ['server/index.js'],
+        env: {},
+        credentialReferences: {},
+      }],
+    } as const
+    expect(() => parseMcpPackageDescriptor(descriptor)).toThrow()
+    expect(() => parseMcpPackageDescriptor({
+      ...descriptor,
+      servers: [{ ...descriptor.servers[0], command: '/usr/bin/python3' }],
+    })).toThrow()
+  })
+
   it('accepts only a trusted publisher signature over descriptor bytes', () => {
     const { privateKey, publicKey } = generateKeyPairSync('ed25519')
     const payload = new TextEncoder().encode('descriptor bytes')

@@ -11,6 +11,9 @@
     "directory": "packages/util/marketplace-core"
   },
   "type": "module",
+  "bin": {
+    "dsh-market-package": "lib/bin.js"
+  },
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
   "exports": {
@@ -28,6 +31,7 @@
   "files": [
     "lib/index.js",
     "lib/invariant.js",
+    "lib/bin.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",

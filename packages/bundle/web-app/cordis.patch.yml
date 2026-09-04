@@ -115,6 +115,8 @@
       config:
         installRoot: !!js dshHomePath('tools')
         trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
+        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
+        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
 
     # Durable digital employee Definition, file Provider, existing-Agent
     # composition Consumer, and typed management Remote.
@@ -136,6 +138,8 @@
       config:
         installRoot: !!js dshHomePath('mcp-packages')
         trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
+        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
+        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
 
     - id: project-manager-test-template
       name: '@deepseek-ai/dsh-project-manager-test-digital-employee'

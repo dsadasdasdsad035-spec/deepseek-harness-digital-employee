@@ -1,10 +1,9 @@
-import { generateKeyPairSync, sign } from 'node:crypto'
+import { generateKeyPairSync } from 'node:crypto'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
-import { descriptorSignaturePayload, parseMcpPackageDescriptor } from '@deepseek-ai/dsh-marketplace-core'
-import { zipSync } from 'fflate'
+import { signMarketplacePackage } from '@deepseek-ai/dsh-marketplace-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { McpMarketGateway } from '../src/index.ts'
 import { McpMarketService } from '../src/service.ts'
@@ -37,7 +36,7 @@ describe('McpMarketGateway', () => {
 
     await expect(gateway.install({
       filename: 'project-tracker.zip',
-      archiveBase64: signedArchive(privateKey),
+      archiveBase64: await signedArchive(privateKey),
     })).resolves.toMatchObject({ ok: true })
     await expect(gateway.configure({
       packageId: 'project-tracker' as never,
@@ -105,7 +104,7 @@ describe('McpMarketGateway', () => {
     }]
     await ctx.plugin(McpMarketGateway, { installRoot, trustedPublishers })
     const gateway = ctx.get('mcpMarket') as McpMarketGateway
-    await gateway.install({ filename: 'project-tracker.zip', archiveBase64: signedArchive(privateKey) })
+    await gateway.install({ filename: 'project-tracker.zip', archiveBase64: await signedArchive(privateKey) })
     await gateway.configure({
       packageId: 'project-tracker' as never,
       credentialReferences: { PROJECT_TRACKER_TOKEN: 'PROJECT_TRACKER_TOKEN' },
@@ -146,7 +145,7 @@ describe('McpMarketGateway', () => {
       }],
     })
     const gateway = ctx.get('mcpMarket') as McpMarketGateway
-    await gateway.install({ filename: 'project-tracker.zip', archiveBase64: signedArchive(privateKey) })
+    await gateway.install({ filename: 'project-tracker.zip', archiveBase64: await signedArchive(privateKey) })
     await gateway.configure({
       packageId: 'project-tracker' as never,
       credentialReferences: { PROJECT_TRACKER_TOKEN: 'PROJECT_TRACKER_TOKEN' },
@@ -183,7 +182,7 @@ describe('McpMarketGateway', () => {
     const gateway = ctx.get('mcpMarket') as McpMarketGateway
     await gateway.install({
       filename: 'project-tracker.zip',
-      archiveBase64: signedArchive(privateKey, ['project-tracker', 'project-tracker-secondary']),
+      archiveBase64: await signedArchive(privateKey, ['project-tracker', 'project-tracker-secondary']),
     })
     await gateway.configure({
       packageId: 'project-tracker' as never,
@@ -212,12 +211,14 @@ describe('McpMarketGateway', () => {
     const service = new McpMarketService({
       installRoot,
       trustedPublishers,
+      stdioInterpreters: ['node'],
+      allowUnsignedPackages: false,
       activeServerNames: () => [],
       credentialInfo: async () => ({ configured: true, writable: true }),
     })
     await service.install({
       filename: 'project-tracker.zip',
-      archiveBase64: signedArchive(privateKey),
+      archiveBase64: await signedArchive(privateKey),
     })
     const descriptor = await service.descriptor('project-tracker')
     const enteredDescriptor: PromiseWithResolvers<void> = Promise.withResolvers()
@@ -244,33 +245,274 @@ describe('McpMarketGateway', () => {
     await expect(uninstall).resolves.toMatchObject({ ok: true })
     await expect(service.list()).resolves.toEqual({ ok: true, value: { entries: [] } })
   })
+
+  it('installs, configures, and activates a stdio server from its managed directory', async () => {
+    const installRoot = await mkdtemp(join(tmpdir(), 'dsh-mcp-market-'))
+    roots.push(installRoot)
+    const { privateKey, publicKey } = generateKeyPairSync('ed25519')
+    const mount = vi.fn(async (_owner: unknown, _config: unknown) => async () => {})
+    const ctx = new Context()
+    ctx.provide('mcpClients', { mount } as never)
+    ctx.provide('credentials', {
+      resolve: vi.fn(async () => ({ value: 'resolved-secret', source: 'memory' })),
+      describe: vi.fn(async () => ({ configured: true, source: 'memory', writable: true })),
+    } as never)
+    await ctx.plugin(McpMarketGateway, {
+      installRoot,
+      trustedPublishers: [{
+        id: 'deepseek-local',
+        publicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      }],
+    })
+    const gateway = ctx.get('mcpMarket') as McpMarketGateway
+
+    await expect(gateway.install({
+      filename: 'local-suite.zip',
+      archiveBase64: await signedArchive(privateKey, { stdio: true }),
+      confirmLocalExecution: true,
+    })).resolves.toMatchObject({ ok: true })
+    await gateway.configure({
+      packageId: 'local-suite' as never,
+      credentialReferences: { LOCAL_SUITE_TOKEN: 'LOCAL_SUITE_TOKEN' },
+    })
+
+    await gateway.activateConfigured()
+
+    expect(mount).toHaveBeenCalledTimes(1)
+    expect(mount.mock.calls[0]?.[1]).toMatchObject({
+      transport: 'stdio',
+      serverName: 'local-suite',
+      command: 'node',
+      args: ['server/index.js', '--verbose'],
+      env: { LOG_LEVEL: 'info', API_TOKEN: 'resolved-secret' },
+      cwd: join(installRoot, 'local-suite'),
+    })
+    await expect(gateway.list()).resolves.toMatchObject({
+      ok: true,
+      value: { entries: [{ permissions: ['subprocess'], servers: [{ transport: 'stdio' }] }] },
+    })
+    const templates = await gateway.templateConfigurations()
+    expect(templates[0]?.declaration).toMatchObject({
+      transport: 'stdio',
+      command: 'node',
+      envCredentials: { API_TOKEN: 'LOCAL_SUITE_TOKEN' },
+      cwd: join(installRoot, 'local-suite'),
+    })
+    expect(JSON.stringify(templates)).not.toContain('resolved-secret')
+    await ctx.fiber.dispose()
+  })
+
+  it('activates mixed-transport packages through both mount paths', async () => {
+    const installRoot = await mkdtemp(join(tmpdir(), 'dsh-mcp-market-'))
+    roots.push(installRoot)
+    const { privateKey, publicKey } = generateKeyPairSync('ed25519')
+    const mount = vi.fn(async (_owner: unknown, _config: unknown) => async () => {})
+    const ctx = new Context()
+    ctx.provide('mcpClients', { mount } as never)
+    ctx.provide('credentials', {
+      resolve: vi.fn(async () => ({ value: 'resolved-secret', source: 'memory' })),
+      describe: vi.fn(async () => ({ configured: true, source: 'memory', writable: true })),
+    } as never)
+    await ctx.plugin(McpMarketGateway, {
+      installRoot,
+      trustedPublishers: [{
+        id: 'deepseek-local',
+        publicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      }],
+    })
+    const gateway = ctx.get('mcpMarket') as McpMarketGateway
+
+    await gateway.install({
+      filename: 'mixed-suite.zip',
+      archiveBase64: await signedArchive(privateKey, { mixed: true }),
+      confirmLocalExecution: true,
+    })
+    await gateway.configure({
+      packageId: 'mixed-suite' as never,
+      credentialReferences: {
+        LOCAL_SUITE_TOKEN: 'LOCAL_SUITE_TOKEN',
+        PROJECT_TRACKER_TOKEN: 'PROJECT_TRACKER_TOKEN',
+      },
+    })
+
+    await gateway.activateConfigured()
+
+    expect(mount).toHaveBeenCalledTimes(2)
+    expect(mount.mock.calls[0]?.[1]).toMatchObject({ transport: 'stdio', serverName: 'local-suite' })
+    expect(mount.mock.calls[1]?.[1]).toMatchObject({ transport: 'streamable-http', serverName: 'remote-suite' })
+    await ctx.fiber.dispose()
+  })
+
+  it('rejects a stdio command outside the interpreter allowlist at install', async () => {
+    const installRoot = await mkdtemp(join(tmpdir(), 'dsh-mcp-market-'))
+    roots.push(installRoot)
+    const { privateKey, publicKey } = generateKeyPairSync('ed25519')
+    const ctx = new Context()
+    ctx.provide('mcpClients', { mount: vi.fn() } as never)
+    ctx.provide('credentials', { resolve: vi.fn(), describe: vi.fn() } as never)
+    await ctx.plugin(McpMarketGateway, {
+      installRoot,
+      trustedPublishers: [{
+        id: 'deepseek-local',
+        publicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      }],
+    })
+    const gateway = ctx.get('mcpMarket') as McpMarketGateway
+
+    await expect(gateway.install({
+      filename: 'local-suite.zip',
+      archiveBase64: await signedArchive(privateKey, { stdio: true, command: 'python3' }),
+    })).resolves.toMatchObject({
+      ok: false,
+      error: { code: 'invalid-package', reason: 'stdio command "python3" is not an allowed interpreter' },
+    })
+    await ctx.fiber.dispose()
+  })
+
+  it('requires explicit confirmation before installing a stdio package', async () => {
+    const installRoot = await mkdtemp(join(tmpdir(), 'dsh-mcp-market-'))
+    roots.push(installRoot)
+    const { privateKey, publicKey } = generateKeyPairSync('ed25519')
+    const ctx = new Context()
+    ctx.provide('mcpClients', { mount: vi.fn() } as never)
+    ctx.provide('credentials', { resolve: vi.fn(), describe: vi.fn() } as never)
+    await ctx.plugin(McpMarketGateway, {
+      installRoot,
+      trustedPublishers: [{
+        id: 'deepseek-local',
+        publicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      }],
+    })
+    const gateway = ctx.get('mcpMarket') as McpMarketGateway
+
+    await expect(gateway.install({
+      filename: 'local-suite.zip',
+      archiveBase64: await signedArchive(privateKey, { stdio: true }),
+    })).resolves.toEqual({
+      ok: false,
+      error: {
+        code: 'local-execution-confirmation-required',
+        candidatePermissions: ['subprocess'],
+      },
+    })
+    await expect(gateway.list()).resolves.toMatchObject({
+      ok: true,
+      value: { entries: [] },
+    })
+    await ctx.fiber.dispose()
+  })
+
+  it('reports a stdio package as a diagnostic when activation narrows the allowlist', async () => {
+    const installRoot = await mkdtemp(join(tmpdir(), 'dsh-mcp-market-'))
+    roots.push(installRoot)
+    const { privateKey, publicKey } = generateKeyPairSync('ed25519')
+    const trustedPublishers = [{
+      id: 'deepseek-local',
+      publicKeyPem: publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+    }]
+    const seeding = new McpMarketService({
+      installRoot,
+      trustedPublishers,
+      stdioInterpreters: ['python3'],
+      allowUnsignedPackages: false,
+      activeServerNames: () => [],
+      credentialInfo: async () => ({ configured: true, writable: true }),
+    })
+    await seeding.install({
+      filename: 'local-suite.zip',
+      archiveBase64: await signedArchive(privateKey, { stdio: true, command: 'python3' }),
+      confirmLocalExecution: true,
+    })
+    await seeding.configure({
+      packageId: 'local-suite' as never,
+      credentialReferences: { LOCAL_SUITE_TOKEN: 'LOCAL_SUITE_TOKEN' },
+    })
+
+    const mount = vi.fn(async (_owner: unknown, _config: unknown) => async () => {})
+    const ctx = new Context()
+    ctx.provide('mcpClients', { mount } as never)
+    ctx.provide('credentials', {
+      resolve: vi.fn(async () => ({ value: 'resolved-secret', source: 'memory' })),
+      describe: vi.fn(async () => ({ configured: true, source: 'memory', writable: true })),
+    } as never)
+    await ctx.plugin(McpMarketGateway, { installRoot, trustedPublishers })
+    const gateway = ctx.get('mcpMarket') as McpMarketGateway
+
+    await gateway.activateConfigured()
+
+    expect(mount).not.toHaveBeenCalled()
+    await expect(gateway.list()).resolves.toMatchObject({
+      ok: true,
+      value: { entries: [{
+        available: false,
+        diagnostic: expect.stringContaining('stdio command "python3" is not an allowed interpreter'),
+      }] },
+    })
+    await ctx.fiber.dispose()
+  })
 })
 
-function signedArchive(
+/** Shape selectors for {@link signedArchive} fixture assembly. */
+interface SignedArchiveVariant {
+  readonly stdio?: boolean
+  readonly mixed?: boolean
+  readonly command?: string
+}
+
+const isIdList = (value: readonly string[] | SignedArchiveVariant): value is readonly string[] => Array.isArray(value)
+
+async function signedArchive(
   privateKey: ReturnType<typeof generateKeyPairSync>['privateKey'],
-  serverIds: readonly string[] = ['project-tracker'],
-): string {
-  const unsigned = parseMcpPackageDescriptor({
-    format: 1,
-    kind: 'mcp',
-    id: 'project-tracker',
-    version: '1.0.0',
-    display: { name: 'Project tracker', description: 'Reads project tickets.' },
-    publisher: { id: 'deepseek-local', signature: 'pending' },
-    files: {},
-    servers: serverIds.map(id => ({
+  variant: readonly string[] | SignedArchiveVariant = ['project-tracker'],
+): Promise<string> {
+  const stdioServer = (command: string) => ({
+    id: 'local-suite',
+    transport: 'stdio' as const,
+    command,
+    args: ['server/index.js', '--verbose'],
+    env: { LOG_LEVEL: 'info', API_TOKEN: '' },
+    credentialReferences: { API_TOKEN: 'LOCAL_SUITE_TOKEN' },
+  })
+  const httpServer = {
+    id: 'remote-suite',
+    transport: 'streamable-http' as const,
+    url: 'https://mcp.example.test',
+    headers: { Authorization: '' },
+    credentialReferences: { Authorization: 'PROJECT_TRACKER_TOKEN' },
+  }
+  const options: SignedArchiveVariant = isIdList(variant) ? {} : variant
+  const servers = isIdList(variant)
+    ? variant.map(id => ({
       id,
-      transport: 'streamable-http',
+      transport: 'streamable-http' as const,
       url: 'https://mcp.example.test',
       headers: { Authorization: '' },
       credentialReferences: { Authorization: 'PROJECT_TRACKER_TOKEN' },
-    })),
+    }))
+    : options.mixed === true
+      ? [stdioServer(options.command ?? 'node'), httpServer]
+      : options.stdio === true
+        ? [stdioServer(options.command ?? 'node')]
+        : [httpServer]
+  const carriesStdio = servers.some(server => server.transport === 'stdio')
+  const packageId = !carriesStdio
+    ? 'project-tracker'
+    : options.mixed === true ? 'mixed-suite' : 'local-suite'
+  const built = await signMarketplacePackage({
+    kind: 'mcp',
+    descriptor: {
+      format: 1,
+      kind: 'mcp',
+      id: packageId,
+      version: '1.0.0',
+      display: { name: 'MCP suite', description: 'Marketplace MCP servers.' },
+      publisher: { id: 'deepseek-local', signature: 'pending' },
+      files: carriesStdio ? { 'server/index.js': 'GENERATED_SHA256' } : {},
+      servers,
+    },
+    files: carriesStdio ? { 'server/index.js': new TextEncoder().encode('// stdio MCP server entry\n') } : {},
+    publisherId: 'deepseek-local',
+    privateKeyPem: privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
   })
-  const signature = sign(null, descriptorSignaturePayload(unsigned), privateKey).toString('base64')
-  return Buffer.from(zipSync({
-    'mcp-package.json': Buffer.from(JSON.stringify({
-      ...unsigned,
-      publisher: { ...unsigned.publisher, signature },
-    })),
-  })).toString('base64')
+  return built.archive.toString('base64')
 }

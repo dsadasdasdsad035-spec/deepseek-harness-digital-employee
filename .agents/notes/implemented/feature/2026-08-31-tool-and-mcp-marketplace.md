@@ -20,6 +20,8 @@ The digital employee configuration studio consumes one administrator catalog tha
 
 Publisher templates include descriptor examples, signed file-table inputs, permission declarations, credential-reference-only MCP headers, and signing instructions. The Web bundle reads trusted publisher records from `DSH_MARKET_TRUSTED_PUBLISHERS`.
 
+`allowUnsignedPackages` (default `false`) is an explicit per-Host development override for local iteration: install and activation skip publisher-trust verification while every archive, file-table, ownership, credential-reference, and atomicity rule still applies. The Web bundle enables it by default and disables it only when the launch environment sets `DSH_MARKET_ALLOW_UNSIGNED=0`, so strict verification returns with that value on the next composition; this default trades the pre-release local friction of signing every test package for an explicit opt-out, and the first tagged release should revisit it together with hosted distribution.
+
 ## Alternatives considered
 
 - **Hot-load uploaded Tool code**: this gives an archive mutation immediate code-execution authority and makes rollback unable to restore the running process.

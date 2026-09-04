@@ -493,6 +493,9 @@ importers:
       '@deepseek-ai/dsh-cordis-host-runner':
         specifier: workspace:*
         version: link:../packages/extensions/cordis-host-runner
+      '@deepseek-ai/dsh-credentials':
+        specifier: workspace:*
+        version: link:../packages/credentials/credentials
       '@deepseek-ai/dsh-credentials-local':
         specifier: workspace:*
         version: link:../packages/credentials/credentials-local
@@ -565,9 +568,15 @@ importers:
       '@deepseek-ai/dsh-lsp-stdio':
         specifier: workspace:*
         version: link:../packages/lsp/lsp-stdio
+      '@deepseek-ai/dsh-marketplace-core':
+        specifier: workspace:*
+        version: link:../packages/util/marketplace-core
       '@deepseek-ai/dsh-mcp-client':
         specifier: workspace:*
         version: link:../packages/mcp/mcp-client
+      '@deepseek-ai/dsh-mcp-market':
+        specifier: workspace:*
+        version: link:../packages/mcp/mcp-market
       '@deepseek-ai/dsh-permission-presets':
         specifier: workspace:*
         version: link:../packages/interaction/permission-presets
@@ -3024,6 +3033,9 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
       '@types/react':
         specifier: ~18.3.1
         version: 18.3.31

@@ -529,7 +529,10 @@ Typed Remote gateway and restart-time activation owner.
 
 /**
  * Activate configured packages during fresh Host composition.
- * Resolved values remain local to each manager mount call.
+ * Resolved values remain local to each manager mount call. Servers mount on
+ * the root context, not the gateway's service context: the service context
+ * sits outside the `tools` service resolution chain, so fibers mounted
+ * there cannot register tools.
  */
 async activateConfigured(): Promise<void>
 

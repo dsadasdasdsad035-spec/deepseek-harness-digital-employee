@@ -1,0 +1,8 @@
+{"type":"acceptance","stage":"install-unconfirmed","code":"local-execution-confirmation-required","candidatePermissions":["subprocess"]}
+{"type":"acceptance","stage":"install-confirmed","packageId":"stdio-fixture-suite","operation":"installed","restartRequired":true}
+{"type":"acceptance","stage":"credentials-set","configured":true}
+{"type":"acceptance","stage":"configured","slots":["FIXTURE_ECHO_TOKEN"]}
+{"type":"acceptance","stage":"activated","tools":["mcp__stdio-fixture__fixture_echo"]}
+{"type":"acceptance","stage":"tool-called","isError":false,"text":"assembled-round-trip:assembled:token-present"}
+{"type":"acceptance","stage":"listed","servers":[{"serverName":"stdio-fixture","transport":"stdio","available":true}],"permissions":["subprocess"],"available":true,"diagnosticCleared":true}
+{"type":"acceptance","stage":"templated","transport":"stdio","command":"node","envCredentialSlots":["API_TOKEN"],"cwdInsideManagedPackage":true}

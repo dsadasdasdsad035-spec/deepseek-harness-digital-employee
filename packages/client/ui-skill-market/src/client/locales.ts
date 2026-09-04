@@ -4,7 +4,7 @@ export type SkillMarketKey =
   | 'nav' | 'title' | 'intro' | 'searchLabel' | 'searchPlaceholder'
   | 'skillTab' | 'toolTab' | 'mcpTab'
   | 'uploadTitle' | 'uploadHint' | 'uploadButton' | 'uploadTooLarge' | 'uploadInvalidType'
-  | 'templateDownload'
+  | 'templateDownload' | 'publisherTemplateDownload'
   | 'uploadFailed' | 'operationFailed' | 'installing' | 'installed' | 'loading'
   | 'loadFailed' | 'retry' | 'empty' | 'emptyFiltered' | 'uninstall' | 'uninstalling'
   | 'uninstallTitle' | 'uninstallDescription' | 'uninstallConfirm'
@@ -24,6 +24,8 @@ export type SkillMarketKey =
   | 'packageUpgradeTitle' | 'packageUpgradeDescription' | 'packageUninstallTitle'
   | 'packageUninstallDescription' | 'errorInvalidPackage' | 'errorUntrustedPublisher'
   | 'errorInvalidSignature' | 'errorInvalidCredentialReference' | 'errorMissingCredentialReference'
+  | 'localExecutionTitle' | 'localExecutionDescription' | 'localExecutionDisclosure'
+  | 'localExecutionConfirm'
 
 /** English marketplace settings dictionary. */
 export const en: Record<SkillMarketKey, string> = {
@@ -39,6 +41,7 @@ export const en: Record<SkillMarketKey, string> = {
   uploadHint: 'Drop one .zip file here or choose a file. Maximum 10 MiB.',
   uploadButton: 'Choose .zip',
   templateDownload: 'Download example ZIP',
+  publisherTemplateDownload: 'Download publisher template',
   uploadTooLarge: 'The ZIP is larger than 10 MiB.',
   uploadInvalidType: 'Choose a file whose name ends in .zip.',
   uploadFailed: 'The browser could not read this ZIP.',
@@ -95,7 +98,7 @@ export const en: Record<SkillMarketKey, string> = {
   restartRequired: 'Restart required',
   restartNotice: 'Restart the Host to apply this marketplace change.',
   mcpTitle: 'MCP Market',
-  mcpIntro: 'Install declarative MCP packages and bind credential references without exposing secret values.',
+  mcpIntro: 'Install MCP packages over Streamable HTTP or local stdio and bind credential references without exposing secret values. stdio packages run local subprocess code and ask for confirmation first.',
   mcpUploadTitle: 'Upload an MCP package',
   mcpSearchLabel: 'Search installed MCP packages',
   mcpSearchPlaceholder: 'Search by package, publisher, or server',
@@ -116,10 +119,14 @@ export const en: Record<SkillMarketKey, string> = {
   packageUninstallTitle: 'Uninstall this package?',
   packageUninstallDescription: 'The managed package will be removed after confirmation.',
   errorInvalidPackage: 'The package descriptor or signed file table is invalid.',
-  errorUntrustedPublisher: 'The package publisher is not trusted by this Host.',
-  errorInvalidSignature: 'The package signature is invalid.',
+  errorUntrustedPublisher: 'The package publisher "{publisherId}" is not trusted by this Host.',
+  errorInvalidSignature: 'The package signature from "{publisherId}" is invalid.',
   errorInvalidCredentialReference: 'Enter a valid credential reference name, not a secret value.',
   errorMissingCredentialReference: 'Every required credential slot needs a reference.',
+  localExecutionTitle: 'This package runs local code',
+  localExecutionDescription: 'The package declares stdio servers that this Host runs as local subprocesses.',
+  localExecutionDisclosure: 'Disclosed permissions',
+  localExecutionConfirm: 'Confirm and install',
 }
 
 /** Simplified Chinese marketplace settings dictionary. */
@@ -136,6 +143,7 @@ export const zh: Record<SkillMarketKey, string> = {
   uploadHint: '拖入一个 .zip 文件，或选择文件。最大 10 MiB。',
   uploadButton: '选择 .zip',
   templateDownload: '下载示例 ZIP',
+  publisherTemplateDownload: '下载发布者模板',
   uploadTooLarge: 'ZIP 文件超过 10 MiB。',
   uploadInvalidType: '请选择文件名以 .zip 结尾的文件。',
   uploadFailed: '浏览器无法读取此 ZIP 文件。',
@@ -192,7 +200,7 @@ export const zh: Record<SkillMarketKey, string> = {
   restartRequired: '需要重启',
   restartNotice: '请重启 Host 以应用本次市场变更。',
   mcpTitle: 'MCP 市场',
-  mcpIntro: '安装声明式 MCP 包，并绑定凭据引用名称，不展示真实密钥。',
+  mcpIntro: '安装 Streamable HTTP 或本地 stdio 的 MCP 包，并绑定凭据引用名称，不展示真实密钥。stdio 包会执行本地子进程代码，安装前需确认。',
   mcpUploadTitle: '上传 MCP 包',
   mcpSearchLabel: '搜索已安装 MCP 包',
   mcpSearchPlaceholder: '按包、发布者或服务搜索',
@@ -213,8 +221,12 @@ export const zh: Record<SkillMarketKey, string> = {
   packageUninstallTitle: '卸载此包？',
   packageUninstallDescription: '确认后将删除由市场管理的包。',
   errorInvalidPackage: '包描述符或签名文件表无效。',
-  errorUntrustedPublisher: '此 Host 不信任该包的发布者。',
-  errorInvalidSignature: '包签名无效。',
+  errorUntrustedPublisher: '此 Host 不信任该包的发布者“{publisherId}”。',
+  errorInvalidSignature: '来自“{publisherId}”的包签名无效。',
   errorInvalidCredentialReference: '请输入有效的凭据引用名称，不要输入真实密钥。',
   errorMissingCredentialReference: '每个必填凭据槽都需要引用。',
+  localExecutionTitle: '此包将运行本地代码',
+  localExecutionDescription: '该包声明了 stdio 服务，Host 会以本地子进程方式运行。',
+  localExecutionDisclosure: '已披露权限',
+  localExecutionConfirm: '确认并安装',
 }

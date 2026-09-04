@@ -13,17 +13,35 @@ import { arrayBufferToBase64, validateUploadFile } from './store.ts'
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'
 
+/** Typed marketplace business failure retained for publisher diagnostics. */
+export interface MarketPackageFailure {
+  readonly code: string
+  readonly publisherId?: string | undefined
+}
+
 interface PendingUpgrade<Id> {
   readonly filename: string
   readonly archiveBase64: string
   readonly packageId: Id
 }
 
+/** A stdio package awaiting explicit local-execution confirmation. */
+export interface PendingLocalExecution {
+  readonly filename: string
+  readonly archiveBase64: string
+  readonly candidatePermissions: readonly string[]
+}
+
 interface PackageInstallTransport<Id> {
   readonly ok: boolean
   readonly value?: {
     readonly ok: boolean
-    readonly error?: { readonly code: string; readonly packageId?: Id }
+    readonly error?: {
+      readonly code: string
+      readonly packageId?: Id
+      readonly publisherId?: string
+      readonly candidatePermissions?: readonly string[]
+    }
     readonly value?: { readonly packageId: Id }
   }
 }
@@ -77,7 +95,7 @@ export interface ToolMarketState {
   entries: readonly ToolMarketEntry[]
   query: string
   busy: boolean
-  error: string | null
+  error: MarketPackageFailure | null
   restartNotice: ToolMarketPackageId | null
   pendingUpgrade: PendingUpgrade<ToolMarketPackageId> | null
   pendingUninstall: ToolMarketPackageId | null
@@ -89,9 +107,12 @@ export interface McpMarketState {
   entries: readonly McpMarketEntry[]
   query: string
   busy: boolean
-  error: string | null
+  error: MarketPackageFailure | null
   restartNotice: McpMarketPackageId | null
   pendingUpgrade: PendingUpgrade<McpMarketPackageId> | null
+  pendingLocalExecution: PendingLocalExecution | null
+  /** Set once the user confirmed the pending package's local-execution disclosure. */
+  localExecutionConfirmed: boolean
   pendingUninstall: McpMarketPackageId | null
   credentialReferences: Readonly<Record<string, Readonly<Record<string, string>>>>
 }
@@ -115,6 +136,8 @@ const MCP_INITIAL: McpMarketState = {
   error: null,
   restartNotice: null,
   pendingUpgrade: null,
+  pendingLocalExecution: null,
+  localExecutionConfirmed: false,
   pendingUninstall: null,
   credentialReferences: {},
 }
@@ -226,8 +249,8 @@ export class ToolMarketStore {
     })
   }
 
-  private fail(error: string): void {
-    failPackageStore(error, mutate => this.store.update(mutate))
+  private fail(error: MarketPackageFailure | string): void {
+    failPackageStore(typeof error === 'string' ? { code: error } : error, mutate => this.store.update(mutate))
   }
 }
 
@@ -318,12 +341,19 @@ export class McpMarketStore {
   }
 
   /** Confirm the pending managed MCP replacement, if any. */
-  // oxlint-disable-next-line sonarjs/no-identical-functions -- Tool and MCP expose symmetric package lifecycle APIs.
   async confirmUpgrade(): Promise<void> {
-    await confirmPackageUpgrade(
-      this.store.getSnapshot().pendingUpgrade,
-      (...args) => this.install(...args),
-    )
+    const snapshot = this.store.getSnapshot()
+    const pending = snapshot.pendingUpgrade
+    if (pending === null) return
+    await this.install(pending.filename, pending.archiveBase64, true, snapshot.localExecutionConfirmed)
+  }
+
+  /** Confirm the pending stdio package after its local-execution disclosure. */
+  async confirmLocalExecution(): Promise<void> {
+    const pending = this.store.getSnapshot().pendingLocalExecution
+    if (pending === null) return
+    this.store.update((state) => { state.localExecutionConfirmed = true })
+    await this.install(pending.filename, pending.archiveBase64, false, true)
   }
 
   /**
@@ -358,25 +388,39 @@ export class McpMarketStore {
   }
 
   // oxlint-disable-next-line sonarjs/no-identical-functions -- Shared lifecycle helper keeps parallel stores consistent.
-  private async install(filename: string, archiveBase64: string, replaceExisting: boolean): Promise<void> {
+  private async install(
+    filename: string,
+    archiveBase64: string,
+    replaceExisting: boolean,
+    confirmLocalExecution = false,
+  ): Promise<void> {
     await installPackage({
       filename,
       archiveBase64,
       replaceExisting,
+      confirmLocalExecution,
       start: () => {
         this.store.update((state) => { state.busy = true; state.error = null })
       },
-      remote: () => this.remote.install({ filename, archiveBase64, replaceExisting }),
+      remote: () => this.remote.install({ filename, archiveBase64, replaceExisting, confirmLocalExecution }),
       pending: (packageId) => {
         this.store.update((state) => {
           state.busy = false
           state.pendingUpgrade = { filename, archiveBase64, packageId }
         })
       },
+      pendingLocalExecution: (candidatePermissions) => {
+        this.store.update((state) => {
+          state.busy = false
+          state.pendingLocalExecution = { filename, archiveBase64, candidatePermissions }
+        })
+      },
       installed: (packageId) => {
         this.store.update((state) => {
           state.busy = false
           state.pendingUpgrade = null
+          state.pendingLocalExecution = null
+          state.localExecutionConfirmed = false
           state.restartNotice = packageId
         })
       },
@@ -385,8 +429,8 @@ export class McpMarketStore {
     })
   }
 
-  private fail(error: string): void {
-    failPackageStore(error, mutate => this.store.update(mutate))
+  private fail(error: MarketPackageFailure | string): void {
+    failPackageStore(typeof error === 'string' ? { code: error } : error, mutate => this.store.update(mutate))
   }
 }
 
@@ -413,11 +457,15 @@ function cancelPackageConfirmation(
   update: (mutate: (state: {
     pendingUpgrade: unknown
     pendingUninstall: unknown
+    pendingLocalExecution?: unknown
+    localExecutionConfirmed?: unknown
   }) => void) => void,
 ): void {
   update((state) => {
     state.pendingUpgrade = null
     state.pendingUninstall = null
+    if ('pendingLocalExecution' in state) state.pendingLocalExecution = null
+    if ('localExecutionConfirmed' in state) state.localExecutionConfirmed = false
   })
 }
 
@@ -425,11 +473,13 @@ async function installPackage<Id>(options: {
   readonly filename: string
   readonly archiveBase64: string
   readonly replaceExisting: boolean
+  readonly confirmLocalExecution?: boolean
   readonly start: () => void
   readonly remote: () => Promise<PackageInstallTransport<Id>>
   readonly pending: (packageId: Id) => void
+  readonly pendingLocalExecution?: (candidatePermissions: readonly string[]) => void
   readonly installed: (packageId: Id) => void
-  readonly fail: (error: string) => void
+  readonly fail: (error: MarketPackageFailure | string) => void
   readonly load: () => Promise<void>
 }): Promise<void> {
   options.start()
@@ -441,7 +491,14 @@ async function installPackage<Id>(options: {
       options.pending(error.packageId)
       return
     }
-    return options.fail(error?.code ?? 'operation-failed')
+    if (error?.code === 'local-execution-confirmation-required' && options.pendingLocalExecution !== undefined) {
+      options.pendingLocalExecution(error.candidatePermissions ?? [])
+      return
+    }
+    return options.fail({
+      code: error?.code ?? 'operation-failed',
+      ...error?.publisherId === undefined ? {} : { publisherId: error.publisherId },
+    })
   }
   const packageId = transport.value.value?.packageId
   if (packageId === undefined) return options.fail('operation-failed')
@@ -453,9 +510,9 @@ function failPackageStore<State extends {
   status: Status
   entries: readonly unknown[]
   busy: boolean
-  error: string | null
+  error: MarketPackageFailure | null
 }>(
-  error: string,
+  error: MarketPackageFailure,
   update: (mutate: (state: State) => void) => void,
 ): void {
   update((state) => {
@@ -465,8 +522,14 @@ function failPackageStore<State extends {
   })
 }
 
-function failureCode(value: unknown): string {
-  if (typeof value !== 'object' || value === null) return 'operation-failed'
-  const transport = value as { ok?: boolean; error?: { code?: string }; value?: { error?: { code?: string } } }
-  return transport.error?.code ?? transport.value?.error?.code ?? 'operation-failed'
+function failureCode(value: unknown): MarketPackageFailure {
+  if (typeof value !== 'object' || value === null) return { code: 'operation-failed' }
+  const transport = value as {
+    ok?: boolean
+    error?: { code?: string; publisherId?: string }
+    value?: { error?: { code?: string; publisherId?: string } }
+  }
+  const error = transport.error ?? transport.value?.error
+  if (error?.code === undefined) return { code: 'operation-failed' }
+  return { code: error.code, ...error.publisherId === undefined ? {} : { publisherId: error.publisherId } }
 }

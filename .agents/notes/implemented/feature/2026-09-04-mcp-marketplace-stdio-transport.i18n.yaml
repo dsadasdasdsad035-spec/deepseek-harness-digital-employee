@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-04-mcp-marketplace-stdio-transport.md
+2026-09-04-mcp-marketplace-stdio-transport.md: 2d06208ca293e51fb9a042c78f2abe2cec96ed3d
+2026-09-04-mcp-marketplace-stdio-transport.zh.md: 8a5e1ca9de45fc51f55e6fbee2f4f6329f380f6f

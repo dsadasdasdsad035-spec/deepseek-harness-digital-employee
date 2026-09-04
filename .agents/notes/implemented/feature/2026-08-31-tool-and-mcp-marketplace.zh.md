@@ -20,6 +20,8 @@ MCP 包是声明式 Streamable HTTP 定义。配置只持久化凭据引用名�
 
 发布者模板包含描述符示例、签名文件表输入、权限声明、仅凭据引用的 MCP 请求头和签名说明。Web bundle 从 `DSH_MARKET_TRUSTED_PUBLISHERS` 读取受信任发布者记录。
 
+`allowUnsignedPackages`（默认 `false`）是面向本地迭代的显式单 Host 开发开关：安装与激活跳过发布者信任校验，但归档、文件表、所有权、凭据引用与原子性规则全部保持。Web bundle 默认启用，仅在启动环境设置 `DSH_MARKET_ALLOW_UNSIGNED=0` 时关闭，设置该值后下一次组合即恢复严格校验；这个默认值用显式退出换掉了 pre-release 阶段每个测试包都要签名的本地摩擦，首个 tagged release 应连同托管分发一起重新评估。
+
 ## Alternatives considered
 
 - **热加载上传的工具代码**：这会让归档变更立即获得代码执行权限，并使回滚无法恢复运行中的进程。

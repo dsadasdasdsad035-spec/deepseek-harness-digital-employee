@@ -255,8 +255,13 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
         source: `mcp-market:${entry.packageId}`,
         version: entry.version,
         publisher: entry.publisherId,
-        permissionSummary: Object.entries(entry.declaration.headerCredentials)
-          .map(([header, reference]) => `${header}: credential ${reference}`),
+        permissionSummary: [
+          ...(entry.declaration.transport === 'stdio' ? ['subprocess'] : []),
+          ...Object.entries(entry.declaration.transport === 'stdio'
+            ? entry.declaration.envCredentials
+            : entry.declaration.headerCredentials)
+            .map(([name, reference]) => `${name}: credential ${reference}`),
+        ],
         restartRequired: entry.restartRequired,
         ...entry.available ? {} : { diagnostic: 'MCP configuration is unavailable or requires a Host restart.' },
         mcpServer: entry.declaration,

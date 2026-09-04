@@ -27,6 +27,8 @@ interface SetupOptions {
   installResult?: Awaited<ReturnType<SkillMarketRemote['install']>>
   installCalls?: Array<{ filename: string; replaceExisting: boolean }>
   uninstallResult?: Awaited<ReturnType<SkillMarketRemote['uninstall']>>
+  toolInstall?: () => Promise<unknown>
+  mcpInstall?: () => Promise<unknown>
 }
 
 function setup(options: SetupOptions = {}) {
@@ -83,11 +85,13 @@ function setup(options: SetupOptions = {}) {
     async list() {
       return { ok: true, value: { ok: true, value: { entries: [] } } }
     },
+    ...options.toolInstall === undefined ? {} : { install: options.toolInstall },
   } as never)
   const mcpStore = new McpMarketStore({
     async list() {
       return { ok: true, value: { ok: true, value: { entries: [] } } }
     },
+    ...options.mcpInstall === undefined ? {} : { install: options.mcpInstall },
   } as never)
   const props: SkillMarketSectionProps = {
     controller: store,
@@ -192,6 +196,44 @@ describe('SkillMarketSection', () => {
     const download = screen.getByRole('link', { name: en.templateDownload })
     expect(download.getAttribute('href')).toBe('/skill-market-template.zip')
     expect(download.getAttribute('download')).toBe('skill-market-template.zip')
+  })
+
+  it('labels Tool and MCP template downloads as publisher templates', async () => {
+    setup()
+    await waitLoaded()
+
+    fireEvent.click(screen.getByRole('tab', { name: en.toolTab }))
+    const toolDownload = screen.getByRole('link', { name: en.publisherTemplateDownload })
+    expect(toolDownload.getAttribute('href')).toBe('/tool-market-template.zip')
+
+    fireEvent.click(screen.getByRole('tab', { name: en.mcpTab }))
+    const mcpDownload = screen.getByRole('link', { name: en.publisherTemplateDownload })
+    expect(mcpDownload.getAttribute('href')).toBe('/mcp-market-template.zip')
+  })
+
+  it('renders the rejected publisher id on both package tabs', async () => {
+    const rejectUntrusted = async () => ({
+      ok: true,
+      value: { ok: false, error: { code: 'untrusted-publisher', publisherId: 'replace-with-publisher-id' } },
+    })
+    setup({ toolInstall: rejectUntrusted, mcpInstall: rejectUntrusted })
+    await waitLoaded()
+
+    fireEvent.click(screen.getByRole('tab', { name: en.toolTab }))
+    fireEvent.change(document.querySelector('[role="tabpanel"] input[type="file"]') as HTMLInputElement, {
+      target: { files: fileList(new File([new Uint8Array([1])], 'demo.zip')) },
+    })
+    await waitFor(() => {
+      expect(screen.getAllByText('The package publisher "replace-with-publisher-id" is not trusted by this Host.').length).toBeGreaterThan(0)
+    })
+
+    fireEvent.click(screen.getByRole('tab', { name: en.mcpTab }))
+    fireEvent.change(document.querySelector('[role="tabpanel"] input[type="file"]') as HTMLInputElement, {
+      target: { files: fileList(new File([new Uint8Array([1])], 'demo.zip')) },
+    })
+    await waitFor(() => {
+      expect(screen.getAllByText('The package publisher "replace-with-publisher-id" is not trusted by this Host.').length).toBeGreaterThan(0)
+    })
   })
 
   it('rejects non-.zip files with the localized error', async () => {

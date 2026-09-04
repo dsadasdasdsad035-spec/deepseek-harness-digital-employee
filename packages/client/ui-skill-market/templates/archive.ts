@@ -195,16 +195,21 @@ async function generatePackageTemplate(
   const archiveInput: Zippable = {
     'README.md': [readme, { mtime: FIXED_MODIFICATION_TIME }],
   }
+  descriptor.files = {
+    'README.md': createHash('sha256').update(readme).digest('hex'),
+  }
   if (descriptorName === 'tool-package.json') {
     const entry = await readFile(join(sourceDirectory, 'plugin/index.js'))
-    descriptor.files = {
-      'README.md': createHash('sha256').update(readme).digest('hex'),
-      'plugin/index.js': createHash('sha256').update(entry).digest('hex'),
-    }
+    descriptor.files['plugin/index.js'] = createHash('sha256').update(entry).digest('hex')
     archiveInput['plugin/index.js'] = [entry, { mtime: FIXED_MODIFICATION_TIME }]
   } else {
-    descriptor.files = {
-      'README.md': createHash('sha256').update(readme).digest('hex'),
+    const servers = (descriptor as { servers?: Array<{ args?: string[] }> }).servers ?? []
+    const localEntries = servers.flatMap(server => server.args ?? []).filter(arg => arg.includes('/'))
+    if (localEntries.length > 0) {
+      const entryPath = localEntries[0]!
+      const entry = await readFile(join(sourceDirectory, entryPath))
+      descriptor.files[entryPath] = createHash('sha256').update(entry).digest('hex')
+      archiveInput[entryPath] = [entry, { mtime: FIXED_MODIFICATION_TIME }]
     }
   }
   archiveInput[descriptorName] = [

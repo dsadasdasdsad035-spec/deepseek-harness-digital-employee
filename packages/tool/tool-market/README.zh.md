@@ -8,6 +8,8 @@
 
 `installRoot` 是托管包的用户私有目录。`trustedPublishers` 将发布者 ID 映射到 Ed25519 SPKI 公钥；重复 ID 会在解析时失败。Web bundle 从 `DSH_MARKET_TRUSTED_PUBLISHERS` 读取相同记录。
 
+`allowUnsignedPackages`（默认 `false`）是显式的开发开关：启用后安装与重启激活跳过发布者信任校验，但归档、描述符、文件表、所有权与原子性规则全部保持。Web bundle 默认启用，仅在启动环境设置 `DSH_MARKET_ALLOW_UNSIGNED=0` 时关闭；设置该值后，下一次组合即恢复严格校验。
+
 ## 包生命周期
 
 `tool-package.json` 声明包标识、版本、展示文本、请求的权限类别、工具名称与入参说明、插件入口、每个非描述符文件的 SHA-256 表以及独立发布者签名。安装会先验证有界 ZIP、规范化路径、文件表、描述符和受信任签名，再原子发布文件，且不会导入上传代码。

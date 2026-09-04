@@ -46,7 +46,7 @@ interface ConfigurationDocument {
 
 class McpMarketDomainError extends Error {
   constructor(readonly failure: McpMarketFailure) {
-    super(failure.code)
+    super('reason' in failure ? `${failure.code}: ${failure.reason}` : failure.code)
   }
 }
 
@@ -54,6 +54,10 @@ class McpMarketDomainError extends Error {
 export interface McpMarketServiceOptions {
   readonly installRoot: string
   readonly trustedPublishers: readonly TrustedPublisher[]
+  /** Bare interpreter command names stdio servers may name. */
+  readonly stdioInterpreters: readonly string[]
+  /** Explicit local override: skip publisher-trust verification. */
+  readonly allowUnsignedPackages: boolean
   readonly activeServerNames: () => readonly string[]
   readonly credentialInfo: (ref: CredentialRef) => Promise<CredentialInfo>
 }
@@ -66,6 +70,15 @@ export class McpMarketService {
 
   constructor(private readonly options: McpMarketServiceOptions) {
     this.configFile = join(resolve(options.installRoot), '.mcp-configurations.json')
+  }
+
+  /**
+   * Absolute managed directory of one installed package; the stdio working directory.
+   * @param packageId - Managed package identity.
+   * @returns Resolved install directory of the package payload.
+   */
+  packageDirectory(packageId: string): string {
+    return join(resolve(this.options.installRoot), packageId)
   }
 
   /**
@@ -100,7 +113,8 @@ export class McpMarketService {
         entries,
         totalBytes: entries.reduce((total, entry) => total + entry.bytes.byteLength, 0),
       }, descriptor.files)
-      verifyTrust(descriptor, this.options.trustedPublishers)
+      if (!this.options.allowUnsignedPackages) verifyTrust(descriptor, this.options.trustedPublishers)
+      this.assertStdioInterpreters(descriptor)
       return descriptor
     } catch (error: unknown) {
       throw new McpMarketDomainError({
@@ -150,6 +164,7 @@ export class McpMarketService {
             version: manifest.version,
             publisherId: manifest.publisherId,
             servers: [],
+            permissions: [],
             credentialRequirements: [],
             installedAt: manifest.installedAt,
             configured: false,
@@ -187,6 +202,7 @@ export class McpMarketService {
           version: manifest.version,
           publisherId: manifest.publisherId,
           servers,
+          permissions: descriptor.permissions,
           credentialRequirements,
           installedAt: manifest.installedAt,
           configured,
@@ -214,7 +230,9 @@ export class McpMarketService {
       if (descriptorEntry === undefined) throw new Error('archive must contain mcp-package.json')
       const descriptor = parseDescriptor(descriptorEntry.bytes)
       verifyPackageFileHashes(archive, descriptor.files)
-      verifyTrust(descriptor, this.options.trustedPublishers)
+      if (!this.options.allowUnsignedPackages) verifyTrust(descriptor, this.options.trustedPublishers)
+      this.assertStdioInterpreters(descriptor)
+      this.assertLocalExecutionConfirmed(descriptor, request.confirmLocalExecution === true)
       return await this.mutations.runExclusive(descriptor.id, async () => {
         const ownership = await readManagedPackage(this.options.installRoot, descriptor.id, 'mcp')
         assertMutableOwnership(ownership.status, descriptor.id, descriptor.version, request.replaceExisting === true, ownership)
@@ -306,6 +324,35 @@ export class McpMarketService {
         this.diagnostics.delete(packageId)
         return { packageId, restartRequired: true as const }
       })
+    })
+  }
+
+  /**
+   * Reject stdio servers naming interpreters outside the Host allowlist.
+   * @param descriptor - Validated MCP descriptor about to be trusted or published.
+   */
+  private assertStdioInterpreters(descriptor: McpPackageDescriptor): void {
+    for (const server of descriptor.servers) {
+      if (server.transport !== 'stdio') continue
+      if (!this.options.stdioInterpreters.includes(server.command)) {
+        throw new McpMarketDomainError({
+          code: 'invalid-package',
+          reason: `stdio command "${server.command}" is not an allowed interpreter`,
+        })
+      }
+    }
+  }
+
+  /**
+   * Require one explicit confirmation before any stdio package is installed or upgraded.
+   * @param descriptor - Validated MCP descriptor about to be published.
+   * @param confirmed - Whether the request already carried the user's confirmation.
+   */
+  private assertLocalExecutionConfirmed(descriptor: McpPackageDescriptor, confirmed: boolean): void {
+    if (confirmed || !descriptor.permissions.includes('subprocess')) return
+    throw new McpMarketDomainError({
+      code: 'local-execution-confirmation-required',
+      candidatePermissions: [...descriptor.permissions],
     })
   }
 

@@ -13,7 +13,7 @@ import type {
 import { filterSkills, MAX_UPLOAD_BYTES } from './store.ts'
 import type { SkillMarketStore } from './store.ts'
 import {
-  filterMcpPackages, filterToolPackages,
+  filterMcpPackages, filterToolPackages, type MarketPackageFailure,
   type McpMarketStore, type ToolMarketStore,
 } from './package-stores.ts'
 import type { SkillMarketKey } from './locales.ts'
@@ -53,10 +53,11 @@ interface UploaderProps {
   readonly onPickFile: (file: File) => void
   readonly templateUrl?: string | undefined
   readonly templateFilename?: string | undefined
+  readonly templateLabel?: SkillMarketKey | undefined
 }
 
 function Uploader({
-  id, title, uploading, error, t, onPickFile, templateUrl, templateFilename,
+  id, title, uploading, error, t, onPickFile, templateUrl, templateFilename, templateLabel = 'templateDownload',
 }: UploaderProps): ReactNode {
   const input = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
@@ -113,7 +114,7 @@ function Uploader({
           download={templateFilename}
           onClick={(event) => { event.stopPropagation() }}
         >
-          {t('templateDownload')}
+          {t(templateLabel)}
         </a>
       )}
       {error === null ? null : <span className={css.error} role="alert">{error}</span>}
@@ -353,7 +354,7 @@ function PackageState({
   status, error, empty, emptyFiltered, hasEntries, hasMatches, retry, t,
 }: {
   readonly status: 'idle' | 'loading' | 'ready' | 'error'
-  readonly error: string | null
+  readonly error: MarketPackageFailure | null
   readonly empty: SkillMarketKey
   readonly emptyFiltered: SkillMarketKey
   readonly hasEntries: boolean
@@ -374,7 +375,7 @@ function PackageState({
   return null
 }
 
-function marketFailureText(error: string | null, t: (key: SkillMarketKey) => string): string {
+function marketFailureText(error: MarketPackageFailure | null, t: (key: SkillMarketKey) => string): string {
   const keys: Readonly<Record<string, SkillMarketKey>> = {
     'invalid-archive': 'errorInvalidArchive',
     'resource-limit': 'errorResourceLimit',
@@ -388,8 +389,10 @@ function marketFailureText(error: string | null, t: (key: SkillMarketKey) => str
     'invalid-credential-reference': 'errorInvalidCredentialReference',
     'missing-credential-reference': 'errorMissingCredentialReference',
   }
-  const key = keys[error ?? ''] ?? 'operationFailed'
-  return t(key)
+  const key = keys[error?.code ?? ''] ?? 'operationFailed'
+  const text = t(key)
+  const publisherId = error?.publisherId
+  return publisherId === undefined ? text : text.replaceAll('{publisherId}', publisherId)
 }
 
 function RestartNotice({ visible, t }: {
@@ -470,6 +473,7 @@ function ToolPanel({ injected: {
         onPickFile={(file) => { void controller.upload(file) }}
         templateUrl={TOOL_TEMPLATE_ARCHIVE_URL}
         templateFilename={TOOL_TEMPLATE_ARCHIVE_FILENAME}
+        templateLabel="publisherTemplateDownload"
       />
       <PackageSearch
         label={t('toolSearchLabel')}
@@ -503,6 +507,7 @@ function ToolPanel({ injected: {
       ) : null}
       <PackageConfirmations
         pendingUpgrade={state.pendingUpgrade?.packageId ?? null}
+        pendingLocalExecution={null}
         pendingUninstall={state.pendingUninstall}
         busy={state.busy}
         cancel={() => { controller.cancelConfirmation() }}
@@ -541,6 +546,14 @@ function McpCard({
         <dt>{t('publisher')}</dt><dd>{entry.publisherId}</dd>
         <dt>{t('servers')}</dt>
         <dd>{entry.servers.map(server => `${server.serverName} (${server.transport})`).join(', ')}</dd>
+        {entry.permissions.length === 0 ? null : (
+          <>
+            <dt>{t('permissions')}</dt>
+            <dd className={css.tags}>
+              {entry.permissions.map(permission => <span className={css.permission} key={permission}>{permission}</span>)}
+            </dd>
+          </>
+        )}
       </dl>
       {entry.diagnostic === undefined ? null : (
         <p className={css.diagnostic} role="status">{t('diagnostic')}: {entry.diagnostic}</p>
@@ -600,6 +613,7 @@ function McpPanel({ injected: {
         onPickFile={(file) => { void controller.upload(file) }}
         templateUrl={MCP_TEMPLATE_ARCHIVE_URL}
         templateFilename={MCP_TEMPLATE_ARCHIVE_FILENAME}
+        templateLabel="publisherTemplateDownload"
       />
       <PackageSearch
         label={t('mcpSearchLabel')}
@@ -636,10 +650,12 @@ function McpPanel({ injected: {
       ) : null}
       <PackageConfirmations
         pendingUpgrade={state.pendingUpgrade?.packageId ?? null}
+        pendingLocalExecution={state.pendingLocalExecution?.candidatePermissions ?? null}
         pendingUninstall={state.pendingUninstall}
         busy={state.busy}
         cancel={() => { controller.cancelConfirmation() }}
         confirmUpgrade={() => { void controller.confirmUpgrade() }}
+        confirmLocalExecution={() => { void controller.confirmLocalExecution() }}
         confirmUninstall={() => { void controller.confirmUninstall() }}
         t={t}
       />
@@ -648,13 +664,16 @@ function McpPanel({ injected: {
 }
 
 function PackageConfirmations({
-  pendingUpgrade, pendingUninstall, busy, cancel, confirmUpgrade, confirmUninstall, t,
+  pendingUpgrade, pendingLocalExecution, pendingUninstall, busy, cancel,
+  confirmUpgrade, confirmLocalExecution, confirmUninstall, t,
 }: {
   readonly pendingUpgrade: string | null
+  readonly pendingLocalExecution: readonly string[] | null
   readonly pendingUninstall: string | null
   readonly busy: boolean
   readonly cancel: () => void
   readonly confirmUpgrade: () => void
+  readonly confirmLocalExecution?: () => void
   readonly confirmUninstall: () => void
   readonly t: (key: SkillMarketKey) => string
 }): ReactNode {
@@ -671,6 +690,19 @@ function PackageConfirmations({
           <Button disabled={busy} onClick={confirmUpgrade}>{t('upgradeConfirm')}</Button>
         </>}
       />
+      {confirmLocalExecution === undefined || pendingLocalExecution === null ? null : (
+        <Modal
+          open
+          onClose={cancel}
+          title={t('localExecutionTitle')}
+          closeLabel={t('close')}
+          description={`${t('localExecutionDescription')} ${t('localExecutionDisclosure')}: ${pendingLocalExecution.join(', ')}`}
+          footer={<>
+            <Button variant="outline" onClick={cancel}>{t('cancel')}</Button>
+            <Button disabled={busy} onClick={confirmLocalExecution}>{t('localExecutionConfirm')}</Button>
+          </>}
+        />
+      )}
       <Modal
         open={pendingUninstall !== null}
         onClose={cancel}

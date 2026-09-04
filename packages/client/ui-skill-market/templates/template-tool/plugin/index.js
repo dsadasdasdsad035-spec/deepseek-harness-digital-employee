@@ -14,8 +14,12 @@ export function apply(ctx) {
         description: 'Text to return.',
       },
     },
+    output: {
+      schema: { type: 'string' },
+      render: (_args, value) => [{ type: 'text', text: value }],
+    },
     async execute(args) {
-      return [{ type: 'text', text: args.text }]
+      return args.text
     },
   }))
 }

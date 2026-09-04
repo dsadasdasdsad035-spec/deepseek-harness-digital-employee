@@ -16,7 +16,7 @@ export interface McpMarketCredentialRequirement {
 /** One declared server in a managed MCP package. */
 export interface McpMarketServerEntry {
   readonly serverName: string
-  readonly transport: 'streamable-http'
+  readonly transport: 'streamable-http' | 'stdio'
   readonly available: boolean
 }
 
@@ -28,6 +28,7 @@ export interface McpMarketEntry {
   readonly version: string
   readonly publisherId: string
   readonly servers: readonly McpMarketServerEntry[]
+  readonly permissions: readonly string[]
   readonly credentialRequirements: readonly McpMarketCredentialRequirement[]
   readonly installedAt: number
   readonly configured: boolean
@@ -46,20 +47,39 @@ export interface McpMarketTemplateConfiguration {
   readonly publisherId: string
   readonly available: boolean
   readonly restartRequired: boolean
-  readonly declaration: {
+  readonly declaration: McpMarketTemplateDeclaration
+}
+
+/**
+ * Credential-free server declaration mirroring the employee-template MCP
+ * declaration union: fixed values plus credential reference names, never
+ * resolved values.
+ */
+export type McpMarketTemplateDeclaration =
+  | {
+    readonly id: string
+    readonly transport: 'stdio'
+    readonly command: string
+    readonly args: string[]
+    readonly env: Readonly<Record<string, string>>
+    readonly envCredentials: Readonly<Record<string, string>>
+    readonly cwd: string
+  }
+  | {
     readonly id: string
     readonly transport: 'streamable-http'
     readonly url: string
     readonly headers: Readonly<Record<string, string>>
     readonly headerCredentials: Readonly<Record<string, string>>
   }
-}
 
 /** Uploaded MCP ZIP and explicit replacement intent. */
 export interface McpMarketInstallRequest {
   readonly filename: string
   readonly archiveBase64: string
   readonly replaceExisting?: boolean
+  /** Explicit user confirmation for packages that execute local subprocess code. */
+  readonly confirmLocalExecution?: boolean
 }
 
 /** Credential-reference configuration for one managed package. */
@@ -90,6 +110,11 @@ export type McpMarketFailure =
     readonly packageId: McpMarketPackageId
     readonly installedVersion: string
     readonly candidateVersion: string
+  }
+  | {
+    /** Install retry must carry explicit confirmation after presenting the disclosure. */
+    readonly code: 'local-execution-confirmation-required'
+    readonly candidatePermissions: readonly string[]
   }
   | { readonly code: 'unmanaged-conflict' | 'manifest-incompatible' | 'not-found'; readonly packageId: McpMarketPackageId }
   | { readonly code: 'invalid-credential-reference'; readonly slot: string }

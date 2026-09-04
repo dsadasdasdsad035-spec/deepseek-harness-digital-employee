@@ -1,7 +1,7 @@
 // Web e2e scenario: the shipped marketplace settings contribution exercises
 // its generated Remote through the real /api carrier against an isolated DSH
 // home. The workflow is keyless and never enters the model loop.
-import { access, mkdir, writeFile } from 'node:fs/promises'
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import type { Browser, Page } from 'playwright'
@@ -15,6 +15,7 @@ import {
 import { newEnglishPage, saveFailureShot } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots/skill-market', import.meta.url))
+const TOOL_TEMPLATE_PATH = fileURLToPath(new URL('../public/tool-market-template.zip', import.meta.url))
 const UI_EXPECTED = join(SNAPSHOT_DIR, 'ui.expected.md')
 const MODE = webSnapshotMode()
 const SKILL_ID = 'marketplace-demo'
@@ -94,12 +95,15 @@ describe('web e2e: skill marketplace through the shipped API', () => {
     await section.getByRole('tab', { name: 'Tools', exact: true }).click()
     await section.getByText('No marketplace-managed Tool packages are installed.', { exact: true })
       .waitFor({ timeout: 10_000 })
-    const toolTemplate = section.getByRole('link', { name: 'Download example ZIP', exact: true })
+    const toolTemplate = section.getByRole('link', { name: 'Download publisher template', exact: true })
     expect(await toolTemplate.getAttribute('href')).toBe('/tool-market-template.zip')
+    await upload(section, await readFile(TOOL_TEMPLATE_PATH), 'tool-market-template.zip')
+    await section.getByText('The package publisher "replace-with-publisher-id" is not trusted by this Host.', { exact: true })
+      .waitFor({ timeout: 10_000 })
     await section.getByRole('tab', { name: 'MCP', exact: true }).click()
     await section.getByText('No marketplace-managed MCP packages are installed.', { exact: true })
       .waitFor({ timeout: 10_000 })
-    const mcpTemplate = section.getByRole('link', { name: 'Download example ZIP', exact: true })
+    const mcpTemplate = section.getByRole('link', { name: 'Download publisher template', exact: true })
     expect(await mcpTemplate.getAttribute('href')).toBe('/mcp-market-template.zip')
     await section.getByRole('tab', { name: 'Skills', exact: true }).click()
 

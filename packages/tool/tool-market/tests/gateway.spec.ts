@@ -1,10 +1,9 @@
-import { createHash, generateKeyPairSync, sign } from 'node:crypto'
+import { generateKeyPairSync } from 'node:crypto'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
-import { descriptorSignaturePayload, parseToolPackageDescriptor } from '@deepseek-ai/dsh-marketplace-core'
-import { zipSync } from 'fflate'
+import { signMarketplacePackage } from '@deepseek-ai/dsh-marketplace-core'
 import { afterEach, describe, expect, it } from 'vitest'
 import { ToolMarketGateway, apply } from '../src/index.ts'
 
@@ -31,7 +30,7 @@ describe('ToolMarketGateway', () => {
 
     await expect(gateway.install({
       filename: 'release-notes.zip',
-      archiveBase64: signedArchive(privateKey, '1.0.0'),
+      archiveBase64: await signedArchive(privateKey, '1.0.0'),
     })).resolves.toEqual({
       ok: true,
       value: { packageId: 'release-notes', operation: 'installed', restartRequired: true },
@@ -67,7 +66,7 @@ describe('ToolMarketGateway', () => {
     const gateway = ctx.get('toolMarket') as ToolMarketGateway
     await gateway.install({
       filename: 'release-notes.zip',
-      archiveBase64: signedArchive(privateKey, '1.0.0'),
+      archiveBase64: await signedArchive(privateKey, '1.0.0'),
     })
 
     await expect(gateway.list()).resolves.toMatchObject({
@@ -92,7 +91,7 @@ describe('ToolMarketGateway', () => {
     const gateway = ctx.get('toolMarket') as ToolMarketGateway
     await expect(gateway.install({
       filename: 'release-notes.zip',
-      archiveBase64: signedArchive(privateKey, '1.0.0'),
+      archiveBase64: await signedArchive(privateKey, '1.0.0'),
     })).resolves.toEqual({
       ok: false,
       error: { code: 'untrusted-publisher', publisherId: 'deepseek-local' },
@@ -124,7 +123,7 @@ describe('ToolMarketGateway', () => {
     `)
     await gateway.install({
       filename: 'release-notes.zip',
-      archiveBase64: signedArchive(privateKey, '1.0.0', entry),
+      archiveBase64: await signedArchive(privateKey, '1.0.0', entry),
     })
     expect((globalThis as { __toolMarketActivated?: boolean }).__toolMarketActivated).toBe(false)
     await first.fiber.dispose()
@@ -154,7 +153,7 @@ describe('ToolMarketGateway', () => {
     `)
     await gateway.install({
       filename: 'release-notes.zip',
-      archiveBase64: signedArchive(privateKey, '1.0.0', entry),
+      archiveBase64: await signedArchive(privateKey, '1.0.0', entry),
     })
     await first.fiber.dispose()
 
@@ -187,27 +186,28 @@ function contextWithTools(names: readonly string[]): Context {
   return ctx
 }
 
-function signedArchive(
+async function signedArchive(
   privateKey: ReturnType<typeof generateKeyPairSync>['privateKey'],
   version: string,
   entry = Buffer.from('throw new Error("must not execute during install")'),
-): string {
-  const unsigned = parseToolPackageDescriptor({
-    format: 1,
+): Promise<string> {
+  const built = await signMarketplacePackage({
     kind: 'tool',
-    id: 'release-notes',
-    version,
-    display: { name: 'Release notes', description: 'Prepares release notes.' },
-    publisher: { id: 'deepseek-local', signature: 'pending' },
-    files: { 'plugin/index.js': createHash('sha256').update(entry).digest('hex') },
-    permissions: ['filesystem-read'],
-    tools: [{ name: 'release_notes', description: 'Prepare notes.', inputDescription: 'Repository path.' }],
-    entry: 'plugin/index.js',
+    descriptor: {
+      format: 1,
+      kind: 'tool',
+      id: 'release-notes',
+      version,
+      display: { name: 'Release notes', description: 'Prepares release notes.' },
+      publisher: { id: 'deepseek-local', signature: 'pending' },
+      files: { 'plugin/index.js': '0'.repeat(64) },
+      permissions: ['filesystem-read'],
+      tools: [{ name: 'release_notes', description: 'Prepare notes.', inputDescription: 'Repository path.' }],
+      entry: 'plugin/index.js',
+    },
+    files: { 'plugin/index.js': entry },
+    publisherId: 'deepseek-local',
+    privateKeyPem: privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
   })
-  const signature = sign(null, descriptorSignaturePayload(unsigned), privateKey).toString('base64')
-  const descriptor = { ...unsigned, publisher: { ...unsigned.publisher, signature } }
-  return Buffer.from(zipSync({
-    'tool-package.json': Buffer.from(JSON.stringify(descriptor)),
-    'plugin/index.js': entry,
-  })).toString('base64')
+  return built.archive.toString('base64')
 }

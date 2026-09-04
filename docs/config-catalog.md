@@ -1510,10 +1510,16 @@ export interface Config {
     /** Ed25519 SPKI public key in PEM form. */
     readonly publicKeyPem: string
   }[]
+  /** Bare interpreter command names a stdio server may name; defaults to `['node']`. */
+  readonly stdioInterpreters?: string[]
+  /** Explicit local override: accept packages without publisher verification. */
+  readonly allowUnsignedPackages?: boolean
+  /** Optional persistent trusted-publisher file combined with inline records. */
+  readonly trustedPublishersFile?: string
 }
 ```
 
-Source: [`packages/mcp/mcp-market/src/index.ts:31`](../packages/mcp/mcp-market/src/index.ts)
+Source: [`packages/mcp/mcp-market/src/index.ts:33`](../packages/mcp/mcp-market/src/index.ts)
 
 <a id="deepseek-aidsh-message-feedback"></a>
 
@@ -2780,10 +2786,14 @@ export interface Config {
     /** Ed25519 SPKI public key in PEM form. */
     readonly publicKeyPem: string
   }[]
+  /** Explicit local override: accept packages without publisher verification. */
+  readonly allowUnsignedPackages?: boolean
+  /** Optional persistent trusted-publisher file combined with inline records. */
+  readonly trustedPublishersFile?: string
 }
 ```
 
-Source: [`packages/tool/tool-market/src/index.ts:28`](../packages/tool/tool-market/src/index.ts)
+Source: [`packages/tool/tool-market/src/index.ts:29`](../packages/tool/tool-market/src/index.ts)
 
 <a id="deepseek-aidsh-tool-pwsh"></a>
 

@@ -35,6 +35,25 @@ export {
 export type {
   MarketplacePackageDescriptor,
   McpPackageDescriptor,
+  McpPackageServer,
   ToolPackageDescriptor,
   TrustedPublisher,
 } from './descriptors.ts'
+export {
+  buildMarketplacePackage,
+  PACKAGE_DESCRIPTOR_FILENAMES,
+  signMarketplacePackage,
+} from './package-builder.ts'
+export type {
+  BuildMarketplacePackageOptions,
+  BuiltMarketplacePackage,
+  MarketplacePackageKind,
+  SignMarketplacePackageOptions,
+} from './package-builder.ts'
+export {
+  combineTrustedPublisherRecords,
+  readTrustedPublisherFileSync,
+  TRUSTED_PUBLISHERS_FILENAME,
+} from './trust-file.ts'
+export { runMarketPackageCli } from './cli.ts'
+export type { MarketPackageCliOutcome } from './cli.ts'
