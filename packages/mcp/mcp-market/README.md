@@ -22,6 +22,12 @@ Configuration persists only credential reference names, for HTTP header slots an
 
 Install, upgrade, configuration, and uninstall are restart-bound. A fresh Host resolves references, enforces unique server names, and mounts available clients. Missing packages, credentials, interpreters, or conflicting server names remain explicit diagnostics.
 
+## Direct server configuration
+
+Next to package upload, the market MCP tab maintains user-declared servers without a package: create, edit, and delete entries over either transport, with immediate effect — the gateway hot-mounts on save and unmounts on delete through the same manager path as packages, so no Host restart applies. Entries persist reference-only in `.mcp-direct-configs.json` under the market user directory and remount at composition.
+
+Direct declarations follow the packaged rules wherever they apply: credential slots keep the empty-fixed-value rule, stdio commands stay within `stdioInterpreters`, and every stdio save requires the local-execution confirmation. A direct entry has no signed file table, so its arguments may name absolute paths on the user's disk and its `cwd` must exist at save time — the user vouches for the entry directly. Server names stay unique across direct entries and managed packages in both directions, with structured conflicts; a same-name edit replaces the live server, and a failed replacement leaves its entry with an explicit diagnostic.
+
 ## Model Experience
 
 None, as package lifecycle and credential-reference configuration do not change prompt projections, model requests, or session logs.

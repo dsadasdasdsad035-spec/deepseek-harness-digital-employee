@@ -528,6 +528,24 @@ Typed Remote gateway and restart-time activation owner.
 @Remote('uninstall') uninstall(request: McpMarketUninstallRequest): Promise<McpMarketUninstallResult>
 
 /**
+ * Create or update one user-declared MCP server configuration and hot-mount
+ * it. A same-name replacement releases the namespace before the new mount
+ * (the manager rejects concurrent duplicate names); a rename mounts the new
+ * name before releasing the old one, so a failed mount leaves the previous
+ * server live and the record untouched.
+ * @param request - Server name, declaration, and local-execution confirmation.
+ * @returns Saved entry identity, or a structured marketplace failure.
+ */
+@Remote('saveDirectConfig') async saveDirectConfig(request: McpDirectConfigSaveRequest): Promise<McpDirectConfigSaveResult>
+
+/**
+ * Delete one user-declared MCP server configuration and unmount it.
+ * @param request - Entry identity to remove.
+ * @returns Deletion acknowledgement, or a structured marketplace failure.
+ */
+@Remote('deleteDirectConfig') async deleteDirectConfig(request: McpDirectConfigDeleteRequest): Promise<McpDirectConfigDeleteResult>
+
+/**
  * Activate configured packages during fresh Host composition.
  * Resolved values remain local to each manager mount call. Servers mount on
  * the root context, not the gateway's service context: the service context

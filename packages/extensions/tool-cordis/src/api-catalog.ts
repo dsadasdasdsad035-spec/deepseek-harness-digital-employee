@@ -1486,6 +1486,18 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'Declared mutation result or a structured marketplace failure.',
       },
       {
+        signature: '@Remote(\'saveDirectConfig\') async saveDirectConfig(request: McpDirectConfigSaveRequest): Promise<McpDirectConfigSaveResult>',
+        description: 'Create or update one user-declared MCP server configuration and hot-mount it. A same-name replacement releases the namespace before the new mount (the manager rejects concurrent duplicate names); a rename mounts the new name before releasing the old one, so a failed mount leaves the previous server live and the record untouched.',
+        parameters: [{ name: 'request', description: 'Server name, declaration, and local-execution confirmation.' }],
+        returns: 'Saved entry identity, or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'deleteDirectConfig\') async deleteDirectConfig(request: McpDirectConfigDeleteRequest): Promise<McpDirectConfigDeleteResult>',
+        description: 'Delete one user-declared MCP server configuration and unmount it.',
+        parameters: [{ name: 'request', description: 'Entry identity to remove.' }],
+        returns: 'Deletion acknowledgement, or a structured marketplace failure.',
+      },
+      {
         signature: 'async activateConfigured(): Promise<void>',
         description: 'Activate configured packages during fresh Host composition. Resolved values remain local to each manager mount call. Servers mount on the root context, not the gateway\'s service context: the service context sits outside the `tools` service resolution chain, so fibers mounted there cannot register tools.',
         parameters: [],
@@ -4535,6 +4547,30 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ManualCompactAgentContext extends CompactionAgentContext {\n    runMaintenance<T>(task: (signal: AbortSignal) => Promise<T>): Promise<T>;\n}',
   },
   {
+    name: 'McpDirectConfigDeclaration',
+    declaration: 'export type McpDirectConfigDeclaration = {\n    readonly transport: \'stdio\';\n    readonly command: string;\n    readonly args: readonly string[];\n    readonly env: Readonly<Record<string, string>>;\n    readonly envCredentials: Readonly<Record<string, string>>;\n    readonly cwd: string;\n} | {\n    readonly transport: \'streamable-http\';\n    readonly url: string;\n    readonly headers: Readonly<Record<string, string>>;\n    readonly headerCredentials: Readonly<Record<string, string>>;\n};',
+  },
+  {
+    name: 'McpDirectConfigDeleteRequest',
+    declaration: 'export interface McpDirectConfigDeleteRequest {\n    readonly entryId: McpDirectConfigEntryId;\n}',
+  },
+  {
+    name: 'McpDirectConfigDeleteResult',
+    declaration: 'export type McpDirectConfigDeleteResult = McpMarketResult<{\n    readonly entryId: McpDirectConfigEntryId;\n    readonly restartRequired: false;\n}>;',
+  },
+  {
+    name: 'McpDirectConfigEntryId',
+    declaration: 'export type McpDirectConfigEntryId = Branded<\'McpDirectConfigEntryId\'>;',
+  },
+  {
+    name: 'McpDirectConfigSaveRequest',
+    declaration: 'export interface McpDirectConfigSaveRequest {\n    readonly entryId?: McpDirectConfigEntryId | undefined;\n    readonly serverName: string;\n    readonly declaration: McpDirectConfigDeclaration;\n    readonly confirmLocalExecution?: boolean;\n}',
+  },
+  {
+    name: 'McpDirectConfigSaveResult',
+    declaration: 'export type McpDirectConfigSaveResult = McpMarketResult<{\n    readonly entryId: McpDirectConfigEntryId;\n    readonly serverName: string;\n    readonly restartRequired: false;\n}>;',
+  },
+  {
     name: 'McpMarketConfigureRequest',
     declaration: 'export interface McpMarketConfigureRequest {\n    readonly packageId: McpMarketPackageId;\n    readonly credentialReferences: Readonly<Record<string, string>>;\n}',
   },
@@ -4548,11 +4584,15 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'McpMarketEntry',
-    declaration: 'export interface McpMarketEntry {\n    readonly packageId: McpMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly servers: readonly McpMarketServerEntry[];\n    readonly permissions: readonly string[];\n    readonly credentialRequirements: readonly McpMarketCredentialRequirement[];\n    readonly installedAt: number;\n    readonly configured: boolean;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n}',
+    declaration: 'export interface McpMarketEntry {\n    readonly packageId: McpMarketPackageId;\n    readonly source: McpMarketEntrySource;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly servers: readonly McpMarketServerEntry[];\n    readonly permissions: readonly string[];\n    readonly credentialRequirements: readonly McpMarketCredentialRequirement[];\n    readonly installedAt: number;\n    readonly configured: boolean;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly declaration?: McpDirectConfigDeclaration | undefined;\n    readonly diagnostic?: string | undefined;\n}',
+  },
+  {
+    name: 'McpMarketEntrySource',
+    declaration: 'export type McpMarketEntrySource = \'direct\' | \'package\';',
   },
   {
     name: 'McpMarketFailure',
-    declaration: 'export type McpMarketFailure = {\n    readonly code: \'invalid-archive\';\n    readonly reason: \'base64\' | \'zip\';\n} | {\n    readonly code: \'resource-limit\';\n    readonly limit: \'archive-bytes\' | \'file-count\' | \'entry-bytes\' | \'total-bytes\';\n    readonly limitValue: number;\n    readonly observedValue: number;\n    readonly entry?: string | undefined;\n} | {\n    readonly code: \'invalid-package\';\n    readonly reason: string;\n} | {\n    readonly code: \'untrusted-publisher\' | \'invalid-signature\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'managed-upgrade-required\';\n    readonly packageId: McpMarketPackageId;\n    readonly installedVersion: string;\n    readonly candidateVersion: string;\n} | {\n    readonly code: \'local-execution-confirmation-required\';\n    readonly candidatePermissions: readonly string[];\n} | {\n    readonly code: \'unmanaged-conflict\' | \'manifest-incompatible\' | \'not-found\';\n    readonly packageId: McpMarketPackageId;\n} | {\n    readonly code: \'invalid-credential-reference\';\n    readonly slot: string;\n} | {\n    readonly code: \'missing-credential-reference\';\n    readonly slot: string;\n};',
+    declaration: 'export type McpMarketFailure = {\n    readonly code: \'invalid-archive\';\n    readonly reason: \'base64\' | \'zip\';\n} | {\n    readonly code: \'resource-limit\';\n    readonly limit: \'archive-bytes\' | \'file-count\' | \'entry-bytes\' | \'total-bytes\';\n    readonly limitValue: number;\n    readonly observedValue: number;\n    readonly entry?: string | undefined;\n} | {\n    readonly code: \'invalid-package\';\n    readonly reason: string;\n} | {\n    readonly code: \'untrusted-publisher\' | \'invalid-signature\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'managed-upgrade-required\';\n    readonly packageId: McpMarketPackageId;\n    readonly installedVersion: string;\n    readonly candidateVersion: string;\n} | {\n    readonly code: \'local-execution-confirmation-required\';\n    readonly candidatePermissions: readonly string[];\n} | {\n    readonly code: \'unmanaged-conflict\' | \'manifest-incompatible\' | \'not-found\';\n    readonly packageId: McpMarketPackageId;\n} | {\n    readonly code: \'invalid-credential-reference\';\n    readonly slot: string;\n} | {\n    readonly code: \'missing-credential-reference\';\n    readonly slot: string;\n} | {\n    readonly code: \'invalid-direct-config\';\n    readonly reason: string;\n} | {\n    readonly code: \'direct-config-conflict\';\n    readonly serverName: string;\n    readonly heldBy: \'direct\' | \'package\';\n    readonly holderId: string;\n};',
   },
   {
     name: 'McpMarketInstallRequest',

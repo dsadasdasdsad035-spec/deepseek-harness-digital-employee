@@ -1492,7 +1492,7 @@ export interface ReconnectConfig {
 }
 ```
 
-来源： [`packages/mcp/mcp-client/src/index.ts:118`](../packages/mcp/mcp-client/src/index.ts)
+来源： [`packages/mcp/mcp-client/src/index.ts:124`](../packages/mcp/mcp-client/src/index.ts)
 
 <a id="deepseek-aidsh-mcp-market"></a>
 
@@ -1521,7 +1521,7 @@ export interface Config {
 }
 ```
 
-来源： [`packages/mcp/mcp-market/src/index.ts:33`](../packages/mcp/mcp-market/src/index.ts)
+来源： [`packages/mcp/mcp-market/src/index.ts:38`](../packages/mcp/mcp-market/src/index.ts)
 
 <a id="deepseek-aidsh-message-feedback"></a>
 
