@@ -15,7 +15,7 @@
 
 - [x] 3.1 New bridge plugin under `packages/hooks` (manifest in `vendor`-style README + config): load installed hook packages, validate matchers, register per-event interception handlers calling `runHook`, `createDetachedRuns` quiescence, `hook/*` session records
 - [x] 3.2 Invocable tool registration `hook__<serverName>` on the root/employee context: tool input as payload, stdout as result, structured failure for unbound or non-invocable targets
-- [ ] 3.3 Remote/gateway surface: inventory of installed hook packages with event bindings; restart-required install semantics consistent with other package kinds
+- [x] 3.3 Remote/gateway surface: inventory of installed hook packages with event bindings; restart-required install semantics consistent with other package kinds
 - [x] 3.4 Bridge tests: matcher filtering, timeout, merge precedence, invocation tool happy path + rejected unbound/non-invocable call, disposal quiescence
 
 ## 4. Digital employee templates and studio
