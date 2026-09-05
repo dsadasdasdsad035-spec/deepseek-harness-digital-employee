@@ -2478,6 +2478,31 @@ export interface Config {
 
 Source: [`packages/subagent/subagent-fork-in-process/src/index.ts:31`](../packages/subagent/subagent-fork-in-process/src/index.ts)
 
+<a id="deepseek-aidsh-subagent-market"></a>
+
+## `@deepseek-ai/dsh-subagent-market`
+
+```ts config-catalog
+/** Subagent marketplace Host configuration. */
+export interface Config {
+  /** Private user directory containing marketplace-managed subagent packages. */
+  readonly installRoot: string
+  /** Locally trusted Ed25519 publisher keys. */
+  readonly trustedPublishers: {
+    /** Stable publisher identity declared by signed packages. */
+    readonly id: string
+    /** Ed25519 SPKI public key in PEM form. */
+    readonly publicKeyPem: string
+  }[]
+  /** Explicit local override: accept packages without publisher verification. */
+  readonly allowUnsignedPackages?: boolean
+  /** Optional persistent trusted-publisher file combined with inline records. */
+  readonly trustedPublishersFile?: string
+}
+```
+
+Source: [`packages/subagent/subagent-market/src/index.ts:36`](../packages/subagent/subagent-market/src/index.ts)
+
 <a id="deepseek-aidsh-subagent-spawn-in-process"></a>
 
 ## `@deepseek-ai/dsh-subagent-spawn-in-process`
@@ -3341,6 +3366,31 @@ export interface Config {
 ```
 
 Source: [`packages/web/web-search-perplexity/src/index.ts:32`](../packages/web/web-search-perplexity/src/index.ts)
+
+<a id="deepseek-aidsh-workflow-market"></a>
+
+## `@deepseek-ai/dsh-workflow-market`
+
+```ts config-catalog
+/** Workflow marketplace Host configuration. */
+export interface Config {
+  /** Private user directory containing marketplace-managed workflow packages. */
+  readonly installRoot: string
+  /** Locally trusted Ed25519 publisher keys. */
+  readonly trustedPublishers: {
+    /** Stable publisher identity declared by signed packages. */
+    readonly id: string
+    /** Ed25519 SPKI public key in PEM form. */
+    readonly publicKeyPem: string
+  }[]
+  /** Explicit local override: accept packages without publisher verification. */
+  readonly allowUnsignedPackages?: boolean
+  /** Optional persistent trusted-publisher file combined with inline records. */
+  readonly trustedPublishersFile?: string
+}
+```
+
+Source: [`packages/workflow/workflow-market/src/index.ts:36`](../packages/workflow/workflow-market/src/index.ts)
 
 <a id="deepseek-aidsh-workflow-worker-thread"></a>
 

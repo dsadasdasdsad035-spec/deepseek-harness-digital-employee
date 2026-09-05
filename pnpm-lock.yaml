@@ -4409,6 +4409,27 @@ importers:
         specifier: workspace:^
         version: link:../../../native/landlock-run/packages/entry
 
+  packages/examples/builder-employee-template:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-digital-employee':
+        specifier: workspace:^
+        version: link:../../core/digital-employee
+      '@deepseek-ai/dsh-digital-employee-file':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-file
+      '@deepseek-ai/dsh-host-digital-employee-management':
+        specifier: workspace:^
+        version: link:../../host/digital-employee-management
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-tools':
+        specifier: workspace:^
+        version: link:../../core/tools
+
   packages/examples/digital-employee-template:
     devDependencies:
       '@deepseek-ai/cordis':
