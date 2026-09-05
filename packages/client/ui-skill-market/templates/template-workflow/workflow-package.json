@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "kind": "workflow",
+  "id": "workflow-market-template",
+  "version": "1.0.0",
+  "display": {
+    "name": "Workflow market template",
+    "description": "Publisher template for marketplace workflow packages."
+  },
+  "publisher": {
+    "id": "replace-with-publisher-id",
+    "signature": "REPLACE_WITH_ED25519_SIGNATURE_BASE64"
+  },
+  "files": {
+    "README.md": "GENERATED_SHA256",
+    "workflows/noop.js": "GENERATED_SHA256"
+  },
+  "workflows": [
+    {
+      "id": "noop-workflow",
+      "entry": "workflows/noop.js",
+      "description": "No-op workflow that exits immediately.",
+      "timeoutSec": 60
+    }
+  ]
+}

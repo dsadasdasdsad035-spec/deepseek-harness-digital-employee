@@ -103,6 +103,46 @@ export const hookPackageDescriptorSchema = base.extend({
   hooks: z.array(hookEntrySchema).min(1).max(32),
 }).strict()
 
+/** Interception events a hook entry may bind; kept aligned with the bridge surface. */
+const workflowEntrySchema = z.object({
+  id: identifier,
+  entry: relativePath,
+  description: z.string().min(1).max(512),
+  timeoutSec: z.number().min(1).max(3600).optional(),
+}).strict()
+
+/** One declarative subagent persona entry. */
+const subagentEntrySchema = z.object({
+  id: identifier,
+  instructions: relativePath,
+  tools: z.array(toolName).max(64).default([]),
+  modelSettings: z.object({
+    provider: z.string().max(128).optional(),
+    model: z.string().max(128).optional(),
+    maxTokens: z.number().min(1).max(1_000_000).optional(),
+  }).strict().optional(),
+  delegation: z.object({
+    mode: z.enum(['one-shot', 'continuable']),
+    maxDepth: z.number().min(0).max(8),
+    maxConcurrency: z.number().min(1).max(16),
+    timeoutMs: z.number().min(1).max(3_600_000),
+  }).strict().optional(),
+}).strict()
+
+/** Parsed workflow package metadata without any credential values. */
+export const workflowPackageDescriptorSchema = base.extend({
+  kind: z.literal('workflow'),
+  permissions: z.array(permissionName).max(16).default([]),
+  workflows: z.array(workflowEntrySchema).min(1).max(32),
+}).strict()
+
+/** Parsed declarative subagent package metadata without any credential values. */
+export const subagentPackageDescriptorSchema = base.extend({
+  kind: z.literal('subagent'),
+  permissions: z.array(permissionName).max(16).default([]),
+  subagents: z.array(subagentEntrySchema).min(1).max(32),
+}).strict()
+
 /** Validated executable Tool package descriptor. */
 export type ToolPackageDescriptor = z.infer<typeof toolPackageDescriptorSchema>
 /** Validated credential-free MCP descriptor. */
@@ -113,8 +153,21 @@ export type McpPackageServer = McpPackageDescriptor['servers'][number]
 export type HookPackageDescriptor = z.infer<typeof hookPackageDescriptorSchema>
 /** One declared shell-hook entry bound to an interception event. */
 export type HookPackageEntry = HookPackageDescriptor['hooks'][number]
+/** Validated credential-free workflow package descriptor. */
+export type WorkflowPackageDescriptor = z.infer<typeof workflowPackageDescriptorSchema>
+/** One declared workflow script entry. */
+export type WorkflowPackageEntry = WorkflowPackageDescriptor['workflows'][number]
+/** Validated declarative subagent package descriptor. */
+export type SubagentPackageDescriptor = z.infer<typeof subagentPackageDescriptorSchema>
+/** One declared subagent persona entry. */
+export type SubagentPackageEntry = SubagentPackageDescriptor['subagents'][number]
 /** Descriptor accepted by shared signature and file-table operations. */
-export type MarketplacePackageDescriptor = ToolPackageDescriptor | McpPackageDescriptor | HookPackageDescriptor
+export type MarketplacePackageDescriptor =
+  | ToolPackageDescriptor
+  | McpPackageDescriptor
+  | HookPackageDescriptor
+  | WorkflowPackageDescriptor
+  | SubagentPackageDescriptor
 
 /** One locally trusted publisher key configured by the Host administrator. */
 export interface TrustedPublisher {
@@ -210,6 +263,71 @@ export function parseHookPackageDescriptor(value: unknown): HookPackageDescripto
 }
 
 /**
+ * Parse one workflow package descriptor.
+ *
+ * Cross-field rules: every workflow entry must name its script in the signed
+ * file table, and any workflow implies the `subprocess` permission in the
+ * returned disclosure.
+ * @param value - Parsed JSON value.
+ * @returns Validated workflow descriptor with effective permissions.
+ */
+export function parseWorkflowPackageDescriptor(value: unknown): WorkflowPackageDescriptor {
+  const descriptor = workflowPackageDescriptorSchema.parse(value)
+  for (const workflow of descriptor.workflows) {
+    if (descriptor.files[workflow.entry] === undefined) {
+      throw new Error(`Workflow "${workflow.id}" entry "${workflow.entry}" is not a declared package file`)
+    }
+  }
+  return withWorkflowImpliedPermissions(descriptor)
+}
+
+/**
+ * Add the disclosure every workflow package carries regardless of declaration.
+ * @param descriptor - Schema-validated workflow descriptor.
+ * @returns Descriptor with `subprocess` present.
+ */
+function withWorkflowImpliedPermissions(descriptor: WorkflowPackageDescriptor): WorkflowPackageDescriptor {
+  if (descriptor.permissions.includes('subprocess')) return descriptor
+  return { ...descriptor, permissions: [...descriptor.permissions, 'subprocess'] }
+}
+
+/**
+ * Parse one declarative subagent package descriptor.
+ *
+ * Cross-field rules: every persona must name its instructions file in the
+ * signed file table, the file must be present, and declarative personas never
+ * ship executable provider code — any `command`, `entry`, or `script` shape is
+ * rejected. A persona implies the `subprocess` permission because the spawn
+ * driver runs a child process.
+ * @param value - Parsed JSON value.
+ * @returns Validated subagent descriptor with effective permissions.
+ */
+export function parseSubagentPackageDescriptor(value: unknown): SubagentPackageDescriptor {
+  const descriptor = subagentPackageDescriptorSchema.parse(value)
+  for (const persona of descriptor.subagents) {
+    if (descriptor.files[persona.instructions] === undefined) {
+      throw new Error(`Subagent "${persona.id}" instructions "${persona.instructions}" are not a declared package file`)
+    }
+    for (const key of ['command', 'entry', 'script'] as const) {
+      if (key in persona) {
+        throw new Error(`Subagent persona "${persona.id}" must not carry executable provider field "${key}"`)
+      }
+    }
+  }
+  return withSubagentImpliedPermissions(descriptor)
+}
+
+/**
+ * Add the disclosure every subagent package carries regardless of declaration.
+ * @param descriptor - Schema-validated subagent descriptor.
+ * @returns Descriptor with `subprocess` present.
+ */
+function withSubagentImpliedPermissions(descriptor: SubagentPackageDescriptor): SubagentPackageDescriptor {
+  if (descriptor.permissions.includes('subprocess')) return descriptor
+  return { ...descriptor, permissions: [...descriptor.permissions, 'subprocess'] }
+}
+
+/**
  * Add the disclosure every hook package carries regardless of declaration.
  * @param descriptor - Schema-validated hook descriptor.
  * @returns Descriptor with `subprocess` present.
@@ -237,7 +355,7 @@ export function descriptorSignaturePayload(descriptor: MarketplacePackageDescrip
  */
 export function preparePackageArchive(
   archive: InspectedArchive,
-  descriptorFilename: 'tool-package.json' | 'mcp-package.json' | 'hook-package.json',
+  descriptorFilename: 'tool-package.json' | 'mcp-package.json' | 'hook-package.json' | 'workflow-package.json' | 'subagent-package.json',
 ): InspectedArchive {
   const seen = new Set<string>()
   const entries: InspectedArchiveEntry[] = archive.entries.map((entry) => {
@@ -276,7 +394,9 @@ export function verifyPackageFileHashes(
     entry.kind === 'regular'
     && entry.name !== 'tool-package.json'
     && entry.name !== 'mcp-package.json'
-    && entry.name !== 'hook-package.json')
+    && entry.name !== 'hook-package.json'
+    && entry.name !== 'workflow-package.json'
+    && entry.name !== 'subagent-package.json')
   const actualNames = new Set(actual.map(entry => entry.name))
   for (const entry of actual) {
     const expected = files[entry.name]

@@ -24,6 +24,8 @@ export const TEMPLATE_ARCHIVE_PATH = join(
 export const TOOL_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'tool-market-template.zip')
 export const MCP_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'mcp-market-template.zip')
 export const HOOK_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'hook-market-template.zip')
+export const WORKFLOW_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'workflow-market-template.zip')
+export const SUBAGENT_TEMPLATE_ARCHIVE_PATH = join(repositoryRoot, 'apps', 'web', 'public', 'subagent-market-template.zip')
 
 const TEMPLATE_SOURCE_PATHS = [
   'README.md',
@@ -186,7 +188,7 @@ export async function generateTemplateArchive(
 
 async function generatePackageTemplate(
   sourceDirectory: string,
-  descriptorName: 'tool-package.json' | 'mcp-package.json' | 'hook-package.json',
+  descriptorName: 'tool-package.json' | 'mcp-package.json' | 'hook-package.json' | 'workflow-package.json' | 'subagent-package.json',
   outputPath: string,
 ): Promise<Buffer> {
   const descriptor = JSON.parse(await readFile(join(sourceDirectory, descriptorName), 'utf8')) as {
@@ -207,6 +209,14 @@ async function generatePackageTemplate(
     const entry = await readFile(join(sourceDirectory, 'hooks/echo.js'))
     descriptor.files['hooks/echo.js'] = createHash('sha256').update(entry).digest('hex')
     archiveInput['hooks/echo.js'] = [entry, { mtime: FIXED_MODIFICATION_TIME }]
+  } else if (descriptorName === 'workflow-package.json') {
+    const entry = await readFile(join(sourceDirectory, 'workflows/noop.js'))
+    descriptor.files['workflows/noop.js'] = createHash('sha256').update(entry).digest('hex')
+    archiveInput['workflows/noop.js'] = [entry, { mtime: FIXED_MODIFICATION_TIME }]
+  } else if (descriptorName === 'subagent-package.json') {
+    const entry = await readFile(join(sourceDirectory, 'subagents/reviewer.md'))
+    descriptor.files['subagents/reviewer.md'] = createHash('sha256').update(entry).digest('hex')
+    archiveInput['subagents/reviewer.md'] = [entry, { mtime: FIXED_MODIFICATION_TIME }]
   } else {
     const servers = (descriptor as { servers?: Array<{ args?: string[] }> }).servers ?? []
     const localEntries = servers.flatMap(server => server.args ?? []).filter(arg => arg.includes('/'))
@@ -244,5 +254,15 @@ export async function generateMarketplaceTemplateArchives(): Promise<void> {
     join(packageDirectory, 'templates', 'template-hook'),
     'hook-package.json',
     HOOK_TEMPLATE_ARCHIVE_PATH,
+  )
+  await generatePackageTemplate(
+    join(packageDirectory, 'templates', 'template-workflow'),
+    'workflow-package.json',
+    WORKFLOW_TEMPLATE_ARCHIVE_PATH,
+  )
+  await generatePackageTemplate(
+    join(packageDirectory, 'templates', 'template-subagent'),
+    'subagent-package.json',
+    SUBAGENT_TEMPLATE_ARCHIVE_PATH,
   )
 }

@@ -1,0 +1,31 @@
+{
+  "format": 1,
+  "kind": "subagent",
+  "id": "subagent-market-template",
+  "version": "1.0.0",
+  "display": {
+    "name": "Subagent market template",
+    "description": "Publisher template for declarative subagent persona packages."
+  },
+  "publisher": {
+    "id": "replace-with-publisher-id",
+    "signature": "REPLACE_WITH_ED25519_SIGNATURE_BASE64"
+  },
+  "files": {
+    "README.md": "GENERATED_SHA256",
+    "subagents/reviewer.md": "GENERATED_SHA256"
+  },
+  "subagents": [
+    {
+      "id": "reviewer",
+      "instructions": "subagents/reviewer.md",
+      "tools": ["read", "grep"],
+      "delegation": {
+        "mode": "one-shot",
+        "maxDepth": 1,
+        "maxConcurrency": 1,
+        "timeoutMs": 30000
+      }
+    }
+  ]
+}

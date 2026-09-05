@@ -23,7 +23,7 @@ export interface DigitalEmployeeConfigurationAsset {
   /** Stable asset identity within its capability class. */
   readonly id: DigitalEmployeeConfigurationAssetId
   /** Capability class stored by the template. */
-  readonly kind: 'skill' | 'tool' | 'mcp' | 'hook'
+  readonly kind: 'skill' | 'tool' | 'mcp' | 'hook' | 'workflow' | 'subagent'
   /** Human-readable label. */
   readonly label: string
   /** Optional capability description. */

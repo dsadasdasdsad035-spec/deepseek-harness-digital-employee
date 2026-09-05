@@ -17,7 +17,7 @@ const DEFAULT_FILE_OPERATIONS: ManagedPackageFileOperations = { rename }
 /** Ownership record written into every Tool or MCP marketplace package. */
 export interface ManagedPackageManifest {
   readonly format: 1
-  readonly kind: 'tool' | 'mcp' | 'hook'
+  readonly kind: 'tool' | 'mcp' | 'hook' | 'workflow' | 'subagent'
   readonly id: string
   readonly version: string
   readonly publisherId: string
@@ -32,7 +32,7 @@ export type ManagedPackageRead =
 const MANIFEST_FILENAME = '.dsh-market.json'
 const manifestSchema = z.object({
   format: z.literal(1),
-  kind: z.enum(['tool', 'mcp', 'hook']),
+  kind: z.enum(['tool', 'mcp', 'hook', 'workflow', 'subagent']),
   id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   version: z.string().min(1).max(128),
   publisherId: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),

@@ -1,0 +1,96 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../sandbox/sandbox-policy"
+    },
+    {
+      "path": "../../core/digital-employee"
+    },
+    {
+      "path": "../../skill/skill"
+    },
+    {
+      "path": "../../mcp/mcp-client"
+    },
+    {
+      "path": "../../fs/fs"
+    },
+    {
+      "path": "../../core/agent-loop"
+    },
+    {
+      "path": "../../preset/agent-presets"
+    },
+    {
+      "path": "../../../vendor/include"
+    },
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../util/atomic-write"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../../credentials/credentials"
+    },
+    {
+      "path": "../../runtime-diagnostics/invariants"
+    },
+    {
+      "path": "../../util/marketplace-core"
+    },
+    {
+      "path": "../../attachment/attachment"
+    },
+    {
+      "path": "../../code-runtime/code-runtime"
+    },
+    {
+      "path": "../../core/agent"
+    },
+    {
+      "path": "../../core/tools"
+    },
+    {
+      "path": "../../core/session"
+    },
+    {
+      "path": "../../jobs/jobs"
+    },
+    {
+      "path": "../../session/session-projection"
+    },
+    {
+      "path": "../../llm/llm"
+    },
+    {
+      "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../../vendor/cosmokit"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../session/session-persistence"
+    },
+    {
+      "path": "../../subagent/subagent"
+    },
+    {
+      "path": "../../shell/shell"
+    }
+  ]
+}

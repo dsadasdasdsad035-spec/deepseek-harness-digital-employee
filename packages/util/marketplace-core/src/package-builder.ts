@@ -10,7 +10,9 @@ import {
   descriptorSignaturePayload,
   parseHookPackageDescriptor,
   parseMcpPackageDescriptor,
+  parseSubagentPackageDescriptor,
   parseToolPackageDescriptor,
+  parseWorkflowPackageDescriptor,
   preparePackageArchive,
   verifyPackageFileHashes,
   verifyPublisherSignature,
@@ -21,15 +23,17 @@ import type {
 } from './descriptors.ts'
 
 /** Package kinds accepted by the publisher toolchain. */
-export type MarketplacePackageKind = 'tool' | 'mcp' | 'hook'
+export type MarketplacePackageKind = 'tool' | 'mcp' | 'hook' | 'workflow' | 'subagent'
 
 /** Descriptor filename required at the root of each package kind. */
 export const PACKAGE_DESCRIPTOR_FILENAMES: Readonly<
-  Record<MarketplacePackageKind, 'tool-package.json' | 'mcp-package.json' | 'hook-package.json'>
+  Record<MarketplacePackageKind, 'tool-package.json' | 'mcp-package.json' | 'hook-package.json' | 'workflow-package.json' | 'subagent-package.json'>
 > = {
   tool: 'tool-package.json',
   mcp: 'mcp-package.json',
   hook: 'hook-package.json',
+  workflow: 'workflow-package.json',
+  subagent: 'subagent-package.json',
 }
 
 /** Publisher identities derived from the shipped template placeholder. */
@@ -144,7 +148,11 @@ export async function signMarketplacePackage(
     ? parseToolPackageDescriptor(unsigned)
     : options.kind === 'mcp'
       ? parseMcpPackageDescriptor(unsigned)
-      : parseHookPackageDescriptor(unsigned)
+      : options.kind === 'hook'
+        ? parseHookPackageDescriptor(unsigned)
+        : options.kind === 'workflow'
+          ? parseWorkflowPackageDescriptor(unsigned)
+          : parseSubagentPackageDescriptor(unsigned)
 
   const privateKey = createPrivateKey(options.privateKeyPem)
   if (privateKey.asymmetricKeyType !== 'ed25519') {
@@ -265,7 +273,11 @@ async function validateBuiltArchive(
     ? parseToolPackageDescriptor(reparsed)
     : kind === 'mcp'
       ? parseMcpPackageDescriptor(reparsed)
-      : parseHookPackageDescriptor(reparsed)
+      : kind === 'hook'
+        ? parseHookPackageDescriptor(reparsed)
+        : kind === 'workflow'
+          ? parseWorkflowPackageDescriptor(reparsed)
+          : parseSubagentPackageDescriptor(reparsed)
   verifyPackageFileHashes(prepared, descriptor.files)
   /* v8 ignore next 2 -- defensive: the signature was produced from the same bytes */
   if (!verifyPublisherSignature(descriptorSignaturePayload(descriptor), descriptor.publisher.signature, publicKeyPem)) {
