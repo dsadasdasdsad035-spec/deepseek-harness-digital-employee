@@ -369,6 +369,15 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Owns declarative package lifecycle and credential-reference configuration; a fresh Host composition resolves references and mounts configured servers through the MCP client manager.',
   },
   {
+    key: 'hookMarket',
+    pkg: 'hooks-market',
+    title: 'Managed hook marketplace gateway',
+    mode: 'core',
+    consumers: ['ui-skill-market', 'digital-employee-management'],
+    companions: ['hook-protocol'],
+    note: 'Owns hook package lifecycle and credential-reference configuration; employee compositions resolve hook references and mount passive interception plus invocable hook__<id> tools through the shared hook protocol.',
+  },
+  {
     key: 'digitalEmployees',
     pkg: 'digital-employee',
     title: 'Digital employee registry and provider seam',

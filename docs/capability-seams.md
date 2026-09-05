@@ -114,6 +114,9 @@ flowchart LR
   pkg_mcp_market["mcp-market"]
   svc_mcpMarket["ctx.mcpMarket<br/>Managed MCP marketplace gateway"]
   pkg_mcp_client["mcp-client"]
+  pkg_hooks_market["hooks-market"]
+  svc_hookMarket["ctx.hookMarket<br/>Managed hook marketplace gateway"]
+  pkg_hook_protocol["hook-protocol"]
   pkg_digital_employee["digital-employee"]
   svc_digitalEmployees["ctx.digitalEmployees<br/>Digital employee registry and provider seam"]
   pkg_digital_employee_file["digital-employee-file"]
@@ -257,6 +260,7 @@ flowchart LR
   pkg_fs_local --> svc_fs
   pkg_fs_sandbox --> svc_fs
   pkg_goal --> svc_goals
+  pkg_hooks_market --> svc_hookMarket
   pkg_invariants --> svc_invariants
   pkg_jobs --> svc_jobs
   pkg_jobs_local --> svc_jobs
@@ -360,6 +364,8 @@ flowchart LR
   svc_e2b --> pkg_fs_e2b
   svc_e2b --> pkg_subprocess_e2b
   svc_fs --> pkg_tool_fs
+  svc_hookMarket --> pkg_digital_employee_management
+  svc_hookMarket --> pkg_ui_skill_market
   svc_invariants --> pkg_agent
   svc_invariants --> pkg_agent_loop
   svc_invariants --> pkg_scope
@@ -456,6 +462,7 @@ flowchart LR
   svc_workflowEngine --> pkg_tool_workflow
   svc_workspaceRegistry --> pkg_apiproxy
   svc_fs -. event gate .-> pkg_fs_observation_policy
+  svc_hookMarket -. event gate .-> pkg_hook_protocol
   svc_mcpMarket -. event gate .-> pkg_mcp_client
   svc_skillMarket -. event gate .-> pkg_skill_filesystem
   svc_toolMarket -. event gate .-> pkg_tools
@@ -496,6 +503,7 @@ flowchart LR
 | `ctx.skillMarket` | `core` | [`skill-market`](../packages/skill/skill-market) | - | `ui-skill-market` | [`skill-filesystem`](../packages/skill/skill-filesystem) | Owns Host-side archive validation and atomic marketplace mutations; the browser settings section consumes its generated Remote methods, and successful commits invalidate filesystem skill discovery. |
 | `ctx.toolMarket` | `core` | [`tool-market`](../packages/tool/tool-market) | - | `ui-skill-market`, `digital-employee-management` | [`tools`](../packages/core/tools) | Owns signed archive validation and restart-bound Tool package mutations; activated package plugins register their tools through the existing registry. |
 | `ctx.mcpMarket` | `core` | [`mcp-market`](../packages/mcp/mcp-market) | - | `ui-skill-market`, `digital-employee-management` | [`mcp-client`](../packages/mcp/mcp-client) | Owns declarative package lifecycle and credential-reference configuration; a fresh Host composition resolves references and mounts configured servers through the MCP client manager. |
+| `ctx.hookMarket` | `core` | [`hooks-market`](../packages/hooks/hooks-market) | - | `ui-skill-market`, `digital-employee-management` | [`hook-protocol`](../packages/hooks/hook-protocol) | Owns hook package lifecycle and credential-reference configuration; employee compositions resolve hook references and mount passive interception plus invocable hook__<id> tools through the shared hook protocol. |
 | `ctx.digitalEmployees` | `seam` | [`digital-employee`](../packages/core/digital-employee) | [`digital-employee-file`](../packages/core/digital-employee-file) | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | - | Owns template and instance lookup, lifecycle mutation, memory, audit, and durable employee records; composition and Host task admission consume the resolved employee state. |
 | `ctx.digitalEmployeeAgent` | `core` | [`digital-employee-agent`](../packages/core/digital-employee-agent) | - | `digital-employee-management` | - | Resolves an active employee into the existing Agent, prompt, skill, tool, MCP, memory, and delegation extension points before creating an employee-owned root Session. |
 | `ctx.digitalEmployeeManagement` | `core` | `digital-employee-management` | - | `ui-digital-employees` | - | Exposes typed management and atomic chat-start Remote operations while delegating durable state and Agent composition to their owning services. |
