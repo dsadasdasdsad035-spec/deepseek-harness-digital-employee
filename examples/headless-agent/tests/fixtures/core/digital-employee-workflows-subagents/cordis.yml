@@ -1,0 +1,66 @@
+- id: mock-llm
+  name: './mock-llm.ts'
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: digital-employee-mock
+    model: digital-employee-mock
+- id: agent-spine
+  name: '@deepseek-ai/dsh-agent-spine-demo'
+  config:
+    agents: []
+    workspaceContext: false
+    skills:
+      filesystem:
+        dshHome: './.dsh-home'
+- id: credentials-local
+  name: '@deepseek-ai/dsh-credentials-local'
+  config:
+    path: !!js process.env.DSH_WF_SA_FIXTURE_CREDENTIALS
+    watch: false
+- id: subprocess-local
+  name: '@deepseek-ai/dsh-subprocess-local'
+- id: bash-local
+  name: '@deepseek-ai/dsh-bash-local'
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+- id: workflow-engine
+  name: '@deepseek-ai/dsh-workflow-worker-thread'
+- id: subagents
+  name: '@deepseek-ai/dsh-subagent'
+- id: fixture-subagent-provider
+  name: '../digital-employee-agent/subagent-provider.ts'
+- id: hooks-market
+  name: '@deepseek-ai/dsh-hooks-market'
+  config:
+    installRoot: !!js process.env.DSH_WF_SA_FIXTURE_HOOKS_ROOT
+    trustedPublishers: !!js JSON.parse(process.env.DSH_WF_SA_FIXTURE_TRUSTED_PUBLISHERS)
+    allowUnsignedPackages: true
+- id: workflow-market
+  name: '@deepseek-ai/dsh-workflow-market'
+  config:
+    installRoot: !!js process.env.DSH_WF_SA_FIXTURE_WORKFLOW_ROOT
+    trustedPublishers: !!js JSON.parse(process.env.DSH_WF_SA_FIXTURE_TRUSTED_PUBLISHERS)
+    allowUnsignedPackages: true
+- id: subagent-market
+  name: '@deepseek-ai/dsh-subagent-market'
+  config:
+    installRoot: !!js process.env.DSH_WF_SA_FIXTURE_SUBAGENT_ROOT
+    trustedPublishers: !!js JSON.parse(process.env.DSH_WF_SA_FIXTURE_TRUSTED_PUBLISHERS)
+    allowUnsignedPackages: true
+- id: agent-presets
+  name: '@deepseek-ai/dsh-agent-presets'
+  config:
+    default: digital-employee-minimal
+    includeUserRoot: false
+    roots:
+      - path: !!js process.env.DSH_DIGITAL_EMPLOYEE_PRESET_ROOT
+        trust: system
+- id: digital-employees
+  name: '@deepseek-ai/dsh-digital-employee'
+- id: example-template
+  name: './template.ts'
+- id: digital-employee-agent
+  name: '@deepseek-ai/dsh-digital-employee-agent'

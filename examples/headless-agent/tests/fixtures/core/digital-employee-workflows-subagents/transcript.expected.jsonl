@@ -1,0 +1,3 @@
+{"type":"acceptance","stage":"workflow-installed","ok":true,"id":"noop-workflows"}
+{"type":"acceptance","stage":"subagent-installed","ok":true,"id":"reviewer-subagents"}
+{"type":"acceptance","stage":"inventory","wfEntries":[{"id":"noop-workflows","entries":["noop"]}],"saEntries":[{"id":"reviewer-subagents","entries":["reviewer"]}]}
