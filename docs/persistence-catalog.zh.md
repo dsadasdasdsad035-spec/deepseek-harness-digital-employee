@@ -406,7 +406,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'digital-employee/expert-authorization-denied': DigitalEmployeeExpertAuthorizationDeniedEvent
 ```
 
-来源：[`packages/core/digital-employee/src/types.ts:248`](../packages/core/digital-employee/src/types.ts)
+来源：[`packages/core/digital-employee/src/types.ts:252`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeeexpert-delegation--log-only"></a>
 
@@ -428,7 +428,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 'digital-employee/expert-result': DigitalEmployeeExpertResultEvent
 ```
 
-来源：[`packages/core/digital-employee/src/types.ts:250`](../packages/core/digital-employee/src/types.ts)
+来源：[`packages/core/digital-employee/src/types.ts:254`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeeidentity--log-only"></a>
 

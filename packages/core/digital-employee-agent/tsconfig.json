@@ -36,6 +36,9 @@
       "path": "../../mcp/mcp-client"
     },
     {
+      "path": "../../hooks/hooks-market"
+    },
+    {
       "path": "../../subagent/subagent"
     },
     {

@@ -3971,6 +3971,9 @@ importers:
       '@deepseek-ai/dsh-digital-employee':
         specifier: workspace:^
         version: link:../digital-employee
+      '@deepseek-ai/dsh-hooks-market':
+        specifier: workspace:^
+        version: link:../../hooks/hooks-market
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -5506,6 +5509,9 @@ importers:
       '@deepseek-ai/dsh-digital-employee-agent':
         specifier: workspace:^
         version: link:../../core/digital-employee-agent
+      '@deepseek-ai/dsh-hooks-market':
+        specifier: workspace:^
+        version: link:../../hooks/hooks-market
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants

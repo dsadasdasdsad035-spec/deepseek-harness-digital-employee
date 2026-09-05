@@ -375,6 +375,64 @@ describe('DigitalEmployeeAgent', () => {
     expect(createAgent).not.toHaveBeenCalled()
   })
 
+
+  it('fails composition when hook references are unresolved and mounts bound hooks otherwise', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-agent-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Verify every material claim.', 'utf8')
+    const hookPackage = {
+      packageId: 'echo-hooks',
+      directory: root,
+      descriptor: {
+        format: 1, kind: 'hook', id: 'echo-hooks', version: '1.0.0',
+        display: { name: 'Echo hooks', description: '' },
+        publisher: { id: 'deepseek-local', signature: 'sig' },
+        files: {}, permissions: ['subprocess'],
+        hooks: [{
+          id: 'echo', event: 'UserPromptSubmit', matcher: 'test-hook',
+          command: 'node', args: ['hooks/echo.js'], env: {}, credentialReferences: {}, invocable: true,
+        }],
+      },
+      references: {},
+    }
+    const registeredTools: string[] = []
+    function makeCtx(): Context {
+      const ctx = new Context()
+      ctx.provide('agentPresets', { mount: vi.fn(() => Promise.resolve()) } as never)
+      ctx.provide('agents', { create: vi.fn() } as never)
+      ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+      ctx.provide('skills', { restrict: vi.fn() } as never)
+      ctx.provide('subagents', {} as never)
+      ctx.provide('tools', {
+        restrict: vi.fn(),
+        register: vi.fn((definition: { name: string }) => {
+          registeredTools.push(definition.name)
+          return () => {}
+        }),
+      } as never)
+      ctx.provide('shell', { run: vi.fn(async () => ({ exitCode: 0, stdout: '', stderr: '' })) } as never)
+      return ctx
+    }
+    const host = makeCtx()
+    host.provide('hookMarket', {
+      installedPackages: vi.fn(async () => [hookPackage]),
+    } as never)
+    await host.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    await host.plugin(DigitalEmployeeAgent)
+
+    const x = createScope(host, { employee: 'x' })
+    await expect(host.digitalEmployeeAgent.compose(x.ctx, {
+      ...resolved(root, 'x', 'X'),
+      hooks: ['missing-hooks'],
+    })).rejects.toThrow('hook references are unresolved: missing-hooks')
+
+    const y = createScope(host, { employee: 'y' })
+    await host.digitalEmployeeAgent.compose(y.ctx, { ...resolved(root, 'y', 'Y'), hooks: ['echo-hooks'] })
+    expect(registeredTools).toContain('hook__echo')
+    const z = createScope(host, { employee: 'z' })
+    await host.digitalEmployeeAgent.compose(z.ctx, resolved(root, 'z', 'Z'))
+    expect(registeredTools).toEqual(['hook__echo'])
+  })
+
   it('drains owned expert trees and root Agents before employee deletion', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-delete-work-'))
     const employee = resolved(root, 'alpha', 'Alpha')
@@ -759,7 +817,6 @@ describe('DigitalEmployeeAgent', () => {
       label: 'Evidence Critic',
       prompt,
       parent,
-      // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any
       signal: expect.any(AbortSignal),
       agentOptions: baseExpert.agentOptions,
       maxDepth: 1,
@@ -869,7 +926,6 @@ describe('DigitalEmployeeAgent', () => {
           },
         },
       },
-      // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any
       signal: expect.any(AbortSignal),
     })
     expect(append).toHaveBeenNthCalledWith(3, 'digital-employee/expert-delegation', {

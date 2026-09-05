@@ -1272,6 +1272,54 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'hookMarket',
+    summary: 'Typed Remote gateway for managed hook packages.',
+    description: 'Typed Remote gateway for managed hook packages.',
+    methods: [
+      {
+        signature: '@Remote(\'list\') list(): Promise<HookMarketListResult>',
+        description: 'List managed hook packages without credential values.',
+        parameters: [],
+        returns: 'Declared inventory result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'install\') install(request: HookMarketInstallRequest): Promise<HookMarketInstallResult>',
+        description: 'Install or explicitly upgrade one trusted hook package.',
+        parameters: [{ name: 'request', description: 'Uploaded archive and explicit replacement intent.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'configure\') configure(request: HookMarketConfigureRequest): Promise<HookMarketConfigureResult>',
+        description: 'Persist credential references only.',
+        parameters: [{ name: 'request', description: 'Package identity and descriptor-slot reference mapping.' }],
+        returns: 'Saved references and restart state, or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'uninstall\') uninstall(request: HookMarketUninstallRequest): Promise<HookMarketUninstallResult>',
+        description: 'Uninstall one marketplace-managed hook package.',
+        parameters: [{ name: 'request', description: 'Managed package identity to remove.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: 'async installedPackages(): Promise<readonly InstalledHookPackage[]>',
+        description: 'Project every installed hook package for the employee bridge. Packages failing validation are skipped with a diagnostic; the bridge must mount only valid descriptors.',
+        parameters: [],
+        returns: 'Installed descriptors with their configured reference names.',
+      },
+      {
+        signature: 'async resolveSlotValue(packageId: string, slot: string): Promise<string>',
+        description: 'Resolve one configured credential reference to its secret value.',
+        parameters: [{ name: 'packageId', description: 'Managed package owning the reference.' }, { name: 'slot', description: 'Descriptor credential slot.' }],
+        returns: 'resolved secret value; never persisted.',
+      },
+      {
+        signature: 'reportDiagnostic(packageId: string, diagnostic?: string): void',
+        description: 'Surface a bridge-side mounting failure on the package inventory.',
+        parameters: [{ name: 'packageId', description: 'Managed package identity.' }, { name: 'diagnostic', description: 'Public diagnostic, or undefined to clear it.' }],
+      },
+    ],
+  },
+  {
     key: 'invariants',
     summary: 'Package-owned invariant registry with global and regex-based selection.',
     description: 'Package-owned invariant registry with global and regex-based selection.',
@@ -3780,7 +3828,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'CreateDigitalEmployeeTemplateDraftRequest',
-    declaration: 'export interface CreateDigitalEmployeeTemplateDraftRequest {\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality?: string;\n    readonly preset?: string;\n    readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n    readonly experts?: DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation?: DigitalEmployeeConfigurationDelegation;\n}',
+    declaration: 'export interface CreateDigitalEmployeeTemplateDraftRequest {\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality?: string;\n    readonly preset?: string;\n    readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n    readonly hooks?: string[];\n    readonly experts?: DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation?: DigitalEmployeeConfigurationDelegation;\n}',
   },
   {
     name: 'CreateGoalRequest',
@@ -3852,7 +3900,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'DigitalEmployeeConfigurationAsset',
-    declaration: 'export interface DigitalEmployeeConfigurationAsset {\n    readonly id: DigitalEmployeeConfigurationAssetId;\n    readonly kind: \'skill\' | \'tool\' | \'mcp\';\n    readonly label: string;\n    readonly description?: string;\n    readonly available: boolean;\n    readonly source: string;\n    readonly version?: string | undefined;\n    readonly publisher?: string | undefined;\n    readonly tags?: readonly string[] | undefined;\n    readonly managedByMarket?: boolean | undefined;\n    readonly permissionSummary: readonly string[];\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n    readonly mcpServer?: DigitalEmployeeConfigurationMcpServer | undefined;\n}',
+    declaration: 'export interface DigitalEmployeeConfigurationAsset {\n    readonly id: DigitalEmployeeConfigurationAssetId;\n    readonly kind: \'skill\' | \'tool\' | \'mcp\' | \'hook\';\n    readonly label: string;\n    readonly description?: string;\n    readonly available: boolean;\n    readonly source: string;\n    readonly version?: string | undefined;\n    readonly publisher?: string | undefined;\n    readonly tags?: readonly string[] | undefined;\n    readonly managedByMarket?: boolean | undefined;\n    readonly permissionSummary: readonly string[];\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n    readonly mcpServer?: DigitalEmployeeConfigurationMcpServer | undefined;\n}',
   },
   {
     name: 'DigitalEmployeeConfigurationAssetCatalog',
@@ -4028,7 +4076,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'DigitalEmployeeTemplate',
-    declaration: 'export interface DigitalEmployeeTemplate {\n    readonly id: DigitalEmployeeTemplateId;\n    readonly version: string;\n    readonly display: DigitalEmployeeTemplateDisplay;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly preset: string;\n    readonly mcpServers?: readonly DigitalEmployeeMcpServer[];\n    readonly capabilities: DigitalEmployeeAuthority;\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
+    declaration: 'export interface DigitalEmployeeTemplate {\n    readonly id: DigitalEmployeeTemplateId;\n    readonly version: string;\n    readonly display: DigitalEmployeeTemplateDisplay;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly preset: string;\n    readonly mcpServers?: readonly DigitalEmployeeMcpServer[];\n    readonly hooks?: readonly string[];\n    readonly capabilities: DigitalEmployeeAuthority;\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
   },
   {
     name: 'DigitalEmployeeTemplateDisplay',
@@ -4036,7 +4084,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'DigitalEmployeeTemplateDraft',
-    declaration: 'export interface DigitalEmployeeTemplateDraft {\n    readonly id: DigitalEmployeeTemplateDraftId;\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality: string;\n    readonly preset: string;\n    readonly capabilities: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers: readonly DigitalEmployeeConfigurationMcpServer[];\n    readonly experts: readonly DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds: readonly DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation: DigitalEmployeeConfigurationDelegation;\n    readonly revision: number;\n    readonly createdAt: string;\n    readonly updatedAt: string;\n}',
+    declaration: 'export interface DigitalEmployeeTemplateDraft {\n    readonly id: DigitalEmployeeTemplateDraftId;\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality: string;\n    readonly preset: string;\n    readonly capabilities: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers: readonly DigitalEmployeeConfigurationMcpServer[];\n    readonly hooks?: string[];\n    readonly experts: readonly DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds: readonly DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation: DigitalEmployeeConfigurationDelegation;\n    readonly revision: number;\n    readonly createdAt: string;\n    readonly updatedAt: string;\n}',
   },
   {
     name: 'DigitalEmployeeTemplateDraftId',
@@ -4295,6 +4343,58 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface GrantRecord {\n    readonly kind: \'grant\';\n    readonly payload: unknown;\n}',
   },
   {
+    name: 'HookMarketConfigureRequest',
+    declaration: 'export interface HookMarketConfigureRequest {\n    readonly packageId: HookMarketPackageId;\n    readonly credentialReferences: Readonly<Record<string, string>>;\n}',
+  },
+  {
+    name: 'HookMarketConfigureResult',
+    declaration: 'export type HookMarketConfigureResult = HookMarketResult<{\n    readonly packageId: HookMarketPackageId;\n    readonly credentialReferences: Readonly<Record<string, string>>;\n    readonly restartRequired: true;\n}>;',
+  },
+  {
+    name: 'HookMarketCredentialRequirement',
+    declaration: 'export interface HookMarketCredentialRequirement {\n    readonly slot: string;\n    readonly reference?: string | undefined;\n    readonly configured: boolean;\n    readonly source?: string | undefined;\n}',
+  },
+  {
+    name: 'HookMarketEntry',
+    declaration: 'export interface HookMarketEntry {\n    readonly packageId: HookMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly hooks: readonly HookMarketHookEntry[];\n    readonly permissions: readonly string[];\n    readonly credentialRequirements: readonly HookMarketCredentialRequirement[];\n    readonly installedAt: number;\n    readonly configured: boolean;\n    readonly available: boolean;\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n}',
+  },
+  {
+    name: 'HookMarketFailure',
+    declaration: 'export type HookMarketFailure = {\n    readonly code: \'invalid-archive\';\n    readonly reason: \'base64\' | \'zip\';\n} | {\n    readonly code: \'resource-limit\';\n    readonly limit: \'archive-bytes\' | \'file-count\' | \'entry-bytes\' | \'total-bytes\';\n    readonly limitValue: number;\n    readonly observedValue: number;\n    readonly entry?: string | undefined;\n} | {\n    readonly code: \'invalid-package\';\n    readonly reason: string;\n} | {\n    readonly code: \'untrusted-publisher\' | \'invalid-signature\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'managed-upgrade-required\';\n    readonly packageId: HookMarketPackageId;\n    readonly installedVersion: string;\n    readonly candidateVersion: string;\n} | {\n    readonly code: \'local-execution-confirmation-required\';\n    readonly candidatePermissions: readonly string[];\n} | {\n    readonly code: \'unmanaged-conflict\' | \'manifest-incompatible\' | \'not-found\';\n    readonly packageId: HookMarketPackageId;\n} | {\n    readonly code: \'invalid-credential-reference\';\n    readonly slot: string;\n} | {\n    readonly code: \'missing-credential-reference\';\n    readonly slot: string;\n};',
+  },
+  {
+    name: 'HookMarketHookEntry',
+    declaration: 'export interface HookMarketHookEntry {\n    readonly id: string;\n    readonly event: HookEvent;\n    readonly matcher?: string | undefined;\n    readonly invocable: boolean;\n    readonly available: boolean;\n}',
+  },
+  {
+    name: 'HookMarketInstallRequest',
+    declaration: 'export interface HookMarketInstallRequest {\n    readonly filename: string;\n    readonly archiveBase64: string;\n    readonly replaceExisting?: boolean;\n    readonly confirmLocalExecution?: boolean;\n}',
+  },
+  {
+    name: 'HookMarketInstallResult',
+    declaration: 'export type HookMarketInstallResult = HookMarketResult<{\n    readonly packageId: HookMarketPackageId;\n    readonly operation: \'installed\' | \'upgraded\';\n    readonly restartRequired: true;\n}>;',
+  },
+  {
+    name: 'HookMarketListResult',
+    declaration: 'export type HookMarketListResult = HookMarketResult<{\n    readonly entries: readonly HookMarketEntry[];\n}>;',
+  },
+  {
+    name: 'HookMarketPackageId',
+    declaration: 'export type HookMarketPackageId = Branded<\'HookMarketPackageId\'>;',
+  },
+  {
+    name: 'HookMarketResult',
+    declaration: 'export type HookMarketResult<Value> = {\n    readonly ok: true;\n    readonly value: Value;\n} | {\n    readonly ok: false;\n    readonly error: HookMarketFailure;\n};',
+  },
+  {
+    name: 'HookMarketUninstallRequest',
+    declaration: 'export interface HookMarketUninstallRequest {\n    readonly packageId: HookMarketPackageId;\n}',
+  },
+  {
+    name: 'HookMarketUninstallResult',
+    declaration: 'export type HookMarketUninstallResult = HookMarketResult<{\n    readonly packageId: HookMarketPackageId;\n    readonly restartRequired: true;\n}>;',
+  },
+  {
     name: 'ImageAttachmentLimits',
     declaration: 'export interface ImageAttachmentLimits {\n    maxImageBytes: number;\n    maxImagesPerMessage: number;\n    maxMessageImageBytes: number;\n    maxImagePixels: number;\n    maxImageDimension: number;\n    mediaTypes: readonly ImageMediaType[];\n}',
   },
@@ -4337,6 +4437,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'IndexInjectionPlacement',
     declaration: 'export type IndexInjectionPlacement = \'head\' | \'body\';',
+  },
+  {
+    name: 'InstalledHookPackage',
+    declaration: 'export interface InstalledHookPackage {\n    readonly packageId: string;\n    readonly directory: string;\n    readonly descriptor: HookPackageDescriptor;\n    readonly references: Readonly<Record<string, string>>;\n}',
   },
   {
     name: 'InvariantFailure',
@@ -4916,7 +5020,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ResolvedDigitalEmployee',
-    declaration: 'export interface ResolvedDigitalEmployee {\n    readonly instance: DigitalEmployeeInstance;\n    readonly template: DigitalEmployeeTemplate;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly authority: DigitalEmployeeAuthority;\n    readonly mcpServers: readonly DigitalEmployeeMcpServer[];\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
+    declaration: 'export interface ResolvedDigitalEmployee {\n    readonly instance: DigitalEmployeeInstance;\n    readonly template: DigitalEmployeeTemplate;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly authority: DigitalEmployeeAuthority;\n    readonly mcpServers: readonly DigitalEmployeeMcpServer[];\n    readonly hooks?: readonly string[];\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
   },
   {
     name: 'ResolvedDigitalEmployeeExpert',
@@ -5980,7 +6084,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'UpdateDigitalEmployeeTemplateDraftRequest',
-    declaration: 'export interface UpdateDigitalEmployeeTemplateDraftRequest extends DigitalEmployeeTemplateDraftIdentityRequest {\n    readonly revision: number;\n    readonly patch: {\n        readonly templateId?: string;\n        readonly display?: {\n            readonly name: string;\n            readonly description: string;\n            readonly banner?: string;\n        };\n        readonly instructions?: string;\n        readonly personality?: string;\n        readonly preset?: string;\n        readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n        readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n        readonly experts?: DigitalEmployeeConfigurationExpert[];\n        readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n        readonly delegation?: DigitalEmployeeConfigurationDelegation;\n    };\n}',
+    declaration: 'export interface UpdateDigitalEmployeeTemplateDraftRequest extends DigitalEmployeeTemplateDraftIdentityRequest {\n    readonly revision: number;\n    readonly patch: {\n        readonly templateId?: string;\n        readonly display?: {\n            readonly name: string;\n            readonly description: string;\n            readonly banner?: string;\n        };\n        readonly instructions?: string;\n        readonly personality?: string;\n        readonly preset?: string;\n        readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n        readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n        readonly hooks?: string[];\n        readonly experts?: DigitalEmployeeConfigurationExpert[];\n        readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n        readonly delegation?: DigitalEmployeeConfigurationDelegation;\n    };\n}',
   },
   {
     name: 'UpdateTeamTaskRequest',

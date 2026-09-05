@@ -30,6 +30,7 @@ import type {} from '@deepseek-ai/dsh-credentials'
 import type {} from '@deepseek-ai/dsh-mcp-client'
 import { listMcpServerConfigs } from '@deepseek-ai/dsh-mcp-client'
 import type {} from '@deepseek-ai/dsh-mcp-market'
+import type { HookMarketGateway } from '@deepseek-ai/dsh-hooks-market'
 import type {} from '@deepseek-ai/dsh-agent-presets'
 import type {} from '@deepseek-ai/dsh-skill'
 import type {} from '@deepseek-ai/dsh-skill-market'
@@ -175,6 +176,8 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
         : [],
     )
     const managedMcp = await this.ctx.get('mcpMarket')?.templateConfigurations() ?? []
+    const managedHooks: Awaited<ReturnType<HookMarketGateway['list']>> = await this.ctx.get('hookMarket')?.list()
+      ?? { ok: true as const, value: { entries: [] } }
     const managedMcpNames = new Set(managedMcp.map(entry => entry.serverName))
     const runtimeSkills = new Map(skills.map(skill => [skill.name, skill] as const))
     const managedSkills = new Map(
@@ -266,6 +269,19 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
         ...entry.available ? {} : { diagnostic: 'MCP configuration is unavailable or requires a Host restart.' },
         mcpServer: entry.declaration,
       })),
+      ...managedHooks.ok === true ? managedHooks.value.entries.map(entry => ({
+        id: `hook:${entry.packageId}` as never,
+        kind: 'hook' as const,
+        label: entry.displayName,
+        description: entry.description,
+        available: entry.available,
+        source: `hooks-market:${entry.packageId}`,
+        version: entry.version,
+        publisher: entry.publisherId,
+        permissionSummary: entry.permissions,
+        restartRequired: entry.restartRequired,
+        ...entry.available ? {} : { diagnostic: 'Hook package requires configuration or a Host restart.' },
+      })) : [],
       ...[...mcpServers].filter(serverName => !managedMcpNames.has(serverName)).map(serverName => ({
         id: `mcp:${serverName}` as never,
         kind: 'mcp' as const,
@@ -383,6 +399,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
             instructions: materialized.instructions,
             preset: draft.preset,
             mcpServers: draft.mcpServers as never,
+            hooks: draft.hooks ?? [],
             capabilities: draft.capabilities as never,
             experts: materialized.experts,
             delegation: draft.delegation,
@@ -391,6 +408,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
           instructions: materialized.instructions,
           authority: draft.capabilities as never,
           mcpServers: draft.mcpServers as never,
+          hooks: draft.hooks ?? [],
           experts: materialized.experts,
           delegation: draft.delegation,
         },
@@ -456,6 +474,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
           instructions: materialized.instructions,
           preset: publishedDraft.preset,
           mcpServers: publishedDraft.mcpServers as never,
+          hooks: publishedDraft.hooks ?? [],
           capabilities: publishedDraft.capabilities as never,
           experts: materialized.experts,
           delegation: publishedDraft.delegation,
@@ -799,6 +818,20 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
         }
       }
     }
+    const hookRefs = draft.hooks ?? []
+    if (hookRefs.length > 0) {
+      const market = this.ctx.get('hookMarket')
+      const installed = new Set((await market?.installedPackages() ?? []).map((pkg: { packageId: string }) => pkg.packageId))
+      for (const hookRef of hookRefs) {
+        if (!installed.has(hookRef)) {
+          diagnostics.push({
+            code: 'unavailable-hook',
+            path: 'hooks',
+            message: `Hook package "${hookRef}" is not installed in this Host.`,
+          })
+        }
+      }
+    }
     return { revision: draft.revision, diagnostics }
   }
 
@@ -932,6 +965,7 @@ async function localTemplate(
     instructions,
     preset: draft.preset,
     mcpServers: draft.mcpServers as never,
+    hooks: draft.hooks ?? [],
     capabilities: draft.capabilities as never,
     experts,
     delegation: draft.delegation,

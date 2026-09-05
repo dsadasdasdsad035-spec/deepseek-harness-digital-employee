@@ -14,6 +14,7 @@
     { "path": "../../core/digital-employee-agent" },
     { "path": "../../mcp/mcp-client" },
     { "path": "../../mcp/mcp-market" },
+    { "path": "../../hooks/hooks-market" },
     { "path": "../../skill/skill-market" },
     { "path": "../../tool/tool-market" },
     { "path": "../../llm/llm" },

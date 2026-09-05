@@ -813,6 +813,35 @@ export interface Config {
 
 Source: [`packages/hooks/hooks-codex/src/index.ts:44`](../packages/hooks/hooks-codex/src/index.ts)
 
+<a id="deepseek-aidsh-hooks-market"></a>
+
+## `@deepseek-ai/dsh-hooks-market`
+
+Requires: `credentials` · `shell`
+
+```ts config-catalog
+/** Hook marketplace Host configuration. */
+export interface Config {
+  /** Private user directory containing marketplace-managed hook packages. */
+  readonly installRoot: string
+  /** Locally trusted Ed25519 publisher keys. */
+  readonly trustedPublishers: {
+    /** Stable publisher identity declared by signed packages. */
+    readonly id: string
+    /** Ed25519 SPKI public key in PEM form. */
+    readonly publicKeyPem: string
+  }[]
+  /** Bare interpreter command names a hook command may name; defaults to `['node']`. */
+  readonly stdioInterpreters?: string[]
+  /** Explicit local override: accept packages without publisher verification. */
+  readonly allowUnsignedPackages?: boolean
+  /** Optional persistent trusted-publisher file combined with inline records. */
+  readonly trustedPublishersFile?: string
+}
+```
+
+Source: [`packages/hooks/hooks-market/src/index.ts:40`](../packages/hooks/hooks-market/src/index.ts)
+
 <a id="deepseek-aidsh-host-apiproxy"></a>
 
 ## `@deepseek-ai/dsh-host-apiproxy`
@@ -867,7 +896,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/host/digital-employee-management/src/index.ts:72`](../packages/host/digital-employee-management/src/index.ts)
+Source: [`packages/host/digital-employee-management/src/index.ts:73`](../packages/host/digital-employee-management/src/index.ts)
 
 <a id="deepseek-aidsh-host-directory-picker-browse"></a>
 

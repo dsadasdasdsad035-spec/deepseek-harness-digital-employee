@@ -475,6 +475,66 @@ The full presentation field docs live in [`packages/core/tools/src/presentation.
 
 Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
 
+<a id="ctxhookmarket--hookmarketgateway"></a>
+
+### `ctx.hookMarket` — `HookMarketGateway`
+
+Typed Remote gateway for managed hook packages.
+
+```ts cordis-catalog
+/**
+ * List managed hook packages without credential values.
+ * @returns Declared inventory result or a structured marketplace failure.
+ */
+@Remote('list') list(): Promise<HookMarketListResult>
+
+/**
+ * Install or explicitly upgrade one trusted hook package.
+ * @param request - Uploaded archive and explicit replacement intent.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('install') install(request: HookMarketInstallRequest): Promise<HookMarketInstallResult>
+
+/**
+ * Persist credential references only.
+ * @param request - Package identity and descriptor-slot reference mapping.
+ * @returns Saved references and restart state, or a structured marketplace failure.
+ */
+@Remote('configure') configure(request: HookMarketConfigureRequest): Promise<HookMarketConfigureResult>
+
+/**
+ * Uninstall one marketplace-managed hook package.
+ * @param request - Managed package identity to remove.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('uninstall') uninstall(request: HookMarketUninstallRequest): Promise<HookMarketUninstallResult>
+
+/**
+ * Project every installed hook package for the employee bridge.
+ * Packages failing validation are skipped with a diagnostic; the bridge must
+ * mount only valid descriptors.
+ * @returns Installed descriptors with their configured reference names.
+ */
+async installedPackages(): Promise<readonly InstalledHookPackage[]>
+
+/**
+ * Resolve one configured credential reference to its secret value.
+ * @param packageId - Managed package owning the reference.
+ * @param slot - Descriptor credential slot.
+ * @returns resolved secret value; never persisted.
+ */
+async resolveSlotValue(packageId: string, slot: string): Promise<string>
+
+/**
+ * Surface a bridge-side mounting failure on the package inventory.
+ * @param packageId - Managed package identity.
+ * @param diagnostic - Public diagnostic, or undefined to clear it.
+ */
+reportDiagnostic(packageId: string, diagnostic?: string): void
+```
+
+Source: [`packages/hooks/hooks-market/src/index.ts`](../../packages/hooks/hooks-market/src/index.ts)
+
 <a id="ctxmcpclients--mcpclientmanager"></a>
 
 ### `ctx.mcpClients` — `McpClientManager`

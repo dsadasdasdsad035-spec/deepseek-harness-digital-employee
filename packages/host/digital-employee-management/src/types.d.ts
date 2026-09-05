@@ -20,7 +20,7 @@ export interface DigitalEmployeeConfigurationAsset {
   /** Stable asset identity within its capability class. */
   readonly id: DigitalEmployeeConfigurationAssetId
   /** Capability class stored by the template. */
-  readonly kind: 'skill' | 'tool' | 'mcp'
+  readonly kind: 'skill' | 'tool' | 'mcp' | 'hook'
   /** Human-readable label. */
   readonly label: string
   /** Optional capability description. */
@@ -140,6 +140,8 @@ export interface DigitalEmployeeTemplateDraft {
   readonly capabilities: DigitalEmployeeConfigurationAuthority
   /** Referenced MCP client declarations without resolved credentials. */
   readonly mcpServers: readonly DigitalEmployeeConfigurationMcpServer[]
+  /** Installed hook package ids bound by this draft; unresolved ids fail validation. */
+  readonly hooks?: string[]
   /** Expert Agent definitions constrained by the root authority. */
   readonly experts: readonly DigitalEmployeeConfigurationExpert[]
   /** Long-term memory records written when an employee is created from this publication. */
@@ -173,6 +175,8 @@ export interface CreateDigitalEmployeeTemplateDraftRequest {
   readonly capabilities?: DigitalEmployeeConfigurationAuthority
   /** Referenced MCP client declarations without resolved credentials. */
   readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[]
+  /** Installed hook package ids bound by this draft. */
+  readonly hooks?: string[]
   /** Expert Agent definitions constrained by the root authority. */
   readonly experts?: DigitalEmployeeConfigurationExpert[]
   /** Long-term memory records written when an employee is created from this publication. */
@@ -202,6 +206,7 @@ export interface UpdateDigitalEmployeeTemplateDraftRequest extends DigitalEmploy
     readonly preset?: string
     readonly capabilities?: DigitalEmployeeConfigurationAuthority
     readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[]
+    readonly hooks?: string[]
     readonly experts?: DigitalEmployeeConfigurationExpert[]
     readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[]
     readonly delegation?: DigitalEmployeeConfigurationDelegation

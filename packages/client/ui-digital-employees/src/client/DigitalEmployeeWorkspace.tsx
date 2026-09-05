@@ -384,6 +384,7 @@ function DraftEditor({ draft, assets, assetStatus, assetError, controller, onClo
   const [instructions, setInstructions] = useState(draft.instructions)
   const [capabilities, setCapabilities] = useState(draft.capabilities)
   const [mcpServers, setMcpServers] = useState([...draft.mcpServers])
+  const [hooks, setHooks] = useState([...draft.hooks ?? []])
   const [experts, setExperts] = useState(JSON.stringify(draft.experts, null, 2))
   const [memorySeeds, setMemorySeeds] = useState(JSON.stringify(draft.memorySeeds, null, 2))
   const [error, setError] = useState<string | null>(null)
@@ -397,6 +398,7 @@ function DraftEditor({ draft, assets, assetStatus, assetError, controller, onClo
         instructions: instructions.trim(),
         capabilities,
         mcpServers,
+        hooks,
         experts: JSON.parse(experts) as DigitalEmployeeConfigurationExpert[],
         memorySeeds: JSON.parse(memorySeeds) as DigitalEmployeeConfigurationMemorySeed[],
       }
@@ -430,8 +432,10 @@ function DraftEditor({ draft, assets, assetStatus, assetError, controller, onClo
         allowNewSelections={assetStatus === 'ready'}
         value={capabilities}
         mcpServers={mcpServers}
+        hooks={hooks}
         onChange={setCapabilities}
         onMcpServersChange={(value) => { setMcpServers([...value]) }}
+        onHooksChange={(value) => { setHooks([...value]) }}
       />
       <textarea aria-label="Edit template experts" value={experts} onChange={(event) => { setExperts(event.target.value) }} />
       <textarea aria-label="Edit template memory seeds" value={memorySeeds} onChange={(event) => { setMemorySeeds(event.target.value) }} />
@@ -444,15 +448,17 @@ function DraftEditor({ draft, assets, assetStatus, assetError, controller, onClo
   )
 }
 
-function CapabilitySelectors({ assets, allowNewSelections, value, mcpServers, onChange, onMcpServersChange }: {
+function CapabilitySelectors({ assets, allowNewSelections, value, mcpServers, hooks, onChange, onMcpServersChange, onHooksChange }: {
   assets: readonly DigitalEmployeeConfigurationAsset[]
   allowNewSelections: boolean
   value: DigitalEmployeeConfigurationAuthority
   mcpServers: readonly import('@deepseek-ai/dsh-api-remotes/client').DigitalEmployeeConfigurationMcpServer[]
+  hooks: readonly string[]
   onChange: (value: DigitalEmployeeConfigurationAuthority) => void
   onMcpServersChange: (
     value: readonly import('@deepseek-ai/dsh-api-remotes/client').DigitalEmployeeConfigurationMcpServer[],
   ) => void
+  onHooksChange: (value: readonly string[]) => void
 }): ReactNode {
   const [search, setSearch] = useState('')
   const normalizedSearch = search.trim().toLocaleLowerCase()
@@ -460,11 +466,13 @@ function CapabilitySelectors({ assets, allowNewSelections, value, mcpServers, on
     skill: value.skills,
     tool: value.tools,
     mcp: value.mcpServers,
+    hook: hooks,
   }
   const labels: Record<DigitalEmployeeConfigurationAsset['kind'], string> = {
     skill: 'Skills',
     tool: 'Tools',
     mcp: 'MCP clients',
+    hook: 'Hooks',
   }
   const update = (kind: DigitalEmployeeConfigurationAsset['kind'], id: string, checked: boolean): void => {
     const current = selected[kind]
@@ -475,6 +483,7 @@ function CapabilitySelectors({ assets, allowNewSelections, value, mcpServers, on
       ...value,
       ...(kind === 'skill' ? { skills: next } : kind === 'tool' ? { tools: next } : { mcpServers: next }),
     })
+    if (kind === 'hook') onHooksChange(next)
     if (kind === 'mcp') {
       const asset = assets.find(candidate => candidate.kind === 'mcp' && candidate.label === id)
       if (checked && asset?.mcpServer !== undefined && !mcpServers.some(server => server.id === id)) {
@@ -488,7 +497,7 @@ function CapabilitySelectors({ assets, allowNewSelections, value, mcpServers, on
     <section className={css.list} aria-label="Template capabilities">
       <h3>Capabilities</h3>
       <input aria-label="Search skills" value={search} onChange={(event) => { setSearch(event.target.value) }} placeholder="Search capabilities" />
-      {(['skill', 'tool', 'mcp'] as const).map((kind) => {
+      {(['skill', 'tool', 'mcp', 'hook'] as const).map((kind) => {
         const label = labels[kind]
         const visible = assets.filter(asset => asset.kind === kind && (
           normalizedSearch === ''

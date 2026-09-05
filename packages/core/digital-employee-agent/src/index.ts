@@ -52,6 +52,7 @@ import type { PostToolDecision, PreToolDecision, ToolExecution } from '@deepseek
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-credentials'
 import type {} from '@deepseek-ai/dsh-mcp-client'
+import { mountEmployeeHooks } from '@deepseek-ai/dsh-hooks-market'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -608,6 +609,7 @@ export class DigitalEmployeeAgent extends Service {
       }
       await mcpClients.mount(agentCtx, config)
     }
+    await this.mountEmployeeHooks(agentCtx, employee)
     if (installAudit) this.installAudit(agentCtx, employee, resolvedMcpServers)
     const systemPrompt = agentCtx.get('systemPrompt')
     if (systemPrompt === undefined) {
@@ -638,6 +640,34 @@ export class DigitalEmployeeAgent extends Service {
         text: renderMemory(memoryProjection),
       })
     }
+  }
+
+  /**
+   * Resolve this employee's hook package references against installed packages
+   * and mount the bridge: passive interception handlers plus invocable tools.
+   * Unresolved references fail composition before any Session exists.
+   * @param agentCtx - Agent scope context receiving the bridge handlers.
+   * @param employee - resolved employee carrying the hook references.
+   */
+  private async mountEmployeeHooks(agentCtx: Context, employee: ResolvedDigitalEmployee): Promise<void> {
+    const hookRefs = employee.hooks ?? employee.template.hooks ?? []
+    if (hookRefs.length === 0) return
+    const market = this.ctx.get('hookMarket')
+    if (market === undefined) {
+      throw new Error('digital employee hook composition requires the hooks-market gateway')
+    }
+    const installed = await market.installedPackages()
+    const byId = new Map(installed.map(pkg => [pkg.packageId, pkg]))
+    const unresolved = hookRefs.filter(ref => !byId.has(ref))
+    if (unresolved.length > 0) {
+      throw new Error(`digital employee hook references are unresolved: ${unresolved.join(', ')}`)
+    }
+    const bindings = hookRefs
+      .map(ref => byId.get(ref))
+      .filter((pkg): pkg is NonNullable<ReturnType<typeof byId.get>> => pkg !== undefined)
+      .flatMap(pkg => pkg.descriptor.hooks.map(hook => ({ pkg, hook })))
+    const dispose = mountEmployeeHooks(agentCtx, bindings)
+    agentCtx.effect(() => dispose, 'hooks-market.employee-bindings')
   }
 
   private mountExpertDelegationTool(

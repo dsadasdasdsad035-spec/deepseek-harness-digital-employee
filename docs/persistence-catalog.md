@@ -404,7 +404,7 @@ Source: [`packages/compaction/compaction/src/types.ts:33`](../packages/compactio
 'digital-employee/expert-authorization-denied': DigitalEmployeeExpertAuthorizationDeniedEvent
 ```
 
-Source: [`packages/core/digital-employee/src/types.ts:250`](../packages/core/digital-employee/src/types.ts)
+Source: [`packages/core/digital-employee/src/types.ts:254`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeeexpert-delegation--log-only"></a>
 
@@ -415,7 +415,7 @@ Source: [`packages/core/digital-employee/src/types.ts:250`](../packages/core/dig
 'digital-employee/expert-delegation': DigitalEmployeeExpertDelegationEvent
 ```
 
-Source: [`packages/core/digital-employee/src/types.ts:248`](../packages/core/digital-employee/src/types.ts)
+Source: [`packages/core/digital-employee/src/types.ts:252`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeeexpert-result--log-only"></a>
 
@@ -426,7 +426,7 @@ Source: [`packages/core/digital-employee/src/types.ts:248`](../packages/core/dig
 'digital-employee/expert-result': DigitalEmployeeExpertResultEvent
 ```
 
-Source: [`packages/core/digital-employee/src/types.ts:252`](../packages/core/digital-employee/src/types.ts)
+Source: [`packages/core/digital-employee/src/types.ts:256`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeeidentity--log-only"></a>
 
@@ -440,7 +440,7 @@ Source: [`packages/core/digital-employee/src/types.ts:252`](../packages/core/dig
 'digital-employee/identity': DigitalEmployeeIdentityEvent
 ```
 
-Source: [`packages/core/digital-employee/src/types.ts:242`](../packages/core/digital-employee/src/types.ts)
+Source: [`packages/core/digital-employee/src/types.ts:246`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeeinstructions--log-only"></a>
 
@@ -451,7 +451,7 @@ Source: [`packages/core/digital-employee/src/types.ts:242`](../packages/core/dig
 'digital-employee/instructions': DigitalEmployeeInstructionsEvent
 ```
 
-Source: [`packages/core/digital-employee/src/types.ts:244`](../packages/core/digital-employee/src/types.ts)
+Source: [`packages/core/digital-employee/src/types.ts:248`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeememory-decision--log-only"></a>
 
@@ -462,7 +462,7 @@ Source: [`packages/core/digital-employee/src/types.ts:244`](../packages/core/dig
 'digital-employee/memory-decision': DigitalEmployeeMemoryDecisionEvent
 ```
 
-Source: [`packages/core/digital-employee/src/types.ts:254`](../packages/core/digital-employee/src/types.ts)
+Source: [`packages/core/digital-employee/src/types.ts:258`](../packages/core/digital-employee/src/types.ts)
 
 <a id="digital-employeememory-projection--log-only"></a>
 
@@ -473,7 +473,7 @@ Source: [`packages/core/digital-employee/src/types.ts:254`](../packages/core/dig
 'digital-employee/memory-projection': DigitalEmployeeMemoryProjectionEvent
 ```
 
-Source: [`packages/core/digital-employee/src/types.ts:246`](../packages/core/digital-employee/src/types.ts)
+Source: [`packages/core/digital-employee/src/types.ts:250`](../packages/core/digital-employee/src/types.ts)
 
 ### `feedback/*`
 

@@ -1,5 +1,7 @@
 # Hook market template
 
+English | [中文](README.zh.md)
+
 Publisher template for marketplace hook packages (`hook-package.json`). Each entry in `hooks` binds one shell command to one agent interception event:
 
 - `event` — one of `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Stop`, `SessionStart`.

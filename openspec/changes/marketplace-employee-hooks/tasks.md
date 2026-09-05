@@ -20,12 +20,12 @@
 
 ## 4. Digital employee templates and studio
 
-- [ ] 4.1 Template schema gains `hooks: string[]`; composition resolves instance + template hook references to installed packages on the employee context; unresolved references block task start with a named diagnostic
-- [ ] 4.2 Configuration studio catalog joins installed hook packages (event bindings, invocability, credential requirements); bind/unbind writes reference names only; draft validation reports unresolved hook references
-- [ ] 4.3 Tests: template registration with hook references (valid + missing package), per-instance scoping (bound hooks intercept only their employee), composition resolution failure, studio bind/unbind validation
+- [x] 4.1 Template schema gains `hooks: string[]`; composition resolves instance + template hook references to installed packages on the employee context; unresolved references block task start with a named diagnostic
+- [x] 4.2 Configuration studio catalog joins installed hook packages (event bindings, invocability, credential requirements); bind/unbind writes reference names only; draft validation reports unresolved hook references
+- [x] 4.3 Tests: template registration with hook references (valid + missing package), per-instance scoping (bound hooks intercept only their employee), composition resolution failure, studio bind/unbind validation
 
 ## 5. End-to-end and docs
 
-- [ ] 5.1 Snapshot: assembled flow — install test hook, bind via template, `@employee` chat task invoking the hook tool, assert tool result and `hook/*` records; bilingual expected outputs updated in the same change
-- [ ] 5.2 Bilingual docs: `packages/hooks` README (new bridge row), market README section, publisher template instructions, config/api catalog regeneration, doc-sync
-- [ ] 5.3 Implementation Agent Note (bilingual) recording the invocable-tool decision and the instance-scoping boundary
+- [ ] 5.1 (coverage landed at integration level: hooks-market bridge test + employee composition test cover install→bind→invoke; a dedicated ACP snapshot fixture remains) Snapshot: assembled flow — install test hook, bind via template, `@employee` chat task invoking the hook tool, assert tool result and `hook/*` records; bilingual expected outputs updated in the same change
+- [x] 5.2 Bilingual docs: `packages/hooks` README (new bridge row), market README section, publisher template instructions, config/api catalog regeneration, doc-sync
+- [x] 5.3 Implementation Agent Note (bilingual) recording the invocable-tool decision and the instance-scoping boundary

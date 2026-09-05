@@ -112,6 +112,7 @@ export class ConfigurationStudioStore {
         preset: request.preset?.trim() || 'headless',
         capabilities: request.capabilities ?? EMPTY_AUTHORITY,
         mcpServers: request.mcpServers ?? [],
+        hooks: request.hooks ?? [],
         experts: request.experts ?? [],
         memorySeeds: request.memorySeeds ?? [],
         delegation: request.delegation ?? DEFAULT_DELEGATION,

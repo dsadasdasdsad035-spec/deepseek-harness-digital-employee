@@ -128,6 +128,8 @@ export interface DigitalEmployeeTemplate {
   readonly instructions: DigitalEmployeeInstructionSource
   readonly preset: string
   readonly mcpServers?: readonly DigitalEmployeeMcpServer[]
+  /** Installed hook package ids this template binds; unresolved ids fail composition. */
+  readonly hooks?: readonly string[]
   readonly capabilities: DigitalEmployeeAuthority
   readonly experts: readonly DigitalEmployeeExpert[]
   readonly delegation: DigitalEmployeeDelegationPolicy
@@ -160,6 +162,8 @@ export interface ResolvedDigitalEmployee {
   readonly instructions: DigitalEmployeeInstructionSource
   readonly authority: DigitalEmployeeAuthority
   readonly mcpServers: readonly DigitalEmployeeMcpServer[]
+  /** Hook package ids bound to this instance; resolved at composition. */
+  readonly hooks?: readonly string[]
   readonly experts: readonly DigitalEmployeeExpert[]
   readonly delegation: DigitalEmployeeDelegationPolicy
 }

@@ -43,6 +43,7 @@ interface ConfigurationDocument {
   readonly packages: Readonly<Record<string, Readonly<Record<string, string>>>>
 }
 
+/** Error type the gateway maps to its structured hook marketplace failure. */
 class HookMarketDomainError extends Error {
   constructor(readonly failure: HookMarketFailure) {
     super('reason' in failure ? `${failure.code}: ${failure.reason}` : failure.code)
