@@ -1,6 +1,6 @@
 ## 1. Format and export
 
-- [ ] 1.1 `employee-package.json` schema + parser + signing
+- [x] 1.1 `employee-package.json` schema + parser + signing
 - [ ] 1.2 Export remote: published template -> signed zip
 - [ ] 1.3 Tests: export round-trip, signature verification
 
