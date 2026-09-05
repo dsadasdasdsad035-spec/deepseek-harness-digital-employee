@@ -143,6 +143,50 @@ export const subagentPackageDescriptorSchema = base.extend({
   subagents: z.array(subagentEntrySchema).min(1).max(32),
 }).strict()
 
+/** Reference to a market package required by the employee's composition. */
+const employeeReferenceSchema = z.object({
+  kind: z.enum(['skill', 'tool', 'mcp', 'hook', 'workflow', 'subagent']),
+  id: identifier,
+}).strict()
+
+/** Parsed employee package metadata without any credential values. */
+export const employeePackageDescriptorSchema = base.extend({
+  kind: z.literal('employee'),
+  template: z.object({
+    displayName: z.string().min(1).max(128),
+    description: z.string().min(1).max(512),
+    personality: z.string().max(512).default(''),
+    preset: z.string().min(1).max(128),
+  }).strict(),
+  instructions: relativePath,
+  experts: z.array(z.object({
+    id: identifier,
+    name: z.string().min(1).max(128),
+    responsibility: z.string().min(1).max(512),
+    instructions: relativePath,
+    modelSettings: z.object({
+      provider: z.string().max(128).optional(),
+      model: z.string().max(128).optional(),
+      maxTokens: z.number().min(1).max(1_000_000).optional(),
+    }).strict().default({}),
+    capabilities: z.object({
+      skills: z.array(z.string()).max(64).default([]),
+      tools: z.array(z.string()).max(64).default([]),
+      mcpServers: z.array(z.string()).max(64).default([]),
+      experts: z.array(z.string()).max(16).default([]),
+      allowSubagents: z.boolean().default(false),
+    }).strict(),
+    memoryAccess: z.array(z.enum(['task', 'session', 'long-term'])).max(3).default([]),
+    delegation: z.object({
+      mode: z.enum(['one-shot', 'continuable']),
+      maxDepth: z.number().min(0).max(8),
+      maxConcurrency: z.number().min(1).max(16),
+      timeoutMs: z.number().min(1).max(3_600_000),
+    }).strict(),
+  }).strict()).max(16).default([]),
+  references: z.array(employeeReferenceSchema).max(64).default([]),
+}).strict()
+
 /** Validated executable Tool package descriptor. */
 export type ToolPackageDescriptor = z.infer<typeof toolPackageDescriptorSchema>
 /** Validated credential-free MCP descriptor. */
@@ -159,6 +203,8 @@ export type WorkflowPackageDescriptor = z.infer<typeof workflowPackageDescriptor
 export type WorkflowPackageEntry = WorkflowPackageDescriptor['workflows'][number]
 /** Validated declarative subagent package descriptor. */
 export type SubagentPackageDescriptor = z.infer<typeof subagentPackageDescriptorSchema>
+/** Validated employee package descriptor. */
+export type EmployeePackageDescriptor = z.infer<typeof employeePackageDescriptorSchema>
 /** One declared subagent persona entry. */
 export type SubagentPackageEntry = SubagentPackageDescriptor['subagents'][number]
 /** Descriptor accepted by shared signature and file-table operations. */
@@ -168,6 +214,7 @@ export type MarketplacePackageDescriptor =
   | HookPackageDescriptor
   | WorkflowPackageDescriptor
   | SubagentPackageDescriptor
+  | EmployeePackageDescriptor
 
 /** One locally trusted publisher key configured by the Host administrator. */
 export interface TrustedPublisher {
@@ -328,6 +375,20 @@ function withSubagentImpliedPermissions(descriptor: SubagentPackageDescriptor): 
 }
 
 /**
+ * Parse one employee package descriptor.
+ *
+ * Employee packages are declarative templates: they never ship executable
+ * provider code and never carry credential values. All market asset
+ * dependencies are recorded as references; the import path resolves them
+ * against the target Host's installed packages.
+ * @param value - Parsed JSON value.
+ * @returns Validated employee package descriptor.
+ */
+export function parseEmployeePackageDescriptor(value: unknown): EmployeePackageDescriptor {
+  return employeePackageDescriptorSchema.parse(value)
+}
+
+/**
  * Add the disclosure every hook package carries regardless of declaration.
  * @param descriptor - Schema-validated hook descriptor.
  * @returns Descriptor with `subprocess` present.
@@ -355,7 +416,7 @@ export function descriptorSignaturePayload(descriptor: MarketplacePackageDescrip
  */
 export function preparePackageArchive(
   archive: InspectedArchive,
-  descriptorFilename: 'tool-package.json' | 'mcp-package.json' | 'hook-package.json' | 'workflow-package.json' | 'subagent-package.json',
+  descriptorFilename: 'tool-package.json' | 'mcp-package.json' | 'hook-package.json' | 'workflow-package.json' | 'subagent-package.json' | 'employee-package.json',
 ): InspectedArchive {
   const seen = new Set<string>()
   const entries: InspectedArchiveEntry[] = archive.entries.map((entry) => {
@@ -396,7 +457,8 @@ export function verifyPackageFileHashes(
     && entry.name !== 'mcp-package.json'
     && entry.name !== 'hook-package.json'
     && entry.name !== 'workflow-package.json'
-    && entry.name !== 'subagent-package.json')
+    && entry.name !== 'subagent-package.json'
+    && entry.name !== 'employee-package.json')
   const actualNames = new Set(actual.map(entry => entry.name))
   for (const entry of actual) {
     const expected = files[entry.name]

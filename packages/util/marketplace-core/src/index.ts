@@ -40,6 +40,7 @@ export type {
   HookEvent,
   HookPackageDescriptor,
   HookPackageEntry,
+  EmployeePackageDescriptor,
   SubagentPackageDescriptor,
   SubagentPackageEntry,
   WorkflowPackageDescriptor,
