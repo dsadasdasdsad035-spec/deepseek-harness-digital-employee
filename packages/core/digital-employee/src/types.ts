@@ -130,6 +130,10 @@ export interface DigitalEmployeeTemplate {
   readonly mcpServers?: readonly DigitalEmployeeMcpServer[]
   /** Installed hook package ids this template binds; unresolved ids fail composition. */
   readonly hooks?: readonly string[]
+  /** Installed workflow package ids this template binds. */
+  readonly workflows?: readonly string[]
+  /** Installed subagent package ids this template binds. */
+  readonly subagents?: readonly string[]
   readonly capabilities: DigitalEmployeeAuthority
   readonly experts: readonly DigitalEmployeeExpert[]
   readonly delegation: DigitalEmployeeDelegationPolicy
@@ -164,6 +168,10 @@ export interface ResolvedDigitalEmployee {
   readonly mcpServers: readonly DigitalEmployeeMcpServer[]
   /** Hook package ids bound to this instance; resolved at composition. */
   readonly hooks?: readonly string[]
+  /** Workflow package ids bound to this instance; resolved at composition. */
+  readonly workflows?: readonly string[]
+  /** Subagent package ids bound to this instance; resolved at composition. */
+  readonly subagents?: readonly string[]
   readonly experts: readonly DigitalEmployeeExpert[]
   readonly delegation: DigitalEmployeeDelegationPolicy
 }

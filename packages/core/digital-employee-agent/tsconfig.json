@@ -39,6 +39,12 @@
       "path": "../../hooks/hooks-market"
     },
     {
+      "path": "../../workflow/workflow-market"
+    },
+    {
+      "path": "../../subagent/subagent-market"
+    },
+    {
       "path": "../../subagent/subagent"
     },
     {

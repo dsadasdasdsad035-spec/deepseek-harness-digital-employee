@@ -950,12 +950,18 @@ importers:
       '@deepseek-ai/dsh-skill-market':
         specifier: workspace:^
         version: link:../../skill/skill-market
+      '@deepseek-ai/dsh-subagent-market':
+        specifier: workspace:^
+        version: link:../../subagent/subagent-market
       '@deepseek-ai/dsh-tool-market':
         specifier: workspace:^
         version: link:../../tool/tool-market
       '@deepseek-ai/dsh-typert-registry':
         specifier: workspace:^
         version: link:../../typert/registry
+      '@deepseek-ai/dsh-workflow-market':
+        specifier: workspace:^
+        version: link:../../workflow/workflow-market
 
   packages/attachment/attachment:
     devDependencies:
@@ -1585,6 +1591,9 @@ importers:
       '@deepseek-ai/dsh-storage-json':
         specifier: workspace:^
         version: link:../../storage/storage-json
+      '@deepseek-ai/dsh-subagent-market':
+        specifier: workspace:^
+        version: link:../../subagent/subagent-market
       '@deepseek-ai/dsh-subprocess':
         specifier: workspace:^
         version: link:../../subprocess/subprocess
@@ -1594,6 +1603,9 @@ importers:
       '@deepseek-ai/dsh-web-frontend':
         specifier: workspace:^
         version: link:../../../apps/web
+      '@deepseek-ai/dsh-workflow-market':
+        specifier: workspace:^
+        version: link:../../workflow/workflow-market
       '@deepseek-ai/dsh-workspace':
         specifier: workspace:^
         version: link:../../workspace/workspace
@@ -3995,12 +4007,18 @@ importers:
       '@deepseek-ai/dsh-subagent':
         specifier: workspace:^
         version: link:../../subagent/subagent
+      '@deepseek-ai/dsh-subagent-market':
+        specifier: workspace:^
+        version: link:../../subagent/subagent-market
       '@deepseek-ai/dsh-system-prompt':
         specifier: workspace:^
         version: link:../system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../tools
+      '@deepseek-ai/dsh-workflow-market':
+        specifier: workspace:^
+        version: link:../../workflow/workflow-market
 
   packages/core/digital-employee-file:
     dependencies:

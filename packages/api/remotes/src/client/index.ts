@@ -13,6 +13,8 @@ import skillMarketRemote from '@deepseek-ai/dsh-skill-market/remote'
 import toolMarketRemote from '@deepseek-ai/dsh-tool-market/remote'
 import mcpMarketRemote from '@deepseek-ai/dsh-mcp-market/remote'
 import hookMarketRemote from '@deepseek-ai/dsh-hooks-market/remote'
+import workflowMarketRemote from '@deepseek-ai/dsh-workflow-market/remote'
+import subagentMarketRemote from '@deepseek-ai/dsh-subagent-market/remote'
 import type { TypertClientRemote } from '@deepseek-ai/dsh-typert-protocol'
 
 export type { TypertClientRemote as ClientRemote } from '@deepseek-ai/dsh-typert-protocol'
@@ -28,6 +30,8 @@ export type {} from '@deepseek-ai/dsh-skill-market/remote'
 export type {} from '@deepseek-ai/dsh-tool-market/remote'
 export type {} from '@deepseek-ai/dsh-mcp-market/remote'
 export type {} from '@deepseek-ai/dsh-hooks-market/remote'
+export type {} from '@deepseek-ai/dsh-workflow-market/remote'
+export type {} from '@deepseek-ai/dsh-subagent-market/remote'
 // The forwarded-event allowlist's selection seat: without it in the consumer's
 // compilation face `TypertRemoteEvent` is `never` and every `$on` call fails.
 export type { ApiRemoteForwardedEvent } from '../types.ts'
@@ -189,6 +193,26 @@ export type {
   McpMarketUninstallResult,
 } from '@deepseek-ai/dsh-mcp-market/types'
 export type {
+  WorkflowMarketEntry,
+  WorkflowMarketFailure,
+  WorkflowMarketInstallRequest,
+  WorkflowMarketInstallResult,
+  WorkflowMarketListResult,
+  WorkflowMarketPackageId,
+  WorkflowMarketUninstallRequest,
+  WorkflowMarketUninstallResult,
+} from '@deepseek-ai/dsh-workflow-market/types'
+export type {
+  SubagentMarketEntry,
+  SubagentMarketFailure,
+  SubagentMarketInstallRequest,
+  SubagentMarketInstallResult,
+  SubagentMarketListResult,
+  SubagentMarketPackageId,
+  SubagentMarketUninstallRequest,
+  SubagentMarketUninstallResult,
+} from '@deepseek-ai/dsh-subagent-market/types'
+export type {
   HookMarketConfigureRequest,
   HookMarketConfigureResult,
   HookMarketCredentialRequirement,
@@ -223,7 +247,8 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
     for (const contribution of [
       commandsRemote, goalsRemote, dynamicRemote, fileReferencesRemote,
       digitalEmployeesRemote, pluginInventoryRemote, messageFeedbackRemote,
-      sessionReferencesRemote, skillMarketRemote, toolMarketRemote, mcpMarketRemote, hookMarketRemote,
+      sessionReferencesRemote, skillMarketRemote, toolMarketRemote, mcpMarketRemote,
+      hookMarketRemote, workflowMarketRemote, subagentMarketRemote,
     ]) {
       disposers.push(await ctx.remote.$mount(contribution))
     }

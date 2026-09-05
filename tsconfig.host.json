@@ -307,6 +307,8 @@
     { "path": "./packages/mcp/mcp-client" },
     { "path": "./packages/mcp/mcp-market" },
     { "path": "./packages/hooks/hooks-market" },
+    { "path": "./packages/workflow/workflow-market" },
+    { "path": "./packages/subagent/subagent-market" },
     { "path": "./packages/host/apiproxy" },
     { "path": "./packages/host/directory-picker" },
     { "path": "./packages/host/directory-picker-auto" },

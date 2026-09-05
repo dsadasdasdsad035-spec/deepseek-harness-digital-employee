@@ -25,6 +25,7 @@ import type {
 } from './types.ts'
 
 export type * from './types.ts'
+export { mountEmployeeWorkflows } from './bridge.ts'
 
 /** Cordis plugin name used by loader diagnostics. */
 export const name = 'workflow-market'

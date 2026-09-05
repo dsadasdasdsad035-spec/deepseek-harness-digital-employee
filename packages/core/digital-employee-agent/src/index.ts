@@ -53,6 +53,8 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import type {} from '@deepseek-ai/dsh-credentials'
 import type {} from '@deepseek-ai/dsh-mcp-client'
 import { mountEmployeeHooks } from '@deepseek-ai/dsh-hooks-market'
+import { mountEmployeeSubagents } from '@deepseek-ai/dsh-subagent-market'
+import { mountEmployeeWorkflows } from '@deepseek-ai/dsh-workflow-market'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -597,9 +599,11 @@ export class DigitalEmployeeAgent extends Service {
       throw new Error('digital employee Agent composition requires skills and tools in the Agent scope')
     }
     this.mountExpertDelegationTool(agentCtx, employee)
-    await this.mountEmployeeHooks(agentCtx, employee)
+    const hookToolNames = await this.mountEmployeeHooks(agentCtx, employee)
+    const workflowToolNames = await this.mountEmployeeWorkflows(agentCtx, employee)
+    await this.mountEmployeeSubagentAssets(agentCtx, employee)
     skills.restrict({ allow: employee.authority.skills })
-    tools.restrict({ allow: employee.authority.tools })
+    tools.restrict({ allow: [...employee.authority.tools, ...hookToolNames, ...workflowToolNames] })
     const resolvedMcpServers = mcpServers ?? (employee.mcpServers.length === 0
       ? []
       : await this.resolveMcpServers(employee, requireMcpSessionId(agentCtx)))
@@ -655,6 +659,7 @@ export class DigitalEmployeeAgent extends Service {
   private async mountEmployeeHooks(agentCtx: Context, employee: ResolvedDigitalEmployee): Promise<string[]> {
     const hookRefs = employee.hooks ?? employee.template.hooks ?? []
     if (hookRefs.length === 0) return []
+    void 0
     const market = this.ctx.get('hookMarket')
     if (market === undefined) {
       throw new Error('digital employee hook composition requires the hooks-market gateway')
@@ -674,6 +679,62 @@ export class DigitalEmployeeAgent extends Service {
     return bindings
       .filter(binding => binding.hook.invocable === true)
       .map(binding => `hook__${binding.hook.id}`)
+  }
+
+  /**
+   * Resolve this employee's workflow package references and mount the
+   * workflow bridge: one `workflow__<id>` tool per declared workflow.
+   * @param agentCtx - Agent scope context receiving the bridge tools.
+   * @param employee - resolved employee carrying the workflow references.
+   * @returns invocable tool names registered by the bridge.
+   */
+  private async mountEmployeeWorkflows(agentCtx: Context, employee: ResolvedDigitalEmployee): Promise<string[]> {
+    const refs = employee.workflows ?? employee.template.workflows ?? []
+    if (refs.length === 0) return []
+    const market = this.ctx.get('workflowMarket')
+    if (market === undefined) {
+      throw new Error('digital employee workflow composition requires the workflow-market gateway')
+    }
+    const installed = await market.installedPackages()
+    const byId = new Map(installed.map(pkg => [pkg.packageId, pkg]))
+    const unresolved = refs.filter(ref => !byId.has(ref))
+    if (unresolved.length > 0) {
+      throw new Error(`digital employee workflow references are unresolved: ${unresolved.join(', ')}`)
+    }
+    const bindings = refs
+      .map(ref => byId.get(ref))
+      .filter((pkg): pkg is NonNullable<ReturnType<typeof byId.get>> => pkg !== undefined)
+      .flatMap(pkg => pkg.descriptor.workflows.map(workflow => ({ pkg, workflow })))
+    const dispose = mountEmployeeWorkflows(agentCtx, bindings)
+    agentCtx.effect(() => dispose, 'workflow-market.employee-bindings')
+    return bindings.map(binding => `workflow__${binding.workflow.id}`)
+  }
+
+  /**
+   * Resolve this employee's subagent package references and mount the
+   * persona bridge: one `subagent__<id>` provider per declared persona.
+   * @param agentCtx - Agent scope context receiving the bridge providers.
+   * @param employee - resolved employee carrying the subagent references.
+   */
+  private async mountEmployeeSubagentAssets(agentCtx: Context, employee: ResolvedDigitalEmployee): Promise<void> {
+    const refs = employee.subagents ?? employee.template.subagents ?? []
+    if (refs.length === 0) return
+    const market = this.ctx.get('subagentMarket')
+    if (market === undefined) {
+      throw new Error('digital employee subagent composition requires the subagent-market gateway')
+    }
+    const installed = await market.installedPackages()
+    const byId = new Map(installed.map(pkg => [pkg.packageId, pkg]))
+    const unresolved = refs.filter(ref => !byId.has(ref))
+    if (unresolved.length > 0) {
+      throw new Error(`digital employee subagent references are unresolved: ${unresolved.join(', ')}`)
+    }
+    const bindings = refs
+      .map(ref => byId.get(ref))
+      .filter((pkg): pkg is NonNullable<ReturnType<typeof byId.get>> => pkg !== undefined)
+      .flatMap(pkg => pkg.descriptor.subagents.map(persona => ({ pkg, persona })))
+    const dispose = mountEmployeeSubagents(agentCtx, bindings)
+    agentCtx.effect(() => dispose, 'subagent-market.employee-bindings')
   }
 
   private mountExpertDelegationTool(

@@ -151,6 +151,24 @@
         trustedPublishersFile: !!js dshHomePath('market-publishers.json')
         allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
 
+    # Signed workflow and subagent packages persist nothing secret; employee
+    # compositions mount bound assets per instance.
+    - id: workflow-market
+      name: '@deepseek-ai/dsh-workflow-market'
+      config:
+        installRoot: !!js dshHomePath('workflow-packages')
+        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
+        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
+        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
+
+    - id: subagent-market
+      name: '@deepseek-ai/dsh-subagent-market'
+      config:
+        installRoot: !!js dshHomePath('subagent-packages')
+        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
+        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
+        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
+
     - id: project-manager-test-template
       name: '@deepseek-ai/dsh-project-manager-test-digital-employee'
 

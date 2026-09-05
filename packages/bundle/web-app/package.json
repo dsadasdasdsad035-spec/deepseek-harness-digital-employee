@@ -97,6 +97,8 @@
     "@deepseek-ai/dsh-digital-employee-file": "workspace:^",
     "@deepseek-ai/dsh-mcp-client": "workspace:^",
     "@deepseek-ai/dsh-mcp-market": "workspace:^",
+    "@deepseek-ai/dsh-workflow-market": "workspace:^",
+    "@deepseek-ai/dsh-subagent-market": "workspace:^",
     "@deepseek-ai/dsh-hooks-market": "workspace:^",
     "@deepseek-ai/dsh-project-manager-test-digital-employee": "workspace:^",
     "@deepseek-ai/dsh-web-frontend": "workspace:^",

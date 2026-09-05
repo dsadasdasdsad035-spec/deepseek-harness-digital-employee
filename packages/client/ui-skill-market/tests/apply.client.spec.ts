@@ -28,11 +28,15 @@ async function bench() {
   const toolMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
   const mcpMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
   const hookMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
-  ctx.provide('remote', { skillMarket, toolMarket, mcpMarket, hookMarket } as never)
+  const workflowMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
+  const subagentMarket = { async list() { return { ok: true, value: { ok: true, value: { entries: [] } } } } }
+  ctx.provide('remote', { skillMarket, toolMarket, mcpMarket, hookMarket, workflowMarket, subagentMarket } as never)
   ctx.provide('remote.skillMarket', skillMarket as never)
   ctx.provide('remote.toolMarket', toolMarket as never)
   ctx.provide('remote.mcpMarket', mcpMarket as never)
   ctx.provide('remote.hookMarket', hookMarket as never)
+  ctx.provide('remote.workflowMarket', workflowMarket as never)
+  ctx.provide('remote.subagentMarket', subagentMarket as never)
   return { ctx, slots: ctx.get('slots') as SlotRegistry, locale }
 }
 
@@ -50,6 +54,7 @@ describe('ui-skill-market apply', () => {
     expect(inject).toEqual([
       'slots', 'locale', 'remote',
       'remote.skillMarket', 'remote.toolMarket', 'remote.mcpMarket', 'remote.hookMarket',
+      'remote.workflowMarket', 'remote.subagentMarket',
     ])
   })
 

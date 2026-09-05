@@ -28,6 +28,10 @@ export type SkillMarketKey =
   | 'localExecutionConfirm'
   | 'hooksTab' | 'hookUploadTitle' | 'hookSearchLabel' | 'hookSearchPlaceholder'
   | 'hookEmpty' | 'hookEmptyFiltered' | 'hookEvents' | 'invocable' | 'passive'
+  | 'workflowSearchLabel' | 'workflowSearchPlaceholder' | 'subagentSearchLabel' | 'subagentSearchPlaceholder'
+  | 'workflowIntro' | 'subagentIntro'
+  | 'workflowsTab' | 'workflowUploadTitle' | 'workflowsEmpty' | 'workflowsEmptyFiltered'
+  | 'subagentsTab' | 'subagentUploadTitle' | 'subagentsEmpty' | 'subagentsEmptyFiltered'
   | 'hookIntro'
   | 'mcpDirectTitle' | 'mcpDirectIntro' | 'mcpDirectServerName' | 'mcpDirectTransportHttp'
   | 'mcpDirectTransportStdio' | 'mcpDirectUrl' | 'mcpDirectHeaders' | 'mcpDirectHeaderCredentials'
@@ -132,6 +136,20 @@ export const en: Record<SkillMarketKey, string> = {
   errorInvalidSignature: 'The package signature from "{publisherId}" is invalid.',
   errorInvalidCredentialReference: 'Enter a valid credential reference name, not a secret value.',
   errorMissingCredentialReference: 'Every required credential slot needs a reference.',
+  workflowIntro: 'Install workflow script packages the employee can start from chat.',
+  subagentIntro: 'Install declarative subagent persona packages the employee can delegate to.',
+  workflowsTab: 'Workflows',
+  workflowUploadTitle: 'Upload a workflow package',
+  workflowSearchLabel: 'Search installed workflow packages',
+  workflowSearchPlaceholder: 'Search by package, publisher, or workflow',
+  subagentSearchLabel: 'Search installed subagent packages',
+  subagentSearchPlaceholder: 'Search by package, publisher, or persona',
+  workflowsEmpty: 'No marketplace-managed workflow packages are installed.',
+  workflowsEmptyFiltered: 'No installed workflow packages match this search.',
+  subagentsTab: 'Subagents',
+  subagentUploadTitle: 'Upload a subagent package',
+  subagentsEmpty: 'No marketplace-managed subagent packages are installed.',
+  subagentsEmptyFiltered: 'No installed subagent packages match this search.',
   hookIntro: 'Install hook packages that run shell commands at agent lifecycle points. Hooks execute local code and ask for confirmation before installation.',
   hooksTab: 'Hooks',
   hookUploadTitle: 'Upload a hook package',
@@ -265,6 +283,20 @@ export const zh: Record<SkillMarketKey, string> = {
   errorInvalidSignature: '来自“{publisherId}”的包签名无效。',
   errorInvalidCredentialReference: '请输入有效的凭据引用名称，不要输入真实密钥。',
   errorMissingCredentialReference: '每个必填凭据槽都需要引用。',
+  workflowIntro: '安装 workflow 脚本包，员工可在聊天中启动。',
+  subagentIntro: '安装声明式 subagent persona 包，员工可委托给它们。',
+  workflowsTab: '工作流',
+  workflowUploadTitle: '上传 workflow 包',
+  workflowSearchLabel: '搜索已安装 workflow 包',
+  workflowSearchPlaceholder: '按包、发布者或工作流搜索',
+  subagentSearchLabel: '搜索已安装 subagent 包',
+  subagentSearchPlaceholder: '按包、发布者或 persona 搜索',
+  workflowsEmpty: '尚未安装由市场管理的 workflow 包。',
+  workflowsEmptyFiltered: '没有已安装 workflow 包匹配当前搜索。',
+  subagentsTab: '子代理',
+  subagentUploadTitle: '上传 subagent 包',
+  subagentsEmpty: '尚未安装由市场管理的 subagent 包。',
+  subagentsEmptyFiltered: '没有已安装 subagent 包匹配当前搜索。',
   hookIntro: '安装钩子包，在代理生命周期点运行 shell 命令。钩子会执行本地代码，安装前需确认。',
   hooksTab: '钩子',
   hookUploadTitle: '上传钩子包',

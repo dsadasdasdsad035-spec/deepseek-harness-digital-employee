@@ -282,6 +282,8 @@ export class FileDigitalEmployeeProvider implements DigitalEmployeeProvider {
       authority,
       mcpServers: (template.mcpServers ?? []).filter(server => authority.mcpServers.includes(server.id)),
       hooks: template.hooks ?? [],
+      workflows: template.workflows ?? [],
+      subagents: template.subagents ?? [],
       experts: template.experts.filter(expert => expertIds.has(expert.id)),
       delegation: template.delegation,
     }

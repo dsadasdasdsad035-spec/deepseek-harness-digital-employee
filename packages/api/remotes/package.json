@@ -79,6 +79,8 @@
     "@deepseek-ai/dsh-skill-market": "workspace:^",
     "@deepseek-ai/dsh-tool-market": "workspace:^",
     "@deepseek-ai/dsh-mcp-market": "workspace:^",
+    "@deepseek-ai/dsh-workflow-market": "workspace:^",
+    "@deepseek-ai/dsh-subagent-market": "workspace:^",
     "@deepseek-ai/dsh-hooks-market": "workspace:^",
     "@deepseek-ai/dsh-typert-registry": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"
@@ -105,6 +107,8 @@
     "@deepseek-ai/dsh-skill-market": "workspace:^",
     "@deepseek-ai/dsh-tool-market": "workspace:^",
     "@deepseek-ai/dsh-mcp-market": "workspace:^",
+    "@deepseek-ai/dsh-workflow-market": "workspace:^",
+    "@deepseek-ai/dsh-subagent-market": "workspace:^",
     "@deepseek-ai/dsh-hooks-market": "workspace:^",
     "@deepseek-ai/dsh-typert-registry": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"

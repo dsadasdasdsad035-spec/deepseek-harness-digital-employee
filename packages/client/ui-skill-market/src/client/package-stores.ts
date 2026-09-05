@@ -812,6 +812,196 @@ export class HookMarketStore {
 
 /* oxlint-enable sonarjs/no-identical-functions */
 
+
+/* oxlint-disable sonarjs/no-identical-functions, typescript/no-non-null-assertion, @stylistic/max-len -- the simple store mirrors the per-kind stores by design. */
+
+/** Minimal browser state shared by workflow and subagent market panels. */
+export interface SimplePackageMarketState<Entry extends { readonly packageId: string; readonly displayName: string }> {
+  status: Status
+  entries: readonly Entry[]
+  query: string
+  busy: boolean
+  error: MarketPackageFailure | null
+  restartNotice: string | null
+  pendingUpgrade: PendingUpgrade<string> | null
+  pendingLocalExecution: PendingLocalExecution | null
+  localExecutionConfirmed: boolean
+  pendingUninstall: string | null
+}
+
+/**
+ * Browser controller for one declarative package kind (workflow, subagent):
+ * install with confirmation gating, upgrade, uninstall, and search.
+ */
+export class SimplePackageMarketStore<
+  Entry extends { readonly packageId: string; readonly displayName: string },
+  ListResult = { ok: boolean; value?: { ok: boolean; value: { entries: readonly Entry[] } } },
+> {
+  /** Observable marketplace state. */
+  readonly store: SnapshotStore<SimplePackageMarketState<Entry>>
+  private readonly remote: {
+    list: () => Promise<ListResult>
+    install: (request: { filename: string; archiveBase64: string; replaceExisting?: boolean; confirmLocalExecution?: boolean }) => Promise<unknown>
+    uninstall: (request: { packageId: string }) => Promise<unknown>
+  }
+
+  /**
+   * @param remote - generated marketplace Remote namespace for the kind.
+   * @param initialEntries - empty initial entries used for type inference.
+   */
+  constructor(remote: unknown, initialEntries?: readonly Entry[]) {
+    this.remote = remote as never
+    void initialEntries
+    this.store = createSnapshotStore({
+      status: 'idle',
+      entries: [],
+      query: '',
+      busy: false,
+      error: null,
+      restartNotice: null,
+      pendingUpgrade: null,
+      pendingLocalExecution: null,
+      localExecutionConfirmed: false,
+      pendingUninstall: null,
+    } as SimplePackageMarketState<Entry>)
+  }
+
+  /** Refresh the installed inventory. */
+  async load(): Promise<void> {
+    this.store.update((state) => { state.status = 'loading'; state.error = null })
+    try {
+      const transport = await this.remote.list() as unknown as { ok?: boolean; value?: { ok?: boolean; value?: { entries: readonly Entry[] } } }
+      if (!transport.ok || transport.value?.ok !== true) return this.fail(failureCode(transport))
+      this.store.update((state) => {
+        state.status = 'ready'
+        state.entries = transport.value!.value!.entries
+      })
+    } catch {
+      this.fail('operation-failed')
+    }
+  }
+
+  /**
+   * Change the local search query.
+   * @param query - Search text to retain in browser state.
+   */
+  setQuery(query: string): void {
+    this.store.update((state) => { state.query = query })
+  }
+
+  /**
+   * Validate and submit one package ZIP for installation.
+   * @param file - Browser-selected ZIP archive.
+   */
+  async upload(file: File): Promise<void> {
+    const invalid = validateUploadFile(file)
+    if (invalid !== null) return this.fail(invalid)
+    await this.install(file.name, arrayBufferToBase64(await file.arrayBuffer()), false)
+  }
+
+  /** Confirm the pending replacement, if any. */
+  async confirmUpgrade(): Promise<void> {
+    const pending = this.store.getSnapshot().pendingUpgrade
+    if (pending === null) return
+    await this.install(pending.filename, pending.archiveBase64, true, this.store.getSnapshot().localExecutionConfirmed)
+  }
+
+  /** Confirm the pending package after its local-execution disclosure. */
+  async confirmLocalExecution(): Promise<void> {
+    const pending = this.store.getSnapshot().pendingLocalExecution
+    if (pending === null) return
+    this.store.update((state) => { state.localExecutionConfirmed = true })
+    await this.install(pending.filename, pending.archiveBase64, false, true)
+  }
+
+  /**
+   * Open uninstall confirmation for one package.
+   * @param packageId - Managed package to remove.
+   */
+  requestUninstall(packageId: string): void {
+    this.store.update((state) => { state.pendingUninstall = packageId })
+  }
+
+  /** Clear pending confirmations. */
+  cancelConfirmation(): void {
+    cancelPackageConfirmation((mutate) => {
+      this.store.update((state) => {
+        mutate(state)
+      })
+    })
+  }
+
+  /** Remove the package awaiting uninstall confirmation. */
+  async confirmUninstall(): Promise<void> {
+    const packageId = this.store.getSnapshot().pendingUninstall
+    if (packageId === null) return
+    const transport = await (this.remote.uninstall as (r: { packageId: string }) => Promise<unknown>)({ packageId })
+    if (!isOkTransport(transport)) return this.fail(failureCode(transport))
+    this.store.update((state) => {
+      state.pendingUninstall = null
+      state.restartNotice = packageId
+    })
+    await this.load()
+  }
+
+  private async install(
+    filename: string,
+    archiveBase64: string,
+    replaceExisting: boolean,
+    confirmLocalExecution = false,
+  ): Promise<void> {
+    this.store.update((state) => { state.busy = true; state.error = null })
+    const transport = await (this.remote.install as (r: Record<string, unknown>) => Promise<unknown>)({
+      filename, archiveBase64, replaceExisting, confirmLocalExecution,
+    })
+    const error = readError(transport)
+    if (error === 'local-execution-confirmation-required') {
+      this.store.update((state) => {
+        state.busy = false
+        state.pendingLocalExecution = { filename, archiveBase64, candidatePermissions: ['subprocess'] }
+      })
+      return
+    }
+    if (error === 'managed-upgrade-required') {
+      this.store.update((state) => {
+        state.busy = false
+        state.pendingUpgrade = { filename, archiveBase64, packageId: readPackageId(transport) ?? '' }
+      })
+      return
+    }
+    if (error !== undefined) return this.fail({ code: error })
+    this.store.update((state) => {
+      state.busy = false
+      state.pendingUpgrade = null
+      state.pendingLocalExecution = null
+      state.localExecutionConfirmed = false
+      state.restartNotice = readPackageId(transport) ?? null
+    })
+    await this.load()
+  }
+
+  private fail(error: MarketPackageFailure | string): void {
+    failPackageStore(typeof error === 'string' ? { code: error } : error, mutate => this.store.update(mutate))
+  }
+}
+
+/* oxlint-enable sonarjs/no-identical-functions, typescript/no-non-null-assertion, @stylistic/max-len */
+
+function isOkTransport(transport: unknown): boolean {
+  const t = transport as { ok?: boolean; value?: { ok?: boolean } }
+  return t.ok === true && t.value?.ok === true
+}
+
+function readError(transport: unknown): string | undefined {
+  const t = transport as { value?: { error?: { code?: string } } }
+  return t.value?.error?.code
+}
+
+function readPackageId(transport: unknown): string | undefined {
+  const t = transport as { value?: { value?: { packageId?: string } } }
+  return t.value?.value?.packageId
+}
+
 function failureCode(value: unknown): MarketPackageFailure {
   if (typeof value !== 'object' || value === null) return { code: 'operation-failed' }
   const transport = value as {

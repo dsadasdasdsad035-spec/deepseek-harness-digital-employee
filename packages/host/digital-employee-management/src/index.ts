@@ -400,6 +400,8 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
             preset: draft.preset,
             mcpServers: draft.mcpServers as never,
             hooks: draft.hooks ?? [],
+            workflows: draft.workflows ?? [],
+            subagents: draft.subagents ?? [],
             capabilities: draft.capabilities as never,
             experts: materialized.experts,
             delegation: draft.delegation,
@@ -409,6 +411,8 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
           authority: draft.capabilities as never,
           mcpServers: draft.mcpServers as never,
           hooks: draft.hooks ?? [],
+          workflows: draft.workflows ?? [],
+          subagents: draft.subagents ?? [],
           experts: materialized.experts,
           delegation: draft.delegation,
         },
@@ -475,6 +479,8 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
           preset: publishedDraft.preset,
           mcpServers: publishedDraft.mcpServers as never,
           hooks: publishedDraft.hooks ?? [],
+          workflows: publishedDraft.workflows ?? [],
+          subagents: publishedDraft.subagents ?? [],
           capabilities: publishedDraft.capabilities as never,
           experts: materialized.experts,
           delegation: publishedDraft.delegation,
@@ -832,6 +838,24 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
         }
       }
     }
+    for (const [field, gatewayKey] of [
+      ['workflows', 'workflowMarket'],
+      ['subagents', 'subagentMarket'],
+    ] as const) {
+      const refs = draft[field] ?? []
+      if (refs.length === 0) continue
+      const gateway = (this.ctx.get(gatewayKey) as { installedPackages?: () => Promise<readonly { packageId: string }[]> } | undefined)
+      const installed = new Set((await gateway?.installedPackages?.() ?? []).map(pkg => pkg.packageId))
+      for (const ref of refs) {
+        if (!installed.has(ref)) {
+          diagnostics.push({
+            code: field === 'workflows' ? 'unavailable-workflow' : 'unavailable-subagent',
+            path: field,
+            message: `${field === 'workflows' ? 'Workflow' : 'Subagent'} package "${ref}" is not installed in this Host.`,
+          })
+        }
+      }
+    }
     return { revision: draft.revision, diagnostics }
   }
 
@@ -966,6 +990,8 @@ async function localTemplate(
     preset: draft.preset,
     mcpServers: draft.mcpServers as never,
     hooks: draft.hooks ?? [],
+    workflows: draft.workflows ?? [],
+    subagents: draft.subagents ?? [],
     capabilities: draft.capabilities as never,
     experts,
     delegation: draft.delegation,

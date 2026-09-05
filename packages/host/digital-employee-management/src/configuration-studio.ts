@@ -113,6 +113,8 @@ export class ConfigurationStudioStore {
         capabilities: request.capabilities ?? EMPTY_AUTHORITY,
         mcpServers: request.mcpServers ?? [],
         hooks: request.hooks ?? [],
+        workflows: request.workflows ?? [],
+        subagents: request.subagents ?? [],
         experts: request.experts ?? [],
         memorySeeds: request.memorySeeds ?? [],
         delegation: request.delegation ?? DEFAULT_DELEGATION,

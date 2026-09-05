@@ -12,7 +12,7 @@ import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import { SkillMarketSection } from './SkillMarketSection.tsx'
 import type { SkillMarketSectionInjected } from './SkillMarketSection.tsx'
 import { SkillMarketStore } from './store.ts'
-import { HookMarketStore, McpMarketStore, ToolMarketStore } from './package-stores.ts'
+import { HookMarketStore, McpMarketStore, SimplePackageMarketStore, ToolMarketStore } from './package-stores.ts'
 import { en, zh, type SkillMarketKey } from './locales.ts'
 
 export type { SkillMarketSectionInjected, SkillMarketSectionProps } from './SkillMarketSection.tsx'
@@ -23,12 +23,18 @@ export {
   arrayBufferToBase64, bannerDataUrl, filterSkills, keyForFailure,
   MAX_UPLOAD_BYTES, SkillMarketStore, validateUploadFile,
 } from './store.ts'
-export { HOOK_TEMPLATE_ARCHIVE_FILENAME, HOOK_TEMPLATE_ARCHIVE_URL } from './SkillMarketSection.tsx'
+export {
+  HOOK_TEMPLATE_ARCHIVE_FILENAME, HOOK_TEMPLATE_ARCHIVE_URL,
+  SUBAGENT_TEMPLATE_ARCHIVE_FILENAME, SUBAGENT_TEMPLATE_ARCHIVE_URL,
+  WORKFLOW_TEMPLATE_ARCHIVE_FILENAME, WORKFLOW_TEMPLATE_ARCHIVE_URL,
+} from './SkillMarketSection.tsx'
 export {
   filterHookPackages, filterMcpPackages, filterToolPackages,
-  HookMarketStore, McpMarketStore, ToolMarketStore,
+  HookMarketStore, McpMarketStore, SimplePackageMarketStore, ToolMarketStore,
 } from './package-stores.ts'
-export type { HookMarketState, McpMarketState, ToolMarketState } from './package-stores.ts'
+export type {
+  HookMarketState, McpMarketState, SimplePackageMarketState, ToolMarketState,
+} from './package-stores.ts'
 export type { SkillMarketKey } from './locales.ts'
 export { TEMPLATE_ARCHIVE_FILENAME, TEMPLATE_ARCHIVE_URL } from './SkillMarketSection.tsx'
 
@@ -43,7 +49,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 export const NS = 'settings.skill-market'
 export const inject = [
   'slots', 'locale', 'remote',
-  'remote.skillMarket', 'remote.toolMarket', 'remote.mcpMarket', 'remote.hookMarket',
+  'remote.skillMarket', 'remote.toolMarket', 'remote.mcpMarket', 'remote.hookMarket', 'remote.workflowMarket', 'remote.subagentMarket',
 ]
 
 /**
@@ -58,6 +64,8 @@ export function apply(ctx: ClientContext): void {
   const toolController = new ToolMarketStore(ctx.remote.toolMarket)
   const mcpController = new McpMarketStore(ctx.remote.mcpMarket)
   const hookController = new HookMarketStore(ctx.remote.hookMarket)
+  const workflowController = new SimplePackageMarketStore(ctx.remote.workflowMarket)
+  const subagentController = new SimplePackageMarketStore(ctx.remote.subagentMarket)
   ctx.effect(() => () => { controller.dispose() }, 'ui-skill-market: release controller data')
   const t = ctx.locale.bind(NS) as SkillMarketSectionInjected['t']
   const injected = (): SkillMarketSectionInjected => ({
@@ -65,11 +73,15 @@ export function apply(ctx: ClientContext): void {
     toolController,
     mcpController,
     hookController,
+    workflowController,
+    subagentController,
     hooks: {
       snapshot: controller.store,
       toolSnapshot: toolController.store,
       mcpSnapshot: mcpController.store,
       hookSnapshot: hookController.store,
+      workflowSnapshot: workflowController.store,
+      subagentSnapshot: subagentController.store,
     },
     t,
   })

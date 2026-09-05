@@ -14,7 +14,8 @@ import { filterSkills, MAX_UPLOAD_BYTES } from './store.ts'
 import type { SkillMarketStore } from './store.ts'
 import {
   filterHookPackages, filterMcpPackages, filterToolPackages, type MarketPackageFailure,
-  type HookMarketStore, type McpMarketStore, type ToolMarketStore,
+  type HookMarketStore, type McpMarketStore, type SimplePackageMarketStore,
+  type ToolMarketStore,
 } from './package-stores.ts'
 import type { SkillMarketKey } from './locales.ts'
 import css from './SkillMarketSection.module.css'
@@ -24,11 +25,15 @@ export interface SkillMarketSectionInjected {
   toolController: ToolMarketStore
   mcpController: McpMarketStore
   hookController: HookMarketStore
+  workflowController: SimplePackageMarketStore<{ packageId: string; displayName: string }>
+  subagentController: SimplePackageMarketStore<{ packageId: string; displayName: string }>
   hooks: {
     snapshot: SkillMarketStore['store']
     toolSnapshot: ToolMarketStore['store']
     mcpSnapshot: McpMarketStore['store']
     hookSnapshot: HookMarketStore['store']
+    workflowSnapshot: SimplePackageMarketStore<{ packageId: string; displayName: string }>['store']
+    subagentSnapshot: SimplePackageMarketStore<{ packageId: string; displayName: string }>['store']
   }
   t: (key: SkillMarketKey) => string
 }
@@ -47,6 +52,10 @@ export const MCP_TEMPLATE_ARCHIVE_URL = '/mcp-market-template.zip'
 export const MCP_TEMPLATE_ARCHIVE_FILENAME = 'mcp-market-template.zip'
 export const HOOK_TEMPLATE_ARCHIVE_URL = '/hook-market-template.zip'
 export const HOOK_TEMPLATE_ARCHIVE_FILENAME = 'hook-market-template.zip'
+export const WORKFLOW_TEMPLATE_ARCHIVE_URL = '/workflow-market-template.zip'
+export const WORKFLOW_TEMPLATE_ARCHIVE_FILENAME = 'workflow-market-template.zip'
+export const SUBAGENT_TEMPLATE_ARCHIVE_URL = '/subagent-market-template.zip'
+export const SUBAGENT_TEMPLATE_ARCHIVE_FILENAME = 'subagent-market-template.zip'
 
 interface UploaderProps {
   readonly id: string
@@ -179,13 +188,15 @@ function SkillCard({ skill, banner, bannerFailed, busy, t, loadBanner, uninstall
 export function SkillMarketSection(props: SkillMarketSectionProps): ReactNode {
   const {
     controller, toolController, mcpController, hookController,
-    useSnapshot, useToolSnapshot, useMcpSnapshot, useHookSnapshot, t,
+    workflowController, subagentController,
+    useSnapshot, useToolSnapshot, useMcpSnapshot, useHookSnapshot,
+    useWorkflowSnapshot, useSubagentSnapshot, t,
   } = props
   if (
     controller === undefined || toolController === undefined || mcpController === undefined
-    || hookController === undefined
+    || hookController === undefined || workflowController === undefined || subagentController === undefined
     || useSnapshot === undefined || useToolSnapshot === undefined || useMcpSnapshot === undefined
-    || useHookSnapshot === undefined
+    || useHookSnapshot === undefined || useWorkflowSnapshot === undefined || useSubagentSnapshot === undefined
     || t === undefined
   ) return null
   return <Loaded injected={{
@@ -193,17 +204,21 @@ export function SkillMarketSection(props: SkillMarketSectionProps): ReactNode {
     toolController,
     mcpController,
     hookController,
+    workflowController,
+    subagentController,
     useSnapshot,
     useToolSnapshot,
     useMcpSnapshot,
     useHookSnapshot,
+    useWorkflowSnapshot,
+    useSubagentSnapshot,
     t,
   }} />
 }
 
 function Loaded({ injected }: { injected: SkillMarketFace }): ReactNode {
   const { t } = injected
-  const [tab, setTab] = useState<'skill' | 'tool' | 'mcp' | 'hooks'>('skill')
+  const [tab, setTab] = useState<'skill' | 'tool' | 'mcp' | 'hooks' | 'workflows' | 'subagents'>('skill')
   return (
     <section className={css.section} aria-labelledby="marketplace-title">
       <header className={css.header}>
@@ -218,6 +233,8 @@ function Loaded({ injected }: { injected: SkillMarketFace }): ReactNode {
           ['tool', 'toolTab'],
           ['mcp', 'mcpTab'],
           ['hooks', 'hooksTab'],
+          ['workflows', 'workflowsTab'],
+          ['subagents', 'subagentsTab'],
         ] as const).map(([id, label]) => (
           <button
             key={id}
@@ -235,6 +252,8 @@ function Loaded({ injected }: { injected: SkillMarketFace }): ReactNode {
       {tab === 'tool' ? <ToolPanel injected={injected} /> : null}
       {tab === 'mcp' ? <McpPanel injected={injected} /> : null}
       {tab === 'hooks' ? <HookPanel injected={injected} /> : null}
+      {tab === 'workflows' ? <SimplePanel injected={injected} kind="workflows" /> : null}
+      {tab === 'subagents' ? <SimplePanel injected={injected} kind="subagents" /> : null}
     </section>
   )
 }
@@ -919,6 +938,111 @@ function McpPanel({ injected: {
         confirmLocalExecution={() => { void controller.confirmLocalExecution() }}
         pendingDirectLocalExecution={state.pendingDirectLocalExecution !== null}
         confirmDirectLocalExecution={() => { void controller.confirmDirectLocalExecution() }}
+        confirmUninstall={() => { void controller.confirmUninstall() }}
+        t={t}
+      />
+    </div>
+  )
+}
+
+interface SimplePanelEntryState {
+  readonly packageId: string
+  readonly displayName: string
+  readonly description: string
+  readonly version: string
+  readonly publisherId: string
+  readonly permissions: readonly string[]
+  readonly restartRequired: boolean
+  readonly diagnostic?: string
+}
+
+interface SimplePanelState {
+  readonly status: 'idle' | 'loading' | 'ready' | 'error'
+  readonly query: string
+  readonly busy: boolean
+  readonly error: MarketPackageFailure | null
+  readonly restartNotice: string | null
+  readonly pendingUpgrade: { readonly packageId: string } | null
+  readonly pendingLocalExecution: { readonly candidatePermissions: readonly string[] } | null
+  readonly pendingUninstall: string | null
+  readonly entries: readonly SimplePanelEntryState[]
+}
+
+function SimplePanel({ injected, kind }: { injected: SkillMarketFace; kind: 'workflows' | 'subagents' }): ReactNode {
+  const { t } = injected
+  const controller = (kind === 'workflows' ? injected.workflowController : injected.subagentController) as unknown as HookMarketStore
+  const useSnapshot = (kind === 'workflows' ? injected.useWorkflowSnapshot : injected.useSubagentSnapshot) as unknown as (selector: (value: never) => SimplePanelState) => SimplePanelState
+  const state = useSnapshot((value: never) => value as SimplePanelState)
+  useEffect(() => {
+    if (state.status === 'idle') void controller.load()
+  }, [controller, state.status])
+  const needle = state.query.trim().toLocaleLowerCase()
+  const entries = state.entries.filter(entry =>
+    needle === ''
+    || [entry.packageId, entry.displayName, entry.description, entry.publisherId]
+      .some(value => value.toLocaleLowerCase().includes(needle)))
+  return (
+    <div className={css.panel} role="tabpanel">
+      <Uploader
+        id={`${kind}-market`}
+        title={t(kind === 'workflows' ? 'workflowUploadTitle' : 'subagentUploadTitle')}
+        uploading={state.busy}
+        error={state.error === null ? null : marketFailureText(state.error, t)}
+        t={t}
+        onPickFile={(file) => { void controller.upload(file) }}
+        templateUrl={kind === 'workflows' ? WORKFLOW_TEMPLATE_ARCHIVE_URL : SUBAGENT_TEMPLATE_ARCHIVE_URL}
+        templateFilename={kind === 'workflows' ? WORKFLOW_TEMPLATE_ARCHIVE_FILENAME : SUBAGENT_TEMPLATE_ARCHIVE_FILENAME}
+        templateLabel="publisherTemplateDownload"
+      />
+      <PackageSearch
+        label={t(kind === 'workflows' ? 'workflowSearchLabel' : 'subagentSearchLabel')}
+        placeholder={t(kind === 'workflows' ? 'workflowSearchPlaceholder' : 'subagentSearchPlaceholder')}
+        value={state.query}
+        onChange={(value) => { controller.setQuery(value) }}
+      />
+      <RestartNotice visible={state.restartNotice !== null} t={t} />
+      <PackageState
+        status={state.status}
+        error={state.error}
+        empty={kind === 'workflows' ? 'workflowsEmpty' : 'subagentsEmpty'}
+        emptyFiltered={kind === 'workflows' ? 'workflowsEmptyFiltered' : 'subagentsEmptyFiltered'}
+        hasEntries={state.entries.length > 0}
+        hasMatches={entries.length > 0}
+        retry={() => { void controller.load() }}
+        t={t}
+      />
+      {state.status === 'ready' && entries.length > 0 ? (
+        <ul className={css.packageCards}>
+          {entries.map(entry => (
+            <li key={entry.packageId} className={css.packageCard}>
+              <div className={css.packageHeading}>
+                <div>
+                  <h3>{entry.displayName}</h3>
+                  <p className={css.packageIdentity}>{entry.packageId} · {entry.version}</p>
+                </div>
+                <span className={css.statusBadge} data-available={entry.restartRequired ? false : true}>
+                  {entry.restartRequired ? t('restartRequired') : t('available')}
+                </span>
+              </div>
+              <p className={css.description}>{entry.description}</p>
+              <dl className={css.metadata}>
+                <dt>{t('publisher')}</dt><dd>{entry.publisherId}</dd>
+              </dl>
+              {entry.diagnostic === undefined ? null : (
+                <p className={css.diagnostic} role="status">{t('diagnostic')}: {entry.diagnostic}</p>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <PackageConfirmations
+        pendingUpgrade={state.pendingUpgrade?.packageId ?? null}
+        pendingLocalExecution={state.pendingLocalExecution?.candidatePermissions ?? null}
+        pendingUninstall={state.pendingUninstall}
+        busy={state.busy}
+        cancel={() => { controller.cancelConfirmation() }}
+        confirmUpgrade={() => { void controller.confirmUpgrade() }}
+        confirmLocalExecution={() => { void controller.confirmLocalExecution() }}
         confirmUninstall={() => { void controller.confirmUninstall() }}
         t={t}
       />
