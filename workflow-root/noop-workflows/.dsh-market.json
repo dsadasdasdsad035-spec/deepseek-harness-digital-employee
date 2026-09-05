@@ -1,8 +1,0 @@
-{
-  "format": 1,
-  "kind": "workflow",
-  "id": "noop-workflows",
-  "version": "1.0.0",
-  "publisherId": "fixture-publisher",
-  "installedAt": 1788627421263
-}
