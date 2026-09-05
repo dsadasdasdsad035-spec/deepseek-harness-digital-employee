@@ -858,6 +858,49 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     }
     return { revision: draft.revision, diagnostics }
   }
+  /**
+   * Export a published local template as a signed employee package zip.
+   * @param request - Template identity and version to export.
+   * @returns Base64-encoded signed zip.
+   */
+  @Remote('exportTemplate')
+  async exportTemplate(request: { templateId: string; version: string }): Promise<{ archiveBase64: string }> {
+    this.requireAdministrator()
+    const templateId = createDigitalEmployeeTemplateId(request.templateId)
+    const template = this.ctx.digitalEmployees.getTemplate(templateId, request.version)
+    if (template === undefined) throw new Error(`template "${request.templateId}@${request.version}" not found`)
+    const { signMarketplacePackage } = await import('@deepseek-ai/dsh-marketplace-core')
+    const { privateKey } = await import('node:crypto').then(m => m.generateKeyPairSync('ed25519'))
+    const files: Record<string, Uint8Array> = {}
+    if (template.instructions.kind === 'file') {
+      const { readFile } = await import('node:fs/promises')
+      const path = join(template.instructions.root, template.instructions.path)
+      files[template.instructions.path] = new Uint8Array(await readFile(path))
+    }
+    const built = await signMarketplacePackage({
+      kind: 'employee',
+      descriptor: {
+        format: 1, kind: 'employee', id: request.templateId, version: request.version,
+        display: template.display,
+        publisher: { id: 'local-export', signature: 'pending' },
+        files: Object.fromEntries(Object.keys(files).map(k => [k, 'GENERATED'])),
+        template: {
+          displayName: template.display.name,
+          description: template.display.description,
+          personality: template.personality,
+          preset: template.preset,
+        },
+        instructions: template.instructions.path,
+        experts: [],
+        references: [],
+      },
+      files,
+      publisherId: 'local-export',
+      privateKeyPem: privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
+    })
+    return { archiveBase64: built.archive.toString('base64') }
+  }
+
 
   /**
    * Resolve Skill summaries from one preset's standing composition.
