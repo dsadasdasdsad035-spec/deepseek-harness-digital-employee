@@ -1,0 +1,7 @@
+{"type":"acceptance","stage":"install-unconfirmed","code":"local-execution-confirmation-required"}
+{"type":"acceptance","stage":"install-confirmed","packageId":"echo-hooks","operation":"installed","restartRequired":true}
+{"type":"acceptance","stage":"listed","hooks":[{"id":"echo","event":"UserPromptSubmit","matcher":"test-hook","invocable":true}],"permissions":["subprocess"]}
+{"type":"acceptance","stage":"employee-created","displayName":"Ada","state":"inactive"}
+{"type":"acceptance","stage":"chat-started","sessionId":"digital-employee-hooks-root"}
+{"type":"acceptance","stage":"hook-invoked-through-chat","toolResultText":"HOOK-SAW:70","echoSawPayload":true}
+{"type":"acceptance","stage":"session-tool-calls","names":["hook__echo"],"invokedEcho":true}

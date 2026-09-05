@@ -1,0 +1,79 @@
+- id: mock-llm
+  name: './mock-llm.ts'
+
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: digital-employee-mock
+    model: digital-employee-mock
+
+- id: agent-spine
+  name: '@deepseek-ai/dsh-agent-spine-demo'
+  config:
+    agents: []
+    workspaceContext: false
+    skills:
+      filesystem:
+        dshHome: './.dsh-home'
+
+- id: attachment-local
+  name: '@deepseek-ai/dsh-attachment-local'
+  config:
+    dshHome: './.dsh-home'
+
+- id: credentials-local
+  name: '@deepseek-ai/dsh-credentials-local'
+  config:
+    path: !!js process.env.DSH_HOOKS_FIXTURE_CREDENTIALS
+    watch: false
+
+- id: subprocess-local
+  name: '@deepseek-ai/dsh-subprocess-local'
+
+- id: bash-local
+  name: '@deepseek-ai/dsh-bash-local'
+
+- id: agent-presets
+  name: '@deepseek-ai/dsh-agent-presets'
+  config:
+    default: digital-employee-minimal
+    includeUserRoot: false
+    roots:
+      - path: !!js process.env.DSH_DIGITAL_EMPLOYEE_PRESET_ROOT
+        trust: system
+
+- id: digital-employees
+  name: '@deepseek-ai/dsh-digital-employee'
+
+- id: example-template
+  name: './template.ts'
+
+- id: digital-employee-file
+  name: '@deepseek-ai/dsh-digital-employee-file'
+  config:
+    path: './digital-employees.json'
+
+- id: subagents
+  name: '@deepseek-ai/dsh-subagent'
+
+- id: fixture-subagent-provider
+  name: '../digital-employee-agent/subagent-provider.ts'
+
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+
+- id: hooks-market
+  name: '@deepseek-ai/dsh-hooks-market'
+  config:
+    installRoot: !!js process.env.DSH_HOOKS_FIXTURE_INSTALL_ROOT
+    trustedPublishers: !!js JSON.parse(process.env.DSH_HOOKS_FIXTURE_TRUSTED_PUBLISHERS)
+    allowUnsignedPackages: false
+
+- id: digital-employee-agent
+  name: '@deepseek-ai/dsh-digital-employee-agent'
+
+- id: digital-employee-management
+  name: '../digital-employee-agent/management.ts'

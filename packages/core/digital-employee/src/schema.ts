@@ -68,6 +68,7 @@ export const DigitalEmployeeTemplateSchema = (value: unknown): DigitalEmployeeTe
     instructions: instruction(template.instructions, `digital employee template "${id}" instructions`),
     preset: identifier(template.preset, `digital employee template "${id}" preset`),
     ...(template.mcpServers === undefined ? {} : { mcpServers }),
+    ...(template.hooks === undefined ? {} : { hooks: array(template.hooks, `digital employee template "${id}" hooks`) as readonly string[] }),
     capabilities,
     experts,
     delegation: delegation(template.delegation, `digital employee template "${id}" delegation`),

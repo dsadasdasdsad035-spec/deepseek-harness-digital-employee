@@ -26,6 +26,6 @@
 
 ## 5. End-to-end and docs
 
-- [x] 5.1 (coverage landed at integration level: hooks-market bridge test + employee composition test cover install→bind→invoke; a dedicated ACP snapshot fixture remains) Snapshot: assembled flow — install test hook, bind via template, `@employee` chat task invoking the hook tool, assert tool result and `hook/*` records; bilingual expected outputs updated in the same change
+- [x] 5.1 Keyless assembled snapshot `examples/headless-agent/tests/digital-employee-hooks.snapshot.ts` + fixture `fixtures/core/digital-employee-hooks/`: signs and installs the echo hook package through the real gateway (confirmation-gated), starts a digital employee whose template binds the package, and replays the chat turn whose model round calls `hook__echo` - expected transcript asserts `HOOK-SAW:` stdout, `invokedEcho`, and passive-binding metadata — install test hook, bind via template, `@employee` chat task invoking the hook tool, assert tool result and `hook/*` records; bilingual expected outputs updated in the same change
 - [x] 5.2 Bilingual docs: `packages/hooks` README (new bridge row), market README section, publisher template instructions, config/api catalog regeneration, doc-sync
 - [x] 5.3 Implementation Agent Note (bilingual) recording the invocable-tool decision and the instance-scoping boundary

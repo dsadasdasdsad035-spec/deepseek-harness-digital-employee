@@ -90,6 +90,31 @@ export function mountEmployeeHooks(
   const stdoutOf = (merged: MergedHookOutcome): string =>
     merged.reason !== undefined ? merged.reason : ''
 
+  /** Run one invocable hook directly, bypassing matcher evaluation. */
+  async function runInvocable(
+    pkg: InstalledHookPackage,
+    hook: HookPackageDescriptor['hooks'][number],
+    input: string,
+    signal: AbortSignal,
+  ): Promise<string> {
+    const env: Record<string, string> = { ...hook.env }
+    const market = agentCtx.root.hookMarket
+    for (const slot of Object.keys(hook.credentialReferences)) {
+      env[slot] = await market.resolveSlotValue(pkg.packageId, slot)
+    }
+    const { output } = await runHook(executor, {
+      command: [hook.command, ...hook.args].join(' '),
+      ...hook.timeoutSec === undefined ? {} : { timeoutSec: hook.timeoutSec },
+    }, {
+      payload: { hook_event_name: hook.event, input },
+      defaultTimeoutMs,
+      cwd: options.workdir ?? pkg.directory,
+      signal,
+      trailingNewline: true,
+    }, () => performance.now())
+    return output.stdout ?? ''
+  }
+
   // Passive interception: tool boundaries and prompt/stop boundaries. Session
   // hooks are handled by the host-level bridge; instance bindings cover the
   // four turn-enclosed points.
@@ -137,10 +162,7 @@ export function mountEmployeeHooks(
         render: (_args, value) => [{ type: 'text', text: value }],
       },
       isConcurrencySafe: () => true,
-      execute: async (args, exec) => {
-        const merged = await runBound(hook.event, '', { input: args.input ?? '' }, exec.signal)
-        return stdoutOf(merged)
-      },
+      execute: async (args, exec) => await runInvocable(pkg, hook, String(args.input), exec.signal),
     }))
     disposers.push(disposeTool)
   }

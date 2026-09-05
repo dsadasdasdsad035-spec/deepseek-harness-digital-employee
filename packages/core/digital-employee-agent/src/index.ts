@@ -597,6 +597,7 @@ export class DigitalEmployeeAgent extends Service {
       throw new Error('digital employee Agent composition requires skills and tools in the Agent scope')
     }
     this.mountExpertDelegationTool(agentCtx, employee)
+    await this.mountEmployeeHooks(agentCtx, employee)
     skills.restrict({ allow: employee.authority.skills })
     tools.restrict({ allow: employee.authority.tools })
     const resolvedMcpServers = mcpServers ?? (employee.mcpServers.length === 0
@@ -609,7 +610,6 @@ export class DigitalEmployeeAgent extends Service {
       }
       await mcpClients.mount(agentCtx, config)
     }
-    await this.mountEmployeeHooks(agentCtx, employee)
     if (installAudit) this.installAudit(agentCtx, employee, resolvedMcpServers)
     const systemPrompt = agentCtx.get('systemPrompt')
     if (systemPrompt === undefined) {
@@ -645,13 +645,16 @@ export class DigitalEmployeeAgent extends Service {
   /**
    * Resolve this employee's hook package references against installed packages
    * and mount the bridge: passive interception handlers plus invocable tools.
-   * Unresolved references fail composition before any Session exists.
+   * Unresolved references fail composition before any Session exists. Must run
+   * before the tool restriction layer is applied so the returned invocable
+   * tool names can join the authority allowlist.
    * @param agentCtx - Agent scope context receiving the bridge handlers.
    * @param employee - resolved employee carrying the hook references.
+   * @returns invocable tool names registered by the bridge.
    */
-  private async mountEmployeeHooks(agentCtx: Context, employee: ResolvedDigitalEmployee): Promise<void> {
+  private async mountEmployeeHooks(agentCtx: Context, employee: ResolvedDigitalEmployee): Promise<string[]> {
     const hookRefs = employee.hooks ?? employee.template.hooks ?? []
-    if (hookRefs.length === 0) return
+    if (hookRefs.length === 0) return []
     const market = this.ctx.get('hookMarket')
     if (market === undefined) {
       throw new Error('digital employee hook composition requires the hooks-market gateway')
@@ -668,6 +671,9 @@ export class DigitalEmployeeAgent extends Service {
       .flatMap(pkg => pkg.descriptor.hooks.map(hook => ({ pkg, hook })))
     const dispose = mountEmployeeHooks(agentCtx, bindings)
     agentCtx.effect(() => dispose, 'hooks-market.employee-bindings')
+    return bindings
+      .filter(binding => binding.hook.invocable === true)
+      .map(binding => `hook__${binding.hook.id}`)
   }
 
   private mountExpertDelegationTool(
