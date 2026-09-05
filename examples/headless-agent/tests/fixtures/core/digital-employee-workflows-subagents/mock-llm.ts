@@ -9,13 +9,13 @@ class MockAdapter extends LlmAdapter {
     if (rounds === 1) {
       yield { type: 'block-start', index: 0, blockType: 'tool-call' }
       yield { type: 'tool-call-delta', index: 0, id: CallId('call-wf'), name: 'workflow__noop', argumentsDelta: '{}' }
-      yield { type: 'block-end', index: 0, block: { type: 'tool-call', id: 'call-wf', name: 'workflow__noop', arguments: '{}' } }
+      yield { type: 'block-end', index: 0, block: { type: 'tool-call', id: CallId('call-wf'), name: 'workflow__noop', arguments: '{}' } }
       yield { type: 'usage', usage: { inputTokens: 1, outputTokens: 1 } }
       yield { type: 'finish', reason: { kind: 'tool-calls' } }
     } else if (rounds === 2) {
       yield { type: 'block-start', index: 0, blockType: 'tool-call' }
       yield { type: 'tool-call-delta', index: 0, id: CallId('call-sa'), name: 'subagent__reviewer', argumentsDelta: '{"prompt":"review"}' }
-      yield { type: 'block-end', index: 0, block: { type: 'tool-call', id: 'call-sa', name: 'subagent__reviewer', arguments: '{"prompt":"review"}' } }
+      yield { type: 'block-end', index: 0, block: { type: 'tool-call', id: CallId('call-sa'), name: 'subagent__reviewer', arguments: '{"prompt":"review"}' } }
       yield { type: 'usage', usage: { inputTokens: 1, outputTokens: 1 } }
       yield { type: 'finish', reason: { kind: 'tool-calls' } }
     } else {
