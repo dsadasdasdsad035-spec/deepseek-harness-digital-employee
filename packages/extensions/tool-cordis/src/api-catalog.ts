@@ -2316,6 +2316,37 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'subagentMarket',
+    summary: 'Typed Remote gateway for managed subagent packages.',
+    description: 'Typed Remote gateway for managed subagent packages.',
+    methods: [
+      {
+        signature: '@Remote(\'list\') async list(): Promise<SubagentMarketListResult>',
+        description: 'List managed subagent packages.',
+        parameters: [],
+        returns: 'Declared inventory result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'install\') async install(request: SubagentMarketInstallRequest): Promise<SubagentMarketInstallResult>',
+        description: 'Install or explicitly upgrade one trusted subagent package.',
+        parameters: [{ name: 'request', description: 'Uploaded archive and explicit replacement intent.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'uninstall\') async uninstall(request: SubagentMarketUninstallRequest): Promise<SubagentMarketUninstallResult>',
+        description: 'Uninstall one marketplace-managed subagent package.',
+        parameters: [{ name: 'request', description: 'Managed package identity to remove.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: 'async installedPackages(): Promise<readonly InstalledSubagentPackage[]>',
+        description: 'Project every installed package for the composition bridge. Packages failing validation are skipped with a diagnostic.',
+        parameters: [],
+        returns: 'Installed descriptors.',
+      },
+    ],
+  },
+  {
     key: 'subagents',
     summary: 'Named provider registry with one-shot runs, durable discovery, and continuable-child operations.',
     description: 'Named provider registry with one-shot runs, durable discovery, and continuable-child operations.',
@@ -2882,6 +2913,37 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Parse and execute a workflow script.',
         parameters: [{ name: 'request', description: 'the script, its `args`, the parent agent, and an optional cancel signal.' }],
         returns: 'the live run; its `result` resolves when the script settles.',
+      },
+    ],
+  },
+  {
+    key: 'workflowMarket',
+    summary: 'Typed Remote gateway for managed workflow packages.',
+    description: 'Typed Remote gateway for managed workflow packages.',
+    methods: [
+      {
+        signature: '@Remote(\'list\') async list(): Promise<WorkflowMarketListResult>',
+        description: 'List managed workflow packages.',
+        parameters: [],
+        returns: 'Declared inventory result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'install\') async install(request: WorkflowMarketInstallRequest): Promise<WorkflowMarketInstallResult>',
+        description: 'Install or explicitly upgrade one trusted workflow package.',
+        parameters: [{ name: 'request', description: 'Uploaded archive and explicit replacement intent.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: '@Remote(\'uninstall\') async uninstall(request: WorkflowMarketUninstallRequest): Promise<WorkflowMarketUninstallResult>',
+        description: 'Uninstall one marketplace-managed workflow package.',
+        parameters: [{ name: 'request', description: 'Managed package identity to remove.' }],
+        returns: 'Declared mutation result or a structured marketplace failure.',
+      },
+      {
+        signature: 'async installedPackages(): Promise<readonly InstalledWorkflowPackage[]>',
+        description: 'Project every installed package for the composition bridge. Packages failing validation are skipped with a diagnostic.',
+        parameters: [],
+        returns: 'Installed descriptors.',
       },
     ],
   },
@@ -3828,7 +3890,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'CreateDigitalEmployeeTemplateDraftRequest',
-    declaration: 'export interface CreateDigitalEmployeeTemplateDraftRequest {\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality?: string;\n    readonly preset?: string;\n    readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n    readonly hooks?: string[];\n    readonly experts?: DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation?: DigitalEmployeeConfigurationDelegation;\n}',
+    declaration: 'export interface CreateDigitalEmployeeTemplateDraftRequest {\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality?: string;\n    readonly preset?: string;\n    readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n    readonly hooks?: string[];\n    readonly workflows?: string[];\n    readonly subagents?: string[];\n    readonly experts?: DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation?: DigitalEmployeeConfigurationDelegation;\n}',
   },
   {
     name: 'CreateGoalRequest',
@@ -3900,7 +3962,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'DigitalEmployeeConfigurationAsset',
-    declaration: 'export interface DigitalEmployeeConfigurationAsset {\n    readonly id: DigitalEmployeeConfigurationAssetId;\n    readonly kind: \'skill\' | \'tool\' | \'mcp\' | \'hook\';\n    readonly label: string;\n    readonly description?: string;\n    readonly available: boolean;\n    readonly source: string;\n    readonly version?: string | undefined;\n    readonly publisher?: string | undefined;\n    readonly tags?: readonly string[] | undefined;\n    readonly managedByMarket?: boolean | undefined;\n    readonly permissionSummary: readonly string[];\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n    readonly mcpServer?: DigitalEmployeeConfigurationMcpServer | undefined;\n}',
+    declaration: 'export interface DigitalEmployeeConfigurationAsset {\n    readonly id: DigitalEmployeeConfigurationAssetId;\n    readonly kind: \'skill\' | \'tool\' | \'mcp\' | \'hook\' | \'workflow\' | \'subagent\';\n    readonly label: string;\n    readonly description?: string;\n    readonly available: boolean;\n    readonly source: string;\n    readonly version?: string | undefined;\n    readonly publisher?: string | undefined;\n    readonly tags?: readonly string[] | undefined;\n    readonly managedByMarket?: boolean | undefined;\n    readonly permissionSummary: readonly string[];\n    readonly restartRequired: boolean;\n    readonly diagnostic?: string | undefined;\n    readonly mcpServer?: DigitalEmployeeConfigurationMcpServer | undefined;\n}',
   },
   {
     name: 'DigitalEmployeeConfigurationAssetCatalog',
@@ -4076,7 +4138,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'DigitalEmployeeTemplate',
-    declaration: 'export interface DigitalEmployeeTemplate {\n    readonly id: DigitalEmployeeTemplateId;\n    readonly version: string;\n    readonly display: DigitalEmployeeTemplateDisplay;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly preset: string;\n    readonly mcpServers?: readonly DigitalEmployeeMcpServer[];\n    readonly hooks?: readonly string[];\n    readonly capabilities: DigitalEmployeeAuthority;\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
+    declaration: 'export interface DigitalEmployeeTemplate {\n    readonly id: DigitalEmployeeTemplateId;\n    readonly version: string;\n    readonly display: DigitalEmployeeTemplateDisplay;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly preset: string;\n    readonly mcpServers?: readonly DigitalEmployeeMcpServer[];\n    readonly hooks?: readonly string[];\n    readonly workflows?: readonly string[];\n    readonly subagents?: readonly string[];\n    readonly capabilities: DigitalEmployeeAuthority;\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
   },
   {
     name: 'DigitalEmployeeTemplateDisplay',
@@ -4084,7 +4146,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'DigitalEmployeeTemplateDraft',
-    declaration: 'export interface DigitalEmployeeTemplateDraft {\n    readonly id: DigitalEmployeeTemplateDraftId;\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality: string;\n    readonly preset: string;\n    readonly capabilities: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers: readonly DigitalEmployeeConfigurationMcpServer[];\n    readonly hooks?: string[];\n    readonly experts: readonly DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds: readonly DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation: DigitalEmployeeConfigurationDelegation;\n    readonly revision: number;\n    readonly createdAt: string;\n    readonly updatedAt: string;\n}',
+    declaration: 'export interface DigitalEmployeeTemplateDraft {\n    readonly id: DigitalEmployeeTemplateDraftId;\n    readonly templateId: string;\n    readonly display: {\n        readonly name: string;\n        readonly description: string;\n        readonly banner?: string;\n    };\n    readonly instructions: string;\n    readonly personality: string;\n    readonly preset: string;\n    readonly capabilities: DigitalEmployeeConfigurationAuthority;\n    readonly mcpServers: readonly DigitalEmployeeConfigurationMcpServer[];\n    readonly hooks?: string[];\n    readonly workflows?: string[];\n    readonly subagents?: string[];\n    readonly experts: readonly DigitalEmployeeConfigurationExpert[];\n    readonly memorySeeds: readonly DigitalEmployeeConfigurationMemorySeed[];\n    readonly delegation: DigitalEmployeeConfigurationDelegation;\n    readonly revision: number;\n    readonly createdAt: string;\n    readonly updatedAt: string;\n}',
   },
   {
     name: 'DigitalEmployeeTemplateDraftId',
@@ -4441,6 +4503,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'InstalledHookPackage',
     declaration: 'export interface InstalledHookPackage {\n    readonly packageId: string;\n    readonly directory: string;\n    readonly descriptor: HookPackageDescriptor;\n    readonly references: Readonly<Record<string, string>>;\n}',
+  },
+  {
+    name: 'InstalledSubagentPackage',
+    declaration: 'export interface InstalledSubagentPackage {\n    readonly packageId: string;\n    readonly directory: string;\n    readonly descriptor: SubagentPackageDescriptor;\n}',
+  },
+  {
+    name: 'InstalledWorkflowPackage',
+    declaration: 'export interface InstalledWorkflowPackage {\n    readonly packageId: string;\n    readonly directory: string;\n    readonly descriptor: WorkflowPackageDescriptor;\n}',
   },
   {
     name: 'InvariantFailure',
@@ -5020,7 +5090,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ResolvedDigitalEmployee',
-    declaration: 'export interface ResolvedDigitalEmployee {\n    readonly instance: DigitalEmployeeInstance;\n    readonly template: DigitalEmployeeTemplate;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly authority: DigitalEmployeeAuthority;\n    readonly mcpServers: readonly DigitalEmployeeMcpServer[];\n    readonly hooks?: readonly string[];\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
+    declaration: 'export interface ResolvedDigitalEmployee {\n    readonly instance: DigitalEmployeeInstance;\n    readonly template: DigitalEmployeeTemplate;\n    readonly personality: string;\n    readonly instructions: DigitalEmployeeInstructionSource;\n    readonly authority: DigitalEmployeeAuthority;\n    readonly mcpServers: readonly DigitalEmployeeMcpServer[];\n    readonly hooks?: readonly string[];\n    readonly workflows?: readonly string[];\n    readonly subagents?: readonly string[];\n    readonly experts: readonly DigitalEmployeeExpert[];\n    readonly delegation: DigitalEmployeeDelegationPolicy;\n}',
   },
   {
     name: 'ResolvedDigitalEmployeeExpert',
@@ -5599,6 +5669,46 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type SubagentInterruptAuthority = {\n    readonly kind: \'user\';\n    readonly parentSessionId: SessionId;\n} | {\n    readonly kind: \'ancestor\';\n    readonly agent: Agent;\n};',
   },
   {
+    name: 'SubagentMarketEntry',
+    declaration: 'export interface SubagentMarketEntry {\n    readonly packageId: SubagentMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly entries: readonly SubagentMarketEntryItem[];\n    readonly permissions: readonly string[];\n    readonly installedAt: number;\n    readonly available: boolean;\n    readonly restartRequired: true;\n    readonly diagnostic?: string | undefined;\n}',
+  },
+  {
+    name: 'SubagentMarketEntryItem',
+    declaration: 'export interface SubagentMarketEntryItem {\n    readonly id: string;\n    readonly available: boolean;\n}',
+  },
+  {
+    name: 'SubagentMarketFailure',
+    declaration: 'export type SubagentMarketFailure = {\n    readonly code: \'invalid-archive\';\n    readonly reason: \'base64\' | \'zip\';\n} | {\n    readonly code: \'resource-limit\';\n    readonly limit: \'archive-bytes\' | \'file-count\' | \'entry-bytes\' | \'total-bytes\';\n    readonly limitValue: number;\n    readonly observedValue: number;\n    readonly entry?: string | undefined;\n} | {\n    readonly code: \'invalid-package\';\n    readonly reason: string;\n} | {\n    readonly code: \'untrusted-publisher\' | \'invalid-signature\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'managed-upgrade-required\';\n    readonly packageId: SubagentMarketPackageId;\n    readonly installedVersion: string;\n    readonly candidateVersion: string;\n} | {\n    readonly code: \'local-execution-confirmation-required\';\n    readonly candidatePermissions: readonly string[];\n} | {\n    readonly code: \'unmanaged-conflict\' | \'manifest-incompatible\' | \'not-found\';\n    readonly packageId: SubagentMarketPackageId;\n};',
+  },
+  {
+    name: 'SubagentMarketInstallRequest',
+    declaration: 'export interface SubagentMarketInstallRequest {\n    readonly filename: string;\n    readonly archiveBase64: string;\n    readonly replaceExisting?: boolean;\n    readonly confirmLocalExecution?: boolean;\n}',
+  },
+  {
+    name: 'SubagentMarketInstallResult',
+    declaration: 'export type SubagentMarketInstallResult = SubagentMarketResult<{\n    readonly packageId: SubagentMarketPackageId;\n    readonly operation: \'installed\' | \'upgraded\';\n    readonly restartRequired: true;\n}>;',
+  },
+  {
+    name: 'SubagentMarketListResult',
+    declaration: 'export type SubagentMarketListResult = SubagentMarketResult<{\n    readonly entries: readonly SubagentMarketEntry[];\n}>;',
+  },
+  {
+    name: 'SubagentMarketPackageId',
+    declaration: 'export type SubagentMarketPackageId = Branded<\'SubagentMarketPackageId\'>;',
+  },
+  {
+    name: 'SubagentMarketResult',
+    declaration: 'export type SubagentMarketResult<Value> = {\n    readonly ok: true;\n    readonly value: Value;\n} | {\n    readonly ok: false;\n    readonly error: SubagentMarketFailure;\n};',
+  },
+  {
+    name: 'SubagentMarketUninstallRequest',
+    declaration: 'export interface SubagentMarketUninstallRequest {\n    readonly packageId: SubagentMarketPackageId;\n}',
+  },
+  {
+    name: 'SubagentMarketUninstallResult',
+    declaration: 'export type SubagentMarketUninstallResult = SubagentMarketResult<{\n    readonly packageId: SubagentMarketPackageId;\n    readonly restartRequired: true;\n}>;',
+  },
+  {
     name: 'SubagentProvider',
     declaration: 'export interface SubagentProvider {\n    readonly name: string;\n    readonly capabilities: SubagentCapabilities;\n    readonly inheritsParentContext: boolean;\n    start(request: ResolvedSubagentStartRequest): Promise<SubagentRun>;\n    prepareContinuable?(request: ContinuableCreateRequest): Promise<ContinuableCreateSpec>;\n}',
   },
@@ -6084,7 +6194,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'UpdateDigitalEmployeeTemplateDraftRequest',
-    declaration: 'export interface UpdateDigitalEmployeeTemplateDraftRequest extends DigitalEmployeeTemplateDraftIdentityRequest {\n    readonly revision: number;\n    readonly patch: {\n        readonly templateId?: string;\n        readonly display?: {\n            readonly name: string;\n            readonly description: string;\n            readonly banner?: string;\n        };\n        readonly instructions?: string;\n        readonly personality?: string;\n        readonly preset?: string;\n        readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n        readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n        readonly hooks?: string[];\n        readonly experts?: DigitalEmployeeConfigurationExpert[];\n        readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n        readonly delegation?: DigitalEmployeeConfigurationDelegation;\n    };\n}',
+    declaration: 'export interface UpdateDigitalEmployeeTemplateDraftRequest extends DigitalEmployeeTemplateDraftIdentityRequest {\n    readonly revision: number;\n    readonly patch: {\n        readonly templateId?: string;\n        readonly display?: {\n            readonly name: string;\n            readonly description: string;\n            readonly banner?: string;\n        };\n        readonly instructions?: string;\n        readonly personality?: string;\n        readonly preset?: string;\n        readonly capabilities?: DigitalEmployeeConfigurationAuthority;\n        readonly mcpServers?: DigitalEmployeeConfigurationMcpServer[];\n        readonly hooks?: string[];\n        readonly workflows?: string[];\n        readonly subagents?: string[];\n        readonly experts?: DigitalEmployeeConfigurationExpert[];\n        readonly memorySeeds?: DigitalEmployeeConfigurationMemorySeed[];\n        readonly delegation?: DigitalEmployeeConfigurationDelegation;\n    };\n}',
   },
   {
     name: 'UpdateTeamTaskRequest',
@@ -6177,6 +6287,46 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkflowAgentOutcome',
     declaration: 'export type WorkflowAgentOutcome = \'completed\' | \'failed\' | \'cancelled\';',
+  },
+  {
+    name: 'WorkflowMarketEntry',
+    declaration: 'export interface WorkflowMarketEntry {\n    readonly packageId: WorkflowMarketPackageId;\n    readonly displayName: string;\n    readonly description: string;\n    readonly version: string;\n    readonly publisherId: string;\n    readonly entries: readonly WorkflowMarketEntryItem[];\n    readonly permissions: readonly string[];\n    readonly installedAt: number;\n    readonly available: boolean;\n    readonly restartRequired: true;\n    readonly diagnostic?: string | undefined;\n}',
+  },
+  {
+    name: 'WorkflowMarketEntryItem',
+    declaration: 'export interface WorkflowMarketEntryItem {\n    readonly id: string;\n    readonly available: boolean;\n}',
+  },
+  {
+    name: 'WorkflowMarketFailure',
+    declaration: 'export type WorkflowMarketFailure = {\n    readonly code: \'invalid-archive\';\n    readonly reason: \'base64\' | \'zip\';\n} | {\n    readonly code: \'resource-limit\';\n    readonly limit: \'archive-bytes\' | \'file-count\' | \'entry-bytes\' | \'total-bytes\';\n    readonly limitValue: number;\n    readonly observedValue: number;\n    readonly entry?: string | undefined;\n} | {\n    readonly code: \'invalid-package\';\n    readonly reason: string;\n} | {\n    readonly code: \'untrusted-publisher\' | \'invalid-signature\';\n    readonly publisherId: string;\n} | {\n    readonly code: \'managed-upgrade-required\';\n    readonly packageId: WorkflowMarketPackageId;\n    readonly installedVersion: string;\n    readonly candidateVersion: string;\n} | {\n    readonly code: \'local-execution-confirmation-required\';\n    readonly candidatePermissions: readonly string[];\n} | {\n    readonly code: \'unmanaged-conflict\' | \'manifest-incompatible\' | \'not-found\';\n    readonly packageId: WorkflowMarketPackageId;\n};',
+  },
+  {
+    name: 'WorkflowMarketInstallRequest',
+    declaration: 'export interface WorkflowMarketInstallRequest {\n    readonly filename: string;\n    readonly archiveBase64: string;\n    readonly replaceExisting?: boolean;\n    readonly confirmLocalExecution?: boolean;\n}',
+  },
+  {
+    name: 'WorkflowMarketInstallResult',
+    declaration: 'export type WorkflowMarketInstallResult = WorkflowMarketResult<{\n    readonly packageId: WorkflowMarketPackageId;\n    readonly operation: \'installed\' | \'upgraded\';\n    readonly restartRequired: true;\n}>;',
+  },
+  {
+    name: 'WorkflowMarketListResult',
+    declaration: 'export type WorkflowMarketListResult = WorkflowMarketResult<{\n    readonly entries: readonly WorkflowMarketEntry[];\n}>;',
+  },
+  {
+    name: 'WorkflowMarketPackageId',
+    declaration: 'export type WorkflowMarketPackageId = Branded<\'WorkflowMarketPackageId\'>;',
+  },
+  {
+    name: 'WorkflowMarketResult',
+    declaration: 'export type WorkflowMarketResult<Value> = {\n    readonly ok: true;\n    readonly value: Value;\n} | {\n    readonly ok: false;\n    readonly error: WorkflowMarketFailure;\n};',
+  },
+  {
+    name: 'WorkflowMarketUninstallRequest',
+    declaration: 'export interface WorkflowMarketUninstallRequest {\n    readonly packageId: WorkflowMarketPackageId;\n}',
+  },
+  {
+    name: 'WorkflowMarketUninstallResult',
+    declaration: 'export type WorkflowMarketUninstallResult = WorkflowMarketResult<{\n    readonly packageId: WorkflowMarketPackageId;\n    readonly restartRequired: true;\n}>;',
   },
   {
     name: 'WorkflowMeta',

@@ -28,6 +28,6 @@
 
 ## 5. Snapshot, docs, notes
 
-- [x] 5.1 Keyless assembled snapshot: install both template packages, bind on a template, `@employee` chat turn starting the workflow and delegating to the persona; dual expected transcripts updated in the same change
+- [ ] 5.1 Keyless assembled snapshot: install both template packages, bind on a template, `@employee` chat turn starting the workflow and delegating to the persona; dual expected transcripts updated in the same change
 - [x] 5.2 Bilingual docs: market READMEs, subsystem/catalog updates, `SERVICE_PAGE` and type-link classifications, doc graphs
-- [x] 5.3 Bilingual implementation Agent Note recording the declarative-persona decision and instance scoping
+- [ ] 5.3 Bilingual implementation Agent Note recording the declarative-persona decision and instance scoping

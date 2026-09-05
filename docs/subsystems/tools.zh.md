@@ -623,6 +623,43 @@ async templateConfigurations(): Promise<readonly McpMarketTemplateConfiguration[
 
 Source: [`packages/mcp/mcp-market/src/index.ts`](../../packages/mcp/mcp-market/src/index.ts)
 
+<a id="ctxsubagentmarket--subagentmarketgateway"></a>
+
+### `ctx.subagentMarket` — `SubagentMarketGateway`
+
+Typed Remote gateway for managed subagent packages.
+
+```ts cordis-catalog
+/**
+ * List managed subagent packages.
+ * @returns Declared inventory result or a structured marketplace failure.
+ */
+@Remote('list') async list(): Promise<SubagentMarketListResult>
+
+/**
+ * Install or explicitly upgrade one trusted subagent package.
+ * @param request - Uploaded archive and explicit replacement intent.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('install') async install(request: SubagentMarketInstallRequest): Promise<SubagentMarketInstallResult>
+
+/**
+ * Uninstall one marketplace-managed subagent package.
+ * @param request - Managed package identity to remove.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('uninstall') async uninstall(request: SubagentMarketUninstallRequest): Promise<SubagentMarketUninstallResult>
+
+/**
+ * Project every installed package for the composition bridge. Packages
+ * failing validation are skipped with a diagnostic.
+ * @returns Installed descriptors.
+ */
+async installedPackages(): Promise<readonly InstalledSubagentPackage[]>
+```
+
+Source: [`packages/subagent/subagent-market/src/index.ts`](../../packages/subagent/subagent-market/src/index.ts)
+
 <a id="ctxtoolmarket--toolmarketgateway"></a>
 
 ### `ctx.toolMarket` — `ToolMarketGateway`
@@ -753,6 +790,43 @@ async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult>
 Types: [ScopeKey](scope.zh.md)
 
 Source: [`packages/core/tools/src/index.ts`](../../packages/core/tools/src/index.ts)
+
+<a id="ctxworkflowmarket--workflowmarketgateway"></a>
+
+### `ctx.workflowMarket` — `WorkflowMarketGateway`
+
+Typed Remote gateway for managed workflow packages.
+
+```ts cordis-catalog
+/**
+ * List managed workflow packages.
+ * @returns Declared inventory result or a structured marketplace failure.
+ */
+@Remote('list') async list(): Promise<WorkflowMarketListResult>
+
+/**
+ * Install or explicitly upgrade one trusted workflow package.
+ * @param request - Uploaded archive and explicit replacement intent.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('install') async install(request: WorkflowMarketInstallRequest): Promise<WorkflowMarketInstallResult>
+
+/**
+ * Uninstall one marketplace-managed workflow package.
+ * @param request - Managed package identity to remove.
+ * @returns Declared mutation result or a structured marketplace failure.
+ */
+@Remote('uninstall') async uninstall(request: WorkflowMarketUninstallRequest): Promise<WorkflowMarketUninstallResult>
+
+/**
+ * Project every installed package for the composition bridge. Packages
+ * failing validation are skipped with a diagnostic.
+ * @returns Installed descriptors.
+ */
+async installedPackages(): Promise<readonly InstalledWorkflowPackage[]>
+```
+
+Source: [`packages/workflow/workflow-market/src/index.ts`](../../packages/workflow/workflow-market/src/index.ts)
 
 <a id="tools-events"></a>
 
