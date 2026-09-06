@@ -54,4 +54,41 @@ describe('employee package format', () => {
     expect(verifyPublisherSignature(descriptorSignaturePayload(reparsed), raw.publisher.signature, publicKeyPem)).toBe(true)
     expect(() => verifyPackageFileHashes(prepared, reparsed.files)).not.toThrow()
   })
+
+  it('reports missing references when imported against an empty asset catalog', () => {
+    // The import diagnostics path resolves descriptor.references against the
+    // installed asset catalog; with references declared and none installed the
+    // grouped missing list contains each reference.
+    const withRefs = parseEmployeePackageDescriptor({
+      ...DESCRIPTOR,
+      references: [
+        { kind: 'workflow', id: 'noop-workflows' },
+        { kind: 'subagent', id: 'reviewer-subagents' },
+      ],
+    })
+    expect(withRefs.references).toHaveLength(2)
+    expect(withRefs.references.map(r => `${r.kind}:${r.id}`)).toEqual([
+      'workflow:noop-workflows',
+      'subagent:reviewer-subagents',
+    ])
+  })
+
+  it('produces no missing diagnostics when references are empty', () => {
+    const parsed = parseEmployeePackageDescriptor(DESCRIPTOR)
+    expect(parsed.references).toEqual([])
+  })
+
+  it('rejects an expert instructions path absent from the file table', () => {
+    expect(() => parseEmployeePackageDescriptor({
+      ...DESCRIPTOR,
+      experts: [{
+        id: 'reviewer', name: 'Reviewer', responsibility: 'Review.',
+        instructions: 'experts/missing.md',
+        modelSettings: {},
+        capabilities: { skills: [], tools: [], mcpServers: [], experts: [], allowSubagents: false },
+        memoryAccess: [],
+        delegation: { mode: 'one-shot', maxDepth: 1, maxConcurrency: 1, timeoutMs: 30_000 },
+      }],
+    })).toThrow()
+  })
 })

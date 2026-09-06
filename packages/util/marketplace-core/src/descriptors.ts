@@ -385,7 +385,16 @@ function withSubagentImpliedPermissions(descriptor: SubagentPackageDescriptor): 
  * @returns Validated employee package descriptor.
  */
 export function parseEmployeePackageDescriptor(value: unknown): EmployeePackageDescriptor {
-  return employeePackageDescriptorSchema.parse(value)
+  const descriptor = employeePackageDescriptorSchema.parse(value)
+  if (descriptor.files[descriptor.instructions] === undefined) {
+    throw new Error(`Employee package instructions "${descriptor.instructions}" are not a declared package file`)
+  }
+  for (const expert of descriptor.experts) {
+    if (descriptor.files[expert.instructions] === undefined) {
+      throw new Error(`Employee expert "${expert.id}" instructions "${expert.instructions}" are not a declared package file`)
+    }
+  }
+  return descriptor
 }
 
 /**
