@@ -12,4 +12,4 @@
 
 ## 3. Docs
 
-- [ ] 3.1 Bilingual docs and Agent Note
+- [x] 3.1 Bilingual docs and Agent Note
