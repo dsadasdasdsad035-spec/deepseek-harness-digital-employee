@@ -9,7 +9,7 @@ import z from '@deepseek-ai/schemastery'
 import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
 import { admitEncodedImages, type ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import { createDigitalEmployeeTemplateId } from '@deepseek-ai/dsh-digital-employee'
+import { createDigitalEmployeeTemplateId, createExpertId } from '@deepseek-ai/dsh-digital-employee'
 import type {
   ApplyDigitalEmployeeUpgradeRequest,
   CreateDigitalEmployeeRequest,
@@ -29,6 +29,7 @@ import type {} from '@deepseek-ai/dsh-digital-employee-agent'
 import type {} from '@deepseek-ai/dsh-credentials'
 import type {} from '@deepseek-ai/dsh-mcp-client'
 import { listMcpServerConfigs } from '@deepseek-ai/dsh-mcp-client'
+import { readTrustedPublisherFileSync } from '@deepseek-ai/dsh-marketplace-core'
 import type {} from '@deepseek-ai/dsh-mcp-market'
 import type { HookMarketGateway } from '@deepseek-ai/dsh-hooks-market'
 import type {} from '@deepseek-ai/dsh-agent-presets'
@@ -872,10 +873,14 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     const { signMarketplacePackage } = await import('@deepseek-ai/dsh-marketplace-core')
     const { privateKey } = await import('node:crypto').then(m => m.generateKeyPairSync('ed25519'))
     const files: Record<string, Uint8Array> = {}
+    const { readFile } = await import('node:fs/promises')
     if (template.instructions.kind === 'file') {
-      const { readFile } = await import('node:fs/promises')
-      const path = join(template.instructions.root, template.instructions.path)
-      files[template.instructions.path] = new Uint8Array(await readFile(path))
+      files[template.instructions.path] = new Uint8Array(await readFile(join(template.instructions.root, template.instructions.path)))
+    }
+    for (const expert of template.experts) {
+      if (expert.instructions.kind === 'file') {
+        files[expert.instructions.path] = new Uint8Array(await readFile(join(expert.instructions.root, expert.instructions.path)))
+      }
     }
     const built = await signMarketplacePackage({
       kind: 'employee',
@@ -899,6 +904,72 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
       privateKeyPem: privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
     })
     return { archiveBase64: built.archive.toString('base64') }
+  }
+
+  /**
+   * Import a signed employee package zip: verify the descriptor, re-register
+   * the template, and report market packages missing from this Host.
+   * @param request - Base64 zip of the employee package.
+   * @returns Registered template id plus grouped missing-reference diagnostics.
+   */
+  @Remote('importTemplate')
+  async importTemplate(request: { archiveBase64: string }): Promise<{
+    templateId: string
+    version: string
+    missing: { kind: string; id: string }[]
+  }> {
+    this.requireAdministrator()
+    const { inspectZipArchive, decodeArchiveBase64, preparePackageArchive, parseEmployeePackageDescriptor, verifyPackageFileHashes, verifyPublisherSignature, descriptorSignaturePayload, resolveTrustedPublisher } = await import('@deepseek-ai/dsh-marketplace-core')
+    const archive = preparePackageArchive(
+      await inspectZipArchive(decodeArchiveBase64(request.archiveBase64)),
+      'employee-package.json',
+    )
+    const entry = archive.entries.find(e => e.name === 'employee-package.json')
+    if (entry === undefined) throw new Error('archive must contain employee-package.json')
+    const descriptor = parseEmployeePackageDescriptor(JSON.parse(new TextDecoder().decode(entry.bytes)))
+    verifyPackageFileHashes(archive, descriptor.files)
+    const publishers: readonly { id: string; publicKeyPem: string }[] = (() => {
+      try { return readTrustedPublisherFileSync(join(this.studioRoot, 'market-publishers.json')) ?? [] } catch { return [] }
+    })()
+    const publicKey = resolveTrustedPublisher(publishers ?? [], descriptor.publisher.id)
+    if (publicKey !== undefined && !verifyPublisherSignature(descriptorSignaturePayload(descriptor), descriptor.publisher.signature, publicKey)) {
+      throw new Error('employee package signature verification failed')
+    }
+    const missing: { kind: string; id: string }[] = []
+    const catalog: { entries: readonly { kind: string; label: string }[] } = await this.listConfigurationAssets({ preset: descriptor.template.preset })
+    const installed = new Set(catalog.entries.map(a => `${a.kind}:${a.label}`))
+    for (const ref of descriptor.references as readonly { kind: string; id: string }[]) {
+      if (!installed.has(`${ref.kind}:${ref.id}`)) missing.push(ref)
+    }
+    const templateRoot = join(this.studioRoot, 'digital-employee-templates', descriptor.id, descriptor.version)
+    const { mkdir, writeFile } = await import('node:fs/promises')
+    await mkdir(dirname(join(templateRoot, descriptor.instructions)), { recursive: true, mode: 0o700 })
+    const mainFile = archive.entries.find(e => e.name === descriptor.instructions)
+    if (mainFile?.kind !== 'regular') throw new Error(`instructions "${descriptor.instructions}" missing from archive`)
+    await writeFile(join(templateRoot, descriptor.instructions), mainFile.bytes)
+    for (const expert of descriptor.experts) {
+      const expertFile = archive.entries.find(e => e.name === expert.instructions)
+      if (expertFile?.kind !== 'regular') throw new Error(`expert instructions "${expert.instructions}" missing from archive`)
+      await mkdir(dirname(join(templateRoot, expert.instructions)), { recursive: true, mode: 0o700 })
+      await writeFile(join(templateRoot, expert.instructions), expertFile.bytes)
+    }
+    const instructions = { kind: 'file' as const, root: templateRoot, path: descriptor.instructions, revision: `import-${descriptor.version}` }
+    const dispose = this.ctx.digitalEmployees.registerTemplate({
+      id: createDigitalEmployeeTemplateId(descriptor.id),
+      version: descriptor.version,
+      display: descriptor.display,
+      personality: descriptor.template.personality,
+      instructions,
+      preset: descriptor.template.preset,
+      capabilities: { skills: [], tools: [], mcpServers: [], experts: descriptor.experts.map((e: { id: string }) => createExpertId(e.id)), allowSubagents: false },
+      experts: (descriptor.experts as unknown as DigitalEmployeeExpert[]).map(expert => ({
+        ...expert,
+        id: createExpertId(expert.id),
+      })),
+      delegation: { maxDepth: 0, maxConcurrency: 1, timeoutMs: 30_000 },
+    })
+    this.registeredPublications.set(`${descriptor.id}\u0000${descriptor.version}`, dispose)
+    return { templateId: descriptor.id, version: descriptor.version, missing }
   }
 
 

@@ -26,6 +26,7 @@ export type { ManagedPackageManifest, ManagedPackageRead } from './managed-packa
 export {
   descriptorSignaturePayload,
   parseHookPackageDescriptor,
+  parseEmployeePackageDescriptor,
   parseSubagentPackageDescriptor,
   parseWorkflowPackageDescriptor,
   parseMcpPackageDescriptor,
