@@ -718,6 +718,7 @@ describe('DigitalEmployeeManagementGateway', () => {
       'delete', 'startChat', 'listMemory', 'deleteMemory', 'listExperts',
       'taskTree', 'continueExpert', 'interruptExpert', 'listAudit',
       'previewUpgrade', 'applyUpgrade', 'exportEmployee', 'importEmployee',
+      'exportTemplate', 'importTemplate',
     ])
     await ctx.fiber.dispose()
   })
