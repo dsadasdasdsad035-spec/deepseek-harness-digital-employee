@@ -2,12 +2,6 @@ import { generateKeyPairSync } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import {
   parseEmployeePackageDescriptor,
-  signMarketplacePackage,
-  verifyPackageFileHashes,
-  inspectZipArchive,
-  preparePackageArchive,
-  verifyPublisherSignature,
-  descriptorSignaturePayload,
 } from '@deepseek-ai/dsh-marketplace-core'
 
 const DESCRIPTOR = {
