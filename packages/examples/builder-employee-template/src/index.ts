@@ -33,7 +33,7 @@ const BUILDER_TEMPLATE: DigitalEmployeeTemplate = {
     path: 'AGENTS.md',
     revision: 'builder-employee-v1',
   },
-  preset: 'standard',
+  preset: 'digital-employee-minimal',
   hooks: [],
   workflows: [],
   subagents: [],
@@ -83,7 +83,7 @@ const BUILDER_TEMPLATE: DigitalEmployeeTemplate = {
 }
 
 export const name = 'builder-employee-template'
-export const inject = ['digitalEmployees', 'tools']
+export const inject = ['digitalEmployees', 'tools', 'digitalEmployeeManagement']
 
 /** Register the builder template and its scoped authoring tools. */
 export function apply(ctx: Context): void {

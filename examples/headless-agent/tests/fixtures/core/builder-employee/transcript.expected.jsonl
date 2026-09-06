@@ -1,0 +1,5 @@
+{"type":"acceptance","stage":"template-registered","found":true}
+{"type":"acceptance","stage":"authoring-tools","count":5,"list":["builder_create_draft","builder_list_assets","builder_preview_draft","builder_publish_draft","builder_validate_draft"]}
+{"type":"acceptance","stage":"employee-created","displayName":"Builder","state":"inactive"}
+{"type":"acceptance","stage":"chat-started","sessionId":"builder-employee-root"}
+{"type":"acceptance","stage":"final-result","output":"Ada completed the keyless task."}

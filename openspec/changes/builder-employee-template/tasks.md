@@ -8,5 +8,5 @@
 ## 2. Skill and docs
 
 - [x] 2.1 `employee-authoring` skill
-- [ ] 2.2 Keyless snapshot: @builder chat -> draft created -> publish -> new employee appears
+- [x] 2.2 Keyless snapshot: @builder chat -> draft created -> publish -> new employee appears
 - [x] 2.3 Bilingual README and Agent Note

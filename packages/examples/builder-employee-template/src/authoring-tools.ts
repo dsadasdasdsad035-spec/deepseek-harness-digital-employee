@@ -49,7 +49,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
     description: 'List installed skills, tools, MCP clients, hooks, workflows, and subagents available for a new digital employee.',
     parameters: {},
     output: {
-      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string', required: true } } },
+      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
       render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
     },
     isConcurrencySafe: () => true,
@@ -67,7 +67,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
       capabilitiesJson: { type: 'string', required: true, description: 'JSON authority: {skills,tools,mcpServers,experts,allowSubagents}.' },
     },
     output: {
-      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string', required: true } } },
+      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
       render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
     },
     execute: async (args) => {
@@ -87,7 +87,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
       draftId: { type: 'string', required: true, description: 'Draft identity to validate.' },
     },
     output: {
-      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string', required: true } } },
+      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
       render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
     },
     execute: async args => JSON.stringify(await gateway.validateConfigurationDraft({ draftId: String(args.draftId) })),
@@ -101,7 +101,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
       revision: { type: 'string', required: true, description: 'Draft revision observed before preview.' },
     },
     output: {
-      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string', required: true } } },
+      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
       render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
     },
     execute: async args => JSON.stringify(await gateway.previewConfigurationDraft({
@@ -117,7 +117,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
       revision: { type: 'string', required: true, description: 'Draft revision to publish.' },
     },
     output: {
-      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string', required: true } } },
+      schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
       render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
     },
     execute: async args => JSON.stringify(await gateway.publishConfigurationDraft({
