@@ -7,7 +7,7 @@
 ## 2. Import and diagnostics
 
 - [x] 2.1 Import remote: validate, re-register, emit missing-reference diagnostics
-- [ ] 2.2 Web: studio export button + workspace import
+- [x] 2.2 Web: studio export button + workspace import
 - [x] 2.3 Tests: import satisfied/missing/collision
 
 ## 3. Docs

@@ -351,6 +351,39 @@ export class DigitalEmployeeStore {
     await this.mutate('import', () => this.remote.importEmployee(artifact))
   }
 
+  /**
+   * Export one published template as a signed employee package zip.
+   * @param templateId - stable template identifier.
+   * @param version - exact template version.
+   * @returns base64 zip for download, or undefined on failure.
+   */
+  async exportTemplate(templateId: string, version: string): Promise<string | undefined> {
+    try {
+      const result = await (this.remote as unknown as {
+        exportTemplate: (r: { templateId: string; version: string }) => Promise<{ ok: boolean; value?: { archiveBase64: string }; error?: { code?: string } }>
+      }).exportTemplate({ templateId, version })
+      return result.ok === true ? result.value?.archiveBase64 : undefined
+    } catch {
+      return undefined
+    }
+  }
+
+  /**
+   * Import a signed employee package zip.
+   * @param archiveBase64 - uploaded zip contents.
+   * @returns grouped missing-reference diagnostics, or undefined on failure.
+   */
+  async importTemplate(archiveBase64: string): Promise<readonly { kind: string; id: string }[] | undefined> {
+    try {
+      const result = await (this.remote as unknown as {
+        importTemplate: (r: { archiveBase64: string }) => Promise<{ ok: boolean; value?: { templateId: string; missing: { kind: string; id: string }[] }; error?: { code?: string } }>
+      }).importTemplate({ archiveBase64 })
+      return result.ok === true ? result.value?.missing : undefined
+    } catch {
+      return undefined
+    }
+  }
+
   private async loadSelected(employeeId: DigitalEmployeeInstanceId, generation: number): Promise<void> {
     try {
       const [detail, memories, experts, audit] = await Promise.all([
