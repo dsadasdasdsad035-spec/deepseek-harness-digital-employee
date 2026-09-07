@@ -1,3 +1,7 @@
+## Purpose
+
+Make published digital employee templates distributable as signed packages that import with signature verification and grouped diagnostics for missing market dependencies.
+
 ## ADDED Requirements
 
 ### Requirement: Employee package format and signing
@@ -13,3 +17,7 @@ The system SHALL validate an imported package's signature and references, re-reg
 #### Scenario: Import with satisfied references
 - **WHEN** references are all installed
 - **THEN** the template is re-registered and available
+
+#### Scenario: Import with missing market packages
+- **WHEN** an employee package references market packages not installed on the target Host
+- **THEN** the template is registered with an explicit diagnostic per missing reference, grouped by market kind

@@ -5,9 +5,10 @@ The configuration studio already exposes draft CRUD, validation, preview, and pu
 ## Decisions
 
 - **D1: Tools wrap remotes, not internals.** Each authoring tool calls the existing management gateway methods; no new draft logic.
-- **D2: Scope tools to the builder.** Registration happens in the builder template plugin's composition path (same scoped-registration pattern as the expert delegation tool), so only the builder composition exposes them.
+- **D2: Mount once, scope by authority.** The template plugin registers the five `builder_*` tools on the host tools registry at mount; the template and each expert list only the tool ids their role needs in `capabilities.tools`, so other compositions never see them.
 - **D3: Publish over export.** The primary output is a published local template (user sees it in "new employee"); zip export is deferred to `digital-employee-package-export`.
-- **D4: Experts mirror the existing expert pattern** from the project-manager-test template (one-shot, file instructions, constrained capabilities).
+- **D4: Experts mirror the existing expert pattern** from the project-manager-test template (one-shot delegation, file instructions, constrained capabilities): requirements-reviewer sees assets, dry-run-tester validates and previews, packager publishes.
+- **D5: No update wrapper.** The chat surface wraps five remotes; `updateConfigurationDraft` has no `builder_*` wrapper, so corrections re-run `builder_create_draft` with the full payload.
 
 ## Risks
 
