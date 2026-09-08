@@ -197,7 +197,7 @@ describe('hostile ZIP validation', () => {
   it('does not leave a staging sibling after archive validation fails', async () => {
     const parent = await import('node:fs/promises').then(({ mkdtemp }) =>
       import('node:os').then(({ tmpdir }) =>
-        import('node:path').then(({ join }) => mkdtemp(join(tmpdir(), 'dsh-market-archive-')))))
+        import('node:path').then(path => mkdtemp(path.join(tmpdir(), 'dsh-market-archive-')))))
     try {
       await expect(inspectZipArchive(Buffer.from('not a zip'))).rejects.toBeDefined()
       expect((await readdir(parent)).filter(name => name.startsWith('.dsh-market-'))).toEqual([])

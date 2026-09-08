@@ -199,7 +199,7 @@ describe('Client Typert API', () => {
     })
     const market = (ctx.remote as unknown as {
       market: {
-        install(request: { readonly objective: string }): Promise<RemoteResult<{ readonly ref: string }>>
+        install: (request: { readonly objective: string }) => Promise<RemoteResult<{ readonly ref: string }>>
       }
     }).market
     const retained = market.install

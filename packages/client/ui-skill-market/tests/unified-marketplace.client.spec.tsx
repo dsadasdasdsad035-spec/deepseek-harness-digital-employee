@@ -34,7 +34,7 @@ function setup() {
       restartRequired: true,
     }] } } })),
     install: vi.fn(),
-    uninstall: vi.fn(async request => ({
+    uninstall: vi.fn(async (request: { packageId: string }) => ({
       ok: true, value: { ok: true, value: { ...request, restartRequired: true } },
     })),
   }
@@ -60,7 +60,7 @@ function setup() {
     }] } } })),
     install: vi.fn(),
     uninstall: vi.fn(),
-    configure: vi.fn(async request => ({
+    configure: vi.fn(async (request: { packageId: string }) => ({
       ok: true, value: { ok: true, value: { ...request, restartRequired: true } },
     })),
   }
@@ -70,10 +70,10 @@ function setup() {
   } as never)
   const wf = new SimplePackageMarketStore({
     list: async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }),
-  } as never)
+  })
   const sa = new SimplePackageMarketStore({
     list: async () => ({ ok: true, value: { ok: true, value: { entries: [] } } }),
-  } as never)
+  })
   const props = {
     controller: skill,
     toolController: tool,

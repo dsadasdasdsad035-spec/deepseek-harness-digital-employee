@@ -150,7 +150,7 @@ describe('McpMarketGateway direct configuration', () => {
   it('replaces a live same-name server on edit and unmounts on delete', async () => {
     const { ctx, gateway, mount, installRoot } = await startHarness()
     const saved = await gateway.saveDirectConfig({ ...HTTP_SAVE })
-    const entryId = saved.ok === true ? saved.value.entryId : undefined
+    const entryId =  saved.ok ? saved.value.entryId : undefined
     const firstDisposer = await mount.mock.results[0]?.value as () => Promise<void>
     await gateway.saveDirectConfig({
       entryId,

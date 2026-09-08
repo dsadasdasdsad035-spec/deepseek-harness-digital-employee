@@ -98,15 +98,15 @@ describe('runMarketPackageCli', () => {
     const root = await workspace()
     const keyPath = await writeKey(root)
 
-    expect(await runMarketPackageCli([])).toMatchObject({ ok: false, message: expect.stringContaining('Usage:') })
-    expect(await runMarketPackageCli(['--kind', 'tool'])).toMatchObject({ ok: false, message: expect.stringContaining('exactly one source directory') })
-    expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'plugin'])).toMatchObject({ ok: false, message: expect.stringContaining('--kind must be tool, mcp, hook, workflow, or subagent') })
-    expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'tool'])).toMatchObject({ ok: false, message: expect.stringContaining('--publisher-id is required') })
+    expect(await runMarketPackageCli([])).toMatchObject({ ok: false, message: expect.stringContaining('Usage:') as string })
+    expect(await runMarketPackageCli(['--kind', 'tool'])).toMatchObject({ ok: false, message: expect.stringContaining('exactly one source directory') as string })
+    expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'plugin'])).toMatchObject({ ok: false, message: expect.stringContaining('--kind must be tool, mcp, hook, workflow, or subagent') as string })
+    expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'tool'])).toMatchObject({ ok: false, message: expect.stringContaining('--publisher-id is required') as string })
     expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'tool', '--publisher-id', 'x']))
-      .toMatchObject({ ok: false, message: expect.stringContaining('one of --private-key or --generate-key') })
+      .toMatchObject({ ok: false, message: expect.stringContaining('one of --private-key or --generate-key') as string })
     expect(await runMarketPackageCli([join(root, 'src'), '--kind', 'tool', '--publisher-id', 'x', '--private-key', keyPath, '--generate-key', keyPath]))
-      .toMatchObject({ ok: false, message: expect.stringContaining('exactly one of --private-key or --generate-key') })
-    expect(await runMarketPackageCli([join(root, 'src'), '--unknown', '1'])).toMatchObject({ ok: false, message: expect.stringContaining('Usage:') })
+      .toMatchObject({ ok: false, message: expect.stringContaining('exactly one of --private-key or --generate-key') as string })
+    expect(await runMarketPackageCli([join(root, 'src'), '--unknown', '1'])).toMatchObject({ ok: false, message: expect.stringContaining('Usage:') as string })
   })
 
   it('rejects unreadable, missing, and insecure private key files', async () => {
@@ -117,10 +117,10 @@ describe('runMarketPackageCli', () => {
     await writeFile(looseKey, privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(), { mode: 0o644 })
 
     expect(await runMarketPackageCli(baseArgs(root, join(root, 'missing.pem'))))
-      .toMatchObject({ ok: false, message: expect.stringContaining('cannot read private key file') })
+      .toMatchObject({ ok: false, message: expect.stringContaining('cannot read private key file') as string })
     if (process.platform !== 'win32') {
       expect(await runMarketPackageCli(baseArgs(root, looseKey)))
-        .toMatchObject({ ok: false, message: expect.stringContaining('must not be group or world readable') })
+        .toMatchObject({ ok: false, message: expect.stringContaining('must not be group or world readable') as string })
     }
     expect(await runMarketPackageCli(baseArgs(root, secureKey))).toMatchObject({ ok: true })
   })
@@ -133,7 +133,7 @@ describe('runMarketPackageCli', () => {
       '--generate-key', join(root, 'key.pem', 'nested'),
     ])
 
-    expect(outcome).toMatchObject({ ok: false, message: expect.stringContaining('cannot write private key file') })
+    expect(outcome).toMatchObject({ ok: false, message: expect.stringContaining('cannot write private key file') as string })
   })
 
   it('refuses to overwrite an existing generated key and reports build failures without writing output', async () => {
@@ -145,12 +145,12 @@ describe('runMarketPackageCli', () => {
       join(root, 'src'), '--kind', 'tool', '--publisher-id', 'deepseek-local',
       '--generate-key', keyPath, '--output', output,
     ])
-    expect(overwrite).toMatchObject({ ok: false, message: expect.stringContaining('refusing to overwrite') })
+    expect(overwrite).toMatchObject({ ok: false, message: expect.stringContaining('refusing to overwrite') as string })
 
     const placeholder = await runMarketPackageCli(baseArgs(root, keyPath, [
       '--output', output, '--publisher-id', 'replace-with-publisher-id',
     ]))
-    expect(placeholder).toMatchObject({ ok: false, message: expect.stringContaining('still the template placeholder') })
+    expect(placeholder).toMatchObject({ ok: false, message: expect.stringContaining('still the template placeholder') as string })
     expect(await stat(output).then(() => true, () => false)).toBe(false)
   })
 
@@ -199,14 +199,14 @@ describe('runMarketPackageCli', () => {
     const refused = await runMarketPackageCli(baseArgs(root, rotationKey, [
       '--trust-file', trustFile, '--output', output,
     ]))
-    expect(refused).toMatchObject({ ok: false, message: expect.stringContaining('refusing to replace the public key') })
+    expect(refused).toMatchObject({ ok: false, message: expect.stringContaining('refusing to replace the public key') as string })
     expect(await stat(output).then(() => true, () => false)).toBe(false)
 
     await writeFile(trustFile, '{', { mode: 0o600 })
     const malformed = await runMarketPackageCli(baseArgs(root, keyPath, [
       '--trust-file', trustFile, '--output', output,
     ]))
-    expect(malformed).toMatchObject({ ok: false, message: expect.stringContaining('cannot update trusted-publisher file') })
+    expect(malformed).toMatchObject({ ok: false, message: expect.stringContaining('cannot update trusted-publisher file') as string })
     expect(await stat(output).then(() => true, () => false)).toBe(false)
   })
 })

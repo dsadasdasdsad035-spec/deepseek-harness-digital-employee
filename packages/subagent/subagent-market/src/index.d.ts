@@ -49,6 +49,7 @@ export interface InstalledSubagentPackage {
 /** Typed Remote gateway for managed subagent packages. */
 export declare class SubagentMarketGateway extends TypertRemoteService {
   static Config: z<Config>
+  /** The installed-package service every gateway call forwards to. */
   readonly service: SubagentMarketService
   constructor(ctx: Context, config: Config)
   /**

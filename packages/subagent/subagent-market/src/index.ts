@@ -74,6 +74,7 @@ export class SubagentMarketGateway extends TypertRemoteService {
     allowUnsignedPackages: z.boolean().default(false),
     trustedPublishersFile: z.string(),
   })
+  /** The installed-package service every gateway call forwards to. */
   readonly service: SubagentMarketService
 
   constructor(ctx: Context, config: Config) {

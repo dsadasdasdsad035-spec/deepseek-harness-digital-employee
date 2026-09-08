@@ -42,9 +42,7 @@ export function apply(ctx: Context): void {
       },
       render: () => [{ type: 'text', text: JSON.stringify(PROJECT_BOARD) }],
     },
-    async execute() {
-      return PROJECT_BOARD
-    },
+    execute: () => Promise.resolve(PROJECT_BOARD),
   }))
   ctx.tools.register(defineTool({
     name: 'project_document',
@@ -62,8 +60,6 @@ export function apply(ctx: Context): void {
       },
       render: () => [{ type: 'text', text: JSON.stringify(PROJECT_DOCUMENT) }],
     },
-    async execute() {
-      return PROJECT_DOCUMENT
-    },
+    execute: () => Promise.resolve(PROJECT_DOCUMENT),
   }))
 }

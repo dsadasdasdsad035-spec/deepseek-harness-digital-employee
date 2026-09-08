@@ -360,6 +360,7 @@ export class SkillMarketService {
           await cleanupPrivatePath(stagingRoot, this.deps.logger, this.transaction.remove)
         }
         // 兜底：如果 rename 抛出 ENOENT（目标已被消费），清掉可能残留的 backup。
+        // oxlint-disable-next-line typescript/no-unnecessary-condition -- retainBackup is set inside the rollback catch above
         if (backupDir !== undefined && !retainBackup) {
           await cleanupPrivatePath(backupDir, this.deps.logger, this.transaction.remove)
         }
@@ -636,6 +637,7 @@ export interface PreparedArchive {
  * @param inventory - 流式解压收集到的条目集合。
  * @returns 已验证并规范化的技能包内容与展示元数据。
  */
+// oxlint-disable-next-line typescript/require-await -- async keeps validation failures rejections for `.rejects` callers
 export async function validateInventory(inventory: ArchiveInventory): Promise<PreparedArchive> {
   if (inventory.failed !== undefined) throw inventory.failed
   if (inventory.entries.length === 0) {

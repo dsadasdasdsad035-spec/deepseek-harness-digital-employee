@@ -11,7 +11,8 @@ describe('Host TypeScript aggregate', () => {
     if (read.error !== undefined) {
       throw new Error(ts.flattenDiagnosticMessageText(read.error.messageText, '\n'))
     }
-    const references = (read.config.references as Array<{ path?: unknown }> | undefined) ?? []
+    const config = read.config as { references?: Array<{ path?: unknown }> }
+    const references = config.references ?? []
     expect(references.map(reference => reference.path)).toContain(
       './packages/examples/digital-employee-template',
     )

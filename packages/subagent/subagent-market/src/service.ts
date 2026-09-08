@@ -32,6 +32,7 @@ import type {
   SubagentMarketUninstallResult,
 } from './types.ts'
 
+/** Error carrying the closed marketplace failure that produced it. */
 class SubagentMarketDomainError extends Error {
   constructor(readonly failure: SubagentMarketFailure) {
     super('reason' in failure ? `${failure.code}: ${failure.reason}` : failure.code)

@@ -20,7 +20,7 @@ const server = new McpServer({ name: 'project-manager-test-data', version: '1.0.
 server.registerTool('project_snapshot', {
   description: 'Read deterministic Atlas milestones, owners, and risks.',
   inputSchema: {},
-}, async () => ({
+}, () => Promise.resolve({
   content: [{ type: 'text', text: JSON.stringify(PROJECT_DATA) }],
   structuredContent: PROJECT_DATA,
 }))

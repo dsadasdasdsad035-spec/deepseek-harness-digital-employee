@@ -49,6 +49,7 @@ export interface InstalledWorkflowPackage {
 /** Typed Remote gateway for managed workflow packages. */
 export declare class WorkflowMarketGateway extends TypertRemoteService {
   static Config: z<Config>
+  /** The installed-package service every gateway call forwards to. */
   readonly service: WorkflowMarketService
   constructor(ctx: Context, config: Config)
   /**

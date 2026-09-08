@@ -232,8 +232,8 @@ describe('marketplace package descriptors', () => {
       }],
       totalBytes: 11,
     }
-    expect(() => verifyPackageFileHashes(archive, {
+    expect(() =>{  verifyPackageFileHashes(archive, {
       'plugin/index.js': '0'.repeat(64),
-    })).toThrow('hash mismatch')
+    }) }).toThrow('hash mismatch')
   })
 })

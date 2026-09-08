@@ -264,7 +264,7 @@ describe('DigitalEmployeeAgent', () => {
     expect(register).toHaveBeenCalledTimes(1)
     expect(register.mock.calls[0]?.[0]).toMatchObject({
       name: 'delegate_to_expert',
-      description: expect.stringContaining('reviewer'),
+      description: expect.stringContaining('reviewer') as string,
     })
     await scope.dispose()
   })
@@ -817,7 +817,7 @@ describe('DigitalEmployeeAgent', () => {
       label: 'Evidence Critic',
       prompt,
       parent,
-      signal: expect.any(AbortSignal),
+      signal: expect.any(AbortSignal) as AbortSignal,
       agentOptions: baseExpert.agentOptions,
       maxDepth: 1,
       persona: 'Challenge unsupported claims.',
@@ -926,7 +926,7 @@ describe('DigitalEmployeeAgent', () => {
           },
         },
       },
-      signal: expect.any(AbortSignal),
+      signal: expect.any(AbortSignal) as AbortSignal,
     })
     expect(append).toHaveBeenNthCalledWith(3, 'digital-employee/expert-delegation', {
       employeeId: baseExpert.employeeId,
@@ -1222,7 +1222,7 @@ describe('DigitalEmployeeAgent', () => {
     expect(promoteMemory).not.toHaveBeenCalled()
     expect(append).toHaveBeenCalledWith('digital-employee/memory-decision', expect.objectContaining({
       employeeId: candidate.employeeId,
-      decision: expect.objectContaining({ kind: 'accepted' }),
+      decision: expect.objectContaining({ kind: 'accepted' }) as unknown,
     }))
   })
 
@@ -1493,7 +1493,7 @@ describe('DigitalEmployeeAgent', () => {
         displayName: 'Alpha',
         templateId: 'analyst',
         templateVersion: '1.0.0',
-        compositionId: expect.stringMatching(/^sha256:[0-9a-f]{64}$/),
+        compositionId: expect.stringMatching(/^sha256:[0-9a-f]{64}$/) as string,
         personality: 'Direct and concise.',
       }],
       ['digital-employee/instructions', {
@@ -1553,7 +1553,7 @@ describe('DigitalEmployeeAgent', () => {
       displayName: 'Alpha',
       templateId: 'analyst',
       templateVersion: '1.0.0',
-      compositionId: expect.stringMatching(/^sha256:[0-9a-f]{64}$/),
+      compositionId: expect.stringMatching(/^sha256:[0-9a-f]{64}$/) as string,
     })
   })
 })

@@ -30,6 +30,7 @@ export interface MountEmployeeSubagentsOptions {
  * mounting employee's composition sees the provider.
  * @param agentCtx - Agent scope context providing `subagents`.
  * @param bindings - Installed packages and their personas bound to this employee.
+ * @param _options - Reserved composition options; accepted for signature symmetry with the hooks twin.
  * @returns disposer unregistering the providers.
  */
 export function mountEmployeeSubagents(

@@ -216,7 +216,7 @@ export class SkillMarketGateway extends TypertRemoteService {
         skillId: result.name as SkillMarketSkillId,
         operation: result.replaced ? 'upgraded' as const : 'installed' as const,
       }
-      await this.ctx.root.emit('skill-filesystem/host-mutation', join(this.installRoot, result.name))
+      this.ctx.root.emit('skill-filesystem/host-mutation', join(this.installRoot, result.name))
       return value
     })
   }
@@ -254,7 +254,7 @@ export class SkillMarketGateway extends TypertRemoteService {
     return await domainResult(async () => {
       const result = await this.engine.uninstall(request.skillId)
       const value = { skillId: result.name as SkillMarketSkillId }
-      await this.ctx.root.emit('skill-filesystem/host-mutation', join(this.installRoot, result.name))
+      this.ctx.root.emit('skill-filesystem/host-mutation', join(this.installRoot, result.name))
       return value
     })
   }

@@ -39,6 +39,7 @@ describe('DigitalEmployeeWorkspace', () => {
       memories: [],
       experts: [],
       taskTree: [],
+      taskAttempts: [],
       audit: [],
       view: 'overview',
       busy: null,
@@ -112,6 +113,7 @@ describe('DigitalEmployeeWorkspace', () => {
         mode: 'continuable',
         activity: 'running',
       }],
+      taskAttempts: [],
       audit: [],
       view: 'tasks',
       busy: null,
@@ -170,6 +172,7 @@ describe('DigitalEmployeeWorkspace', () => {
       memories: [],
       experts: [],
       taskTree: [],
+      taskAttempts: [],
       audit: [],
       view: 'overview',
       busy: null,
@@ -258,6 +261,7 @@ describe('DigitalEmployeeWorkspace', () => {
       memories: [],
       experts: [],
       taskTree: [],
+      taskAttempts: [],
       audit: [],
       view: 'overview',
       busy: null,
@@ -290,6 +294,7 @@ describe('DigitalEmployeeWorkspace', () => {
       memories: [],
       experts: [],
       taskTree: [],
+      taskAttempts: [],
       audit: [],
       view: 'overview',
       busy: null,
@@ -434,8 +439,8 @@ describe('DigitalEmployeeWorkspace', () => {
           skills: ['release-notes', 'local-planning'],
           tools: ['workspace_lookup'],
           mcpServers: ['project-tracker'],
-        }),
-      }),
+        }) as unknown,
+      }) as unknown,
     }))
   })
 
@@ -450,6 +455,7 @@ describe('DigitalEmployeeWorkspace', () => {
       memories: [],
       experts: [],
       taskTree: [],
+      taskAttempts: [],
       audit: [],
       view: 'overview',
       busy: null,
@@ -548,8 +554,8 @@ describe('DigitalEmployeeWorkspace', () => {
           skills: [],
           tools: [],
           mcpServers: [],
-        }),
-      }),
+        }) as unknown,
+      }) as unknown,
     }))
   })
 
@@ -564,6 +570,7 @@ describe('DigitalEmployeeWorkspace', () => {
       memories: [],
       experts: [],
       taskTree: [],
+      taskAttempts: [],
       audit: [],
       view: 'overview',
       busy: null,

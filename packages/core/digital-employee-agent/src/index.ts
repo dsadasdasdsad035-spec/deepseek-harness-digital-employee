@@ -464,6 +464,7 @@ export class DigitalEmployeeAgent extends Service {
     parent: Agent,
     candidate: DigitalEmployeeMemoryCandidate,
   ): Promise<DigitalEmployeeMemoryDecision> {
+    // oxlint-disable-next-line typescript/no-unnecessary-condition -- runtime session doubles may omit header; chain is load-bearing
     if (parent.session.header?.preview === true) {
       const memory: DigitalEmployeeMemoryRecord = {
         id: `preview-memory-${randomUUID()}` as never,
@@ -791,7 +792,7 @@ export class DigitalEmployeeAgent extends Service {
         const settled = await output
         return settled.output
           .filter((block): block is { type: 'text'; text: string } =>
-            typeof block === 'object' && block !== null && !Array.isArray(block)
+            typeof block === 'object' && !Array.isArray(block)
             && block.type === 'text' && typeof block.text === 'string')
           .map(block => block.text)
           .join('')

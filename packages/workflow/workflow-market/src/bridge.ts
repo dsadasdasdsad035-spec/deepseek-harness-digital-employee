@@ -17,6 +17,25 @@ export interface EmployeeWorkflowBinding {
   readonly workflow: InstalledWorkflowPackage['descriptor']['workflows'][number]
 }
 
+/**
+ * Tool-registry face the bridge mounts into. Structural so the bridge needs no
+ * dependency on the tools package; the host `ToolRuntime.register` accepts this
+ * definition shape.
+ */
+interface EmployeeWorkflowToolRegistry {
+  register(definition: {
+    name: string
+    description: string
+    parameters: Record<string, unknown>
+    output: {
+      schema: { type: 'string' }
+      render: (args: unknown, value: string) => Array<{ type: 'text'; text: string }>
+    }
+    isConcurrencySafe: () => boolean
+    execute: (args: { input?: string }, exec: { agent: unknown; signal: AbortSignal }) => Promise<string>
+  }): () => void
+}
+
 /** Options for mounting employee workflows. */
 export interface MountEmployeeWorkflowsOptions {
   /** Optional engine-wide child-provider override for runs. */
@@ -39,7 +58,7 @@ export function mountEmployeeWorkflows(
 ): () => void {
   if (bindings.length === 0) return () => {}
   const engine = agentCtx.get('workflowEngine')
-  const tools = agentCtx.get('tools')
+  const tools = agentCtx.get('tools') as EmployeeWorkflowToolRegistry | undefined
   if (engine === undefined || tools === undefined) {
     throw new Error('workflow-market bridge requires workflowEngine and tools in the mounting scope')
   }
@@ -61,7 +80,7 @@ export function mountEmployeeWorkflows(
         render: (_args: unknown, value: string) => [{ type: 'text' as const, text: value }],
       },
       isConcurrencySafe: () => true,
-      execute: async (args: { input?: string }, exec: { agent: NonNullable<unknown>; signal: AbortSignal }) => {
+      execute: async (args: { input?: string }, exec: { agent: unknown; signal: AbortSignal }) => {
         const script = await readFile(join(pkg.directory, workflow.entry), 'utf8')
         const run = engine.start({
           script,

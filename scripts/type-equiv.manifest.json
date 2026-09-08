@@ -1974,6 +1974,21 @@
       "doc": "docs/subsystems/feedback.md",
       "symbol": "MessageFeedbackDeleteResult",
       "source": "packages/feedback/message-feedback/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/notification.md",
+      "symbol": "NotificationMessage",
+      "source": "packages/interaction/notification/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/notification.md",
+      "symbol": "NotificationDelivery",
+      "source": "packages/interaction/notification/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/notification.md",
+      "symbol": "NotificationChannel",
+      "source": "packages/interaction/notification/src/types.ts"
     }
   ]
 }

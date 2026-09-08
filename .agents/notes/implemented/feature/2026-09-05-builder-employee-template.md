@@ -12,6 +12,11 @@ Creating a digital employee required administrator-level manual work in the conf
 
 A builder digital employee template wraps the configuration-studio remotes as six scoped authoring tools (`builder_list_assets`, `builder_create_draft`, `builder_validate_draft`, `builder_preview_draft`, `builder_publish_draft`). Three experts (requirements-reviewer, dry-run-tester, packager) decompose the interview-author-publish flow. Tools are registered in the builder composition only.
 
+## Alternatives considered
+
+- **Extending the configuration studio UI with a wizard** — keeps authoring manual and administrator-gated; the conversational path was the goal.
+- **One monolithic builder tool** — collapses interview, validation, and publish into one call the model cannot intermediate; scoped tools keep the user confirmation boundary at publish.
+
 ## Consequences
 
 The builder creates drafts in the shared studio with the same validation; the user confirms before publish. Zip export is deferred to the `digital-employee-package-export` change.

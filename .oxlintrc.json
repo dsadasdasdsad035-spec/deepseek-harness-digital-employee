@@ -25,6 +25,7 @@
     "vendor/**", // Vendored source keeps upstream style and idioms.
     "native/**", // The imported landlock-run subtree has its own gates; see native/README.md.
     "**/*.js",
+    "**/src/**/*.d.ts", // Emitted declaration artifacts beside sources; typecheck and the build own them, lint never re-reads them.
     "**/*.mjs",
     "**/*.config.ts", // Tool and app configs are outside the repository TypeScript programs.
     "packages/client/tsdown.client.ts" // Shared client build preset, also outside a TypeScript program.

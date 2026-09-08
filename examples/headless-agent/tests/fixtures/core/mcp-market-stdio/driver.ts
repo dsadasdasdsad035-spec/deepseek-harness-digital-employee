@@ -152,7 +152,7 @@ try {
   })
   const firstBlock = executed.content[0]
   acceptance('tool-called', {
-    isError: executed.isError === true,
+    isError:  executed.isError,
     text: firstBlock !== undefined && firstBlock.type === 'text' ? firstBlock.text : '',
   })
 

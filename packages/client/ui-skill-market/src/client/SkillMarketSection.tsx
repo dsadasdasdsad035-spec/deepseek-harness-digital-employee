@@ -972,7 +972,7 @@ function SimplePanel({ injected, kind }: { injected: SkillMarketFace; kind: 'wor
   const { t } = injected
   const controller = (kind === 'workflows' ? injected.workflowController : injected.subagentController) as unknown as HookMarketStore
   const useSnapshot = (kind === 'workflows' ? injected.useWorkflowSnapshot : injected.useSubagentSnapshot) as unknown as (selector: (value: never) => SimplePanelState) => SimplePanelState
-  const state = useSnapshot((value: never) => value as SimplePanelState)
+  const state = useSnapshot((value: never) => value)
   useEffect(() => {
     if (state.status === 'idle') void controller.load()
   }, [controller, state.status])

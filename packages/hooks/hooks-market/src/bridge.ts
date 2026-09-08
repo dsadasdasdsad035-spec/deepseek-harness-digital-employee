@@ -112,7 +112,7 @@ export function mountEmployeeHooks(
       signal,
       trailingNewline: true,
     }, () => performance.now())
-    return output.stdout ?? ''
+    return output.stdout
   }
 
   // Passive interception: tool boundaries and prompt/stop boundaries. Session
@@ -162,7 +162,7 @@ export function mountEmployeeHooks(
         render: (_args, value) => [{ type: 'text', text: value }],
       },
       isConcurrencySafe: () => true,
-      execute: async (args, exec) => await runInvocable(pkg, hook, String(args.input), exec.signal),
+      execute: async (args, exec) => await runInvocable(pkg, hook, args.input, exec.signal),
     }))
     disposers.push(disposeTool)
   }

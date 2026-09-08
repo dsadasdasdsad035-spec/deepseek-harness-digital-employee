@@ -118,7 +118,7 @@ function setup(options: SetupOptions = {}) {
     useHookSnapshot: bindSnapshotSelector(mcpStore.store),
     t: (key: string) => en[key as keyof typeof en],
   } as unknown as SkillMarketSectionProps
-  return render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
+  return render(<SkillMarketSection {...(props)} />)
 }
 
 function fileList(file: File): FileList {
@@ -280,7 +280,7 @@ describe('SkillMarketSection', () => {
     })
     // 覆盖 modal 出现
     await waitFor(() => { expect(screen.getByText(en.upgradeTitle)).toBeTruthy() })
-    expect(installCalls.find(call => call.replaceExisting === true)).toBeUndefined()
+    expect(installCalls.find(call =>  call.replaceExisting)).toBeUndefined()
     // 点击「覆盖」按钮
     const overwriteBtn = screen.getByText(en.upgradeConfirm)
     await act(async () => {
@@ -288,7 +288,7 @@ describe('SkillMarketSection', () => {
       await new Promise((resolve) => { setTimeout(resolve, 30) })
     })
     await waitFor(() => {
-      expect(installCalls.find(call => call.replaceExisting === true)).toBeDefined()
+      expect(installCalls.find(call =>  call.replaceExisting)).toBeDefined()
     })
   })
 
@@ -370,7 +370,7 @@ describe('SkillMarketSection', () => {
       useHookSnapshot: bindSnapshotSelector(mcpStore.store),
       t: (key: string) => en[key as keyof typeof en],
     } as unknown as SkillMarketSectionProps
-    render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
+    render(<SkillMarketSection {...(props)} />)
     await waitFor(() => {
       expect(screen.getByText(en.loadFailed)).toBeTruthy()
       expect(screen.getByText(en.retry)).toBeTruthy()
@@ -425,7 +425,7 @@ describe('SkillMarketSection', () => {
       useHookSnapshot: bindSnapshotSelector(mcpStore.store),
       t: (key: string) => en[key as keyof typeof en],
     } as unknown as SkillMarketSectionProps
-    render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
+    render(<SkillMarketSection {...(props)} />)
     fireEvent.click(screen.getByRole('tab', { name: en.mcpTab }))
     const nameInput = screen.getByLabelText(en.mcpDirectServerName)
     await act(async () => {
@@ -493,7 +493,7 @@ describe('SkillMarketSection', () => {
       useHookSnapshot: bindSnapshotSelector(mcpStore.store),
       t: (key: string) => en[key as keyof typeof en],
     } as unknown as SkillMarketSectionProps
-    render(<SkillMarketSection {...(props as SkillMarketSectionProps)} />)
+    render(<SkillMarketSection {...(props)} />)
     fireEvent.click(screen.getByRole('tab', { name: en.mcpTab }))
     fireEvent.change(screen.getByLabelText(en.mcpDirectServerName), { target: { value: 'local-fs' } })
     fireEvent.change(screen.getByLabelText(en.transport), { target: { value: 'stdio' } })

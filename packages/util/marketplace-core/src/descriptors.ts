@@ -53,7 +53,7 @@ export const toolPackageDescriptorSchema = base.extend({
 const mcpHttpServerSchema = z.object({
   id: identifier,
   transport: z.literal('streamable-http'),
-  url: z.string().url(),
+  url: z.url(),
   headers: z.record(z.string(), z.string()).default({}),
   credentialReferences: z.record(z.string(), reference).default({}),
 }).strict()

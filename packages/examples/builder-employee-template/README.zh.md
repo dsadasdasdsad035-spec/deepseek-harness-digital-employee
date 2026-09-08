@@ -27,3 +27,9 @@ Builder 看到六个 `builder_*` 工具用于列出资产和驱动草稿生命�
 #### KV Cache effect
 
 无失效；工具是常量。
+
+## Known Limitations and Deferred Work
+
+- **Builder 专属工具** — 六个 `builder_*` 工具只在 builder 组合内注册；其他员工表面无法驱动草稿。
+- **发布确认始终归用户** — builder 经相同的 studio 校验发布，但确认动作绝不属于模型。
+- **单一模板预设** — builder 组合一个固定预设；不提供按部署覆盖预设的配置。

@@ -131,8 +131,10 @@ describe('DeepSeekHarness', () => {
 
     const result = await harness.run('operate as the employee', { sessionId: 'employee-session' })
 
+    // 'future/employee-extension' is deliberately outside SessionEventMap: the filter probes
+    // ignorable-event passthrough for event types this build does not know.
     expect(result.events.filter(event =>
-      event.type === 'digital-employee/identity' || String(event.type) === 'future/employee-extension',
+      event.type === 'digital-employee/identity' || (event.type as string) === 'future/employee-extension',
     )).toEqual([
       {
         type: 'digital-employee/identity',

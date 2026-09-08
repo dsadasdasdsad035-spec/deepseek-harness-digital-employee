@@ -2,7 +2,8 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import type {
-  SkillMarketFailure, SkillMarketSkillId,
+  SkillMarketBannerRequest, SkillMarketFailure, SkillMarketSkillId,
+  SkillMarketUninstallRequest,
 } from '@deepseek-ai/dsh-api-remotes/client'
 import {
   arrayBufferToBase64, filterSkills, keyForFailure, MAX_UPLOAD_BYTES,
@@ -38,11 +39,11 @@ function fakeRemote(overrides: Partial<SkillMarketRemote> = {}) {
       calls.install.push(request)
       return businessOk({ skillId: id('pdf-tools'), operation: 'installed' as const })
     }),
-    uninstall: vi.fn(async (request) => {
+    uninstall: vi.fn(async (request: SkillMarketUninstallRequest) => {
       calls.uninstall.push(request)
       return businessOk({ skillId: request.skillId })
     }),
-    banner: vi.fn(async (request) => {
+    banner: vi.fn(async (request: SkillMarketBannerRequest) => {
       calls.banner.push(request)
       return businessOk({
         skillId: request.skillId,
@@ -51,7 +52,7 @@ function fakeRemote(overrides: Partial<SkillMarketRemote> = {}) {
       })
     }),
     ...overrides,
-  } as SkillMarketRemote
+  }
   return { remote, calls }
 }
 
@@ -149,7 +150,7 @@ describe('SkillMarketStore', () => {
     await store.upload(new File(['zip'], 'pdf-tools.zip'))
     expect(store.store.getSnapshot().pendingUpgrade).toMatchObject({
       skillId: 'pdf-tools',
-      archiveBase64: expect.any(String),
+      archiveBase64: expect.any(String) as string,
     })
     store.cancelUpgrade()
     expect(store.store.getSnapshot().pendingUpgrade).toBeNull()

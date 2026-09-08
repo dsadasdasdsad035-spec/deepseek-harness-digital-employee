@@ -52,7 +52,7 @@ describe.skipIf(!existsSync(binPath))('dsh-market-package bin', () => {
     ])
     expect(JSON.parse(generated.stdout)).toEqual([{
       id: 'deepseek-local',
-      publicKeyPem: expect.stringContaining('BEGIN PUBLIC KEY'),
+      publicKeyPem: expect.stringContaining('BEGIN PUBLIC KEY') as string,
     }])
     expect((await readFile(keyPath, 'utf8')).includes('PRIVATE KEY')).toBe(true)
     expect(existsSync(output)).toBe(true)
@@ -72,7 +72,7 @@ describe.skipIf(!existsSync(binPath))('dsh-market-package bin', () => {
     const failure = await execa('node', [
       binPath, join(root, 'src'), '--kind', 'tool', '--publisher-id', 'replace-with-publisher-id',
       '--generate-key', join(root, 'key.pem'), '--output', output,
-    ]).catch((error: ExecaError) => error)
+    ]).catch((error: unknown) => error as ExecaError)
 
     expect(failure.exitCode).toBe(1)
     expect(failure.stderr).toContain('still the template placeholder')

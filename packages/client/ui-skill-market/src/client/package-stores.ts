@@ -160,7 +160,7 @@ export class ToolMarketStore {
     this.store.update((state) => { state.status = 'loading'; state.error = null })
     try {
       const transport = await this.remote.list()
-      if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+      if (!transport.ok || !transport.value.ok) {  this.fail(failureCode(transport)); return }
       const entries = transport.value.value.entries
       this.store.update((state) => {
         state.status = 'ready'
@@ -184,7 +184,7 @@ export class ToolMarketStore {
    * @param file - Browser-selected ZIP archive.
    */
   async upload(file: File): Promise<void> {
-    await uploadPackage(file, error => this.fail(error), (...args) => this.install(...args))
+    await uploadPackage(file, (error) =>{  this.fail(error) }, (...args) => this.install(...args))
   }
 
   /** Confirm the pending managed Tool replacement, if any. */
@@ -218,7 +218,7 @@ export class ToolMarketStore {
     if (packageId === null) return
     this.store.update((state) => { state.busy = true; state.error = null })
     const transport = await this.remote.uninstall({ packageId })
-    if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+    if (!transport.ok || !transport.value.ok) {  this.fail(failureCode(transport)); return }
     this.store.update((state) => {
       state.busy = false
       state.pendingUpgrade = null
@@ -250,13 +250,13 @@ export class ToolMarketStore {
           state.restartNotice = packageId
         })
       },
-      fail: error => this.fail(error),
+      fail: (error) =>{  this.fail(error) },
       load: () => this.load(),
     })
   }
 
   private fail(error: MarketPackageFailure | string): void {
-    failPackageStore(typeof error === 'string' ? { code: error } : error, mutate => this.store.update(mutate))
+    failPackageStore(typeof error === 'string' ? { code: error } : error, (mutate) =>{  this.store.update(mutate) })
   }
 }
 
@@ -272,7 +272,7 @@ export class McpMarketStore {
     this.store.update((state) => { state.status = 'loading'; state.error = null })
     try {
       const transport = await this.remote.list()
-      if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+      if (!transport.ok || !transport.value.ok) {  this.fail(failureCode(transport)); return }
       const entries = transport.value.value.entries
       this.store.update((state) => {
         state.status = 'ready'
@@ -325,7 +325,7 @@ export class McpMarketStore {
   ): Promise<void> {
     this.store.update((state) => { state.busy = true; state.error = null })
     const transport = await this.remote.configure({ packageId, credentialReferences })
-    if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+    if (!transport.ok || !transport.value.ok) {  this.fail(failureCode(transport)); return }
     const savedReferences = transport.value.value.credentialReferences
     this.store.update((state) => {
       state.busy = false
@@ -343,7 +343,7 @@ export class McpMarketStore {
    * @param file - Browser-selected ZIP archive.
    */
   async upload(file: File): Promise<void> {
-    await uploadPackage(file, error => this.fail(error), (...args) => this.install(...args))
+    await uploadPackage(file, (error) =>{  this.fail(error) }, (...args) => this.install(...args))
   }
 
   /** Confirm the pending managed MCP replacement, if any. */
@@ -399,7 +399,7 @@ export class McpMarketStore {
       return
     }
     const transport = await this.remote.uninstall({ packageId })
-    if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+    if (!transport.ok || !transport.value.ok) {  this.fail(failureCode(transport)); return }
     this.store.update((state) => {
       state.pendingUninstall = null
       state.restartNotice = packageId
@@ -441,7 +441,6 @@ export class McpMarketStore {
     await this.saveDirectConfig(pending, true)
   }
 
-  // oxlint-disable-next-line sonarjs/no-identical-functions -- Shared lifecycle helper keeps parallel stores consistent.
   private async install(
     filename: string,
     archiveBase64: string,
@@ -478,13 +477,13 @@ export class McpMarketStore {
           state.restartNotice = packageId
         })
       },
-      fail: error => this.fail(error),
+      fail: (error) =>{  this.fail(error) },
       load: () => this.load(),
     })
   }
 
   private fail(error: MarketPackageFailure | string): void {
-    failPackageStore(typeof error === 'string' ? { code: error } : error, mutate => this.store.update(mutate))
+    failPackageStore(typeof error === 'string' ? { code: error } : error, (mutate) =>{  this.store.update(mutate) })
   }
 }
 
@@ -494,7 +493,7 @@ async function uploadPackage(
   install: (filename: string, archiveBase64: string, replaceExisting: boolean) => Promise<void>,
 ): Promise<void> {
   const invalid = validateUploadFile(file)
-  if (invalid !== null) return fail(invalid)
+  if (invalid !== null) {  fail(invalid); return }
   const archiveBase64 = arrayBufferToBase64(await file.arrayBuffer())
   await install(file.name, archiveBase64, false)
 }
@@ -539,7 +538,7 @@ async function installPackage<Id>(options: {
 }): Promise<void> {
   options.start()
   const transport = await options.remote()
-  if (!transport.ok || transport.value === undefined) return options.fail('transport')
+  if (!transport.ok || transport.value === undefined) {  options.fail('transport'); return }
   if (!transport.value.ok) {
     const error = transport.value.error
     if (error?.code === 'managed-upgrade-required' && error.packageId !== undefined) {
@@ -550,25 +549,28 @@ async function installPackage<Id>(options: {
       options.pendingLocalExecution(error.candidatePermissions ?? [])
       return
     }
-    return options.fail({
+    options.fail({
       code: error?.code ?? 'operation-failed',
       ...error?.publisherId === undefined ? {} : { publisherId: error.publisherId },
-    })
+    }); return
   }
   const packageId = transport.value.value?.packageId
-  if (packageId === undefined) return options.fail('operation-failed')
+  if (packageId === undefined) {  options.fail('operation-failed'); return }
   options.installed(packageId)
   await options.load()
 }
 
-function failPackageStore<State extends {
+/** State face every package store exposes to the shared failure projection. */
+type FailablePackageStore = {
   status: Status
   entries: readonly unknown[]
   busy: boolean
   error: MarketPackageFailure | null
-}>(
+}
+
+function failPackageStore(
   error: MarketPackageFailure,
-  update: (mutate: (state: State) => void) => void,
+  update: (mutate: (state: FailablePackageStore) => void) => void,
 ): void {
   update((state) => {
     state.status = state.entries.length === 0 ? 'error' : state.status
@@ -643,7 +645,7 @@ export class HookMarketStore {
     this.store.update((state) => { state.status = 'loading'; state.error = null })
     try {
       const transport = await this.remote.list()
-      if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+      if (!transport.ok || !transport.value.ok) {  this.fail(failureCode(transport)); return }
       const entries = transport.value.value.entries
       this.store.update((state) => {
         state.status = 'ready'
@@ -696,7 +698,7 @@ export class HookMarketStore {
   ): Promise<void> {
     this.store.update((state) => { state.busy = true; state.error = null })
     const transport = await this.remote.configure({ packageId, credentialReferences })
-    if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+    if (!transport.ok || !transport.value.ok) {  this.fail(failureCode(transport)); return }
     const savedReferences = transport.value.value.credentialReferences
     this.store.update((state) => {
       state.busy = false
@@ -714,7 +716,7 @@ export class HookMarketStore {
    * @param file - Browser-selected ZIP archive.
    */
   async upload(file: File): Promise<void> {
-    await uploadPackage(file, error => this.fail(error), (...args) => this.install(...args))
+    await uploadPackage(file, (error) =>{  this.fail(error) }, (...args) => this.install(...args))
   }
 
   /** Confirm the pending managed hook replacement, if any. */
@@ -756,7 +758,7 @@ export class HookMarketStore {
     const packageId = this.store.getSnapshot().pendingUninstall
     if (packageId === null) return
     const transport = await this.remote.uninstall({ packageId })
-    if (!transport.ok || !transport.value.ok) return this.fail(failureCode(transport))
+    if (!transport.ok || !transport.value.ok) {  this.fail(failureCode(transport)); return }
     this.store.update((state) => {
       state.pendingUninstall = null
       state.restartNotice = packageId
@@ -800,13 +802,13 @@ export class HookMarketStore {
           state.restartNotice = packageId
         })
       },
-      fail: error => this.fail(error),
+      fail: (error) =>{  this.fail(error) },
       load: () => this.load(),
     })
   }
 
   private fail(error: MarketPackageFailure | string): void {
-    failPackageStore(typeof error === 'string' ? { code: error } : error, mutate => this.store.update(mutate))
+    failPackageStore(typeof error === 'string' ? { code: error } : error, (mutate) =>{  this.store.update(mutate) })
   }
 }
 
@@ -863,7 +865,7 @@ export class SimplePackageMarketStore<
       pendingLocalExecution: null,
       localExecutionConfirmed: false,
       pendingUninstall: null,
-    } as SimplePackageMarketState<Entry>)
+    })
   }
 
   /** Refresh the installed inventory. */
@@ -871,7 +873,7 @@ export class SimplePackageMarketStore<
     this.store.update((state) => { state.status = 'loading'; state.error = null })
     try {
       const transport = await this.remote.list() as unknown as { ok?: boolean; value?: { ok?: boolean; value?: { entries: readonly Entry[] } } }
-      if (!transport.ok || transport.value?.ok !== true) return this.fail(failureCode(transport))
+      if (!transport.ok || transport.value?.ok !== true) {  this.fail(failureCode(transport)); return }
       this.store.update((state) => {
         state.status = 'ready'
         state.entries = transport.value!.value!.entries
@@ -895,7 +897,7 @@ export class SimplePackageMarketStore<
    */
   async upload(file: File): Promise<void> {
     const invalid = validateUploadFile(file)
-    if (invalid !== null) return this.fail(invalid)
+    if (invalid !== null) {  this.fail(invalid); return }
     await this.install(file.name, arrayBufferToBase64(await file.arrayBuffer()), false)
   }
 
@@ -935,8 +937,8 @@ export class SimplePackageMarketStore<
   async confirmUninstall(): Promise<void> {
     const packageId = this.store.getSnapshot().pendingUninstall
     if (packageId === null) return
-    const transport = await (this.remote.uninstall as (r: { packageId: string }) => Promise<unknown>)({ packageId })
-    if (!isOkTransport(transport)) return this.fail(failureCode(transport))
+    const transport = await (this.remote.uninstall)({ packageId })
+    if (!isOkTransport(transport)) {  this.fail(failureCode(transport)); return }
     this.store.update((state) => {
       state.pendingUninstall = null
       state.restartNotice = packageId
@@ -969,7 +971,7 @@ export class SimplePackageMarketStore<
       })
       return
     }
-    if (error !== undefined) return this.fail({ code: error })
+    if (error !== undefined) {  this.fail({ code: error }); return }
     this.store.update((state) => {
       state.busy = false
       state.pendingUpgrade = null
@@ -981,7 +983,7 @@ export class SimplePackageMarketStore<
   }
 
   private fail(error: MarketPackageFailure | string): void {
-    failPackageStore(typeof error === 'string' ? { code: error } : error, mutate => this.store.update(mutate))
+    failPackageStore(typeof error === 'string' ? { code: error } : error, (mutate) =>{  this.store.update(mutate) })
   }
 }
 

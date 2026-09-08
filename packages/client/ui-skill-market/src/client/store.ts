@@ -175,9 +175,9 @@ export class SkillMarketStore {
     try {
       const transport = await this.remote.list()
       if (!this.currentLoad(generation)) return
-      if (!transport.ok) return this.failLoad(generation)
+      if (!transport.ok) {  this.failLoad(generation); return }
       if (!transport.value.ok) {
-        return this.failLoad(generation, keyForFailure(transport.value.error))
+        this.failLoad(generation, keyForFailure(transport.value.error)); return
       }
       const skills = transport.value.value.entries
       const remaining = new Set(skills.map(skill => skill.skillId))
@@ -291,9 +291,9 @@ export class SkillMarketStore {
     try {
       const transport = await this.remote.uninstall({ skillId })
       if (!this.currentUninstall(generation)) return
-      if (!transport.ok) return this.failUninstall(generation, 'operationFailed')
+      if (!transport.ok) {  this.failUninstall(generation, 'operationFailed'); return }
       if (!transport.value.ok) {
-        return this.failUninstall(generation, keyForFailure(transport.value.error))
+        this.failUninstall(generation, keyForFailure(transport.value.error)); return
       }
       this.releaseBanner(skillId)
       this.store.update((state) => {
@@ -324,7 +324,7 @@ export class SkillMarketStore {
     try {
       const transport = await this.remote.banner({ skillId })
       if (!this.currentBanner(skillId, generation)) return
-      if (!transport.ok || !transport.value.ok) return this.failBanner(skillId, generation)
+      if (!transport.ok || !transport.value.ok) {  this.failBanner(skillId, generation); return }
       const banner = transport.value.value
       this.store.update((state) => {
         state.bannersLoading = state.bannersLoading.filter(name => name !== skillId)
@@ -356,7 +356,7 @@ export class SkillMarketStore {
         replaceExisting,
       })
       if (!this.currentUpload(generation)) return
-      if (!transport.ok) return this.failUpload(generation, 'operationFailed')
+      if (!transport.ok) {  this.failUpload(generation, 'operationFailed'); return }
       if (!transport.value.ok) {
         const failure = transport.value.error
         if (!replaceExisting && failure.code === 'managed-upgrade-required') {
@@ -372,7 +372,7 @@ export class SkillMarketStore {
           })
           return
         }
-        return this.failUpload(generation, keyForFailure(failure))
+        this.failUpload(generation, keyForFailure(failure)); return
       }
       const skillId = transport.value.value.skillId
       this.store.update((state) => {
@@ -444,7 +444,7 @@ export class SkillMarketStore {
     this.store.update((state) => {
       state.banners = Object.fromEntries(
         Object.entries(state.banners).filter(([name]) => name !== skillId),
-      ) as typeof state.banners
+      )
       state.bannersLoading = state.bannersLoading.filter(name => name !== skillId)
       state.bannersFailed = state.bannersFailed.filter(name => name !== skillId)
     })

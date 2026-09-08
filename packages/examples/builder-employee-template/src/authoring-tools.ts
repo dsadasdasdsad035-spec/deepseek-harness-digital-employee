@@ -6,16 +6,17 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-host-digital-employee-management'
 import type {} from '@deepseek-ai/dsh-tools'
 
 /** Management gateway face the tools call; structural for testability. */
 interface AuthoringGateway {
   listConfigurationAssets(request: { preset: string }): Promise<unknown>
-  createConfigurationDraft(request: Record<string, unknown>): Promise<unknown>
-  updateConfigurationDraft(request: Record<string, unknown>): Promise<unknown>
+  createConfigurationDraft(request: object): Promise<unknown>
+  updateConfigurationDraft(request: object): Promise<unknown>
   validateConfigurationDraft(request: { draftId: string }): Promise<unknown>
-  previewConfigurationDraft(request: Record<string, unknown>): Promise<unknown>
-  publishConfigurationDraft(request: Record<string, unknown>): Promise<unknown>
+  previewConfigurationDraft(request: object): Promise<unknown>
+  publishConfigurationDraft(request: object): Promise<unknown>
 }
 
 /**
@@ -27,7 +28,7 @@ interface AuthoringGateway {
  * @returns disposer releasing all authoring tools.
  */
 export function registerAuthoringTools(ctx: Context, preset: string): () => void {
-  const gateway = ctx.get('digitalEmployeeManagement' as never) as unknown as AuthoringGateway | undefined
+  const gateway: AuthoringGateway | undefined = ctx.get('digitalEmployeeManagement')
   if (gateway === undefined) {
     throw new Error('builder authoring tools require the digital-employee-management gateway')
   }
@@ -50,7 +51,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
     parameters: {},
     output: {
       schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
-      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
+      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: value }],
     },
     isConcurrencySafe: () => true,
     execute: async () => JSON.stringify(await gateway.listConfigurationAssets({ preset }), null, 2),
@@ -68,7 +69,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
     },
     output: {
       schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
-      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
+      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: value }],
     },
     execute: async (args) => {
       const capabilities = JSON.parse(String(args.capabilitiesJson)) as Record<string, unknown>
@@ -88,7 +89,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
     },
     output: {
       schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
-      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
+      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: value }],
     },
     execute: async args => JSON.stringify(await gateway.validateConfigurationDraft({ draftId: String(args.draftId) })),
   })
@@ -102,7 +103,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
     },
     output: {
       schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
-      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
+      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: value }],
     },
     execute: async args => JSON.stringify(await gateway.previewConfigurationDraft({
       draftId: String(args.draftId), revision: Number(String(args.revision)),
@@ -118,7 +119,7 @@ export function registerAuthoringTools(ctx: Context, preset: string): () => void
     },
     output: {
       schema: { type: 'object', additionalProperties: false, properties: { result: { type: 'string' } }, required: ['result'] },
-      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: String(value) }],
+      render: (_args: unknown, value: string) => [{ type: 'text' as const, text: value }],
     },
     execute: async args => JSON.stringify(await gateway.publishConfigurationDraft({
       draftId: String(args.draftId), revision: Number(String(args.revision)),

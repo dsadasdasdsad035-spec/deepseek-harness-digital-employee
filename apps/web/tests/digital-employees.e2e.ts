@@ -212,6 +212,7 @@ describe('web e2e: digital employee management through the shipped API', () => {
     await operationsOption.waitFor({ timeout: 15_000 })
     await operationsOption.click()
     await composer.press('End')
+    // oxlint-disable-next-line typescript/no-deprecated -- character-by-character input is the behavior under test; fill() would bypass it.
     await composer.type(DIRECT_TASK)
     await composer.press('Enter')
 
@@ -242,6 +243,7 @@ describe('web e2e: digital employee management through the shipped API', () => {
     await inactiveStart.click()
     const managementComposer = page.locator('textarea:enabled[placeholder="Describe what you want to build"]')
     await managementComposer.press('End')
+    // oxlint-disable-next-line typescript/no-deprecated -- character-by-character input is the behavior under test; fill() would bypass it.
     await managementComposer.type(MANAGEMENT_TASK)
     await managementComposer.press('Enter')
 
@@ -317,7 +319,7 @@ describe('web e2e: digital employee management through the shipped API', () => {
     expect(parentId).toBeDefined()
     const parent = scaffold.ctx.agents.get(parentId!)
     expect(parent).toBeDefined()
-    const tool = scaffold.ctx.tools.get('delegate_to_expert', parent!)
+    const tool = scaffold.ctx.tools.get('delegate_to_expert', parent)
     expect(tool).toBeDefined()
 
     const execution = await scaffold.ctx.tools.execute({

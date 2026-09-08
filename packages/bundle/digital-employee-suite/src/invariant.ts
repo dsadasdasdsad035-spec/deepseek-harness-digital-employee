@@ -13,6 +13,7 @@ export const name = 'digital-employee-suite-bundle-invariant'
 /** Service required before registration. */
 export const inject = ['invariants']
 
+/** No runtime invariant: the bundle only composes row manifests; it owns no runtime state. */
 const install: InvariantInstaller = () => {}
 
 /**

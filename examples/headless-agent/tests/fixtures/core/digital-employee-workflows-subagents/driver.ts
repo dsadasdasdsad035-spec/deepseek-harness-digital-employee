@@ -4,6 +4,9 @@ import { fileURLToPath } from 'node:url'
 import type { Context } from '@deepseek-ai/cordis'
 import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { signMarketplacePackage } from '@deepseek-ai/dsh-marketplace-core'
+// Type-only: declaration-merges ctx.workflowMarket for the host-side install probe.
+import type {} from '@deepseek-ai/dsh-workflow-market'
+import type {} from '@deepseek-ai/dsh-subagent-market'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('driver requires config path')
@@ -61,8 +64,11 @@ process.env.DSH_WF_SA_FIXTURE_TRUSTED_PUBLISHERS = JSON.stringify([wf.trustRecor
 let ctx: Context | undefined
 try {
   ctx = await boot('wf-sa-snapshot', resolveConfigPath(configPath, undefined))
-  const wfGateway: any = (ctx as any).workflowMarket
-  const saGateway: any = (ctx as any).subagentMarket
+  const wfGateway = ctx.get('workflowMarket')
+  const saGateway = ctx.get('subagentMarket')
+  if (wfGateway === undefined || saGateway === undefined) {
+    throw new Error('wf-sa snapshot requires the workflow and subagent market gateways')
+  }
 
   const wfInstall = await wfGateway.install({ filename: 'wf.zip', archiveBase64: wf.archive.toString('base64'), confirmLocalExecution: true, replaceExisting: true })
   acceptance('workflow-installed', { ok: wfInstall.ok, id: wfInstall.ok ? wfInstall.value.packageId : wfInstall.error?.code })
@@ -72,8 +78,8 @@ try {
   const wfList = await wfGateway.list()
   const saList = await saGateway.list()
   acceptance('inventory', {
-    wfEntries: wfList.ok && wfList.value ? wfList.value.entries.map((e: any) => ({ id: e.packageId, entries: e.entries.map((w: any) => w.id) })) : [],
-    saEntries: saList.ok && saList.value ? saList.value.entries.map((e: any) => ({ id: e.packageId, entries: e.entries.map((s: any) => s.id) })) : [],
+    wfEntries: wfList.ok && wfList.value ? wfList.value.entries.map(e => ({ id: e.packageId, entries: e.entries.map(w => w.id) })) : [],
+    saEntries: saList.ok && saList.value ? saList.value.entries.map(e => ({ id: e.packageId, entries: e.entries.map(s => s.id) })) : [],
   })
 } finally {
   await ctx?.fiber.dispose()

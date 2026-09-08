@@ -14,7 +14,7 @@ All employee records and template configuration are target-local. The bundle con
 
 #### What the model sees
 
-When a user starts a chat with a managed digital employee, the composed Host resolves that employee's published template, instructions, declared Skills, Tools, MCP servers, experts, and memory projection. The suite adds the management and chat entry points; the Web bundle supplies the shared marketplace and API remote composition.
+When a user starts a chat with a managed digital employee (`@数字员工` input source or the management page), the composed Host resolves that employee's published template, instructions, declared Skills, Tools, MCP servers, experts, and memory projection, then appends the durable `digital-employee/identity` event recording the resolved composition. The suite adds the management and chat entry points; the Web bundle supplies the shared marketplace and API remote composition.
 
 #### Token effect
 

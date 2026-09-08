@@ -13,7 +13,7 @@ const workspaceRegistryService = {
 }
 
 /** Digital employee management fixture with a minimal workspace registry dependency. */
-const managementWithWorkspaceRegistry: Plugin = {
+const managementWithWorkspaceRegistry: Plugin.Object = {
   name: 'digital-employee-management-with-workspace',
   apply: async (ctx: Context) => {
     ctx.provide('workspaceRegistry', workspaceRegistryService)

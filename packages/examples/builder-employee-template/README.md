@@ -27,3 +27,9 @@ Six short tool schemas, stable while the builder template is unchanged.
 #### KV Cache effect
 
 No invalidation; the tools are constant.
+
+## Known Limitations and Deferred Work
+
+- **Builder-only tools** — the six `builder_*` tools register in the builder composition only; no other employee surface can drive drafts.
+- **Publish confirmation stays with the user** — the builder publishes through the same studio validation, but the confirming click is never the model's.
+- **Single template preset** — the builder composes one fixed preset; per-deployment preset overrides are not configurable.

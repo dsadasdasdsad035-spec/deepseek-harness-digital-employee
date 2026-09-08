@@ -15,8 +15,11 @@ import { registerAuthoringTools } from './authoring-tools.ts'
 
 const ROOT = resolve(import.meta.dirname, '..')
 
+/** The requirements-reviewer expert every assembled builder employee carries. */
 export const REVIEW_EXPERT_ID = createExpertId('requirements-reviewer')
+/** The dry-run-tester expert every assembled builder employee carries. */
 export const TEST_EXPERT_ID = createExpertId('dry-run-tester')
+/** The packager expert every assembled builder employee carries. */
 export const PACKAGE_EXPERT_ID = createExpertId('packager')
 
 const BUILDER_TEMPLATE: DigitalEmployeeTemplate = {

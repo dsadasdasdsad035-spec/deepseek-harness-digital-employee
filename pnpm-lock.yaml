@@ -469,6 +469,9 @@ importers:
       '@deepseek-ai/dsh-bash-sandbox':
         specifier: workspace:*
         version: link:../packages/shell/bash-sandbox
+      '@deepseek-ai/dsh-builder-employee-template':
+        specifier: workspace:^
+        version: link:../packages/examples/builder-employee-template
       '@deepseek-ai/dsh-code-runtime-worker-thread':
         specifier: workspace:*
         version: link:../packages/code-runtime/code-runtime-worker-thread
@@ -535,12 +538,21 @@ importers:
       '@deepseek-ai/dsh-goal-round-driver':
         specifier: workspace:*
         version: link:../packages/goal/goal-round-driver
+      '@deepseek-ai/dsh-headless':
+        specifier: workspace:^
+        version: link:../packages/bundle/headless
       '@deepseek-ai/dsh-hooks-claude-code':
         specifier: workspace:*
         version: link:../packages/hooks/hooks-claude-code
       '@deepseek-ai/dsh-hooks-codex':
         specifier: workspace:*
         version: link:../packages/hooks/hooks-codex
+      '@deepseek-ai/dsh-hooks-market':
+        specifier: workspace:^
+        version: link:../packages/hooks/hooks-market
+      '@deepseek-ai/dsh-host-digital-employee-management':
+        specifier: workspace:^
+        version: link:../packages/host/digital-employee-management
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:*
         version: link:../packages/runtime-diagnostics/invariants
@@ -577,6 +589,9 @@ importers:
       '@deepseek-ai/dsh-mcp-market':
         specifier: workspace:*
         version: link:../packages/mcp/mcp-market
+      '@deepseek-ai/dsh-notification':
+        specifier: workspace:^
+        version: link:../packages/interaction/notification
       '@deepseek-ai/dsh-permission-presets':
         specifier: workspace:*
         version: link:../packages/interaction/permission-presets
@@ -611,7 +626,7 @@ importers:
         specifier: workspace:*
         version: link:../packages/session/session-checkpoint-policy
       '@deepseek-ai/dsh-session-persistence-jsonl':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../packages/session/session-persistence-jsonl
       '@deepseek-ai/dsh-session-projection':
         specifier: workspace:*
@@ -655,6 +670,15 @@ importers:
       '@deepseek-ai/dsh-spill-policy':
         specifier: workspace:*
         version: link:../packages/spill/spill-policy
+      '@deepseek-ai/dsh-storage':
+        specifier: workspace:^
+        version: link:../packages/storage/storage
+      '@deepseek-ai/dsh-storage-domain':
+        specifier: workspace:^
+        version: link:../packages/storage/storage-domain
+      '@deepseek-ai/dsh-storage-json':
+        specifier: workspace:^
+        version: link:../packages/storage/storage-json
       '@deepseek-ai/dsh-subagent':
         specifier: workspace:*
         version: link:../packages/subagent/subagent
@@ -673,6 +697,9 @@ importers:
       '@deepseek-ai/dsh-subagent-fork-in-process':
         specifier: workspace:*
         version: link:../packages/subagent/subagent-fork-in-process
+      '@deepseek-ai/dsh-subagent-market':
+        specifier: workspace:^
+        version: link:../packages/subagent/subagent-market
       '@deepseek-ai/dsh-subagent-spawn-in-process':
         specifier: workspace:*
         version: link:../packages/subagent/subagent-spawn-in-process
@@ -781,9 +808,15 @@ importers:
       '@deepseek-ai/dsh-web-fetch-http':
         specifier: workspace:*
         version: link:../packages/web/web-fetch-http
+      '@deepseek-ai/dsh-workflow-market':
+        specifier: workspace:^
+        version: link:../packages/workflow/workflow-market
       '@deepseek-ai/dsh-workflow-worker-thread':
         specifier: workspace:*
         version: link:../packages/workflow/workflow-worker-thread
+      '@deepseek-ai/dsh-workspace':
+        specifier: workspace:^
+        version: link:../packages/workspace/workspace
 
   native/landlock-run:
     devDependencies:
@@ -1354,6 +1387,21 @@ importers:
       '@deepseek-ai/dsh-agent-default-model':
         specifier: workspace:^
         version: link:../../core/agent-default-model
+      '@deepseek-ai/dsh-digital-employee':
+        specifier: workspace:^
+        version: link:../../core/digital-employee
+      '@deepseek-ai/dsh-digital-employee-agent':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-agent
+      '@deepseek-ai/dsh-digital-employee-file':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-file
+      '@deepseek-ai/dsh-goal':
+        specifier: workspace:^
+        version: link:../../goal/goal
+      '@deepseek-ai/dsh-home-paths':
+        specifier: workspace:^
+        version: link:../../util/home-paths
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -1363,6 +1411,49 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
+
+  packages/bundle/headless-employee:
+    dependencies:
+      '@deepseek-ai/dsh-agent-presets':
+        specifier: workspace:^
+        version: link:../../preset/agent-presets
+      '@deepseek-ai/dsh-digital-employee':
+        specifier: workspace:^
+        version: link:../../core/digital-employee
+      '@deepseek-ai/dsh-digital-employee-agent':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-agent
+      '@deepseek-ai/dsh-digital-employee-example-template':
+        specifier: workspace:^
+        version: link:../../examples/digital-employee-template
+      '@deepseek-ai/dsh-digital-employee-file':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-file
+      '@deepseek-ai/dsh-goal':
+        specifier: workspace:^
+        version: link:../../goal/goal
+      '@deepseek-ai/dsh-goal-round-driver':
+        specifier: workspace:^
+        version: link:../../goal/goal-round-driver
+      '@deepseek-ai/dsh-headless':
+        specifier: workspace:^
+        version: link:../headless
+      '@deepseek-ai/dsh-notification':
+        specifier: workspace:^
+        version: link:../../interaction/notification
+      '@deepseek-ai/dsh-tool-goal':
+        specifier: workspace:^
+        version: link:../../goal/tool-goal
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/cordis-plugin-loader':
+        specifier: workspace:^
+        version: link:../../../vendor/loader
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
 
   packages/bundle/web-app:
     dependencies:
@@ -2151,6 +2242,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-primitives':
         specifier: workspace:^
         version: link:../ui-primitives
+      '@deepseek-ai/dsh-client-ui-settings':
+        specifier: workspace:^
+        version: link:../ui-settings
       '@deepseek-ai/dsh-client-ui-sidebar':
         specifier: workspace:^
         version: link:../ui-sidebar
@@ -4041,6 +4135,9 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:^
+        version: link:../session
 
   packages/core/scope:
     devDependencies:
@@ -4410,6 +4507,10 @@ importers:
         version: link:../../../native/landlock-run/packages/entry
 
   packages/examples/builder-employee-template:
+    dependencies:
+      '@deepseek-ai/dsh-digital-employee-file':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-file
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -4417,9 +4518,6 @@ importers:
       '@deepseek-ai/dsh-digital-employee':
         specifier: workspace:^
         version: link:../../core/digital-employee
-      '@deepseek-ai/dsh-digital-employee-file':
-        specifier: workspace:^
-        version: link:../../core/digital-employee-file
       '@deepseek-ai/dsh-host-digital-employee-management':
         specifier: workspace:^
         version: link:../../host/digital-employee-management
@@ -5372,9 +5470,6 @@ importers:
       '@deepseek-ai/dsh-atomic-write':
         specifier: workspace:^
         version: link:../../util/atomic-write
-      '@deepseek-ai/dsh-bash-local':
-        specifier: workspace:^
-        version: link:../../shell/bash-local
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
@@ -5399,9 +5494,6 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../typert/protocol
-      fflate:
-        specifier: ^0.8.3
-        version: 0.8.3
 
   packages/host/apiproxy:
     dependencies:
@@ -5548,6 +5640,9 @@ importers:
       '@deepseek-ai/dsh-digital-employee-agent':
         specifier: workspace:^
         version: link:../../core/digital-employee-agent
+      '@deepseek-ai/dsh-digital-employee-file':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-file
       '@deepseek-ai/dsh-hooks-market':
         specifier: workspace:^
         version: link:../../hooks/hooks-market
@@ -5563,6 +5658,9 @@ importers:
       '@deepseek-ai/dsh-mcp-market':
         specifier: workspace:^
         version: link:../../mcp/mcp-market
+      '@deepseek-ai/dsh-notification':
+        specifier: workspace:^
+        version: link:../../interaction/notification
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
@@ -5773,6 +5871,22 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../typert/protocol
+
+  packages/interaction/notification:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-credentials':
+        specifier: workspace:^
+        version: link:../../credentials/credentials
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
 
   packages/interaction/permission-presets:
     dependencies:
@@ -8269,6 +8383,12 @@ importers:
 
   packages/subagent/subagent-market:
     dependencies:
+      '@deepseek-ai/dsh-atomic-write':
+        specifier: workspace:^
+        version: link:../../util/atomic-write
+      '@deepseek-ai/dsh-credentials':
+        specifier: workspace:^
+        version: link:../../credentials/credentials
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -8279,15 +8399,9 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
-      '@deepseek-ai/dsh-atomic-write':
-        specifier: workspace:^
-        version: link:../../util/atomic-write
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
-      '@deepseek-ai/dsh-credentials':
-        specifier: workspace:^
-        version: link:../../credentials/credentials
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -8297,9 +8411,6 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../typert/protocol
-      fflate:
-        specifier: ^0.8.3
-        version: 0.8.3
 
   packages/subagent/subagent-spawn-in-process:
     dependencies:
@@ -9298,6 +9409,12 @@ importers:
 
   packages/workflow/workflow-market:
     dependencies:
+      '@deepseek-ai/dsh-atomic-write':
+        specifier: workspace:^
+        version: link:../../util/atomic-write
+      '@deepseek-ai/dsh-credentials':
+        specifier: workspace:^
+        version: link:../../credentials/credentials
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -9308,15 +9425,9 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
-      '@deepseek-ai/dsh-atomic-write':
-        specifier: workspace:^
-        version: link:../../util/atomic-write
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
-      '@deepseek-ai/dsh-credentials':
-        specifier: workspace:^
-        version: link:../../credentials/credentials
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -9326,9 +9437,6 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../typert/protocol
-      fflate:
-        specifier: ^0.8.3
-        version: 0.8.3
 
   packages/workflow/workflow-worker-thread:
     dependencies:

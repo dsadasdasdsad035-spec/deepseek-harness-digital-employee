@@ -15,7 +15,7 @@ describe('project-manager test memory', () => {
   const homes: string[] = []
 
   afterEach(async () => {
-    await Promise.all(homes.splice(0).map(async home => await rm(home, { recursive: true, force: true })))
+    await Promise.all(homes.splice(0).map(async (home) =>{  await rm(home, { recursive: true, force: true }) }))
   })
 
   it('persists the Atlas seed for its employee only', async () => {

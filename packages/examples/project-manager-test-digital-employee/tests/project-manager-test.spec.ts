@@ -31,7 +31,7 @@ describe('project-manager test digital employee', () => {
     })
     expect(template?.experts).toEqual([expect.objectContaining({
       name: 'Risk Review Expert',
-      responsibility: expect.stringContaining('delivery risk'),
+      responsibility: expect.stringContaining('delivery risk') as string,
       capabilities: {
         skills: ['risk-review'],
         tools: ['project_document'],
@@ -48,7 +48,7 @@ describe('project-manager test digital employee', () => {
       envCredentials: {},
     })])
     expect(PROJECT_MEMORY_SEED).toEqual(expect.objectContaining({
-      content: expect.stringContaining('Atlas'),
+      content: expect.stringContaining('Atlas') as string,
       tags: ['atlas', 'delivery'],
       sensitive: false,
     }))

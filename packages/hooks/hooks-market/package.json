@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-hooks-market",
   "description": "Managed install, credential-reference configuration, and employee-scoped mounting for marketplace hook packages",
-  "version": "0.1.0",
+  "version": "0.1.1-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -73,9 +73,7 @@
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-marketplace-core": "workspace:^",
     "@deepseek-ai/dsh-shell": "workspace:^",
-    "@deepseek-ai/dsh-bash-local": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^",
-    "fflate": "^0.8.3"
+    "@deepseek-ai/dsh-typert-protocol": "workspace:^"
   }
 }

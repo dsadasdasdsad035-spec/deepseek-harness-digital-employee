@@ -42,47 +42,65 @@
     },
     "examples": {
       "entry": [
-        "headless-agent/tests/fixtures/cli-mock-llm.ts",
-        "headless-agent/tests/fixtures/semantic-checkpoint-agent.ts",
-        "headless-agent/tests/fixtures/subagent-diagnostic-agent.ts",
-        "headless-agent/tests/fixtures/subagent-inheritance-agent.ts",
-        "headless-agent/tests/fixtures/subagent-settlement-fence.ts",
-        "headless-agent/tests/fixtures/workspace-context-resume-agent.ts",
-        "headless-agent/tests/fixtures/goal-domain/seed-goal.ts",
-        "headless-agent/tests/fixtures/time-context-driver.ts",
-        "headless-agent/tests/fixtures/time-context-mock-llm.ts",
-        "headless-agent/tests/fixtures/session-telemetry-otel-driver.ts",
-        "headless-agent/tests/fixtures/telemetry-redact-rule.ts",
-        "headless-agent/tests/fixtures/e2b/e2b/bin.ts",
-        "headless-agent/tests/fixtures/core/digital-employee-agent/management.ts",
-        "headless-agent/tests/fixtures/core/digital-employee-agent/mock-llm.ts",
-        "headless-agent/tests/fixtures/core/digital-employee-agent/subagent-provider.ts",
-        "headless-agent/tests/fixtures/core/digital-employee-agent/template.ts",
-        "headless-agent/tests/fixtures/core/digital-employee-configuration-studio/driver.ts",
-        "headless-agent/tests/fixtures/core/digital-employee-configuration-studio/management.ts",
-        "headless-agent/tests/fixtures/core/digital-employee-configuration-studio/mock-llm.ts",
-        "headless-agent/tests/fixtures/core/project-manager-digital-employee/driver.ts",
-        "headless-agent/tests/fixtures/core/project-manager-digital-employee/mock-llm.ts",
-        "acp-agent/tests/snapshots/lsp-definition/workspace/subject.ts",
+        "*/tests/**/*.e2e.ts",
+        "*/tests/**/*.snapshot.ts",
         "acp-agent/tests/fixtures/child-question-tripwire.ts",
         "acp-agent/tests/fixtures/parent-sandbox-override.ts",
         "acp-agent/tests/fixtures/partial-landlock-sandbox.ts",
         "acp-agent/tests/fixtures/subagent-durability-failure.ts",
-        "acp-agent/tests/fixtures/subagent-result-diagnostic.ts",
         "acp-agent/tests/fixtures/subagent-report-fence.ts",
+        "acp-agent/tests/fixtures/subagent-result-diagnostic.ts",
         "acp-agent/tests/fixtures/subagent-settlement-marker.ts",
-        "acp-agent/tests/fixtures/workspace-context-compaction.ts",
-        "acp-agent/tests/fixtures/subagent/subagent-acp/mock-delegating-llm.ts",
         "acp-agent/tests/fixtures/subagent/subagent-acp/driver.ts",
-        "acp-agent/tests/fixtures/subagent/subagent-claude-code/fixture.ts",
+        "acp-agent/tests/fixtures/subagent/subagent-acp/mock-delegating-llm.ts",
         "acp-agent/tests/fixtures/subagent/subagent-claude-code/driver.ts",
-        "acp-agent/tests/fixtures/subagent/subagent-codex/fixture.ts",
+        "acp-agent/tests/fixtures/subagent/subagent-claude-code/fixture.ts",
         "acp-agent/tests/fixtures/subagent/subagent-codex/driver.ts",
-        "jsonrpc-agent/tests/fixtures/subagent/subagent-dsh-sdk/driver.ts",
+        "acp-agent/tests/fixtures/subagent/subagent-codex/fixture.ts",
+        "acp-agent/tests/fixtures/workspace-context-compaction.ts",
+        "acp-agent/tests/snapshots/lsp-definition/workspace/subject.ts",
+        "headless-agent/tests/fixtures/cli-mock-llm.ts",
+        "headless-agent/tests/fixtures/core/builder-employee/driver.ts",
+        "headless-agent/tests/fixtures/core/builder-employee/management.ts",
+        "headless-agent/tests/fixtures/core/builder-employee/mock-llm.ts",
+        "headless-agent/tests/fixtures/core/builder-employee/subagent-provider.ts",
+        "headless-agent/tests/fixtures/core/builder-employee/template.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-agent/management.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-agent/mock-llm.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-agent/subagent-provider.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-agent/template.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-autonomous/channel.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-autonomous/driver.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-autonomous/launcher.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-autonomous/mock-llm.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-autonomous/subagent-provider.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-autonomous/template.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-configuration-studio/driver.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-configuration-studio/management.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-configuration-studio/mock-llm.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-hooks/driver.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-hooks/mock-llm.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-hooks/template.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-workflows-subagents/driver.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-workflows-subagents/mock-llm.ts",
+        "headless-agent/tests/fixtures/core/digital-employee-workflows-subagents/template.ts",
+        "headless-agent/tests/fixtures/core/mcp-market-stdio/driver.ts",
+        "headless-agent/tests/fixtures/core/project-manager-digital-employee/driver.ts",
+        "headless-agent/tests/fixtures/core/project-manager-digital-employee/mock-llm.ts",
+        "headless-agent/tests/fixtures/e2b/e2b/bin.ts",
+        "headless-agent/tests/fixtures/goal-domain/seed-goal.ts",
+        "headless-agent/tests/fixtures/semantic-checkpoint-agent.ts",
+        "headless-agent/tests/fixtures/session-telemetry-otel-driver.ts",
+        "headless-agent/tests/fixtures/subagent-diagnostic-agent.ts",
+        "headless-agent/tests/fixtures/subagent-inheritance-agent.ts",
+        "headless-agent/tests/fixtures/subagent-settlement-fence.ts",
+        "headless-agent/tests/fixtures/telemetry-redact-rule.ts",
+        "headless-agent/tests/fixtures/time-context-driver.ts",
+        "headless-agent/tests/fixtures/time-context-mock-llm.ts",
+        "headless-agent/tests/fixtures/workspace-context-resume-agent.ts",
         "jsonrpc-agent/tests/fixtures/subagent/subagent-dsh-sdk/child-mock-llm.ts",
-        "jsonrpc-agent/tests/fixtures/subagent/subagent-dsh-sdk/mock-delegating-llm.ts",
-        "*/tests/**/*.e2e.ts",
-        "*/tests/**/*.snapshot.ts"
+        "jsonrpc-agent/tests/fixtures/subagent/subagent-dsh-sdk/driver.ts",
+        "jsonrpc-agent/tests/fixtures/subagent/subagent-dsh-sdk/mock-delegating-llm.ts"
       ],
       "project": [
         "**/*.ts"
@@ -661,6 +679,41 @@
     "packages/bundle/web-app": {
       "ignoreDependencies": [
         "@deepseek-ai/.+"
+      ]
+    },
+    "packages/examples/builder-employee-template": {
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
+    "packages/subagent/subagent-market": {
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
+    "packages/workflow/workflow-market": {
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
+    "packages/bundle/digital-employee-suite": {
+      "ignoreDependencies": [
+        "@deepseek-ai/.+"
+      ]
+    },
+    "packages/bundle/headless-employee": {
+      "ignoreDependencies": [
+        "@deepseek-ai/.+"
+      ]
+    },
+    "packages/util/marketplace-core": {
+      "entry": [
+        "tests/**/*.spec.ts",
+        "tests/built-bin.e2e.ts"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "tests/**/*.ts"
       ]
     }
   }

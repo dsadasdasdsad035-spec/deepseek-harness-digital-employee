@@ -32,6 +32,7 @@ import type {
   WorkflowMarketUninstallResult,
 } from './types.ts'
 
+/** Error carrying the closed marketplace failure that produced it. */
 class WorkflowMarketDomainError extends Error {
   constructor(readonly failure: WorkflowMarketFailure) {
     super('reason' in failure ? `${failure.code}: ${failure.reason}` : failure.code)

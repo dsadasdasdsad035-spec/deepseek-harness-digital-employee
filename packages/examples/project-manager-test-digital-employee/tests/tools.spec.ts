@@ -20,7 +20,7 @@ describe('project-manager test tools', () => {
       arguments: {},
     })).resolves.toMatchObject({
       isError: false,
-      value: { project: 'Atlas', milestones: expect.any(Array), risks: expect.any(Array) },
+      value: { project: 'Atlas', milestones: expect.any(Array) as unknown[], risks: expect.any(Array) as unknown[] },
     })
     await expect(ctx.tools.execute({
       signal: new AbortController().signal,
@@ -29,7 +29,7 @@ describe('project-manager test tools', () => {
       arguments: {},
     })).resolves.toMatchObject({
       isError: false,
-      value: { project: 'Atlas', decision: expect.stringContaining('staged release') },
+      value: { project: 'Atlas', decision: expect.stringContaining('staged release') as string },
     })
   })
 })

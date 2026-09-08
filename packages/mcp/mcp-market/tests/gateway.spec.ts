@@ -445,7 +445,7 @@ describe('McpMarketGateway', () => {
       ok: true,
       value: { entries: [{
         available: false,
-        diagnostic: expect.stringContaining('stdio command "python3" is not an allowed interpreter'),
+        diagnostic: expect.stringContaining('stdio command "python3" is not an allowed interpreter') as string,
       }] },
     })
     await ctx.fiber.dispose()

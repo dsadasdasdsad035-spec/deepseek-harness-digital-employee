@@ -74,6 +74,7 @@ export class WorkflowMarketGateway extends TypertRemoteService {
     allowUnsignedPackages: z.boolean().default(false),
     trustedPublishersFile: z.string(),
   })
+  /** The installed-package service every gateway call forwards to. */
   readonly service: WorkflowMarketService
 
   constructor(ctx: Context, config: Config) {

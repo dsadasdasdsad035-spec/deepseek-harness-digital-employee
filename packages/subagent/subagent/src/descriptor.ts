@@ -203,7 +203,7 @@ function parseComposition(value: unknown): Readonly<Record<string, JsonValue>> {
     throw new Error('persisted subagent descriptor composition must be an object')
   }
   const snapshot = snapshotJsonValue(value)
-  if (snapshot === undefined || Array.isArray(snapshot) || snapshot === null || typeof snapshot !== 'object') {
+  if (snapshot === undefined || Array.isArray(snapshot)) {
     throw new Error('persisted subagent descriptor composition must be losslessly JSON-serializable')
   }
   return snapshot as Record<string, JsonValue>

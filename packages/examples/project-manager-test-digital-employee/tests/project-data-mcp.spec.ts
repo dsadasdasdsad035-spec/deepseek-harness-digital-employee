@@ -34,8 +34,8 @@ describe('project-manager test MCP server', () => {
       value: {
         structuredContent: {
           project: 'Atlas',
-          milestones: expect.any(Array),
-          risks: expect.any(Array),
+          milestones: expect.any(Array) as unknown[],
+          risks: expect.any(Array) as unknown[],
         },
       },
     })

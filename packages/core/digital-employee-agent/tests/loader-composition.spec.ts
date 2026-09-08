@@ -41,6 +41,7 @@ describe('digital employee assembled Loader composition', () => {
         displayName: 'Ada',
         templateId: 'research-assistant',
         templateVersion: '1.0.0',
+        // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
         compositionId: expect.stringMatching(/^sha256:[0-9a-f]{64}$/),
         personality: 'Precise, curious, and concise.',
       }) as unknown as SessionEvent['data'],

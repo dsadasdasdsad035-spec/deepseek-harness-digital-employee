@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-workflow-market",
   "description": "Managed install and employee-scoped mounting for marketplace workflow packages",
-  "version": "0.1.0",
+  "version": "0.1.1-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -63,12 +63,9 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-atomic-write": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-credentials": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-marketplace-core": "workspace:^",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^",
-    "fflate": "^0.8.3"
+    "@deepseek-ai/dsh-typert-protocol": "workspace:^"
   }
 }

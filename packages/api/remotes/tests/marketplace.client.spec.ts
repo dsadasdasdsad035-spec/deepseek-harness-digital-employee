@@ -44,10 +44,10 @@ describe('API Remote marketplace client composition', () => {
     const marketplace = (ctx.remote as unknown as { skillMarket: MarketplaceRemote }).skillMarket
 
     expect(marketplace).toMatchObject({
-      banner: expect.any(Function),
-      install: expect.any(Function),
-      list: expect.any(Function),
-      uninstall: expect.any(Function),
+      banner: expect.any(Function) as unknown,
+      install: expect.any(Function) as unknown,
+      list: expect.any(Function) as unknown,
+      uninstall: expect.any(Function) as unknown,
     })
     const banner = await marketplace.banner({ skillId: 'fixture' })
     expect(banner).toEqual({

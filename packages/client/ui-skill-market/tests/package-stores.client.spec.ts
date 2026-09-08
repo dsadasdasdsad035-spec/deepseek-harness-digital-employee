@@ -32,7 +32,7 @@ describe('unified marketplace package stores', () => {
       list: vi.fn(async () => ({ ok: true, value: { ok: true, value: { entries: [] } } })),
       install: vi.fn(),
       uninstall: vi.fn(),
-      configure: vi.fn(async request => ({
+      configure: vi.fn(async (request: { packageId: string }) => ({
         ok: true,
         value: { ok: true, value: { ...request, restartRequired: true } },
       })),
@@ -142,7 +142,7 @@ describe('unified marketplace package stores', () => {
           value: { packageId: 'release-notes', operation: 'upgraded', restartRequired: true },
         },
       })
-    const uninstall = vi.fn(async request => ({
+    const uninstall = vi.fn(async (request: { packageId: string }) => ({
       ok: true, value: { ok: true, value: { ...request, restartRequired: true } },
     }))
     const remote = {
@@ -203,7 +203,7 @@ describe('unified marketplace package stores', () => {
         env: { API_TOKEN: '' }, envCredentials: { API_TOKEN: 'LOCAL_TOKEN' }, cwd: '/tmp',
       },
     } as const
-    await store.saveDirectConfig(request as never)
+    await store.saveDirectConfig(request)
     expect(save.mock.calls[0]?.[0]).not.toHaveProperty('confirmLocalExecution', true)
     expect(store.store.getSnapshot().pendingDirectLocalExecution).not.toBeNull()
     await store.confirmDirectLocalExecution()

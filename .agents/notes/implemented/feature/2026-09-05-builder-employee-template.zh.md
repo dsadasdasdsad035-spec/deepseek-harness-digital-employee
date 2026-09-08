@@ -12,6 +12,11 @@
 
 Builder 数字员工模板将配置工作室 Remote 包装为六个作用域创作工具（`builder_list_assets`、`builder_create_draft`、`builder_validate_draft`、`builder_preview_draft`、`builder_publish_draft`）。三个专家（需求审查员、试跑测试员、打包员）分解访谈-编写-发布流程。工具仅在 Builder 组合中注册。
 
+## 已否决的备选方案
+
+- **在配置工作室 UI 上扩展向导** —— 作者化仍是手工且需管理员门禁，而会话化路径才是目标。
+- **单一整体 builder 工具** —— 把访谈、校验与发布折叠成模型无法介入的一次调用；按职责拆分的工具把用户确认边界保留在发布环节。
+
 ## 后果
 
 Builder 在共享工作室中创建草稿并使用相同的校验；用户在发布前确认。zip 导出推迟到 `digital-employee-package-export` 变更。

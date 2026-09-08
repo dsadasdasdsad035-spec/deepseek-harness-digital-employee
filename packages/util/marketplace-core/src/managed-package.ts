@@ -163,7 +163,7 @@ export async function listManagedPackages(
   root: string,
   kind: ManagedPackageManifest['kind'],
 ): Promise<readonly ManagedPackageManifest[]> {
-  let entries: Dirent<string>[]
+  let entries: Dirent[]
   try {
     entries = await readdir(root, { withFileTypes: true })
   } catch (error: unknown) {

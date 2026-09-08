@@ -199,7 +199,7 @@ export class HookMarketGateway extends TypertRemoteService {
 }
 
 /** Install the gateway; mounting happens per employee composition, not here. */
-export async function apply(ctx: Context, config: Config): Promise<void> {
+export function apply(ctx: Context, config: Config): void {
   new HookMarketGateway(ctx, config)
 }
 

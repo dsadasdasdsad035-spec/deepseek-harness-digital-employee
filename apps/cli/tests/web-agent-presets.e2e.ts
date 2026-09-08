@@ -246,18 +246,18 @@ describe('the shipped Web composition', () => {
       expect(subagent?.parameters).toMatchObject({
         type: 'object',
         properties: expect.objectContaining({
-          description: expect.objectContaining({ type: 'string' }),
-          prompt: expect.objectContaining({ type: 'string' }),
-          run_in_background: expect.objectContaining({ type: 'boolean' }),
-        }),
+          description: expect.objectContaining({ type: 'string' }) as unknown,
+          prompt: expect.objectContaining({ type: 'string' }) as unknown,
+          run_in_background: expect.objectContaining({ type: 'boolean' }) as unknown,
+        }) as unknown,
       })
       expect(fork?.parameters).toMatchObject({
         type: 'object',
         properties: expect.objectContaining({
-          description: expect.objectContaining({ type: 'string' }),
-          prompt: expect.objectContaining({ type: 'string' }),
-          run_in_background: expect.objectContaining({ type: 'boolean' }),
-        }),
+          description: expect.objectContaining({ type: 'string' }) as unknown,
+          prompt: expect.objectContaining({ type: 'string' }) as unknown,
+          run_in_background: expect.objectContaining({ type: 'boolean' }) as unknown,
+        }) as unknown,
       })
     } finally {
       await handle.dispose()
@@ -686,7 +686,9 @@ describe('a delegated child', () => {
       sessionId: SessionId('preset-child'),
       meta: childSessionMeta(parent.agent, 1, 0),
       setup: (agentCtx) => {
-        applyChildComposition(agentCtx, parent.agent, {})
+        // Fire-and-forget mirrors the subagent driver's creation window: `create`
+        // must not await the child composition.
+        void applyChildComposition(agentCtx, parent.agent, {})
       },
     })
     try {
@@ -712,7 +714,9 @@ describe('a delegated child', () => {
       sessionId: SessionId('preset-child-switch'),
       meta: childSessionMeta(parent.agent, 1, 0),
       setup: (agentCtx) => {
-        applyChildComposition(agentCtx, parent.agent, {})
+        // Fire-and-forget mirrors the subagent driver's creation window: `create`
+        // must not await the child composition.
+        void applyChildComposition(agentCtx, parent.agent, {})
       },
     })
     try {

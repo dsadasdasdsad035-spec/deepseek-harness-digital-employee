@@ -208,6 +208,7 @@ export function decodeArchiveBase64(archiveBase64: string): Buffer {
  * @param options - Optional inspection limits.
  * @returns Validated entry inventory and byte totals.
  */
+// oxlint-disable-next-line typescript/require-await -- async keeps limit and parse failures rejections for `.rejects` callers
 export async function inspectZipArchive(
   archive: Uint8Array,
   options: InspectZipOptions = {},
@@ -224,12 +225,10 @@ export async function inspectZipArchive(
   let declaredTotalBytes = 0
   let totalBytes = 0
   let failure: ArchiveValidationError | undefined
-  let sawEntry = false
   const unzip = new Unzip()
   unzip.register(UnzipPassThrough)
   unzip.register(UnzipInflate)
   unzip.onfile = (file): void => {
-    sawEntry = true
     const centralEntry = centralEntries[centralIndex++]
     if (centralEntry === undefined || centralEntry.name !== file.name) {
       failure = invalidArchive('zip')
@@ -333,7 +332,9 @@ export async function inspectZipArchive(
     throw failure ?? invalidArchive('zip')
   }
   if (failure !== undefined) throw failure
-  if (!sawEntry || entries.length === 0 || centralIndex !== centralEntries.length) {
+  // An archive with zero streamed entries also has an empty `entries` list, so
+  // the empty check covers both "no local entries" and "empty zip" inputs.
+  if (entries.length === 0 || centralIndex !== centralEntries.length) {
     throw invalidArchive('zip')
   }
   return { entries, totalBytes }

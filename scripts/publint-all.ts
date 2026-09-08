@@ -186,7 +186,12 @@ async function runPublint(target: PackageTarget): Promise<PublintResult> {
       pack: { files },
     })
     const manifest = result.pkg as Record<string, unknown>
-    return result.messages.some(message => message.type === 'error') || closureViolations.length > 0
+    // The client browser bundle is deliberately CJS (see packages/client/tsdown.client.ts):
+    // the webserver fetches lib/client.js with its own loader and Node's ESM resolver never
+    // reads it, so the .js-in-type:module mismatch is a recorded trade-off, not a defect.
+    const messages = result.messages.filter(message =>
+      !(message.code === 'EXPORTS_MODULE_SHOULD_BE_ESM' && JSON.stringify(message.path) === '["exports","./client","default"]'))
+    return messages.some(message => message.type === 'error') || closureViolations.length > 0
       ? { path: target.path, status: 'failed', messages: result.messages, closureViolations, manifest }
       : { path: target.path, status: 'passed', messages: result.messages, closureViolations, manifest }
   } catch (error: unknown) {
