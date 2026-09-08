@@ -60,6 +60,8 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/e2b/e2b': { kind: 'none', reason: 'The shared remote-runtime owner registers no model context; provider adapters and consumers own rendered effects.' },
   'packages/client/hmr': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
   'packages/interaction/notification': { kind: 'none', reason: 'Host-side alert delivery; the seam registers no prompt, schema, or result of its own.' },
+  'packages/account/user-accounts': { kind: 'none', reason: 'Account storage and verification; the service registers no model-facing prompt, tool, or session content.' },
+  'packages/email/email': { kind: 'none', reason: 'Mail delivery transport; the seam registers no model-facing prompt, tool, or session content.' },
   'packages/client/modules': { kind: 'none', reason: 'Browser-side module-loading kernel machinery; registers nothing model-facing.' },
   'packages/test-support/client-runtime': { kind: 'none', reason: 'Browser-side test infrastructure (jsdom bench); registers nothing model-facing.' },
   'packages/client/ui-slots': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },

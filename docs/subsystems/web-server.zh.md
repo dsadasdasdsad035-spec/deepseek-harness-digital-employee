@@ -78,6 +78,17 @@ register(route: WebRoute): () => void
 registerUpgrade(route: WebUpgradeRoute): () => void
 
 /**
+ * Register the request gate: a single seat consulted before route dispatch.
+ * When installed, every request first runs through the gate handler; a
+ * `false` verdict stops dispatch (the handler owns the response), `true`
+ * continues into routes. One seat — the account layer owns access control
+ * for the whole surface, so composition cannot accidentally leave a hole.
+ * @param handler - the gate verdict.
+ * @returns the disposer removing the gate.
+ */
+registerGate(handler: (req: IncomingMessage, res: ServerResponse) => Promise<boolean> | boolean): () => void
+
+/**
  * Claim the fallback seat: the handler answering every request no named
  * route matches (the SPA dist server in the shipped Web composition). One
  * owner only — a second registration throws, because two fallbacks cannot

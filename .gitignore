@@ -51,3 +51,4 @@ digital-employees.json
 
 # Repository-root build outputs (npm publish staging)
 /dist/
+release-notes.zip/

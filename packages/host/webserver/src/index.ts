@@ -81,6 +81,7 @@ export class WebServer extends Service {
   private readonly upgrades = new Map<string, WebUpgradeRoute>()
   private readonly upgradedSockets = new Set<Duplex>()
   private readonly indexTaps: ((html: string) => string)[] = []
+  private gate: ((req: IncomingMessage, res: ServerResponse) => Promise<boolean> | boolean) | undefined
   private fallback: WebRoute['handler'] | undefined
   private server!: Server
   private listenedPort!: number
@@ -136,6 +137,28 @@ export class WebServer extends Service {
    * @param handler - owns the full response lifecycle of unmatched requests.
    * @returns the disposer releasing the seat.
    */
+  /**
+   * Register the request gate: a single seat consulted before route dispatch.
+   * When installed, every request first runs through the gate handler; a
+   * `false` verdict stops dispatch (the handler owns the response), `true`
+   * continues into routes. One seat — the account layer owns access control
+   * for the whole surface, so composition cannot accidentally leave a hole.
+   * @param handler - the gate verdict.
+   * @returns the disposer removing the gate.
+   */
+  registerGate(handler: (req: IncomingMessage, res: ServerResponse) => Promise<boolean> | boolean): () => void {
+    this.gate = handler
+    return () => { if (this.gate === handler) this.gate = undefined }
+  }
+
+  /**
+   * Claim the fallback seat: the handler answering every request no named
+   * route matches (the SPA dist server in the shipped Web composition). One
+   * owner only — a second registration throws, because two fallbacks cannot
+   * compose.
+   * @param handler - owns the full response lifecycle of unmatched requests.
+   * @returns the disposer releasing the seat.
+   */
   registerFallback(handler: WebRoute['handler']): () => void {
     if (this.fallback !== undefined) {
       throw new Error('webserver: fallback already registered')
@@ -165,6 +188,8 @@ export class WebServer extends Service {
       /* v8 ignore next -- `?? '/'` arm: node:http always sets url on server
       requests; the field is only optional on the client-side IncomingMessage type */
       const rawPath = new URL(req.url ?? '/', 'http://x').pathname
+      const gate = this.gate
+      if (gate !== undefined && !(await gate(req, res))) return
       const route = this.match(rawPath)
       if (route !== undefined) {
         await route.handler(req, res)

@@ -387,6 +387,22 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Owns workflow package lifecycle and credential-reference configuration; employee compositions resolve workflow references and mount scripted workflow tools through the shared workflow seam.',
   },
   {
+    key: 'email',
+    pkg: 'email',
+    title: 'Transport-registry email seam',
+    mode: 'seam',
+    consumers: ['user-accounts'],
+    note: 'Providers register plain-text SMTP transports under stable ids (QQ SMTP ships as a subpath plugin); send resolves to a closed delivery outcome and never rejects, so verification codes and reset links fail visibly without crashing the flow.',
+  },
+  {
+    key: 'userAccounts',
+    pkg: 'user-accounts',
+    title: 'Web surface account system',
+    mode: 'seam',
+    consumers: ['webserver', 'host-webserver'],
+    note: 'SQLite user store with argon2id hashing, email verification codes, single-use reset tokens, and signed session cookies; the web auth gate redirects unauthenticated traffic to the login page.',
+  },
+  {
     key: 'notifications',
     pkg: 'notification',
     title: 'Channel-registry notification seam',

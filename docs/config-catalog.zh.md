@@ -3188,6 +3188,24 @@ export interface Config {
 
 Source: [`packages/typert/loader/src/index.ts:47`](../packages/typert/loader/src/index.ts)
 
+<a id="deepseek-aidsh-user-accounts"></a>
+
+## `@deepseek-ai/dsh-user-accounts`
+
+```ts config-catalog
+/** Plugin config. */
+export interface Config {
+  /** Allow open registration (default false — accounts are admin-created). */
+  allowRegistration?: boolean
+  /** Session lifetime in milliseconds (default 7 days). */
+  sessionTtlMs?: number
+  /** Absolute path to the users database (tests substitute; default under $DSH_HOME). */
+  dbPath?: string
+}
+```
+
+Source: [`packages/account/user-accounts/src/index.ts:44`](../packages/account/user-accounts/src/index.ts)
+
 <a id="deepseek-aidsh-user-approval"></a>
 
 ## `@deepseek-ai/dsh-user-approval`
@@ -3479,6 +3497,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@deepseek-ai/dsh-digital-employee` ([`packages/core/digital-employee/src/index.ts`](../packages/core/digital-employee/src/index.ts))
 - `@deepseek-ai/dsh-digital-employee-agent` — requires `agentPresets` · `agents` · `digitalEmployees` · `skills` · `subagents` · `systemPrompt` · `tools` ([`packages/core/digital-employee-agent/src/index.ts`](../packages/core/digital-employee-agent/src/index.ts))
 - `@deepseek-ai/dsh-digital-employee-example-template` — requires `digitalEmployees` ([`packages/examples/digital-employee-template/src/index.ts`](../packages/examples/digital-employee-template/src/index.ts))
+- `@deepseek-ai/dsh-email` ([`packages/email/email/src/index.ts`](../packages/email/email/src/index.ts))
 - `@deepseek-ai/dsh-fs-e2b` — requires `e2b` ([`packages/e2b/fs-e2b/src/index.ts`](../packages/e2b/fs-e2b/src/index.ts))
 - `@deepseek-ai/dsh-fs-observation-policy` ([`packages/fs/fs-observation-policy/src/index.ts`](../packages/fs/fs-observation-policy/src/index.ts))
 - `@deepseek-ai/dsh-goal-round-driver` — requires `agents` · `goals` · `sessions` ([`packages/goal/goal-round-driver/src/index.ts`](../packages/goal/goal-round-driver/src/index.ts))

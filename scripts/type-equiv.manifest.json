@@ -1989,6 +1989,31 @@
       "doc": "docs/subsystems/notification.md",
       "symbol": "NotificationChannel",
       "source": "packages/interaction/notification/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/email.md",
+      "symbol": "EmailMessage",
+      "source": "packages/email/email/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/email.md",
+      "symbol": "EmailDelivery",
+      "source": "packages/email/email/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/email.md",
+      "symbol": "EmailTransport",
+      "source": "packages/email/email/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/user-accounts.md",
+      "symbol": "AccountRole",
+      "source": "packages/account/user-accounts/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/user-accounts.md",
+      "symbol": "SessionIdentity",
+      "source": "packages/account/user-accounts/src/types.ts"
     }
   ]
 }

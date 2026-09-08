@@ -1148,6 +1148,32 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'email',
+    summary: 'The email service: a transport registry with fail-visible, non-throwing delivery.',
+    description: 'The email service: a transport registry with fail-visible, non-throwing delivery.',
+    methods: [
+      {
+        signature: 'register(transport: EmailTransport): () => void',
+        description: 'Register one SMTP transport. Duplicate ids are rejected at registration.',
+        parameters: [{ name: 'transport', description: 'the transport; its `id` is the registry key.' }],
+        returns: 'a disposer removing the registration, disposed with the calling fiber.',
+        throws: ['when `transport.id` is already registered.'],
+      },
+      {
+        signature: 'listTransports(): readonly string[]',
+        description: 'Enumerate the registered transport ids.',
+        parameters: [],
+        returns: 'the transport ids in registration order.',
+      },
+      {
+        signature: 'async send(request: EmailSendRequest): Promise<EmailDelivery>',
+        description: 'Deliver one message through the addressed transport. Unknown transport ids and throwing transports resolve to `{ delivered: false, reason }` — never reject — so the calling flow survives an absent or broken mail path.',
+        parameters: [{ name: 'request', description: 'the message plus the transport id that should deliver it.' }],
+        returns: 'the closed delivery outcome.',
+      },
+    ],
+  },
+  {
     key: 'fileReferences',
     summary: 'Host capability for cancellable file-reference discovery.',
     description: 'Host capability for cancellable file-reference discovery.',
@@ -2883,6 +2909,130 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'userAccounts',
+    summary: 'The account service, registered as `ctx.userAccounts`.',
+    description: 'The account service, registered as `ctx.userAccounts`.',
+    methods: [
+      {
+        signature: 'isEmpty(): boolean',
+        description: 'Whether the users table is empty, which drives first-boot owner creation.',
+        parameters: [],
+        returns: 'true when no account exists yet.',
+      },
+      {
+        signature: 'list(): UserAccountView[]',
+        description: 'List every account as a hash-free view, in creation order.',
+        parameters: [],
+        returns: 'the account views.',
+      },
+      {
+        signature: 'idByEmail(email: string): string | undefined',
+        description: 'Look up one account id by email (admin flows).',
+        parameters: [{ name: 'email', description: 'the email address (case-insensitive).' }],
+        returns: 'the account id, or undefined.',
+      },
+      {
+        signature: 'get(id: string): UserAccountView | undefined',
+        description: 'Look up one account view by id.',
+        parameters: [{ name: 'id', description: 'the account id.' }],
+        returns: 'the account view, or undefined.',
+      },
+      {
+        signature: 'async createOwner(email: string, password: string): Promise<UserAccountView>',
+        description: 'Create the first `owner` account (first-boot bootstrap; bypasses allowRegistration by design).',
+        parameters: [{ name: 'email', description: 'the owner\'s email (case-insensitive).' }, { name: 'password', description: 'the plaintext password; stored as argon2id.' }],
+        returns: 'the created account view.',
+      },
+      {
+        signature: 'async login(email: string, password: string): Promise< { kind: \'ok\'; cookie: string; identity: SessionIdentity } | { kind: \'locked\'; retryAfterMinutes: number } | { kind: \'bad-credentials\' } | { kind: \'disabled\' } >',
+        description: 'Verify login credentials and rate limits.',
+        parameters: [{ name: 'email', description: 'the email address.' }, { name: 'password', description: 'the plaintext password attempt.' }],
+        returns: 'the session identity and cookie token, or a closed failure kind.',
+      },
+      {
+        signature: 'resolveSession(cookie: string): SessionIdentity | undefined',
+        description: 'Validate a session cookie value.',
+        parameters: [{ name: 'cookie', description: 'the raw cookie token.' }],
+        returns: 'the session identity, or undefined when invalid/expired.',
+      },
+      {
+        signature: 'logout(cookie: string): void',
+        description: 'Invalidate one session (logout).',
+        parameters: [{ name: 'cookie', description: 'the raw cookie token.' }],
+      },
+      {
+        signature: 'invalidateAllFor(accountId: string): void',
+        description: 'Invalidate every session belonging to one account.',
+        parameters: [{ name: 'accountId', description: 'the account whose sessions die.' }],
+      },
+      {
+        signature: 'async issueVerificationCode(email: string, send: (to: string, code: string) => Promise<string | undefined>): Promise<void>',
+        description: 'Issue a verification code for one email and hand it to the send callback. Uniform regardless of registration state (anti-enumeration).',
+        parameters: [{ name: 'email', description: 'the target email.' }, { name: 'send', description: 'the delivery callback; returns the failure reason when undeliverable.' }],
+      },
+      {
+        signature: 'verifyCode(email: string, code: string): boolean',
+        description: 'Consume a verification code for one email.',
+        parameters: [{ name: 'email', description: 'the email the code was issued for.' }, { name: 'code', description: 'the candidate code.' }],
+        returns: 'true when the code matches and is unexpired.',
+      },
+      {
+        signature: 'async completeRegistration(email: string, password: string): Promise<UserAccountView | \'duplicate\'>',
+        description: 'Create the account after code verification (registration step two).',
+        parameters: [{ name: 'email', description: 'the verified email.' }, { name: 'password', description: 'the chosen password.' }],
+        returns: 'the account view, or `duplicate` when the email is taken.',
+      },
+      {
+        signature: 'issueResetToken(email: string): string | undefined',
+        description: 'Issue a password reset token for one email; returns undefined for unknown emails so callers keep the uniform response (anti-enumeration).',
+        parameters: [{ name: 'email', description: 'the email to reset.' }],
+        returns: 'the reset token when the account exists.',
+      },
+      {
+        signature: 'async completeReset(token: string, newPassword: string): Promise<boolean>',
+        description: 'Consume a reset token and set a new password; invalidates all sessions of the account.',
+        parameters: [{ name: 'token', description: 'the reset token.' }, { name: 'newPassword', description: 'the replacement password.' }],
+        returns: 'true when the token was valid and the password updated.',
+      },
+      {
+        signature: 'async adminSetPassword(accountId: string, newPassword: string): Promise<boolean>',
+        description: 'Change one account\'s password (admin reset) and kill its sessions.',
+        parameters: [{ name: 'accountId', description: 'the target account id.' }, { name: 'newPassword', description: 'the replacement password.' }],
+        returns: 'true when the account exists.',
+      },
+      {
+        signature: 'setDisabled(accountId: string, disabled: boolean): boolean',
+        description: 'Set the disabled flag; disabling kills all sessions of the account.',
+        parameters: [{ name: 'accountId', description: 'the target account id.' }, { name: 'disabled', description: 'the new flag.' }],
+        returns: 'true when the account exists.',
+      },
+      {
+        signature: 'setRole(accountId: string, role: AccountRole): boolean',
+        description: 'Set an account\'s role.',
+        parameters: [{ name: 'accountId', description: 'the target account id.' }, { name: 'role', description: 'the new role.' }],
+        returns: 'true when the account exists.',
+      },
+      {
+        signature: 'delete(accountId: string): boolean',
+        description: 'Delete one account entirely.',
+        parameters: [{ name: 'accountId', description: 'the target account id.' }],
+        returns: 'true when the account existed.',
+      },
+      {
+        signature: 'ownerCount(): number',
+        description: 'Count the live `owner` accounts.',
+        parameters: [],
+        returns: 'the owner count.',
+      },
+      {
+        signature: 'hasOtherAccounts(accountId: string): boolean',
+        description: 'Whether any account besides the target exists (last-owner protection).',
+        parameters: [{ name: 'accountId', description: 'the account excluded from the check.' }],
+        returns: 'true when another account exists.',
+      },
+    ],
+  },
+  {
     key: 'userQuestions',
     summary: '`ctx.userQuestions`: one active UI provider plus an `ask()` API.',
     description: '`ctx.userQuestions`: one active UI provider plus an `ask()` API.',
@@ -2949,6 +3099,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Register an exact-path HTTP upgrade route. Duplicate paths throw because one socket can have only one protocol owner.',
         parameters: [{ name: 'route', description: 'pathname and handler owning negotiation plus socket use.' }],
         returns: 'the disposer removing the route.',
+      },
+      {
+        signature: 'registerGate(handler: (req: IncomingMessage, res: ServerResponse) => Promise<boolean> | boolean): () => void',
+        description: 'Register the request gate: a single seat consulted before route dispatch. When installed, every request first runs through the gate handler; a `false` verdict stops dispatch (the handler owns the response), `true` continues into routes. One seat — the account layer owns access control for the whole surface, so composition cannot accidentally leave a hole.',
+        parameters: [{ name: 'handler', description: 'the gate verdict.' }],
+        returns: 'the disposer removing the gate.',
       },
       {
         signature: 'registerFallback(handler: WebRoute[\'handler\']): () => void',
@@ -3608,6 +3764,10 @@ export const EVENT_API: readonly EventApiEntry[] = [
 
 /** Shapes of every exported type the Service and Event signatures reference (transitively), sorted by name. */
 export const TYPE_API: readonly TypeApiEntry[] = [
+  {
+    name: 'AccountRole',
+    declaration: 'export type AccountRole = \'owner\' | \'admin\' | \'user\';',
+  },
   {
     name: 'AdapterRegistrationHandle',
     declaration: 'export interface AdapterRegistrationHandle {\n    (): void;\n    replace(providers: string[]): void;\n}',
@@ -4371,6 +4531,22 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'EditGoalRequest',
     declaration: 'export interface EditGoalRequest {\n    readonly objective?: string;\n    readonly maxGoalRounds?: number;\n}',
+  },
+  {
+    name: 'EmailDelivery',
+    declaration: 'export type EmailDelivery = {\n    readonly delivered: true;\n} | {\n    readonly delivered: false;\n    readonly reason: string;\n};',
+  },
+  {
+    name: 'EmailMessage',
+    declaration: 'export interface EmailMessage {\n    readonly to: string;\n    readonly subject: string;\n    readonly text: string;\n}',
+  },
+  {
+    name: 'EmailSendRequest',
+    declaration: 'export interface EmailSendRequest extends EmailMessage {\n    readonly transport: string;\n}',
+  },
+  {
+    name: 'EmailTransport',
+    declaration: 'export interface EmailTransport {\n    readonly id: string;\n    send(message: EmailMessage): Promise<EmailDelivery>;\n}',
   },
   {
     name: 'EncodedImageAttachment',
@@ -5445,6 +5621,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type SessionId = Branded<\'SessionId\'>;',
   },
   {
+    name: 'SessionIdentity',
+    declaration: 'export interface SessionIdentity {\n    readonly accountId: string;\n    readonly role: AccountRole;\n}',
+  },
+  {
     name: 'SessionInspection',
     declaration: 'export interface SessionInspection {\n    readonly meta: SessionHeader;\n    readonly events: readonly SessionEvent[];\n}',
   },
@@ -6351,6 +6531,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'UpdateTeamTaskRequest',
     declaration: 'export interface UpdateTeamTaskRequest {\n    readonly taskId: TeamTaskId;\n    readonly expectedRevision: number;\n    readonly action: TeamTaskAction;\n    readonly subject?: string;\n    readonly description?: string;\n    readonly blockedBy?: readonly TeamTaskId[];\n    readonly writeScopes?: readonly string[];\n    readonly owner?: string;\n}',
+  },
+  {
+    name: 'UserAccountView',
+    declaration: 'export interface UserAccountView {\n    readonly id: string;\n    readonly email: string;\n    readonly role: AccountRole;\n    readonly disabled: boolean;\n    readonly ownerId: string;\n    readonly createdAt: string;\n}',
   },
   {
     name: 'UserMessage',

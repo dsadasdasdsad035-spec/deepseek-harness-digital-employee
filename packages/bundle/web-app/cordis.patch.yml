@@ -70,6 +70,23 @@
     - id: session-log-download
       name: '@deepseek-ai/dsh-session-log-export'
 
+    - id: user-accounts
+      name: '@deepseek-ai/dsh-user-accounts'
+      config:
+        allowRegistration: true
+
+    - id: user-accounts-gate
+      name: '@deepseek-ai/dsh-user-accounts/gate'
+
+    - id: email
+      name: '@deepseek-ai/dsh-email'
+
+    - id: email-qq-smtp
+      name: '@deepseek-ai/dsh-email/qq-smtp'
+      config:
+        userRef: SMTP_USER
+        passRef: SMTP_PASS
+
     - id: workspace
       name: '@deepseek-ai/dsh-workspace'
 

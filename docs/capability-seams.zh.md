@@ -123,6 +123,12 @@ flowchart LR
   pkg_workflow_market["workflow-market"]
   svc_workflowMarket["ctx.workflowMarket<br/>Managed workflow marketplace gateway"]
   pkg_workflow["workflow"]
+  pkg_email["email"]
+  svc_email["ctx.email<br/>Transport-registry email seam"]
+  pkg_user_accounts["user-accounts"]
+  svc_userAccounts["ctx.userAccounts<br/>Web surface account system"]
+  pkg_webserver["webserver"]
+  pkg_host_webserver["host-webserver"]
   pkg_notification["notification"]
   svc_notifications["ctx.notifications<br/>Channel-registry notification seam"]
   pkg_headless["headless"]
@@ -212,7 +218,6 @@ flowchart LR
   svc_directoryPicker["ctx.directoryPicker<br/>Workspace-directory picking seam"]
   pkg_directory_picker_native["directory-picker-native"]
   pkg_directory_picker_browse["directory-picker-browse"]
-  pkg_webserver["webserver"]
   svc_webServer["ctx.webServer<br/>HTTP route registration"]
   pkg_connection["connection"]
   pkg_modules["modules"]
@@ -261,6 +266,7 @@ flowchart LR
   pkg_directory_picker_browse --> svc_directoryPicker
   pkg_directory_picker_native --> svc_directoryPicker
   pkg_e2b --> svc_e2b
+  pkg_email --> svc_email
   pkg_file_reference --> svc_fileReferences
   pkg_file_reference_local --> svc_fileReferences
   pkg_fs --> svc_fs
@@ -335,6 +341,7 @@ flowchart LR
   pkg_tool_market --> svc_toolMarket
   pkg_tools --> svc_tools
   pkg_typert_registry --> svc_typert
+  pkg_user_accounts --> svc_userAccounts
   pkg_user_questions --> svc_userQuestions
   pkg_web --> svc_web
   pkg_web_fetch_http --> svc_web
@@ -374,6 +381,7 @@ flowchart LR
   svc_dynamicCordisRunner --> pkg_tool_cordis
   svc_e2b --> pkg_fs_e2b
   svc_e2b --> pkg_subprocess_e2b
+  svc_email --> pkg_user_accounts
   svc_fs --> pkg_tool_fs
   svc_hookMarket --> pkg_digital_employee_management
   svc_hookMarket --> pkg_ui_skill_market
@@ -467,6 +475,8 @@ flowchart LR
   svc_tools --> pkg_tool_web
   svc_typert --> pkg_api_gateway
   svc_typert --> pkg_typert_loader
+  svc_userAccounts --> pkg_host_webserver
+  svc_userAccounts --> pkg_webserver
   svc_userQuestions --> pkg_tool_ask_user
   svc_web --> pkg_tool_web
   svc_webServer --> pkg_connection
@@ -523,6 +533,8 @@ flowchart LR
 | `ctx.mcpMarket` | `core` | [`mcp-market`](../packages/mcp/mcp-market) | - | `ui-skill-market`, `digital-employee-management` | [`mcp-client`](../packages/mcp/mcp-client) | Owns declarative package lifecycle and credential-reference configuration; a fresh Host composition resolves references and mounts configured servers through the MCP client manager. |
 | `ctx.subagentMarket` | `core` | [`subagent-market`](../packages/subagent/subagent-market) | - | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | [`subagent`](../packages/subagent/subagent) | Owns subagent package lifecycle and credential-reference configuration; employee compositions resolve subagent references and mount persona providers through the shared subagent seam. |
 | `ctx.workflowMarket` | `core` | [`workflow-market`](../packages/workflow/workflow-market) | - | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | [`workflow`](../packages/workflow/workflow) | Owns workflow package lifecycle and credential-reference configuration; employee compositions resolve workflow references and mount scripted workflow tools through the shared workflow seam. |
+| `ctx.email` | `seam` | [`email`](../packages/email/email) | - | [`user-accounts`](../packages/account/user-accounts) | - | Providers register plain-text SMTP transports under stable ids (QQ SMTP ships as a subpath plugin); send resolves to a closed delivery outcome and never rejects, so verification codes and reset links fail visibly without crashing the flow. |
+| `ctx.userAccounts` | `seam` | [`user-accounts`](../packages/account/user-accounts) | - | `webserver`, [`host-webserver`](../packages/host/webserver) | - | SQLite user store with argon2id hashing, email verification codes, single-use reset tokens, and signed session cookies; the web auth gate redirects unauthenticated traffic to the login page. |
 | `ctx.notifications` | `seam` | [`notification`](../packages/interaction/notification) | - | [`headless`](../packages/bundle/headless) | - | Providers register delivery channels under stable ids (generic-webhook, wechat-work-bot, feishu-bot ship as subpath plugins of the seam package); send resolves to a closed delivery outcome and never rejects, so a failing alert path cannot crash the calling task flow. |
 | `ctx.hookMarket` | `core` | [`hooks-market`](../packages/hooks/hooks-market) | - | `ui-skill-market`, `digital-employee-management` | [`hook-protocol`](../packages/hooks/hook-protocol) | Owns hook package lifecycle and credential-reference configuration; employee compositions resolve hook references and mount passive interception plus invocable `hook__<id>` tools through the shared hook protocol. |
 | `ctx.digitalEmployees` | `seam` | [`digital-employee`](../packages/core/digital-employee) | [`digital-employee-file`](../packages/core/digital-employee-file) | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | - | Owns template and instance lookup, lifecycle mutation, memory, audit, and durable employee records; composition and Host task admission consume the resolved employee state. |

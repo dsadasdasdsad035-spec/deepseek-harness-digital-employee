@@ -161,6 +161,9 @@ const packageFileExtras: Readonly<Record<string, readonly string[]>> = {
   // The employee task driver ships as its own bundle beside the one-shot
   // runner: the Loader imports it as a row module for the employee profile.
   '@deepseek-ai/dsh-headless': ['lib/employee-runner.js'],
+  // The account gate ships as its own bundle beside the service entry: the
+  // web composition loads it as a row module for the auth gate seat.
+  '@deepseek-ai/dsh-user-accounts': ['lib/gate.js'],
   // SQLite loads every statement from immutable package resources at runtime.
   '@deepseek-ai/dsh-session-persistence-sqlite': ['resources/sql/**/*.sql'],
   '@deepseek-ai/dsh-skill-badge': ['assets'],
