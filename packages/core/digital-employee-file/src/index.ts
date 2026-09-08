@@ -42,6 +42,11 @@ import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 /** Current on-disk digital employee document version. */
 export const SCHEMA_VERSION = 1
 
+// The autonomous-task attempt ledger shares this package's home: it lives in
+// the same user-data directory, uses the same lock and atomic-write machinery,
+// and is the one home of the task-attempts.json format.
+export * from './task-attempts.ts'
+
 /** File provider plugin configuration. */
 export interface Config {
   /** Explicit document path; defaults under the Harness home. */

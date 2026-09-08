@@ -37,7 +37,7 @@ describe('employee package format', () => {
     const { privateKey, publicKey } = generateKeyPairSync('ed25519')
     const built = await signMarketplacePackage({
       kind: 'employee',
-      descriptor: DESCRIPTOR as never,
+      descriptor: DESCRIPTOR,
       files: {
         'AGENTS.md': new TextEncoder().encode('You are a test employee.\n'),
         'experts/reviewer.md': new TextEncoder().encode('Review material.\n'),
@@ -52,7 +52,7 @@ describe('employee package format', () => {
     const reparsed = parseEmployeePackageDescriptor(raw)
     const publicKeyPem = publicKey.export({ type: 'spki', format: 'pem' }).toString()
     expect(verifyPublisherSignature(descriptorSignaturePayload(reparsed), raw.publisher.signature, publicKeyPem)).toBe(true)
-    expect(() => verifyPackageFileHashes(prepared, reparsed.files)).not.toThrow()
+    expect(() =>{  verifyPackageFileHashes(prepared, reparsed.files) }).not.toThrow()
   })
 
   it('reports missing references when imported against an empty asset catalog', () => {

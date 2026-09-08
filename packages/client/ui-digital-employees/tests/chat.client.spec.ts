@@ -156,7 +156,7 @@ function setup(options: {
     sessions: sessions as never,
     workspaces: workspaces as never,
     conversation: conversation as never,
-    layout: layout as never,
+    layout: layout,
     ids: {
       session: sessionId,
       submission: submissionId,
@@ -195,12 +195,12 @@ describe('DigitalEmployeeChatController source', () => {
     expect(leading).toEqual([
       expect.objectContaining({
         name: 'Release Engineer',
-        description: expect.stringContaining('Available'),
+        description: expect.stringContaining('Available') as string,
         value: EMPLOYEE_ID,
       }),
       expect.objectContaining({
         name: 'Release Engineer',
-        description: expect.stringContaining('Unavailable'),
+        description: expect.stringContaining('Unavailable') as string,
         value: 'employee-2',
       }),
     ])

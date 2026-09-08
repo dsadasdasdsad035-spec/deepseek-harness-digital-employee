@@ -192,7 +192,6 @@ export class DigitalEmployeeChatController {
     }
     this.pendingOpens.set(sessionId, cancel)
     const unsubscribe = this.deps.sessions.list.subscribe(reconcile)
-    if (settled) unsubscribe()
     reconcile()
   }
 

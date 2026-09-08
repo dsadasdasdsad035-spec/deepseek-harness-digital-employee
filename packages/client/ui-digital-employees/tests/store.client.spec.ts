@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type {
-  DigitalEmployeeInstance, DigitalEmployeeTemplate,
+  DigitalEmployeeInstance, DigitalEmployeeTaskEntry, DigitalEmployeeTemplate,
 } from '@deepseek-ai/dsh-api-remotes/client'
 import { DigitalEmployeeStore } from '../src/client/store.ts'
 
@@ -75,6 +75,9 @@ function remote() {
     deactivate: vi.fn(() => ok({ ...employee, state: 'inactive' })),
     delete: vi.fn(() => ok(undefined)),
     deleteMemory: vi.fn(() => ok(undefined)),
+    listEmployeeTasks: vi.fn(() => ok<DigitalEmployeeTaskEntry[]>([])),
+    resumeEmployeeTask: vi.fn(() => ok(undefined)),
+    discardEmployeeTask: vi.fn(() => ok(undefined)),
   }
 }
 
@@ -99,17 +102,17 @@ describe('DigitalEmployeeStore', () => {
 
     expect(controller.chatEmployees()).toEqual([
       expect.objectContaining({
-        employee: expect.objectContaining({ id: 'employee-1' }),
+        employee: expect.objectContaining({ id: 'employee-1' }) as unknown,
         templateName: 'Release specialist',
         available: true,
       }),
       expect.objectContaining({
-        employee: expect.objectContaining({ id: 'employee-2' }),
+        employee: expect.objectContaining({ id: 'employee-2' }) as unknown,
         available: false,
         unavailableReason: 'Employee is inactive.',
       }),
       expect.objectContaining({
-        employee: expect.objectContaining({ id: 'employee-3' }),
+        employee: expect.objectContaining({ id: 'employee-3' }) as unknown,
         available: false,
         unavailableReason: 'Template template-1@2.0.0 is unavailable.',
       }),
@@ -144,7 +147,7 @@ describe('DigitalEmployeeStore', () => {
 
     expect(controller.chatEmployees()).toEqual([
       expect.objectContaining({
-        employee: expect.objectContaining({ id: 'employee-current' }),
+        employee: expect.objectContaining({ id: 'employee-current' }) as unknown,
         templateName: 'Current template',
         available: true,
       }),
@@ -215,5 +218,71 @@ describe('DigitalEmployeeStore', () => {
       selectedId: null,
       confirmation: null,
     })
+  })
+})
+
+describe('DigitalEmployeeStore task console', () => {
+  function taskEntry(overrides: Partial<DigitalEmployeeTaskEntry> = {}): DigitalEmployeeTaskEntry {
+    return {
+      key: 'daily-digest',
+      displayName: 'Daily digest',
+      consecutiveFailures: 3,
+      suspended: true,
+      lastReason: 'blocked: no deploy tool',
+      employeeId: 'employee-1',
+      ...overrides,
+    }
+  }
+
+  it('loads only the selected employee ledger rows into the tasks view', async () => {
+    const api = remote()
+    api.listEmployeeTasks = vi.fn(() => ok([
+      taskEntry(),
+      taskEntry({ key: 'other-key', displayName: 'Other', employeeId: 'employee-2', suspended: false, consecutiveFailures: 1 }),
+    ]))
+    const controller = new DigitalEmployeeStore(api as never)
+    await controller.load()
+    expect(controller.store.getSnapshot().taskAttempts).toEqual([taskEntry()])
+    expect(api.listEmployeeTasks).toHaveBeenCalled()
+  })
+
+  it('resumes a suspended task and refreshes the ledger rows', async () => {
+    const api = remote()
+    api.listEmployeeTasks = vi.fn()
+      .mockResolvedValueOnce(ok([taskEntry()]))
+      .mockResolvedValueOnce(ok([taskEntry({ suspended: false })]))
+    const controller = new DigitalEmployeeStore(api as never)
+    await controller.load()
+    await controller.resumeTask('daily-digest')
+    expect(api.resumeEmployeeTask).toHaveBeenCalledWith({ key: 'daily-digest' })
+    expect(controller.store.getSnapshot().taskAttempts[0]?.suspended).toBe(false)
+  })
+
+  it('surfaces resume failures as the store error', async () => {
+    const api = remote()
+    api.resumeEmployeeTask = vi.fn(() => Promise.resolve({
+      ok: false as const,
+      error: { message: 'task console: task key "daily-digest" is not suspended' },
+    }) as never)
+    const controller = new DigitalEmployeeStore(api as never)
+    await controller.load()
+    await controller.resumeTask('daily-digest')
+    expect(controller.store.getSnapshot().error).toContain('is not suspended')
+  })
+
+  it('keeps discarding behind confirmation and clears the ledger row', async () => {
+    const api = remote()
+    api.listEmployeeTasks = vi.fn()
+      .mockResolvedValueOnce(ok([taskEntry()]))
+      .mockResolvedValueOnce(ok([]))
+    const controller = new DigitalEmployeeStore(api as never)
+    await controller.load()
+    controller.requestDiscardTask('daily-digest', 'Daily digest')
+    expect(controller.store.getSnapshot().confirmation).toEqual({
+      kind: 'discard-task', key: 'daily-digest', displayName: 'Daily digest',
+    })
+    await controller.confirm()
+    expect(api.discardEmployeeTask).toHaveBeenCalledWith({ key: 'daily-digest' })
+    expect(controller.store.getSnapshot().taskAttempts).toEqual([])
   })
 })

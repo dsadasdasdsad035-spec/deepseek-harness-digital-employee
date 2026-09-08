@@ -908,6 +908,48 @@ Remote-only facade over the owning digital employee services.
  */
 @Remote('listTemplates') async listTemplates(): Promise<readonly DigitalEmployeeTemplate[]>
 
+/**
+ * List the autonomous task ledger entries for the task console. Display
+ * names fall back to the task key for records written before the display
+ * fields existed; counting fields are strict (an invalid ledger fails the
+ * call rather than silently resetting suspension state).
+ * @returns one entry per ledger record, ledger insertion order.
+ */
+@Remote('listEmployeeTasks') listEmployeeTasks(): Promise<readonly DigitalEmployeeTaskEntry[]>
+
+/**
+ * Resume one suspended task: clear the suspension flag and keep the failure
+ * count, so the next failure re-accumulates toward the ceiling. Resuming
+ * never starts a run — deployment-side scheduling pulls the next attempt.
+ * @param request - the task key to resume.
+ * @throws when the key is unknown or not suspended.
+ */
+@Remote('resumeEmployeeTask') async resumeEmployeeTask(request: DigitalEmployeeTaskKeyRequest): Promise<void>
+
+/**
+ * Discard one task's ledger record, so the same key starts from zero.
+ * @param request - the task key to discard.
+ * @throws when the key is unknown.
+ */
+@Remote('discardEmployeeTask') async discardEmployeeTask(request: DigitalEmployeeTaskKeyRequest): Promise<void>
+
+/**
+ * Describe the registered notification channels with their credential
+ * configuration facts (never values). An absent notification capability
+ * lists nothing, which is the surface's hide-the-row signal.
+ * @returns one status per registered channel.
+ */
+@Remote('describeNotificationChannels') async describeNotificationChannels(): Promise<readonly NotificationChannelStatus[]>
+
+/**
+ * Send one clearly-labeled test message through a channel via the
+ * production send contract. The notification capability being absent fails with a distinct
+ * message.
+ * @param request - the channel id to test.
+ * @returns the closed delivery outcome.
+ */
+@Remote('testNotificationChannel') async testNotificationChannel(request: NotificationChannelTestRequest): Promise<NotificationChannelTestResult>
+
 /** List durable employee instances.
  * @returns durable employee instances.
  */
@@ -1016,6 +1058,21 @@ Remote-only facade over the owning digital employee services.
  * @returns fresh inactive employee.
  */
 @Remote('importEmployee') importEmployee(artifact: DigitalEmployeeExportArtifact): Promise<DigitalEmployeeInstance>
+
+/**
+ * Export a published local template as a signed employee package zip.
+ * @param request - Template identity and version to export.
+ * @returns Base64-encoded signed zip.
+ */
+@Remote('exportTemplate') async exportTemplate(request: { templateId: string; version: string }): Promise<{ archiveBase64: string }>
+
+/**
+ * Import a signed employee package zip: verify the descriptor, re-register
+ * the template, and report market packages missing from this Host.
+ * @param request - Base64 zip of the employee package.
+ * @returns Registered template id plus grouped missing-reference diagnostics.
+ */
+@Remote('importTemplate') async importTemplate(request: { archiveBase64: string }): Promise<{ templateId: string version: string missing: { kind: string; id: string }[] }>
 ```
 
 Types: [MessageId](llm-streaming.zh.md)

@@ -165,6 +165,7 @@ describe('DigitalEmployeeManagementGateway startChat', () => {
         model: 'deepseek-v4-pro',
         reasoningEffort: 'high',
       },
+      // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
       initialMessage: expect.objectContaining({
         role: 'user',
         source: { kind: 'user' },
@@ -282,6 +283,7 @@ describe('DigitalEmployeeManagementGateway startChat', () => {
     }), new AbortController().signal)).rejects.toBe(admissionError)
 
     expect(setup.createTask).toHaveBeenCalledWith(
+      // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
       expect.objectContaining({ initialMessage: expect.any(Object) }),
       setup.resolvedEmployee,
     )
@@ -307,7 +309,7 @@ describe('DigitalEmployeeManagementGateway startChat', () => {
     const controller = new AbortController()
     const createTask = vi.fn(() => {
       controller.abort(new Error('caller aborted'))
-      return Promise.reject(controller.signal.reason)
+      return Promise.reject(controller.signal.reason as Error)
     })
     const setup = harness({ createTask })
     const gateway = await gatewayFor(setup)

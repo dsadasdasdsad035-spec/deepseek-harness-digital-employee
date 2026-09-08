@@ -9,6 +9,7 @@ import type {
   DigitalEmployeeInstanceId,
   DigitalEmployeeMemoryId,
   DigitalEmployeeMemoryRecord,
+  DigitalEmployeeTaskEntry,
   DigitalEmployeeTaskTreeEntry,
   DigitalEmployeeTemplate,
   DigitalEmployeeUpgradePreview,
@@ -32,6 +33,7 @@ export interface DigitalEmployeeChatRow {
 /** Pending destructive or permission-expanding confirmation. */
 export type DigitalEmployeeConfirmation =
   | { readonly kind: 'delete'; readonly employeeId: DigitalEmployeeInstanceId }
+  | { readonly kind: 'discard-task'; readonly key: string; readonly displayName: string }
   | {
     readonly kind: 'upgrade'
     readonly preview: DigitalEmployeeUpgradePreview
@@ -49,6 +51,7 @@ export interface DigitalEmployeeState {
   memories: readonly DigitalEmployeeMemoryRecord[]
   experts: readonly DigitalEmployeeExpert[]
   taskTree: readonly DigitalEmployeeTaskTreeEntry[]
+  taskAttempts: readonly DigitalEmployeeTaskEntry[]
   audit: readonly DigitalEmployeeAuditRecord[]
   view: DigitalEmployeeView
   busy: string | null
@@ -66,6 +69,7 @@ const INITIAL: DigitalEmployeeState = {
   memories: [],
   experts: [],
   taskTree: [],
+  taskAttempts: [],
   audit: [],
   view: 'overview',
   busy: null,
@@ -249,6 +253,32 @@ export class DigitalEmployeeStore {
     await this.withSelected('delete-memory', id => this.remote.deleteMemory({ employeeId: id, memoryId }))
   }
 
+  /** Refresh the autonomous task ledger rows for the selected employee. */
+  async refreshTaskAttempts(): Promise<void> {
+    await this.perform('refresh-tasks', async () => {
+      const tasks = await this.remote.listEmployeeTasks()
+      if (!tasks.ok) throw new Error(failure(tasks.error))
+      const employeeId = this.store.getSnapshot().selectedId
+      this.publish((state) => {
+        state.taskAttempts = tasks.value.filter(entry => entry.employeeId === employeeId)
+      })
+    })
+  }
+
+  /** Resume one suspended autonomous task; scheduling stays deployment-side.
+   * @param key - the ledger task key to resume.
+   */
+  async resumeTask(key: string): Promise<void> {
+    await this.mutate('resume-task', () => this.remote.resumeEmployeeTask({ key }))
+  }
+
+  /** Discard one autonomous task's ledger record; the same key restarts from zero.
+   * @param key - the ledger task key to discard.
+   */
+  async discardTask(key: string): Promise<void> {
+    await this.mutate('discard-task', () => this.remote.discardEmployeeTask({ key }))
+  }
+
   /** Interrupt one expert child.
    * @param parentSessionId - live direct parent Session.
    * @param childSessionId - expert child Session.
@@ -270,6 +300,16 @@ export class DigitalEmployeeStore {
     }), false)
   }
 
+  /** Open discard confirmation for one autonomous task.
+   * @param key - the ledger task key.
+   * @param displayName - display name shown in the dialog.
+   */
+  requestDiscardTask(key: string, displayName: string): void {
+    this.publish((state) => {
+      state.confirmation = { kind: 'discard-task', key, displayName }
+    })
+  }
+
   /** Open destructive deletion confirmation for the selected employee. */
   requestDelete(): void {
     const employeeId = this.store.getSnapshot().selectedId
@@ -289,6 +329,10 @@ export class DigitalEmployeeStore {
     if (pending === null) return
     if (pending.kind === 'delete') {
       await this.mutate('delete', () => this.remote.delete({ employeeId: pending.employeeId }))
+      return
+    }
+    if (pending.kind === 'discard-task') {
+      await this.mutate('discard-task', () => this.remote.discardEmployeeTask({ key: pending.key }))
       return
     }
     await this.mutate('upgrade', () => this.remote.applyUpgrade({
@@ -360,9 +404,11 @@ export class DigitalEmployeeStore {
   async exportTemplate(templateId: string, version: string): Promise<string | undefined> {
     try {
       const result = await (this.remote as unknown as {
-        exportTemplate: (r: { templateId: string; version: string }) => Promise<{ ok: boolean; value?: { archiveBase64: string }; error?: { code?: string } }>
+        exportTemplate: (
+          r: { templateId: string; version: string },
+        ) => Promise<{ ok: boolean; value?: { archiveBase64: string }; error?: { code?: string } }>
       }).exportTemplate({ templateId, version })
-      return result.ok === true ? result.value?.archiveBase64 : undefined
+      return  result.ok ? result.value?.archiveBase64 : undefined
     } catch {
       return undefined
     }
@@ -376,9 +422,11 @@ export class DigitalEmployeeStore {
   async importTemplate(archiveBase64: string): Promise<readonly { kind: string; id: string }[] | undefined> {
     try {
       const result = await (this.remote as unknown as {
-        importTemplate: (r: { archiveBase64: string }) => Promise<{ ok: boolean; value?: { templateId: string; missing: { kind: string; id: string }[] }; error?: { code?: string } }>
+        importTemplate: (
+          r: { archiveBase64: string },
+        ) => Promise<{ ok: boolean; value?: { templateId: string; missing: { kind: string; id: string }[] }; error?: { code?: string } }>
       }).importTemplate({ archiveBase64 })
-      return result.ok === true ? result.value?.missing : undefined
+      return  result.ok ? result.value?.missing : undefined
     } catch {
       return undefined
     }
@@ -407,11 +455,15 @@ export class DigitalEmployeeStore {
       const taskTree = await this.remote.taskTree({ rootSessionId })
       if (!this.current(generation)) return
       if (!taskTree.ok) throw new Error(failure(taskTree.error))
+      const tasks = await this.remote.listEmployeeTasks()
+      if (!this.current(generation)) return
+      if (!tasks.ok) throw new Error(failure(tasks.error))
       this.publish((state) => {
         state.detail = detail.value
         state.memories = memories.value
         state.experts = experts.value
         state.taskTree = taskTree.value
+        state.taskAttempts = tasks.value.filter(entry => entry.employeeId === employeeId)
         state.audit = audit.value
       })
     } catch (error) {
@@ -482,6 +534,7 @@ export class DigitalEmployeeStore {
     state.memories = []
     state.experts = []
     state.taskTree = []
+    state.taskAttempts = []
     state.audit = []
   }
 }

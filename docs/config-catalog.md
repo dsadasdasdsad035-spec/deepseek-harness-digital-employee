@@ -595,7 +595,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/core/digital-employee-file/src/index.ts:46`](../packages/core/digital-employee-file/src/index.ts)
+Source: [`packages/core/digital-employee-file/src/index.ts:51`](../packages/core/digital-employee-file/src/index.ts)
 
 <a id="deepseek-aidsh-e2b"></a>
 
@@ -746,7 +746,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/bundle/headless/src/index.ts:31`](../packages/bundle/headless/src/index.ts)
+Source: [`packages/bundle/headless/src/index.ts:32`](../packages/bundle/headless/src/index.ts)
 
 <a id="deepseek-aidsh-hooks-claude-code"></a>
 
@@ -896,7 +896,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/host/digital-employee-management/src/index.ts:73`](../packages/host/digital-employee-management/src/index.ts)
+Source: [`packages/host/digital-employee-management/src/index.ts:97`](../packages/host/digital-employee-management/src/index.ts)
 
 <a id="deepseek-aidsh-host-directory-picker-browse"></a>
 
@@ -3430,6 +3430,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@deepseek-ai/dsh-api-gateway` — requires `typert` ([`packages/api/gateway/src/index.ts`](../packages/api/gateway/src/index.ts))
 - `@deepseek-ai/dsh-api-remotes` ([`packages/api/remotes/src/index.ts`](../packages/api/remotes/src/index.ts))
 - `@deepseek-ai/dsh-authorization` — requires `credentials` ([`packages/credentials/authorization/src/index.ts`](../packages/credentials/authorization/src/index.ts))
+- `@deepseek-ai/dsh-builder-employee-template` — requires `digitalEmployees` · `tools` · `digitalEmployeeManagement` ([`packages/examples/builder-employee-template/src/index.ts`](../packages/examples/builder-employee-template/src/index.ts))
 - `@deepseek-ai/dsh-client-locale` ([`packages/client/locale/src/index.ts`](../packages/client/locale/src/index.ts))
 - `@deepseek-ai/dsh-client-modules` — requires `webServer` · `loader` ([`packages/client/modules/src/index.ts`](../packages/client/modules/src/index.ts))
 - `@deepseek-ai/dsh-client-runtime` ([`packages/client/runtime/src/index.ts`](../packages/client/runtime/src/index.ts))
@@ -3484,6 +3485,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@deepseek-ai/dsh-host-plugin-inventory` — requires `loader` ([`packages/host/plugin-inventory/src/index.ts`](../packages/host/plugin-inventory/src/index.ts))
 - `@deepseek-ai/dsh-llm` ([`packages/llm/llm/src/index.ts`](../packages/llm/llm/src/index.ts))
 - `@deepseek-ai/dsh-lsp` ([`packages/lsp/lsp/src/index.ts`](../packages/lsp/lsp/src/index.ts))
+- `@deepseek-ai/dsh-notification` ([`packages/interaction/notification/src/index.ts`](../packages/interaction/notification/src/index.ts))
 - `@deepseek-ai/dsh-project-manager-test-digital-employee` — requires `digitalEmployees` ([`packages/examples/project-manager-test-digital-employee/src/index.ts`](../packages/examples/project-manager-test-digital-employee/src/index.ts))
 - `@deepseek-ai/dsh-schedule` — requires `agents` · `sessions` · `tools` · `sessionPersistence` ([`packages/schedule/schedule/src/index.ts`](../packages/schedule/schedule/src/index.ts))
 - `@deepseek-ai/dsh-session` ([`packages/core/session/src/index.ts`](../packages/core/session/src/index.ts))
@@ -3542,6 +3544,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-cmdline` ([`packages/boot/cmdline/src/index.ts`](../packages/boot/cmdline/src/index.ts))
 - `@deepseek-ai/dsh-code-runtime-python` ([`packages/code-runtime/code-runtime-python/src/index.ts`](../packages/code-runtime/code-runtime-python/src/index.ts))
 - `@deepseek-ai/dsh-digital-employee-suite` ([`packages/bundle/digital-employee-suite/src/index.ts`](../packages/bundle/digital-employee-suite/src/index.ts))
+- `@deepseek-ai/dsh-headless-employee` ([`packages/bundle/headless-employee/src/index.ts`](../packages/bundle/headless-employee/src/index.ts))
 - `@deepseek-ai/dsh-home-paths` ([`packages/util/home-paths/src/index.ts`](../packages/util/home-paths/src/index.ts))
 - `@deepseek-ai/dsh-hook-protocol` ([`packages/hooks/hook-protocol/src/index.ts`](../packages/hooks/hook-protocol/src/index.ts))
 - `@deepseek-ai/dsh-launch-environment` ([`packages/util/launch-environment/src/index.ts`](../packages/util/launch-environment/src/index.ts))

@@ -20,6 +20,7 @@ import type { SessionEvent } from '@deepseek-ai/dsh-session'
 // and the cmdline Context merge for the appExit host value.
 import type {} from '@deepseek-ai/cordis-plugin-loader'
 import type {} from '@deepseek-ai/dsh-cmdline'
+import { HEADLESS_STARTUP_SERVICE, type HeadlessStartupValues } from './startup.ts'
 
 /** Stable Cordis plugin name. */
 export const name = 'headless-runner'
@@ -139,6 +140,10 @@ async function run(ctx: Context, task: string, io: HeadlessIo): Promise<void> {
  * @param config - validated task config.
  */
 export function apply(ctx: Context, config: Config): void {
+  // An employee selection hands the run to the employee driver; the ordinary
+  // runner stays owner of plain tasks only.
+  const startup = ctx.get(HEADLESS_STARTUP_SERVICE) as HeadlessStartupValues | undefined
+  if (startup?.employee !== undefined) return
   // Read through the global service store, not the property proxy: appExit is
   // an optional host value, never an injected dependency.
   const exit = ctx.get('appExit')

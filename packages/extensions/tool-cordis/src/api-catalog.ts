@@ -819,6 +819,36 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'registered immutable template versions.',
       },
       {
+        signature: '@Remote(\'listEmployeeTasks\') listEmployeeTasks(): Promise<readonly DigitalEmployeeTaskEntry[]>',
+        description: 'List the autonomous task ledger entries for the task console. Display names fall back to the task key for records written before the display fields existed; counting fields are strict (an invalid ledger fails the call rather than silently resetting suspension state).',
+        parameters: [],
+        returns: 'one entry per ledger record, ledger insertion order.',
+      },
+      {
+        signature: '@Remote(\'resumeEmployeeTask\') async resumeEmployeeTask(request: DigitalEmployeeTaskKeyRequest): Promise<void>',
+        description: 'Resume one suspended task: clear the suspension flag and keep the failure count, so the next failure re-accumulates toward the ceiling. Resuming never starts a run — deployment-side scheduling pulls the next attempt.',
+        parameters: [{ name: 'request', description: 'the task key to resume.' }],
+        throws: ['when the key is unknown or not suspended.'],
+      },
+      {
+        signature: '@Remote(\'discardEmployeeTask\') async discardEmployeeTask(request: DigitalEmployeeTaskKeyRequest): Promise<void>',
+        description: 'Discard one task\'s ledger record, so the same key starts from zero.',
+        parameters: [{ name: 'request', description: 'the task key to discard.' }],
+        throws: ['when the key is unknown.'],
+      },
+      {
+        signature: '@Remote(\'describeNotificationChannels\') async describeNotificationChannels(): Promise<readonly NotificationChannelStatus[]>',
+        description: 'Describe the registered notification channels with their credential configuration facts (never values). An absent notification capability lists nothing, which is the surface\'s hide-the-row signal.',
+        parameters: [],
+        returns: 'one status per registered channel.',
+      },
+      {
+        signature: '@Remote(\'testNotificationChannel\') async testNotificationChannel(request: NotificationChannelTestRequest): Promise<NotificationChannelTestResult>',
+        description: 'Send one clearly-labeled test message through a channel via the production send contract. The notification capability being absent fails with a distinct message.',
+        parameters: [{ name: 'request', description: 'the channel id to test.' }],
+        returns: 'the closed delivery outcome.',
+      },
+      {
         signature: '@Remote(\'list\') list(): Promise<readonly DigitalEmployeeInstance[]>',
         description: 'List durable employee instances.',
         parameters: [],
@@ -922,6 +952,18 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Import portable employee data.',
         parameters: [{ name: 'artifact', description: 'portable employee data.' }],
         returns: 'fresh inactive employee.',
+      },
+      {
+        signature: '@Remote(\'exportTemplate\') async exportTemplate(request: { templateId: string; version: string }): Promise<{ archiveBase64: string }>',
+        description: 'Export a published local template as a signed employee package zip.',
+        parameters: [{ name: 'request', description: 'Template identity and version to export.' }],
+        returns: 'Base64-encoded signed zip.',
+      },
+      {
+        signature: '@Remote(\'importTemplate\') async importTemplate(request: { archiveBase64: string }): Promise<{ templateId: string version: string missing: { kind: string; id: string }[] }>',
+        description: 'Import a signed employee package zip: verify the descriptor, re-register the template, and report market packages missing from this Host.',
+        parameters: [{ name: 'request', description: 'Base64 zip of the employee package.' }],
+        returns: 'Registered template id plus grouped missing-reference diagnostics.',
       },
     ],
   },
@@ -1580,6 +1622,38 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Delete one feedback item. Absence is successful regardless of the supplied version; an existing item requires an exact version match.',
         parameters: [{ name: 'request', description: 'Session, message, and observed item version.' }],
         returns: 'the stable absent postcondition, or an explicit failure.',
+      },
+    ],
+  },
+  {
+    key: 'notifications',
+    summary: 'The notification service: a channel registry with fail-visible, non-throwing delivery.',
+    description: 'The notification service: a channel registry with fail-visible, non-throwing delivery. Registered as `ctx.notifications` (one instance per context).',
+    methods: [
+      {
+        signature: 'register(channel: NotificationChannel): () => void',
+        description: 'Register one delivery channel. Duplicate ids are rejected at registration.',
+        parameters: [{ name: 'channel', description: 'the channel; its `id` is the registry key.' }],
+        returns: 'a disposer removing the registration, disposed with the calling fiber.',
+        throws: ['when `channel.id` is already registered.'],
+      },
+      {
+        signature: 'listChannels(): readonly string[]',
+        description: 'List the registered channel ids in registration order.',
+        parameters: [],
+        returns: 'the stable channel ids.',
+      },
+      {
+        signature: 'async channelCredentials(id: string): Promise<readonly NotificationCredentialState[] | undefined>',
+        description: 'Report one channel\'s credential states. A channel without a `credentials()` hook reports an empty list; an unknown id resolves to `undefined` so callers can distinguish it from an unconfigured channel.',
+        parameters: [{ name: 'id', description: 'the registered channel id.' }],
+        returns: 'the credential states, or `undefined` for an unknown channel.',
+      },
+      {
+        signature: 'async send(request: NotificationSendRequest): Promise<NotificationDelivery>',
+        description: 'Deliver one message through the addressed channel. Unknown channel ids and throwing channels resolve to `{ delivered: false, reason }` — never reject — so the calling task flow survives an absent or broken channel.',
+        parameters: [{ name: 'request', description: 'the message plus the channel id that should deliver it.' }],
+        returns: 'the closed delivery outcome.',
       },
     ],
   },
@@ -2321,6 +2395,11 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Typed Remote gateway for managed subagent packages.',
     methods: [
       {
+        signature: 'readonly service: SubagentMarketService',
+        description: 'The installed-package service every gateway call forwards to.',
+        parameters: [],
+      },
+      {
         signature: '@Remote(\'list\') async list(): Promise<SubagentMarketListResult>',
         description: 'List managed subagent packages.',
         parameters: [],
@@ -2921,6 +3000,11 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     summary: 'Typed Remote gateway for managed workflow packages.',
     description: 'Typed Remote gateway for managed workflow packages.',
     methods: [
+      {
+        signature: 'readonly service: WorkflowMarketService',
+        description: 'The installed-package service every gateway call forwards to.',
+        parameters: [],
+      },
       {
         signature: '@Remote(\'list\') async list(): Promise<WorkflowMarketListResult>',
         description: 'List managed workflow packages.',
@@ -4129,6 +4213,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface DigitalEmployeeStdioMcpServer extends DigitalEmployeeMcpServerBase {\n    readonly transport: \'stdio\';\n    readonly command: string;\n    readonly args: readonly string[];\n    readonly env: Readonly<Record<string, string>>;\n    readonly envCredentials: Readonly<Record<string, CredentialRef>>;\n    readonly cwd: string;\n}',
   },
   {
+    name: 'DigitalEmployeeTaskEntry',
+    declaration: 'export interface DigitalEmployeeTaskEntry {\n    readonly key: string;\n    readonly displayName: string;\n    readonly consecutiveFailures: number;\n    readonly suspended: boolean;\n    readonly lastReason?: string;\n    readonly employeeId?: string;\n}',
+  },
+  {
+    name: 'DigitalEmployeeTaskKeyRequest',
+    declaration: 'export interface DigitalEmployeeTaskKeyRequest {\n    readonly key: string;\n}',
+  },
+  {
     name: 'DigitalEmployeeTaskTreeEntry',
     declaration: 'export type DigitalEmployeeTaskTreeEntry = {\n    readonly kind: \'child\';\n    readonly id: SessionId;\n    readonly activity: \'running\' | \'inactive\';\n    readonly hasChildren: boolean;\n    readonly mode: \'one-shot\';\n    readonly label?: string;\n    readonly parentId: SessionId;\n    readonly depth: number;\n} | {\n    readonly kind: \'child\';\n    readonly id: SessionId;\n    readonly activity: \'running\' | \'inactive\';\n    readonly hasChildren: boolean;\n    readonly mode: \'continuable\';\n    readonly label: string;\n    readonly parentId: SessionId;\n    readonly depth: number;\n} | {\n    readonly kind: \'diagnostic\';\n    readonly id: SessionId;\n    readonly reason: \'corrupt\' | \'unsupported\' | \'unavailable\';\n    readonly parentId: SessionId;\n    readonly depth: number;\n};',
   },
@@ -4405,6 +4497,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface GrantRecord {\n    readonly kind: \'grant\';\n    readonly payload: unknown;\n}',
   },
   {
+    name: 'HookEvent',
+    declaration: 'export type HookEvent = typeof HOOK_EVENTS[number];',
+  },
+  {
     name: 'HookMarketConfigureRequest',
     declaration: 'export interface HookMarketConfigureRequest {\n    readonly packageId: HookMarketPackageId;\n    readonly credentialReferences: Readonly<Record<string, string>>;\n}',
   },
@@ -4455,6 +4551,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'HookMarketUninstallResult',
     declaration: 'export type HookMarketUninstallResult = HookMarketResult<{\n    readonly packageId: HookMarketPackageId;\n    readonly restartRequired: true;\n}>;',
+  },
+  {
+    name: 'HookPackageDescriptor',
+    declaration: 'export type HookPackageDescriptor = z.infer<typeof hookPackageDescriptorSchema>;',
   },
   {
     name: 'ImageAttachmentLimits',
@@ -4915,6 +5015,42 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ModelModalityMap',
     declaration: 'export interface ModelModalityMap {\n    text: \'text\';\n    image: \'image\';\n}',
+  },
+  {
+    name: 'NotificationChannel',
+    declaration: 'export interface NotificationChannel {\n    readonly id: string;\n    send(message: NotificationMessage): Promise<NotificationDelivery>;\n    credentials?(): Promise<readonly NotificationCredentialState[]>;\n}',
+  },
+  {
+    name: 'NotificationChannelStatus',
+    declaration: 'export interface NotificationChannelStatus {\n    readonly id: string;\n    readonly credentials: readonly NotificationCredentialStateInfo[];\n}',
+  },
+  {
+    name: 'NotificationChannelTestRequest',
+    declaration: 'export interface NotificationChannelTestRequest {\n    readonly channel: string;\n}',
+  },
+  {
+    name: 'NotificationChannelTestResult',
+    declaration: 'export interface NotificationChannelTestResult {\n    readonly delivered: boolean;\n    readonly reason?: string;\n}',
+  },
+  {
+    name: 'NotificationCredentialState',
+    declaration: 'export interface NotificationCredentialState {\n    readonly ref: string;\n    readonly configured: boolean;\n}',
+  },
+  {
+    name: 'NotificationCredentialStateInfo',
+    declaration: 'export interface NotificationCredentialStateInfo {\n    readonly ref: string;\n    readonly configured: boolean;\n}',
+  },
+  {
+    name: 'NotificationDelivery',
+    declaration: 'export type NotificationDelivery = {\n    readonly delivered: true;\n} | {\n    readonly delivered: false;\n    readonly reason: string;\n};',
+  },
+  {
+    name: 'NotificationMessage',
+    declaration: 'export interface NotificationMessage {\n    readonly title: string;\n    readonly body: string;\n    readonly context?: Readonly<Record<string, string>>;\n}',
+  },
+  {
+    name: 'NotificationSendRequest',
+    declaration: 'export interface NotificationSendRequest extends NotificationMessage {\n    readonly channel: string;\n}',
   },
   {
     name: 'ObjectJsonSchema',
@@ -5701,12 +5837,24 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type SubagentMarketResult<Value> = {\n    readonly ok: true;\n    readonly value: Value;\n} | {\n    readonly ok: false;\n    readonly error: SubagentMarketFailure;\n};',
   },
   {
+    name: 'SubagentMarketService',
+    declaration: 'export class SubagentMarketService {\n    constructor(private readonly options: SubagentMarketServiceOptions);\n    packageDirectory(packageId: string): string;\n    async descriptor(packageId: string): Promise<SubagentPackageDescriptor>;\n    async list(): Promise<SubagentMarketListResult>;\n    async install(request: SubagentMarketInstallRequest): Promise<SubagentMarketInstallResult>;\n    async uninstall(packageId: SubagentMarketPackageId): Promise<SubagentMarketUninstallResult>;\n    setDiagnostic(packageId: string, diagnostic?: string): void;\n}',
+  },
+  {
+    name: 'SubagentMarketServiceOptions',
+    declaration: 'export interface SubagentMarketServiceOptions {\n    readonly installRoot: string;\n    readonly trustedPublishers: readonly TrustedPublisher[];\n    readonly allowUnsignedPackages: boolean;\n}',
+  },
+  {
     name: 'SubagentMarketUninstallRequest',
     declaration: 'export interface SubagentMarketUninstallRequest {\n    readonly packageId: SubagentMarketPackageId;\n}',
   },
   {
     name: 'SubagentMarketUninstallResult',
     declaration: 'export type SubagentMarketUninstallResult = SubagentMarketResult<{\n    readonly packageId: SubagentMarketPackageId;\n    readonly restartRequired: true;\n}>;',
+  },
+  {
+    name: 'SubagentPackageDescriptor',
+    declaration: 'export type SubagentPackageDescriptor = z.infer<typeof subagentPackageDescriptorSchema>;',
   },
   {
     name: 'SubagentProvider',
@@ -6121,6 +6269,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ToolSchema {\n    name: string;\n    description: string;\n    parameters: Record<string, unknown>;\n}',
   },
   {
+    name: 'TrustedPublisher',
+    declaration: 'export interface TrustedPublisher {\n    readonly id: string;\n    readonly publicKeyPem: string;\n}',
+  },
+  {
     name: 'TurnEndCancelCause',
     declaration: 'export type TurnEndCancelCause = AgentCancelCause | {\n    readonly kind: \'legacy\';\n};',
   },
@@ -6321,6 +6473,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type WorkflowMarketResult<Value> = {\n    readonly ok: true;\n    readonly value: Value;\n} | {\n    readonly ok: false;\n    readonly error: WorkflowMarketFailure;\n};',
   },
   {
+    name: 'WorkflowMarketService',
+    declaration: 'export class WorkflowMarketService {\n    constructor(private readonly options: WorkflowMarketServiceOptions);\n    packageDirectory(packageId: string): string;\n    async descriptor(packageId: string): Promise<WorkflowPackageDescriptor>;\n    async list(): Promise<WorkflowMarketListResult>;\n    async install(request: WorkflowMarketInstallRequest): Promise<WorkflowMarketInstallResult>;\n    async uninstall(packageId: WorkflowMarketPackageId): Promise<WorkflowMarketUninstallResult>;\n    setDiagnostic(packageId: string, diagnostic?: string): void;\n}',
+  },
+  {
+    name: 'WorkflowMarketServiceOptions',
+    declaration: 'export interface WorkflowMarketServiceOptions {\n    readonly installRoot: string;\n    readonly trustedPublishers: readonly TrustedPublisher[];\n    readonly allowUnsignedPackages: boolean;\n}',
+  },
+  {
     name: 'WorkflowMarketUninstallRequest',
     declaration: 'export interface WorkflowMarketUninstallRequest {\n    readonly packageId: WorkflowMarketPackageId;\n}',
   },
@@ -6331,6 +6491,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkflowMeta',
     declaration: 'export interface WorkflowMeta {\n    name: string;\n    description: string;\n    whenToUse?: string;\n    phases?: WorkflowPhase[];\n}',
+  },
+  {
+    name: 'WorkflowPackageDescriptor',
+    declaration: 'export type WorkflowPackageDescriptor = z.infer<typeof workflowPackageDescriptorSchema>;',
   },
   {
     name: 'WorkflowPhase',

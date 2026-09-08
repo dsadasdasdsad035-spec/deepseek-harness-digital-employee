@@ -1,0 +1,8 @@
+{"type":"acceptance","stage":"exit-recorded","exits":[3]}
+{"type":"acceptance","stage":"ledger-state","ledger":{"autonomous-snapshot-key":{"consecutiveFailures":3,"suspended":true,"lastReason":"budget-limited: Goal reached its configured limit of 2 rounds.","displayName":"Watch the endless queue.","employeeId":"employee-autonomous-ada"}}}
+{"type":"acceptance","stage":"console-list-before","entries":[{"key":"autonomous-snapshot-key","displayName":"Watch the endless queue.","consecutiveFailures":3,"suspended":true,"lastReason":"budget-limited: Goal reached its configured limit of 2 rounds.","employeeId":"employee-autonomous-ada"}]}
+{"type":"acceptance","stage":"console-list-after","entries":[{"key":"autonomous-snapshot-key","displayName":"Watch the endless queue.","consecutiveFailures":3,"suspended":false,"lastReason":"budget-limited: Goal reached its configured limit of 2 rounds.","employeeId":"employee-autonomous-ada"}]}
+{"type":"acceptance","stage":"console-test","delivered":true}
+{"type":"acceptance","stage":"notifications-captured","count":2}
+{"type":"acceptance","stage":"notification-sent","channel":"fixture-channel","title":"Digital employee task suspended"}
+{"type":"acceptance","stage":"notification-sent","channel":"fixture-channel","title":"[test] fixture-channel"}

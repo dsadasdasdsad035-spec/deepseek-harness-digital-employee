@@ -355,6 +355,7 @@ describe('DigitalEmployeeManagementGateway', () => {
       })
 
       await expect(gateway.validateConfigurationDraft({ draftId: draft.id })).resolves.toMatchObject({
+        // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
         diagnostics: expect.arrayContaining([
           expect.objectContaining({ code: 'unavailable-skill', path: 'capabilities.skills' }),
           expect.objectContaining({ code: 'unavailable-tool', path: 'capabilities.tools' }),
@@ -427,6 +428,7 @@ describe('DigitalEmployeeManagementGateway', () => {
       expect(digitalEmployees.registerTemplate).toHaveBeenCalledWith(expect.objectContaining({
         id: 'operations-assistant',
         version: '0.1.1',
+        // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
         instructions: expect.objectContaining({ path: 'AGENTS.md' }),
       }))
       await ctx.fiber.dispose()
@@ -478,6 +480,7 @@ describe('DigitalEmployeeManagementGateway', () => {
       expect(digitalEmployees.registerTemplate).toHaveBeenCalledWith(expect.objectContaining({
         experts: [expect.objectContaining({
           id: 'risk-reviewer',
+          // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
           instructions: expect.objectContaining({ path: 'experts/risk-reviewer/AGENTS.md' }),
         })],
       }))
@@ -523,6 +526,7 @@ describe('DigitalEmployeeManagementGateway', () => {
       expect(digitalEmployees.promoteMemory).toHaveBeenCalledWith(expect.objectContaining({
         employeeId: 'employee-1',
         content: 'Atlas project facts are durable working context.',
+        // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
         provenance: expect.objectContaining({ source: 'configuration-seed' }),
       }))
       await ctx.fiber.dispose()
@@ -649,7 +653,9 @@ describe('DigitalEmployeeManagementGateway', () => {
       })
       expect(digitalEmployeeAgent.createPreviewTask).toHaveBeenCalledWith(expect.objectContaining({
         workspacePath: workspace.path,
+        // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
         employee: expect.objectContaining({
+          // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
           template: expect.objectContaining({
             id: draft.templateId,
             version: `preview-${draft.revision}`,
@@ -657,7 +663,8 @@ describe('DigitalEmployeeManagementGateway', () => {
         }),
       }))
       await expect(gateway.disposeConfigurationPreview({ previewId: preview.id })).resolves.toBeUndefined()
-      expect(digitalEmployeeAgent.createPreviewTask.mock.results[0]?.value).resolves.toMatchObject({
+      await expect(digitalEmployeeAgent.createPreviewTask.mock.results[0]?.value).resolves.toMatchObject({
+        // oxlint-disable-next-line typescript/no-unsafe-assignment -- Vitest asymmetric matchers are intentionally typed as any.
         dispose: expect.any(Function),
       })
       await ctx.fiber.dispose()
@@ -714,7 +721,9 @@ describe('DigitalEmployeeManagementGateway', () => {
       namespace: 'digitalEmployees',
     })
     expect(remoteMethods(gateway).map(method => method.method)).toEqual([
-      'listConfigurationDrafts', 'listConfigurationAssets', 'listConfigurationPublications', 'createConfigurationDraft', 'updateConfigurationDraft', 'deleteConfigurationDraft', 'validateConfigurationDraft', 'previewConfigurationDraft', 'disposeConfigurationPreview', 'publishConfigurationDraft', 'listTemplates', 'list', 'get', 'create', 'activate', 'deactivate',
+      'listConfigurationDrafts', 'listConfigurationAssets', 'listConfigurationPublications', 'createConfigurationDraft', 'updateConfigurationDraft', 'deleteConfigurationDraft', 'validateConfigurationDraft', 'previewConfigurationDraft', 'disposeConfigurationPreview', 'publishConfigurationDraft', 'listTemplates',
+      'listEmployeeTasks', 'resumeEmployeeTask', 'discardEmployeeTask', 'describeNotificationChannels', 'testNotificationChannel',
+      'list', 'get', 'create', 'activate', 'deactivate',
       'delete', 'startChat', 'listMemory', 'deleteMemory', 'listExperts',
       'taskTree', 'continueExpert', 'interruptExpert', 'listAudit',
       'previewUpgrade', 'applyUpgrade', 'exportEmployee', 'importEmployee',

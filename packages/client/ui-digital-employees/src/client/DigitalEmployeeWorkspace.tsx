@@ -239,6 +239,15 @@ function Loaded({
             <Button variant="outline" className={css.dangerButton} onClick={() => { void controller.confirm() }}>Delete employee</Button>
           </div>
         </div>
+      ) : state.confirmation?.kind === 'discard-task' ? (
+        <div className={css.confirmation} role="dialog" aria-modal="true" aria-labelledby="task-discard-title">
+          <h2 id="task-discard-title">Discard task record?</h2>
+          <p>“{state.confirmation.displayName}” is removed from the attempt ledger; the same task key restarts from zero failures.</p>
+          <div>
+            <Button onClick={() => { controller.cancelConfirmation() }}>Cancel</Button>
+            <Button variant="outline" className={css.dangerButton} onClick={() => { void controller.confirm() }}>Discard</Button>
+          </div>
+        </div>
       ) : state.confirmation?.kind === 'upgrade' ? (
         <div className={css.confirmation} role="dialog" aria-modal="true" aria-labelledby="employee-upgrade-title">
           <h2 id="employee-upgrade-title">Approve template upgrade?</h2>
@@ -615,6 +624,42 @@ function View({ state, controller }: {
     case 'tasks':
       return (
         <section className={css.list}>
+          <section aria-label="Autonomous tasks">
+            <h2>Autonomous tasks</h2>
+            {state.taskAttempts.length === 0 ? <p className={css.empty}>No autonomous task attempts recorded.</p> : (
+              <ul>{state.taskAttempts.map(task => (
+                <li key={task.key}>
+                  <span>
+                    {task.suspended ? '⛔ ' : ''}
+                    {task.displayName}
+                    {' · '}
+                    {task.suspended ? `suspended after ${task.consecutiveFailures} failures` : `${task.consecutiveFailures} consecutive failure(s)`}
+                    {task.lastReason === undefined ? '' : ` · ${task.lastReason}`}
+                  </span>
+                  {task.suspended ? (
+                    <>
+                      <button
+                        type="button"
+                        aria-label={`Resume task ${task.displayName}`}
+                        disabled={state.busy !== null}
+                        onClick={() => { void controller.resumeTask(task.key) }}
+                      >
+                        Resume
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Discard task ${task.displayName}`}
+                        disabled={state.busy !== null}
+                        onClick={() => { controller.requestDiscardTask(task.key, task.displayName) }}
+                      >
+                        Discard
+                      </button>
+                    </>
+                  ) : null}
+                </li>
+              ))}</ul>
+            )}
+          </section>
           <h2>Agent tree</h2>
           {state.taskTree.length === 0 ? <p className={css.empty}>Nothing to show.</p> : (
             <ul>{state.taskTree.map(entry => (

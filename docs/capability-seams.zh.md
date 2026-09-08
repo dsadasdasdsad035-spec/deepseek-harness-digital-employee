@@ -3,6 +3,8 @@
 
 # Capability Seams And Core Services
 
+[English](capability-seams.md) | 中文
+
 A service can be a core spine service, a swappable capability seam, or a bundle/composition point. The graph shows the package that owns the service declaration, known implementation packages, and packages that consume the service directly.
 
 ```mermaid
@@ -114,13 +116,22 @@ flowchart LR
   pkg_mcp_market["mcp-market"]
   svc_mcpMarket["ctx.mcpMarket<br/>Managed MCP marketplace gateway"]
   pkg_mcp_client["mcp-client"]
+  pkg_subagent_market["subagent-market"]
+  svc_subagentMarket["ctx.subagentMarket<br/>Managed subagent marketplace gateway"]
+  pkg_digital_employee_agent["digital-employee-agent"]
+  pkg_subagent["subagent"]
+  pkg_workflow_market["workflow-market"]
+  svc_workflowMarket["ctx.workflowMarket<br/>Managed workflow marketplace gateway"]
+  pkg_workflow["workflow"]
+  pkg_notification["notification"]
+  svc_notifications["ctx.notifications<br/>Channel-registry notification seam"]
+  pkg_headless["headless"]
   pkg_hooks_market["hooks-market"]
   svc_hookMarket["ctx.hookMarket<br/>Managed hook marketplace gateway"]
   pkg_hook_protocol["hook-protocol"]
   pkg_digital_employee["digital-employee"]
   svc_digitalEmployees["ctx.digitalEmployees<br/>Digital employee registry and provider seam"]
   pkg_digital_employee_file["digital-employee-file"]
-  pkg_digital_employee_agent["digital-employee-agent"]
   svc_digitalEmployeeAgent["ctx.digitalEmployeeAgent<br/>Digital employee Agent composition"]
   svc_digitalEmployeeManagement["ctx.digitalEmployeeManagement<br/>Digital employee Host management gateway"]
   pkg_ui_digital_employees["ui-digital-employees"]
@@ -129,7 +140,6 @@ flowchart LR
   pkg_acp["acp"]
   pkg_agent_default_model["agent-default-model"]
   svc_agentDefaultModel["ctx.agentDefaultModel<br/>Default Agent model selection"]
-  pkg_headless["headless"]
   svc_agentLoop["ctx.agentLoop<br/>Concrete loop driver"]
   pkg_agent_spine_demo["agent-spine-demo"]
   pkg_goal["goal"]
@@ -175,7 +185,6 @@ flowchart LR
   pkg_fs_observation_policy["fs-observation-policy"]
   pkg_compaction["compaction"]
   svc_compaction["ctx.compaction<br/>Compaction seam"]
-  pkg_subagent["subagent"]
   svc_subagents["ctx.subagents<br/>Subagent provider and continuation service"]
   pkg_subagent_spawn_in_process["subagent-spawn-in-process"]
   pkg_subagent_fork_in_process["subagent-fork-in-process"]
@@ -209,7 +218,6 @@ flowchart LR
   pkg_modules["modules"]
   pkg_hmr["hmr"]
   svc_clientModules["ctx.clientModules<br/>Client plugin graph host"]
-  pkg_workflow["workflow"]
   svc_workflowEngine["ctx.workflowEngine<br/>Workflow script engine"]
   pkg_workflow_worker_thread["workflow-worker-thread"]
   pkg_tool_workflow["tool-workflow"]
@@ -274,6 +282,7 @@ flowchart LR
   pkg_mcp_market --> svc_mcpMarket
   pkg_message_feedback --> svc_messageFeedback
   pkg_modules --> svc_clientModules
+  pkg_notification --> svc_notifications
   pkg_permission_presets --> svc_permissionPresets
   pkg_plan_mode --> svc_planMode
   pkg_pwsh_local --> svc_shell
@@ -314,6 +323,7 @@ flowchart LR
   pkg_subagent_codex --> svc_subagents
   pkg_subagent_dsh_sdk --> svc_subagents
   pkg_subagent_fork_in_process --> svc_subagents
+  pkg_subagent_market --> svc_subagentMarket
   pkg_subagent_spawn_in_process --> svc_subagents
   pkg_subprocess --> svc_subprocess
   pkg_subprocess_e2b --> svc_subprocess
@@ -333,6 +343,7 @@ flowchart LR
   pkg_web_search_perplexity --> svc_web
   pkg_webserver --> svc_webServer
   pkg_workflow --> svc_workflowEngine
+  pkg_workflow_market --> svc_workflowMarket
   pkg_workflow_worker_thread --> svc_workflowEngine
   pkg_workspace --> svc_workspaceRegistry
   svc_agentDefaultModel --> pkg_headless
@@ -380,6 +391,7 @@ flowchart LR
   svc_mcpClients --> pkg_digital_employee_agent
   svc_mcpMarket --> pkg_digital_employee_management
   svc_mcpMarket --> pkg_ui_skill_market
+  svc_notifications --> pkg_headless
   svc_sandbox --> pkg_bash_sandbox
   svc_sandbox --> pkg_terminal_bash
   svc_sandboxPolicy --> pkg_bash_sandbox
@@ -421,6 +433,8 @@ flowchart LR
   svc_storage --> pkg_storage_domain
   svc_storageDomain --> pkg_message_feedback
   svc_storageDomain --> pkg_workspace
+  svc_subagentMarket --> pkg_digital_employee_agent
+  svc_subagentMarket --> pkg_digital_employee_management
   svc_subagents --> pkg_tool_ralph
   svc_subagents --> pkg_tool_subagent
   svc_subagents --> pkg_tool_subagent_control
@@ -460,12 +474,16 @@ flowchart LR
   svc_webServer --> pkg_modules
   svc_workflowEngine --> pkg_tool_ralph
   svc_workflowEngine --> pkg_tool_workflow
+  svc_workflowMarket --> pkg_digital_employee_agent
+  svc_workflowMarket --> pkg_digital_employee_management
   svc_workspaceRegistry --> pkg_apiproxy
   svc_fs -. event gate .-> pkg_fs_observation_policy
   svc_hookMarket -. event gate .-> pkg_hook_protocol
   svc_mcpMarket -. event gate .-> pkg_mcp_client
   svc_skillMarket -. event gate .-> pkg_skill_filesystem
+  svc_subagentMarket -. event gate .-> pkg_subagent
   svc_toolMarket -. event gate .-> pkg_tools
+  svc_workflowMarket -. event gate .-> pkg_workflow
 ```
 
 | ctx key | Role | Owner | Implementations | Direct consumers | Companion plugins | Note |
@@ -503,7 +521,10 @@ flowchart LR
 | `ctx.skillMarket` | `core` | [`skill-market`](../packages/skill/skill-market) | - | `ui-skill-market` | [`skill-filesystem`](../packages/skill/skill-filesystem) | Owns Host-side archive validation and atomic marketplace mutations; the browser settings section consumes its generated Remote methods, and successful commits invalidate filesystem skill discovery. |
 | `ctx.toolMarket` | `core` | [`tool-market`](../packages/tool/tool-market) | - | `ui-skill-market`, `digital-employee-management` | [`tools`](../packages/core/tools) | Owns signed archive validation and restart-bound Tool package mutations; activated package plugins register their tools through the existing registry. |
 | `ctx.mcpMarket` | `core` | [`mcp-market`](../packages/mcp/mcp-market) | - | `ui-skill-market`, `digital-employee-management` | [`mcp-client`](../packages/mcp/mcp-client) | Owns declarative package lifecycle and credential-reference configuration; a fresh Host composition resolves references and mounts configured servers through the MCP client manager. |
-| `ctx.hookMarket` | `core` | [`hooks-market`](../packages/hooks/hooks-market) | - | `ui-skill-market`, `digital-employee-management` | [`hook-protocol`](../packages/hooks/hook-protocol) | Owns hook package lifecycle and credential-reference configuration; employee compositions resolve hook references and mount passive interception plus invocable hook__<id> tools through the shared hook protocol. |
+| `ctx.subagentMarket` | `core` | [`subagent-market`](../packages/subagent/subagent-market) | - | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | [`subagent`](../packages/subagent/subagent) | Owns subagent package lifecycle and credential-reference configuration; employee compositions resolve subagent references and mount persona providers through the shared subagent seam. |
+| `ctx.workflowMarket` | `core` | [`workflow-market`](../packages/workflow/workflow-market) | - | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | [`workflow`](../packages/workflow/workflow) | Owns workflow package lifecycle and credential-reference configuration; employee compositions resolve workflow references and mount scripted workflow tools through the shared workflow seam. |
+| `ctx.notifications` | `seam` | [`notification`](../packages/interaction/notification) | - | [`headless`](../packages/bundle/headless) | - | Providers register delivery channels under stable ids (generic-webhook, wechat-work-bot, feishu-bot ship as subpath plugins of the seam package); send resolves to a closed delivery outcome and never rejects, so a failing alert path cannot crash the calling task flow. |
+| `ctx.hookMarket` | `core` | [`hooks-market`](../packages/hooks/hooks-market) | - | `ui-skill-market`, `digital-employee-management` | [`hook-protocol`](../packages/hooks/hook-protocol) | Owns hook package lifecycle and credential-reference configuration; employee compositions resolve hook references and mount passive interception plus invocable `hook__<id>` tools through the shared hook protocol. |
 | `ctx.digitalEmployees` | `seam` | [`digital-employee`](../packages/core/digital-employee) | [`digital-employee-file`](../packages/core/digital-employee-file) | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | - | Owns template and instance lookup, lifecycle mutation, memory, audit, and durable employee records; composition and Host task admission consume the resolved employee state. |
 | `ctx.digitalEmployeeAgent` | `core` | [`digital-employee-agent`](../packages/core/digital-employee-agent) | - | `digital-employee-management` | - | Resolves an active employee into the existing Agent, prompt, skill, tool, MCP, memory, and delegation extension points before creating an employee-owned root Session. |
 | `ctx.digitalEmployeeManagement` | `core` | `digital-employee-management` | - | `ui-digital-employees` | - | Exposes typed management and atomic chat-start Remote operations while delegating durable state and Agent composition to their owning services. |

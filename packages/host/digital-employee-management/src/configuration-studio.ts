@@ -302,7 +302,7 @@ export function validateDraftBasics(
       ['expert', expert.capabilities.experts, draft.capabilities.experts],
     ] as const) {
       for (const value of child) {
-        if (!parent.includes(value as never)) {
+        if (!parent.includes(value)) {
           diagnostics.push({
             code: 'authority-escalation',
             path: `experts.${expert.id}.capabilities`,
@@ -358,15 +358,15 @@ function parsePublication(value: unknown): StoredPublication {
 }
 
 function parseDraft(value: unknown): DigitalEmployeeTemplateDraft {
-  if (typeof value !== 'object' || value === null) throw new Error('digital employee configuration studio draft is invalid')
-  const draft = value as DigitalEmployeeTemplateDraft
+  const draft = record(value, 'draft')
+  const display = record(draft.display, 'display')
   return {
     id: requiredText(draft.id, 'draft id') as DigitalEmployeeTemplateDraft['id'],
     templateId: requiredText(draft.templateId, 'templateId'),
     display: {
-      name: requiredText(draft.display?.name, 'display name'),
-      description: requiredText(draft.display?.description, 'display description'),
-      ...(draft.display?.banner === undefined ? {} : { banner: requiredText(draft.display.banner, 'display banner') }),
+      name: requiredText(display.name, 'display name'),
+      description: requiredText(display.description, 'display description'),
+      ...(display.banner === undefined ? {} : { banner: requiredText(display.banner, 'display banner') }),
     },
     instructions: requiredText(draft.instructions, 'instructions'),
     personality: requiredText(draft.personality, 'personality'),
@@ -447,7 +447,7 @@ function parseExperts(value: unknown): DigitalEmployeeTemplateDraft['experts'] {
       throw new Error(`digital employee configuration experts.${index}.delegation.mode is invalid`)
     }
     return {
-      id: requiredIdentifier(entry.id, `experts.${index}.id`) as DigitalEmployeeTemplateDraft['experts'][number]['id'],
+      id: requiredIdentifier(entry.id, `experts.${index}.id`),
       name: requiredText(entry.name, `experts.${index}.name`),
       responsibility: requiredText(entry.responsibility, `experts.${index}.responsibility`),
       instructions: requiredText(entry.instructions, `experts.${index}.instructions`),
@@ -514,7 +514,7 @@ function parseCredentialRecord(value: unknown, field: string): Record<string, st
 
 function parseMemoryAccess(value: unknown, field: string): DigitalEmployeeTemplateDraft['experts'][number]['memoryAccess'] {
   if (!Array.isArray(value)) throw new Error(`digital employee configuration ${field} must be an array`)
-  return value.map((scope) => {
+  return value.map((scope: unknown) => {
     if (scope !== 'task' && scope !== 'session' && scope !== 'long-term') {
       throw new Error(`digital employee configuration ${field} contains invalid memory scope`)
     }

@@ -23,9 +23,32 @@ import type {
   DigitalEmployeeUpgradePreview,
   ExportDigitalEmployeeRequest,
   PreviewDigitalEmployeeUpgradeRequest,
+  DigitalEmployeeTaskEntry,
+  DigitalEmployeeTaskKeyRequest,
+  NotificationChannelStatus,
+  NotificationChannelTestRequest,
+  NotificationChannelTestResult,
 } from '@deepseek-ai/dsh-digital-employee'
 import { createUserMessage, type MessageId } from '@deepseek-ai/dsh-llm'
+import {
+  listTaskAttempts,
+  withTaskAttempts,
+  type TaskAttemptRecord,
+} from '@deepseek-ai/dsh-digital-employee-file'
+/** Project one ledger record onto its console row with the legacy fallback. */
+function taskEntryOf(key: string, record: TaskAttemptRecord): DigitalEmployeeTaskEntry {
+  return {
+    key,
+    displayName: record.displayName ?? key,
+    consecutiveFailures: record.consecutiveFailures,
+    suspended: record.suspended === true,
+    ...record.lastReason !== undefined ? { lastReason: record.lastReason } : {},
+    ...record.employeeId !== undefined ? { employeeId: record.employeeId } : {},
+  }
+}
+
 import type {} from '@deepseek-ai/dsh-digital-employee-agent'
+import type {} from '@deepseek-ai/dsh-notification'
 import type {} from '@deepseek-ai/dsh-credentials'
 import type {} from '@deepseek-ai/dsh-mcp-client'
 import { listMcpServerConfigs } from '@deepseek-ai/dsh-mcp-client'
@@ -141,7 +164,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
         ...previews.map(preview => this.disposePreview(preview)),
         ...registrations.map(dispose => Promise.resolve().then(dispose)),
       ])
-      const failures = results.flatMap(result => result.status === 'rejected' ? [result.reason] : [])
+      const failures = results.flatMap(result => result.status === 'rejected' ? [result.reason as unknown] : [])
       if (failures.length > 0) throw new AggregateError(failures, 'digital employee management teardown failed')
     }, 'digital-employee-management.lifecycle')
   }
@@ -270,7 +293,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
         ...entry.available ? {} : { diagnostic: 'MCP configuration is unavailable or requires a Host restart.' },
         mcpServer: entry.declaration,
       })),
-      ...managedHooks.ok === true ? managedHooks.value.entries.map(entry => ({
+      ...managedHooks.ok ? managedHooks.value.entries.map(entry => ({
         id: `hook:${entry.packageId}` as never,
         kind: 'hook' as const,
         label: entry.displayName,
@@ -490,7 +513,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
         return async () => {
           this.registeredPublications.delete(key)
           try {
-            await dispose()
+            dispose()
           } finally {
             await rm(root, { recursive: true, force: true })
           }
@@ -510,6 +533,98 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
   async listTemplates(): Promise<readonly DigitalEmployeeTemplate[]> {
     await this.registerPublishedTemplates()
     return this.ctx.digitalEmployees.listTemplates()
+  }
+
+  /**
+   * List the autonomous task ledger entries for the task console. Display
+   * names fall back to the task key for records written before the display
+   * fields existed; counting fields are strict (an invalid ledger fails the
+   * call rather than silently resetting suspension state).
+   * @returns one entry per ledger record, ledger insertion order.
+   */
+  @Remote('listEmployeeTasks')
+  listEmployeeTasks(): Promise<readonly DigitalEmployeeTaskEntry[]> {
+    return listTaskAttempts().then(entries => Object.entries(entries).map(([key, record]) => taskEntryOf(key, record)))
+  }
+
+  /**
+   * Resume one suspended task: clear the suspension flag and keep the failure
+   * count, so the next failure re-accumulates toward the ceiling. Resuming
+   * never starts a run — deployment-side scheduling pulls the next attempt.
+   * @param request - the task key to resume.
+   * @throws when the key is unknown or not suspended.
+   */
+  @Remote('resumeEmployeeTask')
+  async resumeEmployeeTask(request: DigitalEmployeeTaskKeyRequest): Promise<void> {
+    await withTaskAttempts((ledger) => {
+      const record = ledger[request.key]
+      if (record === undefined) {
+        throw new Error(`task console: task key ${JSON.stringify(request.key)} is not in the ledger`)
+      }
+      if (record.suspended !== true) {
+        throw new Error(`task console: task key ${JSON.stringify(request.key)} is not suspended`)
+      }
+      ledger[request.key] = {
+        consecutiveFailures: record.consecutiveFailures,
+        ...record.lastReason !== undefined ? { lastReason: record.lastReason } : {},
+        ...record.displayName !== undefined ? { displayName: record.displayName } : {},
+        ...record.employeeId !== undefined ? { employeeId: record.employeeId } : {},
+      }
+    })
+  }
+
+  /**
+   * Discard one task's ledger record, so the same key starts from zero.
+   * @param request - the task key to discard.
+   * @throws when the key is unknown.
+   */
+  @Remote('discardEmployeeTask')
+  async discardEmployeeTask(request: DigitalEmployeeTaskKeyRequest): Promise<void> {
+    await withTaskAttempts((ledger) => {
+      if (ledger[request.key] === undefined) {
+        throw new Error(`task console: task key ${JSON.stringify(request.key)} is not in the ledger`)
+      }
+      for (const key of Object.keys(ledger)) {
+        if (key === request.key) Reflect.deleteProperty(ledger, key)
+      }
+    })
+  }
+
+  /**
+   * Describe the registered notification channels with their credential
+   * configuration facts (never values). An absent notification capability
+   * lists nothing, which is the surface's hide-the-row signal.
+   * @returns one status per registered channel.
+   */
+  @Remote('describeNotificationChannels')
+  async describeNotificationChannels(): Promise<readonly NotificationChannelStatus[]> {
+    const notifications = this.ctx.get('notifications')
+    if (notifications === undefined) return []
+    return await Promise.all(notifications.listChannels().map(async id => ({
+      id,
+      credentials: await notifications.channelCredentials(id) ?? [],
+    })))
+  }
+
+  /**
+   * Send one clearly-labeled test message through a channel via the
+   * production send contract. The notification capability being absent fails with a distinct
+   * message.
+   * @param request - the channel id to test.
+   * @returns the closed delivery outcome.
+   */
+  @Remote('testNotificationChannel')
+  async testNotificationChannel(request: NotificationChannelTestRequest): Promise<NotificationChannelTestResult> {
+    const notifications = this.ctx.get('notifications')
+    if (notifications === undefined) {
+      return { delivered: false, reason: 'no notification capability is composed' }
+    }
+    const outcome = await notifications.send({
+      channel: request.channel,
+      title: `[test] ${request.channel}`,
+      body: 'Test message sent from the digital employee notification settings.',
+    })
+    return outcome.delivered ? { delivered: true } : { delivered: false, reason: outcome.reason }
   }
 
   /** List durable employee instances.
@@ -874,13 +989,9 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     const { privateKey } = await import('node:crypto').then(m => m.generateKeyPairSync('ed25519'))
     const files: Record<string, Uint8Array> = {}
     const { readFile } = await import('node:fs/promises')
-    if (template.instructions.kind === 'file') {
-      files[template.instructions.path] = new Uint8Array(await readFile(join(template.instructions.root, template.instructions.path)))
-    }
+    files[template.instructions.path] = new Uint8Array(await readFile(join(template.instructions.root, template.instructions.path)))
     for (const expert of template.experts) {
-      if (expert.instructions.kind === 'file') {
-        files[expert.instructions.path] = new Uint8Array(await readFile(join(expert.instructions.root, expert.instructions.path)))
-      }
+      files[expert.instructions.path] = new Uint8Array(await readFile(join(expert.instructions.root, expert.instructions.path)))
     }
     const built = await signMarketplacePackage({
       kind: 'employee',
@@ -931,12 +1042,17 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     const publishers: readonly { id: string; publicKeyPem: string }[] = (() => {
       try { return readTrustedPublisherFileSync(join(this.studioRoot, 'market-publishers.json')) ?? [] } catch { return [] }
     })()
-    const publicKey = resolveTrustedPublisher(publishers ?? [], descriptor.publisher.id)
-    if (publicKey !== undefined && !verifyPublisherSignature(descriptorSignaturePayload(descriptor), descriptor.publisher.signature, publicKey)) {
+    const publicKey = resolveTrustedPublisher(publishers, descriptor.publisher.id)
+    if (
+      publicKey !== undefined
+      && !verifyPublisherSignature(descriptorSignaturePayload(descriptor), descriptor.publisher.signature, publicKey)
+    ) {
       throw new Error('employee package signature verification failed')
     }
     const missing: { kind: string; id: string }[] = []
-    const catalog: { entries: readonly { kind: string; label: string }[] } = await this.listConfigurationAssets({ preset: descriptor.template.preset })
+    const catalog: { entries: readonly { kind: string; label: string }[] } = await this.listConfigurationAssets({
+      preset: descriptor.template.preset,
+    })
     const installed = new Set(catalog.entries.map(a => `${a.kind}:${a.label}`))
     for (const ref of descriptor.references as readonly { kind: string; id: string }[]) {
       if (!installed.has(`${ref.kind}:${ref.id}`)) missing.push(ref)
@@ -961,7 +1077,13 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
       personality: descriptor.template.personality,
       instructions,
       preset: descriptor.template.preset,
-      capabilities: { skills: [], tools: [], mcpServers: [], experts: descriptor.experts.map((e: { id: string }) => createExpertId(e.id)), allowSubagents: false },
+      capabilities: {
+        skills: [],
+        tools: [],
+        mcpServers: [],
+        experts: descriptor.experts.map((e: { id: string }) => createExpertId(e.id)),
+        allowSubagents: false,
+      },
       experts: (descriptor.experts as unknown as DigitalEmployeeExpert[]).map(expert => ({
         ...expert,
         id: createExpertId(expert.id),

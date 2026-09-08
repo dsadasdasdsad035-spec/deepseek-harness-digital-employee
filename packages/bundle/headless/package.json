@@ -22,6 +22,10 @@
       "types": "./lib/types/startup.d.ts",
       "default": "./lib/startup.js"
     },
+    "./employee": {
+      "types": "./lib/types/employee-runner.d.ts",
+      "default": "./lib/employee-runner.js"
+    },
     "./invariant": {
       "types": "./lib/types/invariant.d.ts",
       "default": "./lib/invariant.js"
@@ -35,6 +39,7 @@
     "lib/invariant.js",
     "lib/startup.js",
     "cordis.patch.yml",
+    "lib/employee-runner.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
@@ -50,21 +55,31 @@
     "commander": "^15.0.0"
   },
   "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/cordis-plugin-loader": "workspace:^",
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-agent-default-model": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee-agent": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee-file": "workspace:^",
+    "@deepseek-ai/dsh-goal": "workspace:^",
+    "@deepseek-ai/dsh-home-paths": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/dsh-session": "workspace:^"
   },
   "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/cordis-plugin-loader": "workspace:^",
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-agent-default-model": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee-agent": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee-file": "workspace:^",
+    "@deepseek-ai/dsh-goal": "workspace:^",
+    "@deepseek-ai/dsh-home-paths": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@deepseek-ai/dsh-session": "workspace:^"
   }
 }

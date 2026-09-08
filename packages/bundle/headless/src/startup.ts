@@ -22,6 +22,10 @@ export const HEADLESS_STARTUP_SERVICE = 'headlessStartup'
 export interface HeadlessStartupValues {
   /** The task text this invocation asked for. */
   task: string
+  /** The digital employee the task runs as; the employee runner owns the run when set. */
+  employee?: string
+  /** Stable attempt-ledger key for retry counting; defaults to a hash of employee and task. */
+  taskKey?: string
 }
 
 /**
@@ -34,9 +38,12 @@ function headlessCommand(): Command {
     .description('Answer one task, print the final assistant message, and exit.')
     .helpOption('-h, --help', 'show this help')
     .argument('[task...]', 'the task text; multiple words are joined by spaces')
+    .option('--employee <id>', 'run the task as this digital employee (goal-armed autonomous run)')
+    .option('--task-key <key>', 'stable attempt-ledger key for retry counting (requires --employee)')
     .addHelpText('after', `
 Examples:
-  dsh --profile headless "run the tests"     answer one task and exit
+  dsh --profile headless "run the tests"                     answer one task and exit
+  dsh --profile headless --employee pm "triage the inbox"    run one employee task
 `)
 }
 
@@ -51,7 +58,15 @@ export function apply(ctx: Context): void {
   program.action(() => {
     const task = program.args.join(' ')
     if (task.trim() === '') program.error('error: a task is required, for example: dsh --profile headless "run the tests"')
-    ctx.provide(HEADLESS_STARTUP_SERVICE, { task } satisfies HeadlessStartupValues)
+    const options = program.opts<{ employee?: string; taskKey?: string }>()
+    if (options.taskKey !== undefined && options.employee === undefined) {
+      program.error('error: --task-key requires --employee')
+    }
+    ctx.provide(HEADLESS_STARTUP_SERVICE, {
+      task,
+      ...options.employee !== undefined ? { employee: options.employee } : {},
+      ...options.taskKey !== undefined ? { taskKey: options.taskKey } : {},
+    } satisfies HeadlessStartupValues)
   })
   parseCmdline(ctx, program)
 }

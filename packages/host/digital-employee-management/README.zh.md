@@ -8,7 +8,9 @@
 
 该命名空间提供模板与实例检查；创建、激活、停用和删除生命周期操作；原子化员工聊天启动；记忆列出与删除；专家列出、继续、打断和任务树检查；审计历史；升级预览与应用；不含凭据的导出，以及导入为新的非活跃实例。
 
-Remote 方法名在 `digitalEmployees` 内唯一，并直接描述管理操作：`listTemplates`、`list`、`get`、`create`、`activate`、`deactivate`、`delete`、`startChat`、`listMemory`、`deleteMemory`、`listExperts`、`taskTree`、`continueExpert`、`interruptExpert`、`listAudit`、`previewUpgrade`、`applyUpgrade`、`exportEmployee` 和 `importEmployee`。命名空间与方法名是 RPC 路径中不同的片段，可以使用相同的领域词汇。客户端命名空间实现成员采用专用于内部管理的名称，避免意外保留生成的业务方法名。
+Remote 方法名在 `digitalEmployees` 内唯一，并直接描述管理操作：`listTemplates`、`listEmployeeTasks`、`resumeEmployeeTask`、`discardEmployeeTask`、`describeNotificationChannels`、`testNotificationChannel`、`list`、`get`、`create`、`activate`、`deactivate`、`delete`、`startChat`、`listMemory`、`deleteMemory`、`listExperts`、`taskTree`、`continueExpert`、`interruptExpert`、`listAudit`、`previewUpgrade`、`applyUpgrade`、`exportEmployee` 和 `importEmployee`。
+
+任务控制台 remote 与 headless 任务驱动器使用同一跨进程文件锁读写自主任务台账：`listEmployeeTasks` 将台账折叠为控制台行（旧记录的显示名回退为任务键），`resumeEmployeeTask` 清除挂起标记并保留失败计数，`discardEmployeeTask` 整条删除。渠道 remote 把通知 seam 暴露给设置面：`describeNotificationChannels` 报告各已注册渠道的凭证配置事实（绝不包含值），`testNotificationChannel` 经生产投递契约发送一条 `[test]` 标记的消息。命名空间与方法名是 RPC 路径中不同的片段，可以使用相同的领域词汇。客户端命名空间实现成员采用专用于内部管理的名称，避免意外保留生成的业务方法名。
 
 gateway 把所有权威操作委托给 `ctx.digitalEmployees`、`ctx.digitalEmployeeAgent` 与活跃 Agent 注册表。浏览器客户端不会重复实现生命周期、授权、任务归属、记忆、升级或导入验证。
 

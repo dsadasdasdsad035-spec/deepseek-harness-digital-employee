@@ -103,4 +103,22 @@ describe('headless command-line provider', () => {
     expect(observed.runnerConfig).toBeUndefined()
     expect(observed.exits).toEqual([0])
   })
+
+  it('publishes the employee selection for the employee driver', async () => {
+    const { task, observed } = await bootStartup(['--employee', 'pm', 'triage', 'the', 'inbox'])
+    expect(task).toEqual({ task: 'triage the inbox', employee: 'pm' })
+    expect(observed.exits).toEqual([])
+  })
+
+  it('publishes the stable task key alongside the employee selection', async () => {
+    const { task } = await bootStartup(['--employee', 'pm', '--task-key', 'daily-digest', 'summarize'])
+    expect(task).toEqual({ task: 'summarize', employee: 'pm', taskKey: 'daily-digest' })
+  })
+
+  it('rejects a task key without an employee selection', async () => {
+    const { task, observed } = await bootStartup(['--task-key', 'daily-digest', 'summarize'])
+    expect(observed.out).toContain('--task-key requires --employee')
+    expect(task).toBeUndefined()
+    expect(observed.exits).toEqual([1])
+  })
 })

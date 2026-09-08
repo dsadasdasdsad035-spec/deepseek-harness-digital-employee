@@ -1,0 +1,71 @@
+# Optional extension over dsh-headless (which itself rides dsh-base): the
+# employee core without any Web rows, the goal autonomy trio that keeps an
+# armed task running to a terminal phase, notification channels for
+# suspension alerts, and the employee driver over the headless startup
+# service. `dsh --profile headless-employee --employee <id> "task"` composes
+# the same employee template semantics the Web surface serves.
+
+- insert:
+    # Employee core: registry, durable file store, composing agent. The
+    # example template ships so a fresh deployment has one resolvable preset.
+    - id: digital-employees
+      name: '@deepseek-ai/dsh-digital-employee'
+
+    - id: digital-employee-example-template
+      name: '@deepseek-ai/dsh-digital-employee-example-template'
+
+    - id: digital-employee-file
+      name: '@deepseek-ai/dsh-digital-employee-file'
+      config:
+        path: !!js dshHomePath('digital-employees/employees.json')
+
+    - id: digital-employee-agent
+      name: '@deepseek-ai/dsh-digital-employee-agent'
+
+    # The preset roster mount employee templates compose through. Only the
+    # shipped root is an assembly fact `apps/cli`'s composeProfile patches in;
+    # the writable user root stays the plugin's own default.
+    - id: agent-presets
+      name: '@deepseek-ai/dsh-agent-presets'
+      config:
+        default: standard
+
+    # Goal autonomy: the durable goal domain, the round driver that keeps an
+    # armed goal running, and the model-facing tools that report
+    # complete/blocked.
+    - id: goal
+      name: '@deepseek-ai/dsh-goal'
+
+    - id: goal-round-driver
+      name: '@deepseek-ai/dsh-goal-round-driver'
+
+    - id: tool-goal
+      name: '@deepseek-ai/dsh-tool-goal'
+
+    # Notification channels for suspension alerts. The credential references
+    # name environment variables the credentials provider resolves; an
+    # unresolved reference fails visibly only when a send addresses it.
+    - id: notification
+      name: '@deepseek-ai/dsh-notification'
+
+    - id: notification-generic-webhook
+      name: '@deepseek-ai/dsh-notification/generic-webhook'
+      config:
+        urlRef: DSH_NOTIFY_WEBHOOK_URL
+
+    - id: notification-feishu-bot
+      name: '@deepseek-ai/dsh-notification/feishu-bot'
+      config:
+        urlRef: DSH_NOTIFY_FEISHU_URL
+        secretRef: DSH_NOTIFY_FEISHU_SECRET
+
+    - id: notification-wechat-work-bot
+      name: '@deepseek-ai/dsh-notification/wechat-work-bot'
+      config:
+        urlRef: DSH_NOTIFY_WECOM_URL
+
+    # The employee task driver. notifyChannel stays unset by default (a
+    # suspension is logged but silent); a deployment points it at one of the
+    # channel ids above through an overlay.
+    - id: headless-employee-runner
+      name: '@deepseek-ai/dsh-headless/employee'

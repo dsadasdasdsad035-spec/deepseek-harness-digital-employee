@@ -18,22 +18,64 @@
       "path": "../../../vendor/schemastery"
     },
     {
+      "path": "../../attachment/attachment"
+    },
+    {
+      "path": "../../boot/cmdline"
+    },
+    {
       "path": "../../core/agent"
     },
     {
       "path": "../../core/agent-default-model"
     },
     {
-      "path": "../../llm/llm"
+      "path": "../../core/digital-employee"
+    },
+    {
+      "path": "../../core/digital-employee-agent"
+    },
+    {
+      "path": "../../core/digital-employee-file"
     },
     {
       "path": "../../core/session"
     },
     {
+      "path": "../../goal/goal"
+    },
+    {
+      "path": "../../hooks/hooks-market"
+    },
+    {
+      "path": "../../llm/llm"
+    },
+    {
+      "path": "../../mcp/mcp-client"
+    },
+    {
+      "path": "../../mcp/mcp-market"
+    },
+    {
       "path": "../../runtime-diagnostics/invariants"
     },
     {
-      "path": "../../boot/cmdline"
+      "path": "../../skill/skill-market"
+    },
+    {
+      "path": "../../subagent/subagent"
+    },
+    {
+      "path": "../../tool/tool-market"
+    },
+    {
+      "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../util/home-paths"
+    },
+    {
+      "path": "../../workspace/workspace"
     }
   ]
 }

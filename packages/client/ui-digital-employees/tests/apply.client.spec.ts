@@ -8,7 +8,7 @@ describe('ui-digital-employees apply', () => {
   it('registers the sidebar action and shell application for one fiber lifetime', async () => {
     expect(inject).toEqual([
       'slots', 'layout', 'sessions', 'workspaces', 'conversation', 'inputTriggers',
-      'remote', 'remote.digitalEmployees',
+      'locale', 'remote', 'remote.digitalEmployees',
     ])
     const ctx = new Context()
     await ctx.plugin(SlotRegistry).await()

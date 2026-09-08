@@ -1,0 +1,119 @@
+# Assembled keyless fixture for the digital employee autonomous task runner:
+# one employee, goal autonomy, notification seam, and the headless employee
+# driver, over a scripted mock model. The seed plugin creates the employee,
+# pre-seeds the attempt ledger for the suspend scenario, and provides the
+# launcher services the driver waits on.
+
+- id: mock-llm
+  name: './mock-llm.ts'
+
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: employee-autonomous-mock
+    model: employee-autonomous-mock
+
+- id: agent-spine
+  name: '@deepseek-ai/dsh-agent-spine-demo'
+  config:
+    agents: []
+    workspaceContext: false
+    skills:
+      filesystem:
+        dshHome: './.dsh-home'
+
+- id: attachment-local
+  name: '@deepseek-ai/dsh-attachment-local'
+  config:
+    dshHome: './.dsh-home'
+
+- id: agent-presets
+  name: '@deepseek-ai/dsh-agent-presets'
+  config:
+    default: digital-employee-minimal
+    includeUserRoot: false
+    roots:
+      - path: !!js process.env.DSH_DIGITAL_EMPLOYEE_PRESET_ROOT
+        trust: system
+
+- id: digital-employees
+  name: '@deepseek-ai/dsh-digital-employee'
+
+- id: example-template
+  name: './template.ts'
+
+- id: digital-employee-file
+  name: '@deepseek-ai/dsh-digital-employee-file'
+  config:
+    path: './digital-employees.json'
+
+- id: subagents
+  name: '@deepseek-ai/dsh-subagent'
+
+- id: fixture-subagent-provider
+  name: './subagent-provider.ts'
+
+- id: digital-employee-agent
+  name: '@deepseek-ai/dsh-digital-employee-agent'
+
+# Goal autonomy: durable goal domain, the round driver, the model-facing tools.
+- id: goal
+  name: '@deepseek-ai/dsh-goal'
+
+- id: goal-round-driver
+  name: '@deepseek-ai/dsh-goal-round-driver'
+
+- id: tool-goal
+  name: '@deepseek-ai/dsh-tool-goal'
+
+# Notification seam plus the in-memory channel capturing suspension alerts.
+- id: notification
+  name: '@deepseek-ai/dsh-notification'
+
+- id: fixture-channel
+  name: './channel.ts'
+
+# The real storage + persistence + workspace stack, exactly as the web-app
+# bundle composes it, scoped to the fixture directory.
+- id: storage
+  name: '@deepseek-ai/dsh-storage'
+
+- id: storage-json
+  name: '@deepseek-ai/dsh-storage-json'
+  config:
+    root: './storages'
+
+- id: storage-domain
+  name: '@deepseek-ai/dsh-storage-domain'
+  config:
+    backend: json
+
+- id: session-persistence-jsonl
+  name: '@deepseek-ai/dsh-session-persistence-jsonl'
+  config:
+    root: !!js dshHomePath('sessions')
+
+- id: workspace
+  name: '@deepseek-ai/dsh-workspace'
+
+# The management gateway: the task console remotes (list/resume/discard and
+# the notification describe/test surface) run inside this real assembly.
+- id: digital-employee-management
+  name: '@deepseek-ai/dsh-host-digital-employee-management'
+  config:
+    administrator: true
+    studioFile: './configuration-studio.json'
+
+# The employee task driver over the seeded startup service.
+- id: headless-employee-runner
+  name: '@deepseek-ai/dsh-headless/employee'
+  config:
+    maxGoalRounds: 2
+    maxFailedAttempts: 3
+    notifyChannel: fixture-channel
+    settleTimeoutMs: 60000
+
+# The launcher provides the exit hook and startup values synchronously; the
+# employee instance is seeded on disk by the test's prepare hook.
+- id: launcher
+  name: './launcher.ts'

@@ -414,3 +414,57 @@ export interface DigitalEmployeeMemoryQuery {
   readonly scopes: readonly DigitalEmployeeMemoryScope[]
   readonly limit: number
 }
+
+/** One autonomous task row of the task console. */
+export interface DigitalEmployeeTaskEntry {
+  /** Stable ledger key (`--task-key` or the derived attempt hash). */
+  readonly key: string
+  /** Recorded display name, or the key itself for legacy records. */
+  readonly displayName: string
+  /** Consecutive attempts that did not complete. */
+  readonly consecutiveFailures: number
+  /** Whether automatic attempts are currently refused. */
+  readonly suspended: boolean
+  /** Human-readable reason of the latest failed attempt. */
+  readonly lastReason?: string
+  /** Owning employee identity, when the driver recorded it. */
+  readonly employeeId?: string
+}
+
+/** Wire request naming one ledger task key. */
+export interface DigitalEmployeeTaskKeyRequest {
+  /** The ledger key to act on. */
+  readonly key: string
+}
+
+/** One notification channel's configuration surface. */
+export interface NotificationChannelStatus {
+  /** Stable channel id. */
+  readonly id: string
+  /** Credential references with their current configured facts (no values). */
+  readonly credentials: readonly NotificationCredentialStateInfo[]
+}
+
+/** Wire request naming one channel to test. */
+export interface NotificationChannelTestRequest {
+  /** The channel id to send the test message through. */
+  readonly channel: string
+}
+
+/** Closed outcome of one channel test send. */
+export interface NotificationChannelTestResult {
+  /** Whether the test message was delivered. */
+  readonly delivered: boolean
+  /** Failure reason when not delivered. */
+  readonly reason?: string
+}
+
+
+
+/** One credential reference a channel resolves, with its configured fact (never a value). */
+export interface NotificationCredentialStateInfo {
+  /** The credential reference name (for example an environment variable). */
+  readonly ref: string
+  /** Whether the credentials service currently resolves this reference. */
+  readonly configured: boolean
+}
