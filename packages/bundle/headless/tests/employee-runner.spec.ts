@@ -13,7 +13,7 @@ import type { GoalView } from '@deepseek-ai/dsh-goal'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { applyAttemptFailure, attemptKeyOf, internals as ledger, listTaskAttempts, resetAttempt, withTaskAttempts } from '@deepseek-ai/dsh-digital-employee-file'
+import { applyAttemptFailure, attemptKeyOf, digestInternals, internals as ledger, listTaskAttempts, resetAttempt, withTaskAttempts } from '@deepseek-ai/dsh-digital-employee-file'
 import * as EmployeeRunner from '../src/employee-runner.ts'
 import { HEADLESS_STARTUP_SERVICE } from '../src/startup.ts'
 
@@ -168,6 +168,7 @@ let dir: string
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), 'dsh-employee-ledger-'))
   ledger.path = join(dir, 'task-attempts.json')
+  digestInternals.path = join(dir, 'task-digest.json')
   internals.stdout = { write: (chunk) => { capturedOut += chunk; return true } }
   internals.stderr = { write: (chunk) => { capturedErr += chunk; return true } }
   capturedOut = ''
@@ -176,6 +177,7 @@ beforeEach(() => {
 
 afterEach(() => {
   ledger.path = join(tmpdir(), `stale-${Date.now()}.json`)
+  digestInternals.path = join(tmpdir(), `stale-${Date.now()}.json`)
   internals.stdout = process.stdout
   internals.stderr = process.stderr
 })
@@ -354,5 +356,47 @@ describe('mounted employee runs', () => {
     await new Promise((resolve) => { setTimeout(resolve, 20) })
     expect(observed.exits).toEqual([])
     expect(observed.createdTasks).toEqual([])
+  })
+})
+
+describe('success digest', () => {
+  it('stays fully silent without a configured digest channel', async () => {
+    const observed = await mountedRun({ goal: { phase: 'complete' } })
+    expect(observed.exits).toEqual([0])
+    expect(observed.sent).toEqual([])
+  })
+
+  it('sends one digest when the window elapsed and resets the window', async () => {
+    const observed = await mountedRun({
+      goal: { phase: 'complete' },
+      config: { successDigestChannel: 'feishu-bot', successDigestEveryHours: 1 },
+    })
+    expect(observed.exits).toEqual([0])
+    expect(observed.sent).toHaveLength(1)
+    expect(observed.sent[0]?.channel).toBe('feishu-bot')
+    expect(observed.sent[0]?.title).toBe('[digest] digital employee tasks')
+    const { digestInternals: digest } = await import('@deepseek-ai/dsh-digital-employee-file')
+    const { readFile } = await import('node:fs/promises')
+    const state = JSON.parse(await readFile(digest.path, 'utf8')) as { successes: number; lastSentAt?: number }
+    expect(state.successes).toBe(0)
+    expect(typeof state.lastSentAt).toBe('number')
+  })
+
+  it('accumulates without sending when the window has not elapsed', async () => {
+    const { writeFile, mkdir } = await import('node:fs/promises')
+    await mkdir(dir, { recursive: true })
+    await writeFile(
+      digestInternals.path,
+      `${JSON.stringify({ successes: 1, lastSentAt: Date.now() })}\n`,
+    )
+    const observed = await mountedRun({
+      goal: { phase: 'complete' },
+      config: { successDigestChannel: 'feishu-bot', successDigestEveryHours: 24 },
+    })
+    expect(observed.exits).toEqual([0])
+    expect(observed.sent).toEqual([])
+    const state = JSON.parse(await (await import('node:fs/promises')).readFile(
+      digestInternals.path, 'utf8')) as { successes: number }
+    expect(state.successes).toBe(2)
   })
 })

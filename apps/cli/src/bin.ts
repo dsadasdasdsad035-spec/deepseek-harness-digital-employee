@@ -37,6 +37,14 @@ switch (invocation.mode) {
     })
     break
   }
+  case 'employee-task': {
+    // Boot-free ledger management: the ledger resolves from DSH_HOME, so the
+    // layered env (root .env) must load before the store module computes paths.
+    loadLayeredEnv('dsh')
+    const { runEmployeeTask } = await import('./employee-task.ts')
+    process.exit(await runEmployeeTask(invocation.args))
+    break
+  }
   case 'plugin': {
     const { runPlugin } = await import('./plugin.ts')
     process.exit(runPlugin(invocation.profile, invocation.args))

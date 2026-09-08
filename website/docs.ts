@@ -309,6 +309,7 @@ const subsystemGroups = [
     ['commands.md', '命令', 'Human commands'],
     ['goal.md', '目标', 'Goals'],
     ['schedule.md', '定时提醒', 'Scheduled reminders'],
+    ['notification.md', '通知', 'Notifications'],
   ]],
   ['平台与接入', 'Platform and access', [
     ['web-server.md', 'HTTP 服务器', 'HTTP server'],

@@ -18,10 +18,14 @@ import z from '@deepseek-ai/schemastery'
 import {
   applyAttemptFailure,
   attemptKeyOf,
+  countDigestSuccess,
+  digestDue,
   listTaskAttempts,
+  markDigestSent,
   resetAttempt,
   stampAttemptDisplay,
   withTaskAttempts,
+  withTaskDigest,
 } from '@deepseek-ai/dsh-digital-employee-file'
 import type { GoalView } from '@deepseek-ai/dsh-goal'
 import type { DigitalEmployeeInstanceId } from '@deepseek-ai/dsh-digital-employee'
@@ -107,6 +111,10 @@ export interface Config {
   maxFailedAttempts?: number
   /** Notification channel notified on suspension; omitted stays silent. */
   notifyChannel?: string
+  /** Notification channel for opt-in aggregated success digests; omitted keeps successes fully silent. */
+  successDigestChannel?: string
+  /** Minimum hours between success digests (default 24). */
+  successDigestEveryHours?: number
   /** Whole-run quiescence ceiling in milliseconds (default 1_800_000). */
   settleTimeoutMs?: number
 }
@@ -115,6 +123,8 @@ export const Config: z<Config> = z.object({
   maxGoalRounds: z.number().step(1).min(1).default(32),
   maxFailedAttempts: z.number().step(1).min(1).default(3),
   notifyChannel: z.string(),
+  successDigestChannel: z.string(),
+  successDigestEveryHours: z.number().min(1).default(24),
   settleTimeoutMs: z.number().min(1).default(1_800_000),
 })
 
@@ -244,6 +254,7 @@ async function run(
 
   if (outcome.kind === 'complete') {
     await withTaskAttempts((ledger) => { resetAttempt(ledger, key) })
+    await recordSuccessDigest(ctx, config, io)
     io.exit(EXIT_COMPLETE)
     return
   }
@@ -328,6 +339,51 @@ interface NotificationsLike {
     readonly body: string
     readonly context?: Readonly<Record<string, string>>
   }): Promise<{ readonly delivered: true } | { readonly delivered: false; readonly reason: string }>
+}
+
+/** The notification surface the digest helper consumes; structural to avoid a host dependency. */
+interface DigestNotificationsLike {
+  send(request: {
+    readonly channel: string
+    readonly title: string
+    readonly body: string
+  }): Promise<{ readonly delivered: true } | { readonly delivered: false; readonly reason: string }>
+}
+
+/**
+ * Opt-in aggregated success digest: count the success, and when the window
+ * elapsed send one summary through the configured channel. Failures keep the
+ * accumulated state so the next success retries. Unconfigured channel = fully
+ * silent (the spec-default behavior).
+ * @param ctx - context carrying the optional notification service.
+ * @param config - validated runner config.
+ * @param io - process-facing effects for warn output.
+ */
+async function recordSuccessDigest(ctx: Context, config: Config, io: EmployeeIo): Promise<void> {
+  const channel = config.successDigestChannel
+  if (channel === undefined) return
+  const intervalMs = (config.successDigestEveryHours as number) * 3_600_000
+  const due = await withTaskDigest((state) => {
+    countDigestSuccess(state)
+    return digestDue(state, intervalMs, Date.now())
+  })
+  if (!due) return
+  const notifications = ctx.get('notifications') as DigestNotificationsLike | undefined
+  if (notifications === undefined) {
+    io.stderr.write('dsh: success digest is configured but no notification capability is composed\n')
+    return
+  }
+  const since = new Date(Date.now() - intervalMs).toISOString()
+  const outcome = await notifications.send({
+    channel,
+    title: '[digest] digital employee tasks',
+    body: `Successful task run(s) completed since ${since}.`,
+  })
+  if (outcome.delivered) {
+    await withTaskDigest((state) => { markDigestSent(state, Date.now()) })
+    return
+  }
+  ctx.logger.warn(`headless-employee-runner: success digest was not delivered: ${outcome.reason}`)
 }
 
 /** Best-effort suspension notification through the composed channel. */

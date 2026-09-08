@@ -15,8 +15,8 @@
  * @module @deepseek-ai/dsh-digital-employee-file/task-attempts
  */
 
-import { createHash } from 'node:crypto'
-import { mkdir, readFile } from 'node:fs/promises'
+import { createHash, randomUUID } from 'node:crypto'
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
@@ -192,4 +192,94 @@ export function stampAttemptDisplay(ledger: TaskAttemptLedger, key: string, disp
   if (record === undefined) return
   record.displayName = displayName
   record.employeeId = employeeId
+}
+
+/** One digest window's state: successes since the last sent digest. */
+export interface TaskDigestState {
+  /** Successful runs accumulated since the last sent digest. */
+  successes: number
+  /** Epoch milliseconds of the last successfully sent digest, when one was sent. */
+  lastSentAt?: number
+}
+
+/** Process-facing digest state path the tests substitute. */
+export const digestInternals: { path: string } = {
+  path: dshHomePath('digital-employees', 'task-digest.json'),
+}
+
+/**
+ * Read the digest state; a missing file is the empty window.
+ * @returns the parsed digest state.
+ */
+export async function readTaskDigest(): Promise<TaskDigestState> {
+  try {
+    const parsed = JSON.parse(await readFile(digestInternals.path, 'utf8')) as unknown
+    if (typeof parsed !== 'object' || parsed === null) throw new Error('not an object')
+    const input = parsed as Record<string, unknown>
+    if (typeof input.successes !== 'number' || !Number.isInteger(input.successes) || input.successes < 0) {
+      throw new Error('invalid successes')
+    }
+    if (input.lastSentAt !== undefined && typeof input.lastSentAt !== 'number') {
+      throw new Error('invalid lastSentAt')
+    }
+    return {
+      successes: input.successes,
+      ...input.lastSentAt !== undefined ? { lastSentAt: input.lastSentAt } : {},
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('task digest:')) throw error
+    if (error instanceof Error && ('invalid successes' === error.message || 'invalid lastSentAt' === error.message)) {
+      throw new Error(`task digest: digest state at ${digestInternals.path} has ${error.message}`)
+    }
+    return { successes: 0 }
+  }
+}
+
+/**
+ * Run one read-modify-write transaction against the digest state under the
+ * same cross-process file lock pattern as the ledger.
+ * @param mutate - receives a mutable draft; edits land only when it settles.
+ * @returns whatever `mutate` settled with.
+ */
+export async function withTaskDigest<T>(mutate: (state: TaskDigestState) => Promise<T> | T): Promise<T> {
+  await mkdir(dirname(digestInternals.path), { recursive: true })
+  return await withFileLock(digestInternals.path, async () => {
+    const state = await readTaskDigest()
+    const result = await mutate(state)
+    const temp = `${digestInternals.path}.${randomUUID()}.tmp`
+    await writeFile(temp, `${JSON.stringify(state, null, 2)}\n`)
+    await rename(temp, digestInternals.path)
+    return result
+  })
+}
+
+/**
+ * Whether one successful run should send the digest now: the window has
+ * elapsed since the last sent digest (or none was ever sent).
+ * @param state - the current digest state.
+ * @param intervalMs - the configured minimum interval between digests.
+ * @param now - current epoch milliseconds.
+ * @returns true when a digest should be sent.
+ */
+export function digestDue(state: TaskDigestState, intervalMs: number, now: number): boolean {
+  if (state.successes === 0) return false
+  return state.lastSentAt === undefined || now - state.lastSentAt >= intervalMs
+}
+
+/**
+ * Record one successful run in place.
+ * @param state - the digest state to mutate.
+ */
+export function countDigestSuccess(state: TaskDigestState): void {
+  state.successes += 1
+}
+
+/**
+ * Reset the window after a successfully sent digest.
+ * @param state - the digest state to mutate.
+ * @param now - epoch milliseconds of the send.
+ */
+export function markDigestSent(state: TaskDigestState, now: number): void {
+  state.successes = 0
+  state.lastSentAt = now
 }

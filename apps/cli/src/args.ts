@@ -44,8 +44,15 @@ interface PluginInvocation {
   args: string[]
 }
 
+/** Manage the autonomous-task attempt ledger without booting a profile. */
+interface EmployeeTaskInvocation {
+  mode: 'employee-task'
+  /** Arguments after `dsh employee-task`, verbatim. */
+  args: string[]
+}
+
 /** The resolved `dsh` invocation. Help, version, and errors exit inside {@link parseDshArgs}. */
-export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation
+export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | EmployeeTaskInvocation
 
 /** Launcher flags shared by the default command and the `web` alias. */
 interface BootOptions {
@@ -168,6 +175,14 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
     .action((args: string[], options: BootOptions) => {
       rejectParentOptions('web')
       resolved = resolveBoot(web, 'web', options, args)
+    })
+
+  const employeeTask = program.command('employee-task').description('manage the autonomous-task attempt ledger (list, resume, discard) without booting a profile')
+  employeeTask
+    .allowUnknownOption()
+    .argument('[args...]', 'subcommand and arguments, forwarded verbatim (see: dsh employee-task --help)')
+    .action((args: string[]) => {
+      resolved = { mode: 'employee-task', args }
     })
 
   const plugin = program.command('plugin').description('manage a profile\'s plugins by forwarding the remaining arguments to pnpm in the profile directory')
