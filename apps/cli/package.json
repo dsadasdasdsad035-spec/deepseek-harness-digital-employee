@@ -84,7 +84,7 @@
     "@deepseek-ai/dsh-web-app": "workspace:^",
     "@deepseek-ai/dsh-workflow-worker-thread": "workspace:^",
     "commander": "^15.0.0",
-    "js-yaml": "^4.2.0",
+    "js-yaml": "^5.2.3",
     "node-addon-require-builtin": "^0.1.4"
   },
   "devDependencies": {
