@@ -15,10 +15,22 @@
       "path": "../locale"
     },
     {
-      "path": "../runtime"
+      "path": "../../api/session-controller/tsconfig.client.json"
+    },
+    {
+      "path": "../store"
+    },
+    {
+      "path": "../ui-chat"
     },
     {
       "path": "../ui-conversation"
+    },
+    {
+      "path": "../ui-renderer"
+    },
+    {
+      "path": "../ui-session"
     },
     {
       "path": "../ui-primitives"
@@ -27,13 +39,13 @@
       "path": "../ui-slots"
     },
     {
+      "path": "../../core/session"
+    },
+    {
       "path": "../../workflow/workflow"
     },
     {
       "path": "../../workflow/tool-workflow"
-    },
-    {
-      "path": "../../runtime-diagnostics/invariants"
     }
   ]
 }

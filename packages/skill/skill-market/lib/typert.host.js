@@ -249,7 +249,7 @@ export const TYPERT = {
         typeSymbol: '@deepseek-ai/dsh-skill-market/types#SkillMarketBannerResult',
         schema: _deepseek_ai_dsh_skill_market_skillMarket_banner_result$schema,
       },
-      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":190,"column":9},
+      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":199,"column":9},
     },
     {
       id: '@deepseek-ai/dsh-skill-market#skillMarket/install',
@@ -274,7 +274,7 @@ export const TYPERT = {
         typeSymbol: '@deepseek-ai/dsh-skill-market/types#SkillMarketInstallResult',
         schema: _deepseek_ai_dsh_skill_market_skillMarket_install_result$schema,
       },
-      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":208,"column":9},
+      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":217,"column":9},
     },
     {
       id: '@deepseek-ai/dsh-skill-market#skillMarket/list',
@@ -289,7 +289,7 @@ export const TYPERT = {
         typeSymbol: '@deepseek-ai/dsh-skill-market/types#SkillMarketListResult',
         schema: _deepseek_ai_dsh_skill_market_skillMarket_list_result$schema,
       },
-      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":229,"column":9},
+      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":238,"column":9},
     },
     {
       id: '@deepseek-ai/dsh-skill-market#skillMarket/uninstall',
@@ -314,7 +314,7 @@ export const TYPERT = {
         typeSymbol: '@deepseek-ai/dsh-skill-market/types#SkillMarketUninstallResult',
         schema: _deepseek_ai_dsh_skill_market_skillMarket_uninstall_result$schema,
       },
-      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":253,"column":9},
+      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":262,"column":9},
     },
   ],
   model: {
@@ -468,7 +468,29 @@ export const TYPERT = {
         ]
       }
     ],
-    "events": [],
+    "events": [
+      {
+        "description": "Notify the filesystem skill provider after a Host-owned skill mutation commits.",
+        "summary": "Notify the filesystem skill provider after a Host-owned skill mutation commits.",
+        "tags": [
+          {
+            "name": "mode",
+            "comment": "emit",
+            "text": "@mode emit\n     *"
+          },
+          {
+            "name": "param",
+            "argument": "path",
+            "comment": "- committed skill directory or descriptor path.",
+            "text": "@param path - committed skill directory or descriptor path."
+          }
+        ],
+        "jsDoc": "/**\n * Notify the filesystem skill provider after a Host-owned skill mutation commits.\n * @mode emit\n * @param path - committed skill directory or descriptor path.\n */",
+        "name": "skill-filesystem/host-mutation",
+        "mode": "emit",
+        "signature": "'skill-filesystem/host-mutation'(path: string): void"
+      }
+    ],
     "objects": []
   },
 }

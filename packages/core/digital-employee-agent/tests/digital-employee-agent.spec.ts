@@ -13,7 +13,7 @@ import {
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { createScope } from '@deepseek-ai/dsh-scope'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
+import { Session, SessionId , SessionLogOffset } from '@deepseek-ai/dsh-session'
 import SystemPrompt, { renderPrompt } from '@deepseek-ai/dsh-system-prompt'
 import { describe, expect, it, vi } from 'vitest'
 import DigitalEmployeeAgent, {
@@ -540,7 +540,7 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('agents', {
       create: async (request: {
         sessionId: SessionId
-        setup: (agentCtx: Context) => Promise<void>
+        setup: (agentCtx: Context, agent: unknown) => Promise<void>
       }) => {
         const agentCtx = new Context()
         agentCtx.provide('agent', {
@@ -550,8 +550,9 @@ describe('DigitalEmployeeAgent', () => {
         agentCtx.provide('skills', { restrict: () => {} } as never)
         agentCtx.provide('systemPrompt', { section: () => {} } as never)
         agentCtx.provide('tools', { restrict: () => {} } as never)
-        await request.setup(agentCtx)
-        return { agent: agentCtx.agent, dispose: async () => {} }
+        const agent = { session: { id: 'stub-agent-session' } } as never
+        await request.setup(agentCtx, agent)
+        return { agent, dispose: async () => {} }
       },
     } as never)
     ctx.provide('credentials', { resolve: () => Promise.resolve({ value: 'unused' }) } as never)
@@ -1076,12 +1077,10 @@ describe('DigitalEmployeeAgent', () => {
     }
     childCtx.provide('agent', child as never)
 
-    await ctx.serial('subagent/compose', childCtx, {
-      digitalEmployeeExpert: {
-        employeeId: employee.instance.id,
-        expertId,
-        mcpServerIds: ['evidence'],
-      },
+    await ctx.digitalEmployeeAgent.composeExpertMcp(childCtx, child as never, {
+      employeeId: employee.instance.id,
+      expertId,
+      mcpServerIds: ['evidence'],
     })
 
     expect(resolveCredential).toHaveBeenCalledWith('EVIDENCE_TOKEN')
@@ -1122,12 +1121,10 @@ describe('DigitalEmployeeAgent', () => {
       })
     })
 
-    await expect(ctx.serial('subagent/compose', childCtx, {
-      digitalEmployeeExpert: {
-        employeeId: employee.instance.id,
-        expertId,
-        mcpServerIds: ['unauthorized'],
-      },
+    await expect(ctx.digitalEmployeeAgent.composeExpertMcp(childCtx, child as never, {
+      employeeId: employee.instance.id,
+      expertId,
+      mcpServerIds: ['unauthorized'],
     })).rejects.toThrow('does not authorize MCP server "unauthorized"')
     expect(mount).toHaveBeenCalledTimes(1)
     expect(JSON.stringify({
@@ -1367,7 +1364,7 @@ describe('DigitalEmployeeAgent', () => {
       parent as never,
       childId,
       content,
-      { source: { kind: 'user' }, signal },
+      { signal },
     )).resolves.toBe('message-2')
     ctx.digitalEmployeeAgent.interruptExpert(childId, {
       kind: 'ancestor',
@@ -1529,7 +1526,7 @@ describe('DigitalEmployeeAgent', () => {
     expect(restrictSkills).toHaveBeenCalledWith({ allow: [] })
     expect(restrictTools).toHaveBeenCalledWith({ allow: [] })
 
-    const creationIdentity = session.events.find(event => event.type === 'digital-employee/identity')
+    const creationIdentity = session.snapshotEvents().find(event => event.type === 'digital-employee/identity')
     currentEmployee = {
       ...employee,
       instance: {
@@ -1543,12 +1540,14 @@ describe('DigitalEmployeeAgent', () => {
     expect(currentEmployee.instance.displayName).toBe('Renamed Alpha')
     const restored = Session.fromRestore(
       session.id,
-      structuredClone(session.events),
+      structuredClone(session.snapshotEvents()),
       structuredClone(session.header),
+      SessionLogOffset(0),
+      'detached',
     )
 
-    expect(restored.events.find(event => event.type === 'digital-employee/identity')).toEqual(creationIdentity)
-    expect(projectDigitalEmployeeOwnership(restored.events)).toMatchObject({
+    expect(restored.snapshotEvents().find(event => event.type === 'digital-employee/identity')).toEqual(creationIdentity)
+    expect(projectDigitalEmployeeOwnership(restored.snapshotEvents())).toMatchObject({
       employeeId: 'alpha',
       displayName: 'Alpha',
       templateId: 'analyst',

@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { type Agent } from '@deepseek-ai/dsh-agent'
 
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import { HarnessError, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import { carrierKeyOf } from '@deepseek-ai/dsh-scope'
 import SubagentRuntime, {
   foldSubagentDescriptor,
@@ -19,13 +19,14 @@ import SubagentRuntime, {
   type SubagentStartRequest,
 } from '@deepseek-ai/dsh-subagent'
 import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
+import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 
 function fakeParent(id = 'parent-1'): Agent {
   return { id: SessionId(id) } as unknown as Agent
 }
 
-const ALL_CAPS: SubagentCapabilities = { outputSchema: true, depthLimit: true, toolFilter: true, persona: true }
-const NO_CAPS: SubagentCapabilities = { outputSchema: false, depthLimit: false, toolFilter: false, persona: false }
+const ALL_CAPS: SubagentCapabilities = { agentOptions: true, outputSchema: true, depthLimit: true, toolFilter: true, persona: true }
+const NO_CAPS: SubagentCapabilities = { agentOptions: false, outputSchema: false, depthLimit: false, toolFilter: false, persona: false }
 
 function baseRequest(overrides: Partial<SubagentStartRequest> = {}): SubagentStartRequest {
   return {
@@ -64,6 +65,9 @@ class StubProvider implements SubagentProvider {
 
 async function service(): Promise<{ ctx: Context; subagents: SubagentRuntime }> {
   const ctx = new Context()
+  // The registry is a required injection of SubagentRuntime (its projection
+  // units register in the constructor).
+  await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SubagentRuntime)
   return { ctx, subagents: ctx.subagents }
 }
@@ -153,15 +157,16 @@ describe('SubagentRuntime', () => {
       request: baseRequest(),
       signal: new AbortController().signal,
     })).rejects.toMatchObject({ code: 'CONTINUATION_UNAVAILABLE' })
-    await expect(subagents.followup(
+    await expect(subagents.sendMessage(
       fakeParent(),
       SessionId('child'),
       [{ type: 'text', text: 'hello' }],
-      { source: { kind: 'user' }, signal: new AbortController().signal },
+      { signal: new AbortController().signal },
     )).rejects.toMatchObject({ code: 'CONTINUATION_UNAVAILABLE' })
   })
 
   it.each([
+    ['agentOptions', { agentOptions: { model: 'child-model' } }],
     ['outputSchema', { outputSchema: { type: 'object', properties: {} } }],
     ['depthLimit', { maxDepth: 1 }],
     ['toolFilter', { toolFilter: { deny: ['bash'] } }],
@@ -348,36 +353,20 @@ describe('subagent descriptors', () => {
       label: 'complete child',
       agentProvider: 'deepseek',
       agentModel: 'chat',
+      agentReasoningEffort: ReasoningEffortId('high'),
       persona: 'reviewer',
       toolFilter: { allow: ['read'], deny: ['bash'] },
-      composition: {
-        digitalEmployee: {
-          employeeId: 'employee-1',
-          expertId: 'critic',
-          mcpServerIds: ['github'],
-        },
-      },
     }
-    const composition = {
-      digitalEmployee: {
-        employeeId: 'employee-1',
-        expertId: 'critic',
-        mcpServerIds: ['github'],
-      },
-    }
-    const snapshot = snapshotSubagentDescriptor({
+    expect(snapshotSubagentDescriptor({
       mode: 'continuable',
       provider: complete.provider,
       label: complete.label,
       agentProvider: complete.agentProvider,
       agentModel: complete.agentModel,
+      agentReasoningEffort: complete.agentReasoningEffort,
       persona: complete.persona,
       toolFilter: complete.toolFilter,
-      composition,
-    })
-    expect(snapshot).toEqual(complete)
-    composition.digitalEmployee.mcpServerIds.push('unauthorized')
-    expect(snapshot).toEqual(complete)
+    })).toEqual(complete)
     expect(foldSubagentDescriptor([event(complete)])).toEqual(complete)
     expect(foldSubagentDescriptor([
       event({
@@ -405,12 +394,6 @@ describe('subagent descriptors', () => {
       provider: 'spawn',
       label: 'bad',
       toolFilter: { deny: [Symbol('not-json')] as unknown as string[] },
-    })).toThrow('not losslessly JSON-serializable')
-    expect(() => snapshotSubagentDescriptor({
-      mode: 'continuable',
-      provider: 'spawn',
-      label: 'bad composition',
-      composition: { bad: Symbol('not-json') as never },
     })).toThrow('not losslessly JSON-serializable')
   })
 
@@ -472,6 +455,13 @@ describe('subagent descriptors', () => {
       label: 'l',
       agentModel: [],
     }, 'agentModel must be a string'],
+    ['invalid agent reasoning effort', {
+      version: SUBAGENT_DESCRIPTOR_VERSION,
+      mode: 'continuable',
+      provider: 'spawn',
+      label: 'l',
+      agentReasoningEffort: 7,
+    }, 'agentReasoningEffort must be a string'],
     ['invalid persona', {
       version: SUBAGENT_DESCRIPTOR_VERSION,
       mode: 'continuable',
@@ -514,20 +504,6 @@ describe('subagent descriptors', () => {
       label: 'l',
       toolFilter: { deny: [7] },
     }, 'toolFilter.deny must be an array of strings'],
-    ['array composition', {
-      version: SUBAGENT_DESCRIPTOR_VERSION,
-      mode: 'continuable',
-      provider: 'spawn',
-      label: 'l',
-      composition: [],
-    }, 'composition must be an object'],
-    ['non-JSON composition', {
-      version: SUBAGENT_DESCRIPTOR_VERSION,
-      mode: 'continuable',
-      provider: 'spawn',
-      label: 'l',
-      composition: { value: undefined },
-    }, 'composition must be losslessly JSON-serializable'],
   ])('rejects a malformed persisted descriptor: %s', (_case, data, detail) => {
     expect(() => foldSubagentDescriptor([event(data)])).toThrow(detail)
   })

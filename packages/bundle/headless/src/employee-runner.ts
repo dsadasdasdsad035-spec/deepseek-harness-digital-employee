@@ -241,7 +241,7 @@ async function run(
   await ctx.sessions.flush(agent.session)
   const goal = ctx.goals.get(agent)
   const outcome = classifyOutcome(goal)
-  io.stdout.write(lastAssistantText(agent.session.events) + '\n')
+  io.stdout.write(lastAssistantText(agent.session.snapshotEvents()) + '\n')
 
   const reasonOf = (): string => {
     switch (outcome.kind) {

@@ -48,6 +48,9 @@
       "path": "../../subagent/subagent"
     },
     {
+      "path": "../../subagent/subagent-in-process-driver"
+    },
+    {
       "path": "../system-prompt"
     },
     {

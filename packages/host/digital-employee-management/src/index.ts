@@ -808,7 +808,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
       this.requiredParent(request.parentSessionId),
       request.childSessionId,
       [...request.content],
-      { source: { kind: 'user' }, signal: new AbortController().signal },
+      { signal: new AbortController().signal },
     )
   }
 

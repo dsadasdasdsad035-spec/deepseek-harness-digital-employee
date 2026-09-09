@@ -4,12 +4,15 @@ import { describe, expect, it } from 'vitest'
 import {
   JsonRpcLineTransport,
   JsonRpcResponseError,
+  type HarnessSdkNotificationMap,
+} from '../src/index.ts'
+import {
   createDigitalEmployeeCompositionId,
   createDigitalEmployeeInstanceId,
   createDigitalEmployeeTemplateId,
   type DigitalEmployeeIdentityEvent,
-  type HarnessSdkNotificationMap,
-} from '../src/index.ts'
+} from '@deepseek-ai/dsh-digital-employee'
+import { SessionSeq } from '@deepseek-ai/dsh-session'
 
 const digitalEmployeeIdentity = {
   employeeId: createDigitalEmployeeInstanceId('employee-1'),
@@ -25,7 +28,7 @@ const digitalEmployeeNotification: HarnessSdkNotificationMap['session.event'] = 
   sessionId: 'session-1',
   event: {
     type: 'digital-employee/identity',
-    seq: 0,
+    seq: SessionSeq(0),
     time: 0,
     data: digitalEmployeeIdentity,
   },

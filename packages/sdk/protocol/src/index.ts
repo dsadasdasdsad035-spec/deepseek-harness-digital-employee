@@ -9,18 +9,14 @@
  */
 
 export { JsonRpcLineTransport, JsonRpcResponseError } from './transport.ts'
-export {
-  createDigitalEmployeeCompositionId,
-  createDigitalEmployeeInstanceId,
-  createDigitalEmployeeTemplateId,
-} from '@deepseek-ai/dsh-digital-employee'
-export type { DigitalEmployeeIdentityEvent } from '@deepseek-ai/dsh-digital-employee'
 export type { JsonRpcTransportPeer } from './transport.ts'
 export type {
   HarnessSdkNotificationMap,
   HarnessSdkRequestMap,
   InitializeParams,
   InitializeResult,
+  SdkEncodedImageBlock,
+  SdkPromptContentBlock,
   SdkRunStatus,
   SessionEventNotification,
   SessionStatusNotification,

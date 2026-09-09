@@ -51,7 +51,7 @@ import {
   KeyedMutex,
 } from '@deepseek-ai/dsh-marketplace-core'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
-import { parseSkillDescriptor } from '@deepseek-ai/dsh-skill-filesystem'
+import { parse as parseYaml } from 'yaml'
 import { isSkillName } from '@deepseek-ai/dsh-skill'
 import {
   SkillMarketError,
@@ -977,6 +977,44 @@ function normalizeEntry(
  * @param frontmatter - owning descriptor parser 提供的完整 frontmatter。
  * @param name - 技能名（用于错误信息）。
  */
+
+interface ParsedSkillDescriptor {
+  readonly frontmatter: Record<string, unknown>
+  readonly name: string
+  readonly description: string
+  readonly content: string
+}
+
+/**
+ * Parse one SKILL.md source: `---` frontmatter (YAML) carrying a valid name and
+ * description, plus the trimmed body. The filesystem provider owns its own
+ * descriptor rules; the market only needs these upload-validation fields.
+ * @param raw - complete SKILL.md text.
+ * @returns the parsed descriptor, or `undefined` when required fields are absent or invalid.
+ */
+function parseSkillDescriptor(raw: string): ParsedSkillDescriptor | undefined {
+  const firstLineEnd = raw.indexOf('\n')
+  if (firstLineEnd < 0) return undefined
+  if (raw.slice(0, firstLineEnd).replace(/\r$/, '') !== '---') return undefined
+  const rest = raw.slice(firstLineEnd + 1)
+  const lines = rest.split('\n')
+  const closeIndex = lines.findIndex(line => line.replace(/\r$/, '') === '---')
+  if (closeIndex < 0) return undefined
+  const parsed = parseYaml(lines.slice(0, closeIndex).join('\n')) as unknown
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return undefined
+  const frontmatter = parsed as Record<string, unknown>
+  const name = frontmatter['name']
+  const description = frontmatter['description']
+  if (typeof name !== 'string' || !isSkillName(name)) return undefined
+  if (typeof description !== 'string' || description.length === 0) return undefined
+  return {
+    frontmatter,
+    name,
+    description,
+    content: lines.slice(closeIndex + 1).join('\n').trim(),
+  }
+}
+
 function parseMarketplace(
   frontmatter: Readonly<Record<string, unknown>>,
   name: string,

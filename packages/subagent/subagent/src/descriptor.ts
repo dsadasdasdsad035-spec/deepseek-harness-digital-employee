@@ -21,10 +21,10 @@
  * @module @deepseek-ai/dsh-subagent/descriptor
  */
 
-import { snapshotJsonValue } from '@deepseek-ai/dsh-session'
+import { snapshotJsonValue } from '@deepseek-ai/dsh-util-values'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import type { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import type { ToolRestriction } from '@deepseek-ai/dsh-tools'
-import type { JsonValue } from '@deepseek-ai/dsh-session'
 
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
@@ -77,12 +77,12 @@ export interface ContinuableSubagentDescriptorData extends SubagentDescriptorBas
   readonly agentProvider?: string
   /** Resolved child `agentOptions.model`, when one was declared. */
   readonly agentModel?: string
+  /** Resolved child `agentOptions.reasoningEffort`, when one was declared. */
+  readonly agentReasoningEffort?: ReasoningEffortId
   /** Per-child persona that shadows the deployment persona on resume. */
   readonly persona?: string
   /** Child tool scoping reapplied on resume. */
   readonly toolFilter?: ToolRestriction
-  /** Non-secret plugin composition data reapplied on cold resume. */
-  readonly composition?: Readonly<Record<string, JsonValue>>
 }
 
 /** The supported durable subagent identity and optional continuation composition. */
@@ -114,12 +114,12 @@ export interface ContinuableSubagentDescriptorInput extends SubagentDescriptorIn
   readonly agentProvider?: string
   /** Requested child `agentOptions.model`. */
   readonly agentModel?: string
+  /** Requested child `agentOptions.reasoningEffort`. */
+  readonly agentReasoningEffort?: ReasoningEffortId
   /** Requested per-child persona. */
   readonly persona?: string
   /** Requested child tool scoping. */
   readonly toolFilter?: ToolRestriction
-  /** Requested non-secret plugin composition data. */
-  readonly composition?: Readonly<Record<string, JsonValue>>
 }
 
 /** Inputs {@link snapshotSubagentDescriptor} validates and detaches. */
@@ -138,9 +138,9 @@ const CONTINUABLE_DESCRIPTOR_KEYS = new Set([
   ...DESCRIPTOR_BASE_KEYS,
   'agentProvider',
   'agentModel',
+  'agentReasoningEffort',
   'persona',
   'toolFilter',
-  'composition',
 ])
 const TOOL_FILTER_KEYS = new Set(['allow', 'deny'])
 
@@ -198,17 +198,6 @@ function parseToolFilter(value: unknown): ToolRestriction {
   }
 }
 
-function parseComposition(value: unknown): Readonly<Record<string, JsonValue>> {
-  if (!isRecord(value)) {
-    throw new Error('persisted subagent descriptor composition must be an object')
-  }
-  const snapshot = snapshotJsonValue(value)
-  if (snapshot === undefined || Array.isArray(snapshot)) {
-    throw new Error('persisted subagent descriptor composition must be losslessly JSON-serializable')
-  }
-  return snapshot as Record<string, JsonValue>
-}
-
 /** Validate one persisted descriptor payload for the current runtime. */
 function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undefined {
   if (!isRecord(value)) {
@@ -248,12 +237,10 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
   }
   const agentProvider = optionalString(value, 'agentProvider')
   const agentModel = optionalString(value, 'agentModel')
+  const agentReasoningEffort = optionalString(value, 'agentReasoningEffort') as ReasoningEffortId | undefined
   const persona = optionalString(value, 'persona')
   const toolFilter = Object.hasOwn(value, 'toolFilter')
     ? parseToolFilter(value['toolFilter'])
-    : undefined
-  const composition = Object.hasOwn(value, 'composition')
-    ? parseComposition(value['composition'])
     : undefined
   return {
     version: SUBAGENT_DESCRIPTOR_VERSION,
@@ -262,9 +249,9 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
     label,
     ...agentProvider !== undefined ? { agentProvider } : {},
     ...agentModel !== undefined ? { agentModel } : {},
+    ...agentReasoningEffort !== undefined ? { agentReasoningEffort } : {},
     ...persona !== undefined ? { persona } : {},
     ...toolFilter !== undefined ? { toolFilter } : {},
-    ...composition !== undefined ? { composition } : {},
   }
 }
 
@@ -304,9 +291,9 @@ export function snapshotSubagentDescriptor(input: SubagentDescriptorInput): Suba
       label: input.label,
       ...input.agentProvider !== undefined ? { agentProvider: input.agentProvider } : {},
       ...input.agentModel !== undefined ? { agentModel: input.agentModel } : {},
+      ...input.agentReasoningEffort !== undefined ? { agentReasoningEffort: input.agentReasoningEffort } : {},
       ...input.persona !== undefined ? { persona: input.persona } : {},
       ...input.toolFilter !== undefined ? { toolFilter: input.toolFilter } : {},
-      ...input.composition !== undefined ? { composition: input.composition } : {},
     }
   const snapshot = snapshotJsonValue(candidate)
   if (snapshot === undefined) {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { mkdir, readdir, readFile, rename, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -7,8 +7,16 @@ import SkillRegistry from '@deepseek-ai/dsh-skill'
 import { FileSystem, FsError, FsVersion, type FsDirEntry, type FsEditOutcome, type FsEditRequest, type FsInfo, type FsPathInfo, type FsTarget, type FsWriteOutcome } from '@deepseek-ai/dsh-fs'
 import * as SkillFileSystem from '../src/index.ts'
 
+/** Every temp dir created by this file, removed after each test. */
+const tempDirs: string[] = []
+afterEach(async () => {
+  for (const dir of tempDirs.splice(0)) await rm(dir, { recursive: true, force: true })
+})
+
 async function tempDir(name: string): Promise<string> {
-  return await import('node:fs/promises').then(fs => fs.mkdtemp(join(tmpdir(), `dsh-${name}-`)))
+  const dir = await import('node:fs/promises').then(fs => fs.mkdtemp(join(tmpdir(), `dsh-${name}-`)))
+  tempDirs.push(dir)
+  return dir
 }
 
 async function writeSkill(root: string, name: string, description: string, body = 'Use the skill.'): Promise<void> {
@@ -97,6 +105,10 @@ class TestFileSystem extends FileSystem {
   }
 
   override async readBytes(_target: FsTarget, _signal: AbortSignal | undefined, _maxBytes: number): Promise<Uint8Array> {
+    throw new Error('not needed in skill tests')
+  }
+
+  override async readByteRange(_target: FsTarget, _range: { offset: number; length: number }, _signal?: AbortSignal): Promise<Uint8Array> {
     throw new Error('not needed in skill tests')
   }
 
@@ -699,24 +711,6 @@ describe('FileSystemSkillProvider', () => {
 
     expect(invalidations).toBe(2)
     expect((await ctx.skills.list()).map(skill => skill.name)).toEqual(['observed-skill'])
-  })
-
-  it('invalidates discovery for typed Host mutations under an observed skill root', async () => {
-    const home = await tempDir('skill-host-mutation-home')
-    const root = join(home, '.dsh/skills')
-    const ctx = await setupLocal(home)
-    expect(await ctx.skills.list()).toEqual([])
-    let invalidations = 0
-    ctx.on('skills/change', () => { invalidations += 1 })
-
-    ctx.emit('skill-filesystem/host-mutation', join(root, 'installed-skill'))
-    ctx.emit('skill-filesystem/host-mutation', join(root, 'updated-skill/SKILL.md'))
-    ctx.emit('skill-filesystem/host-mutation', root)
-    ctx.emit('skill-filesystem/host-mutation', join(root, '.system/SKILL.md'))
-    ctx.emit('skill-filesystem/host-mutation', join(root, 'installed-skill/references/notes.md'))
-    ctx.emit('skill-filesystem/host-mutation', join(home, 'outside-skill'))
-
-    expect(invalidations).toBe(2)
   })
 
   it('bounds project watchers and re-observes an evicted project on its next lookup', async () => {

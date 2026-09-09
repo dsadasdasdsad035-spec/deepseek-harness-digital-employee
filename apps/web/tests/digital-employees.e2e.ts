@@ -13,7 +13,7 @@ import {
   type DigitalEmployeeAuthority,
   type DigitalEmployeeTemplate,
 } from '@deepseek-ai/dsh-digital-employee'
-import { CallId } from '@deepseek-ai/dsh-llm'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
 import {
   launchWebScaffold, watchConsole, type WebScaffold,
@@ -69,12 +69,12 @@ function userText(events: readonly SessionEvent[]): string[] {
 
 function employeeSessionIds(scaffold: WebScaffold): SessionId[] {
   return scaffold.ctx.agents.roots().flatMap(agent =>
-    agent.session.events.some(event => event.type === 'digital-employee/identity') ? [agent.id] : [])
+    agent.session.snapshotEvents().some(event => event.type === 'digital-employee/identity') ? [agent.id] : [])
 }
 
 async function runtimeSessionIds(scaffold: WebScaffold): Promise<string[]> {
   const ids = new Set<string>(scaffold.ctx.agents.roots().map(agent => agent.id))
-  for (const header of await scaffold.ctx.sessionPersistence.list()) ids.add(header.id)
+  for (const snapshot of await scaffold.ctx.sessionPersistence.list()) ids.add(snapshot.header.id)
   return [...ids].sort()
 }
 
@@ -221,7 +221,8 @@ describe('web e2e: digital employee management through the shipped API', () => {
     await page.locator('[data-chat-flow-kind="user"]').getByText(DIRECT_TASK, { exact: true })
       .waitFor({ timeout: 15_000 })
     await expect.poll(async () => {
-      const loaded = await scaffold.ctx.sessionPersistence.load(directSessionId)
+      const handle = await scaffold.ctx.sessionPersistence.open(directSessionId, 'read')
+      const loaded = await handle.read()
       return {
         owner: loaded.events.find(event => event.type === 'digital-employee/identity')?.data.employeeId,
         prompts: userText(loaded.events),
@@ -253,7 +254,8 @@ describe('web e2e: digital employee management through the shipped API', () => {
     await page.locator('[data-chat-flow-kind="user"]').getByText(MANAGEMENT_TASK, { exact: true })
       .waitFor({ timeout: 15_000 })
     await expect.poll(async () => {
-      const loaded = await scaffold.ctx.sessionPersistence.load(managementSessionId)
+      const handle = await scaffold.ctx.sessionPersistence.open(managementSessionId, 'read')
+      const loaded = await handle.read()
       return {
         owner: loaded.events.find(event => event.type === 'digital-employee/identity')?.data.employeeId,
         prompts: userText(loaded.events),
@@ -324,7 +326,7 @@ describe('web e2e: digital employee management through the shipped API', () => {
 
     const execution = await scaffold.ctx.tools.execute({
       signal: new AbortController().signal,
-      callId: CallId('web-digital-employee-expert'),
+      callId: ToolCallId('web-digital-employee-expert'),
       name: 'delegate_to_expert',
       arguments: {
         expert_id: REVIEWER_ID,
@@ -354,7 +356,7 @@ describe('web e2e: digital employee management through the shipped API', () => {
       parent!,
       child!.id,
       [{ type: 'text', text: 'Return the updated risk finding.' }],
-      { source: { kind: 'user' }, signal: new AbortController().signal },
+      { signal: new AbortController().signal },
     )
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)

@@ -18,6 +18,10 @@ export default defineConfig(({ env }) => {
   return {
     workspace: ['vendor/*', 'packages/*/*', 'apps/cli'],
     entry: client ? '' : ['lib/types/{index,invariant,startup,employee-runner,gate}.js'],
+    workspace: client
+      ? ['vendor/*', 'packages/*/*', 'apps/cli']
+      : ['vendor/*', 'packages/*/*', 'apps/cli', 'apps/desktop', 'apps/desktop-host'],
+    entry: client ? '' : ['lib/types/{index,invariant,startup}.js'],
     outDir: 'lib',
     format: ['esm'],
     platform: 'node',

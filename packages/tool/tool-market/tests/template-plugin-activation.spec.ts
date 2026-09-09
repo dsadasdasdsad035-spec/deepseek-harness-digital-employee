@@ -1,5 +1,5 @@
 import { Context } from '@deepseek-ai/cordis'
-import { CallId } from '@deepseek-ai/dsh-llm'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import { ToolRuntime } from '@deepseek-ai/dsh-tools'
 import { describe, expect, it } from 'vitest'
@@ -26,7 +26,7 @@ describe('Tool publisher template plugin', () => {
     expect(ctx.tools.schemas().map(tool => tool.name)).toContain('marketplace_echo')
     const result = await ctx.tools.execute({
       signal: AbortSignal.timeout(5_000),
-      callId: CallId('template-activation'),
+      callId: ToolCallId('template-activation'),
       name: 'marketplace_echo',
       arguments: { text: 'hello from the template' },
     })

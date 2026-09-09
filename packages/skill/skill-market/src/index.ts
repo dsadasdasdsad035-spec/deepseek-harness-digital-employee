@@ -152,6 +152,15 @@ declare module '@deepseek-ai/cordis' {
     /** Host marketplace service exported through the generated Typert Remote. */
     skillMarket: SkillMarketGateway
   }
+
+  interface Events {
+    /**
+     * Notify the filesystem skill provider after a Host-owned skill mutation commits.
+     * @mode emit
+     * @param path - committed skill directory or descriptor path.
+     */
+    'skill-filesystem/host-mutation'(path: string): void
+  }
 }
 
 /**

@@ -7,8 +7,12 @@
  * with the runtime sessions service. A second effect seats the theme
  * presenter, which projects ctx.theme snapshots onto document.body.
  */
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type {} from '@deepseek-ai/dsh-client-ui-theme/client'
+import type { PanelActions } from './service.ts'
 import { AppFrame } from './AppFrame.tsx'
 import { createLayoutStore } from './stores.ts'
 import { LayoutController } from './service.ts'
@@ -60,20 +64,19 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      */
     'conversation': { kind: 'single'; scope: 'session-maybe'; owner: ConvOwnerProps }
     /**
-     * The right details column, shown when the layout opens it. OCCUPIED by
-     * ui-conversation's DetailsPanel, which declares the tool-details seat
-     * inside it — registering here replaces the column and takes that seat
-     * with it. Absent an occupant the column renders nothing.
+     * The right column: a track the centre makes room for, or nothing. OCCUPIED
+     * by the right Sidebar, which uses the resolved column width in normal
+     * mode and covers the viewport in fullscreen, retaining the wide-screen
+     * column reservation underneath.
      *
-     * No owner props: the framework injects the session id and hooks for the
-     * `session` scope, and `ctx.layout` owns whether the column is open.
+     * Whether the panel is shown, and whether it takes a track, is the
+     * occupant's own recorded business — it reports the composition of its
+     * expanded and presentation state through `ctx.layout`, and the frame sizes
+     * the track and places the resize handle from that. The expand control is
+     * not this column's: it is a button in the conversation header. With no
+     * current session nothing is mounted here.
      */
-    'details': { kind: 'single'; scope: 'session'; owner: DetailsOwnerProps }
-    /**
-     * Root-scoped operational workspace shown in the center column when
-     * `ctx.layout.openApplication()` is active.
-     */
-    'shell.application': { kind: 'single'; scope: 'root'; owner: ApplicationOwnerProps }
+    'rightbar': { kind: 'single'; scope: 'session'; owner: RightbarOwnerProps }
     /**
      * Frame-wide floating layer, above every column and outside their scroll
      * containers. Deliberately generic and unowned by any feature: a badge, a
@@ -105,14 +108,21 @@ export interface SidebarOwnerProps {
 /** Conversation owner share: business state and actions belong to the registrant. */
 export interface ConvOwnerProps {}
 
-/** Details owner share: empty — sessionId arrives as a framework-standard prop. */
-export interface DetailsOwnerProps {}
-
-/** Empty owner share for the shell application workspace. */
-export interface ApplicationOwnerProps {}
+/** Right column owner share: resolved normal geometry and opening eligibility. */
+export interface RightbarOwnerProps {
+  /** Resolved normal panel width in px, not the saved preference; zero if it cannot fit. */
+  width: number
+  /** Current frame width in px. */
+  viewportWidth: number
+  /**
+   * Whether a normal right panel can retain 300px beside a 400px center.
+   * Before a narrow opening, includes the space from collapsing the left sidebar.
+   */
+  canShow: boolean
+}
 
 /** Required services (cordis fiber inject — the loader passes all module exports as an object plugin). */
-export const inject = ['slots', 'theme']
+export const inject = ['slots', 'theme', 'locale']
 
 /**
  * Client plugin body: provide ctx.layout, then one register() call — AppFrame
@@ -126,18 +136,22 @@ export function apply(ctx: ClientContext): void {
     const disposeService = ctx.reflect.provide('layout', layout)
     const disposeRegistration = ctx.slots.register({
       name: 'root',
+      locale: 'common',
       children: {
         'sidebar': { kind: 'single', scope: 'root' },
         'conversation': { kind: 'single', scope: 'session-maybe' },
-        'details': { kind: 'single', scope: 'session' },
-        'shell.application': { kind: 'single', scope: 'root' },
+        'rightbar': { kind: 'single', scope: 'session' },
         'shell.overlay': { kind: 'list', scope: 'root' },
       },
       // Exclusive store: the factory itself — the framework instantiates per
       // entry and delivers useStore/actions to AppFrame as standard props.
       store: createLayoutStore,
-      // AppFrame rebinds the controller to its current root-store instance.
-      inject: () => ({ layout }),
+      // The hook's only side effect connects the root store to ctx.layout;
+      // conversation business actions belong to their registrants.
+      inject: (actions: PanelActions) => {
+        layout.attachPanels(actions)
+        return {}
+      },
     }, AppFrame)
     return () => {
       disposeRegistration()

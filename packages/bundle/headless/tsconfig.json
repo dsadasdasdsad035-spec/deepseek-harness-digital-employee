@@ -76,6 +76,9 @@
     },
     {
       "path": "../../workspace/workspace"
+    },
+    {
+      "path": "../../boot/cmdline"
     }
   ]
 }

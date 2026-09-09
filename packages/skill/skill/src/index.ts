@@ -11,10 +11,11 @@
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
-import { assertNever } from '@deepseek-ai/dsh-llm'
+import type { SessionId } from '@deepseek-ai/dsh-session'
+import type {} from '@deepseek-ai/dsh-llm'
+import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { NamedEntries, ScopedLayers, scopeChainOf, scopeOf } from '@deepseek-ai/dsh-scope'
 import type { ScopeKey, ScopeLayer } from '@deepseek-ai/dsh-scope'
-import type { SessionId } from '@deepseek-ai/dsh-session'
 import z from '@deepseek-ai/schemastery'
 import type Schema from '@deepseek-ai/schemastery'
 
@@ -126,6 +127,27 @@ export interface SkillRestriction {
   readonly allow: readonly string[]
 }
 
+/** Attributable successful selection of one skill body for an Agent. */
+export interface SkillSelection {
+  readonly name: string
+  readonly provider: string
+  readonly source: SkillSource
+  readonly channel: 'model' | 'user'
+  readonly sessionId: SessionId
+  readonly agentId: SessionId
+}
+
+declare module '@deepseek-ai/cordis' {
+  interface Events {
+    /**
+     * A skill body was successfully selected for model-visible use.
+     * @param selection - skill identity, invocation channel, and acting Agent.
+     * @mode emit
+     */
+    'skill/selected'(selection: SkillSelection): void
+  }
+}
+
 /**
  * Return whether a skill may be advertised to and loaded by a model.
  * @param skill - skill metadata carrying resolved invocation controls.
@@ -157,27 +179,6 @@ export interface SkillInvocationSource {
   readonly name: string
   /** Injected skill bodies are instructions for the model to follow. */
   readonly form: 'instructions'
-}
-
-/** Attributable successful selection of one skill body for an Agent. */
-export interface SkillSelection {
-  readonly name: string
-  readonly provider: string
-  readonly source: SkillSource
-  readonly channel: 'model' | 'user'
-  readonly sessionId: SessionId
-  readonly agentId: SessionId
-}
-
-declare module '@deepseek-ai/cordis' {
-  interface Events {
-    /**
-     * A skill body was successfully selected for model-visible use.
-     * @param selection - skill identity, invocation channel, and acting Agent.
-     * @mode emit
-     */
-    'skill/selected'(selection: SkillSelection): void
-  }
 }
 
 declare module '@deepseek-ai/dsh-llm' {

@@ -1,5 +1,5 @@
 import { Context } from '@deepseek-ai/cordis'
-import { CallId } from '@deepseek-ai/dsh-llm'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import { apply as applyMcp } from '@deepseek-ai/dsh-mcp-client/src/index.ts'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
@@ -26,7 +26,7 @@ describe('project-manager test MCP server', () => {
 
     await expect(ctx.tools.execute({
       signal: new AbortController().signal,
-      callId: CallId('project-data'),
+      callId: ToolCallId('project-data'),
       name: 'mcp__project-data__project_snapshot',
       arguments: {},
     })).resolves.toMatchObject({

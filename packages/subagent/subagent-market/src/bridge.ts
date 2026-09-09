@@ -53,7 +53,7 @@ export function mountEmployeeSubagents(
     const instructions = readFile(join(pkg.directory, persona.instructions), 'utf8')
     const provider: SubagentProvider = {
       name: providerName,
-      capabilities: { outputSchema: false, depthLimit: true, toolFilter: true, persona: true },
+      capabilities: { agentOptions: false, outputSchema: false, depthLimit: true, toolFilter: true, persona: true },
       inheritsParentContext: false,
       start: async (request) => {
         const text = await instructions

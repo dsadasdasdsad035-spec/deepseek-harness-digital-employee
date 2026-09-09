@@ -246,7 +246,7 @@ export const TYPERT_REMOTE = {
         typeSymbol: '@deepseek-ai/dsh-skill-market/types#SkillMarketBannerResult',
         schema: _deepseek_ai_dsh_skill_market_skillMarket_banner_result$schema,
       },
-      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":190,"column":9},
+      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":199,"column":9},
     },
     {
       id: '@deepseek-ai/dsh-skill-market#skillMarket/install',
@@ -271,7 +271,7 @@ export const TYPERT_REMOTE = {
         typeSymbol: '@deepseek-ai/dsh-skill-market/types#SkillMarketInstallResult',
         schema: _deepseek_ai_dsh_skill_market_skillMarket_install_result$schema,
       },
-      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":208,"column":9},
+      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":217,"column":9},
     },
     {
       id: '@deepseek-ai/dsh-skill-market#skillMarket/list',
@@ -286,7 +286,7 @@ export const TYPERT_REMOTE = {
         typeSymbol: '@deepseek-ai/dsh-skill-market/types#SkillMarketListResult',
         schema: _deepseek_ai_dsh_skill_market_skillMarket_list_result$schema,
       },
-      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":229,"column":9},
+      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":238,"column":9},
     },
     {
       id: '@deepseek-ai/dsh-skill-market#skillMarket/uninstall',
@@ -311,7 +311,7 @@ export const TYPERT_REMOTE = {
         typeSymbol: '@deepseek-ai/dsh-skill-market/types#SkillMarketUninstallResult',
         schema: _deepseek_ai_dsh_skill_market_skillMarket_uninstall_result$schema,
       },
-      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":253,"column":9},
+      sourceLocation: {"file":"packages/skill/skill-market/src/index.ts","line":262,"column":9},
     },
   ],
 }

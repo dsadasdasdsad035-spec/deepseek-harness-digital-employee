@@ -33,17 +33,6 @@ import {
   type SkillSource,
 } from '@deepseek-ai/dsh-skill'
 
-declare module '@deepseek-ai/cordis' {
-  interface Events {
-    /**
-     * Notify the filesystem skill provider after a Host-owned skill mutation commits.
-     * @mode emit
-     * @param path - committed skill directory or descriptor path.
-     */
-    'skill-filesystem/host-mutation'(path: string): void
-  }
-}
-
 const PROJECT_DSH_RANK = 100
 const PROJECT_AGENTS_RANK = 200
 const CUSTOM_RANK = 300
@@ -58,7 +47,7 @@ export const inject = ['skills']
 
 /** Local filesystem skill provider configuration. */
 export interface Config {
-  /** Unique provider name. Defaults to `local`. */
+  /** Unique provider name. Defaults to `filesystem`. */
   providerName?: string
   /** Whether project and user roots are included around custom roots. */
   includeDefaultRoots?: boolean
@@ -114,10 +103,7 @@ interface SkillRootEntry {
   path: string
 }
 
-/** Parsed SKILL.md descriptor shared by filesystem-backed consumers. */
-export interface ParsedSkillDescriptor {
-  /** Parsed frontmatter fields before provider-specific projection. */
-  frontmatter: Readonly<Record<string, unknown>>
+interface ParsedSkill {
   name: string
   description: string
   whenToUse?: string
@@ -153,9 +139,6 @@ export function apply(ctx: Context, config: Config = {}): void {
   ctx.on('fs/observed', (target, _observation, actor) => {
     if (mutationToolName(actor) === undefined) return
     provider.observeHostMutation(target.displayPath)
-  })
-  ctx.on('skill-filesystem/host-mutation', (path) => {
-    provider.observeHostMutation(path)
   })
 }
 
@@ -696,7 +679,7 @@ function isPotentialSkillPath(root: SkillRoot, path: string): boolean {
   if (segments === undefined || segments.length === 0 || segments.length > 2) return false
   if (root.skipSystem === true && segments[0] === '.system') return false
   return segments.length === 1
-    ? segments[0]?.endsWith('.md') === true || isSkillName(segments[0] ?? '')
+    ? segments[0]?.endsWith('.md') === true
     : segments[1] === 'SKILL.md'
 }
 
@@ -807,12 +790,7 @@ async function listSkillRootEntriesFromNode(root: SkillRoot, ctx: Context): Prom
   return result
 }
 
-async function parseSkillFile(
-  path: string,
-  ctx: Context,
-  signal?: AbortSignal,
-  trustedHost = false,
-): Promise<ParsedSkillDescriptor | undefined> {
+async function parseSkillFile(path: string, ctx: Context, signal?: AbortSignal, trustedHost = false): Promise<ParsedSkill | undefined> {
   const raw = await readSkillText(ctx, path, signal, trustedHost)
   signal?.throwIfAborted()
   if (raw === undefined) {
@@ -820,16 +798,40 @@ async function parseSkillFile(
   }
   let parsed
   try {
-    parsed = parseSkillDescriptor(raw)
+    parsed = parseFrontmatter(raw)
   } catch (error) {
-    ctx.logger.warn(`skill file ${path} ignored: invalid frontmatter: ${errorMessage(error)}`)
+    ctx.logger.warn(`skill file ${path} ignored: invalid YAML frontmatter: ${errorMessage(error)}`)
     return undefined
   }
   if (!parsed) {
-    ctx.logger.warn(`skill file ${path} ignored: descriptor requires valid YAML frontmatter, name, and description`)
+    ctx.logger.warn(`skill file ${path} ignored: missing YAML frontmatter`)
     return undefined
   }
-  return parsed
+  const name = stringField(parsed.data, 'name')
+  const description = stringField(parsed.data, 'description')
+  if (name === undefined || description === undefined) {
+    ctx.logger.warn(`skill file ${path} ignored: frontmatter requires name and description`)
+    return undefined
+  }
+  if (!isSkillName(name)) {
+    ctx.logger.warn(`skill file ${path} ignored: invalid skill name "${name}"`)
+    return undefined
+  }
+  let invocation
+  try {
+    invocation = parseInvocationPolicy(parsed.data)
+  } catch (error) {
+    ctx.logger.warn(`skill file ${path} ignored: invalid invocation frontmatter: ${errorMessage(error)}`)
+    return undefined
+  }
+  return {
+    name,
+    description,
+    ...optionalString(parsed.data, 'whenToUse'),
+    invocation,
+    ...optionalMetadata(parsed.data),
+    content: parsed.body.trim(),
+  }
 }
 
 function optionalFileSystem(ctx: Context): FileSystem | undefined {
@@ -916,28 +918,6 @@ function parseFrontmatter(raw: string): { data: Record<string, unknown>; body: s
   const parsed = parseYaml(yaml) as unknown
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return undefined
   return { data: parsed as Record<string, unknown>, body: raw.slice(closing.bodyStart) }
-}
-
-/**
- * Parse one SKILL.md source with the filesystem provider's descriptor rules.
- * @param raw - complete SKILL.md text.
- * @returns the normalized descriptor, or `undefined` when required frontmatter fields are absent or invalid.
- */
-export function parseSkillDescriptor(raw: string): ParsedSkillDescriptor | undefined {
-  const parsed = parseFrontmatter(raw)
-  if (parsed === undefined) return undefined
-  const name = stringField(parsed.data, 'name')
-  const description = stringField(parsed.data, 'description')
-  if (name === undefined || description === undefined || !isSkillName(name)) return undefined
-  return {
-    frontmatter: parsed.data,
-    name,
-    description,
-    ...optionalString(parsed.data, 'whenToUse'),
-    invocation: parseInvocationPolicy(parsed.data),
-    ...optionalMetadata(parsed.data),
-    content: parsed.body.trim(),
-  }
 }
 
 function findClosingFrontmatter(raw: string, start: number): { start: number; bodyStart: number } | undefined {
@@ -1058,4 +1038,14 @@ function optionalMetadata(data: Record<string, unknown>): { metadata?: Record<st
 
 function errorMessage(error: unknown): string {
   return String(error)
+}
+declare module '@deepseek-ai/cordis' {
+  interface Events {
+    /**
+     * Notify the filesystem skill provider after a Host-owned skill mutation commits.
+     * @mode emit
+     * @param path - committed skill directory or descriptor path.
+     */
+    'skill-filesystem/host-mutation'(path: string): void
+  }
 }

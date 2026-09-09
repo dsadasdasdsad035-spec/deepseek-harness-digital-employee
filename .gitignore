@@ -17,6 +17,7 @@ examples/*/*.jsonl
 .sessions/
 examples/*/.sessions/
 coverage/
+.coverage-times.json
 .doc-typecheck-*/
 .node-next-types-*/
 .oxlint-contract-*/
@@ -32,10 +33,13 @@ tmp/
 .idea
 mise.toml
 dist-exe/
-python/sdk-runtime/src/deepseek_harness_runtime/runtime/dsh-jsonrpc-agent-*
+/dist/
+apps/desktop/.desktop-build/
+python/sdk-runtime/src/deepseek_harness_runtime/runtime/deepseek-harness-sdk-runtime-*
 python/sdk-runtime/src/deepseek_harness_runtime/runtime/node/
 python/**/__pycache__/
 python/**/.pytest_cache/
+packages/**/__pycache__/
 apps/web/dist/
 .artifacts/
 .dsh-build/
@@ -45,6 +49,7 @@ apps/web/dist/
 worktrees/
 .agents/worktrees/
 .typert-*/
+<<<<<<< main
 .codegraph/
 .codex/
 digital-employees.json
@@ -52,3 +57,6 @@ digital-employees.json
 # Repository-root build outputs (npm publish staging)
 /dist/
 release-notes.zip/
+=======
+native/system/test/bin/
+>>>>>>> official/master

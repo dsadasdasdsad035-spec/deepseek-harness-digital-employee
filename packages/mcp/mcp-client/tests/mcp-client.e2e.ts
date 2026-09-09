@@ -22,11 +22,11 @@ import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
 import LocalAttachmentStore from '@deepseek-ai/dsh-attachment-local'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
-import { CallId, LlmAdapter, LlmRuntime } from '@deepseek-ai/dsh-llm'
+import { ToolCallId, LlmAdapter, LlmRuntime } from '@deepseek-ai/dsh-llm'
 import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm'
 import { apply } from '@deepseek-ai/dsh-mcp-client/src/index.ts'
 import { publicToolName } from '@deepseek-ai/dsh-mcp-client/src/tools.ts'
-import type { McpServerConfig } from '@deepseek-ai/dsh-mcp-client'
+import type { Config, McpServerConfig } from '@deepseek-ai/dsh-mcp-client'
 
 const testToolSignal = new AbortController().signal
 
@@ -87,8 +87,8 @@ function textOf(block: unknown): string {
 }
 
 let callSeq = 0
-function nextCallId(): CallId {
-  return CallId(`e2e-${++callSeq}`)
+function nextCallId(): ToolCallId {
+  return ToolCallId(`e2e-${++callSeq}`)
 }
 
 // ---- Fixture server tests ----
@@ -97,7 +97,7 @@ describe('fixture server — controlled scenarios', () => {
   let ctx: Context
   let home: string
 
-  const fixtureConfig: McpServerConfig = {
+  const fixtureConfig: Config = {
     transport: 'stdio',
     serverName: 'fixture',
     command: process.execPath,
@@ -196,7 +196,7 @@ describe('fixture server — controlled scenarios', () => {
 describe('fixture server — duplicate serverName', () => {
   it('rejects a second instance with the same serverName on one root', async () => {
     const ctx = await mountRegistry()
-    const config: McpServerConfig = {
+    const config: Config = {
       transport: 'stdio',
       serverName: 'dup',
       command: process.execPath,
@@ -325,7 +325,7 @@ describe('fixture server — crash recovery', () => {
 describe('server-everything — official test server', () => {
   let ctx: Context
 
-  const config: McpServerConfig = {
+  const config: Config = {
     transport: 'stdio',
     serverName: 'everything',
     command: join(localBin, 'mcp-server-everything'),
@@ -394,7 +394,7 @@ describe('server-filesystem — real filesystem operations', () => {
     tempDir = await mkdtemp(join(tmpdir(), 'mcp-fs-e2e-'))
 
     ctx = await mountRegistry()
-    const config: McpServerConfig = {
+    const config: Config = {
       transport: 'stdio',
       serverName: 'filesystem',
       command: join(localBin, 'mcp-server-filesystem'),
@@ -513,7 +513,7 @@ describe('streamable-http — in-process MCP server', () => {
     baseUrl = `http://127.0.0.1:${address.port}/mcp`
 
     ctx = await mountRegistry()
-    const config: McpServerConfig = {
+    const config: Config = {
       transport: 'streamable-http',
       serverName: 'web',
       url: baseUrl,

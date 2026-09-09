@@ -1,5 +1,5 @@
 import { Context } from '@deepseek-ai/cordis'
-import { CallId } from '@deepseek-ai/dsh-llm'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { describe, expect, it } from 'vitest'
@@ -15,7 +15,7 @@ describe('project-manager test tools', () => {
     expect(ctx.tools.schemas().map(tool => tool.name)).toEqual(['project_board', 'project_document'])
     await expect(ctx.tools.execute({
       signal: new AbortController().signal,
-      callId: CallId('project-board'),
+      callId: ToolCallId('project-board'),
       name: 'project_board',
       arguments: {},
     })).resolves.toMatchObject({
@@ -24,7 +24,7 @@ describe('project-manager test tools', () => {
     })
     await expect(ctx.tools.execute({
       signal: new AbortController().signal,
-      callId: CallId('project-document'),
+      callId: ToolCallId('project-document'),
       name: 'project_document',
       arguments: {},
     })).resolves.toMatchObject({

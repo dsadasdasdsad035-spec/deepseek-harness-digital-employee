@@ -1,6 +1,6 @@
 import { Context } from '@deepseek-ai/cordis'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
+import { Session, SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import DigitalEmployees, {
   createDigitalEmployeeAuditId,
@@ -124,11 +124,13 @@ describe('digital employee contracts', () => {
 
     const restored = Session.fromRestore(
       session.id,
-      structuredClone(session.events),
+      structuredClone(session.snapshotEvents()),
       structuredClone(session.header),
+      SessionLogOffset(0),
+      'detached',
     )
 
-    expect(restored.events[0]).toMatchObject({
+    expect(restored.snapshotEvents()[0]).toMatchObject({
       type: 'digital-employee/memory-projection',
       data: {
         memories: [{
@@ -204,14 +206,16 @@ describe('digital employee contracts', () => {
 
     const restored = Session.fromRestore(
       session.id,
-      structuredClone(session.events),
+      structuredClone(session.snapshotEvents()),
       structuredClone(session.header),
+      SessionLogOffset(0),
+      'detached',
     )
 
-    expect(restored.events.slice(0, session.events.length).map(event => [event.type, event.data])).toEqual(
-      session.events.map(event => [event.type, event.data]),
+    expect(restored.snapshotEvents().slice(0, session.snapshotEvents().length).map(event => [event.type, event.data])).toEqual(
+      session.snapshotEvents().map(event => [event.type, event.data]),
     )
-    expect(restored.events.at(-1)?.type).toBe('session/end-seed')
+    expect(restored.snapshotEvents().at(-1)?.type).toBe('session/end-seed')
   })
 
   it('validates complete templates and rejects malformed or inconsistent experts', () => {
