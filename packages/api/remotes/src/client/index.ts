@@ -6,6 +6,7 @@ import goalsRemote from '@deepseek-ai/dsh-goal/remote'
 import dynamicRemote from '@deepseek-ai/dsh-cordis-host-runner/remote'
 import fileReferencesRemote from '@deepseek-ai/dsh-file-reference/remote'
 import companiesRemote from '@deepseek-ai/dsh-host-company-management/remote'
+import companyGroupsRemote from '@deepseek-ai/dsh-host-company-group-chat/remote'
 import digitalEmployeesRemote from '@deepseek-ai/dsh-host-digital-employee-management/remote'
 import pluginInventoryRemote from '@deepseek-ai/dsh-host-plugin-inventory/remote'
 import messageFeedbackRemote from '@deepseek-ai/dsh-message-feedback/remote'
@@ -23,6 +24,7 @@ export type { PluginInventorySnapshot } from '@deepseek-ai/dsh-host-plugin-inven
 export type {} from '@deepseek-ai/dsh-commands/remote'
 export type {} from '@deepseek-ai/dsh-file-reference/remote'
 export type {} from '@deepseek-ai/dsh-host-company-management/remote'
+export type {} from '@deepseek-ai/dsh-host-company-group-chat/remote'
 export type {} from '@deepseek-ai/dsh-goal/remote'
 export type {} from '@deepseek-ai/dsh-host-digital-employee-management/remote'
 export type {} from '@deepseek-ai/dsh-host-plugin-inventory/remote'
@@ -273,7 +275,7 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
   try {
     for (const contribution of [
       commandsRemote, goalsRemote, dynamicRemote, fileReferencesRemote,
-      digitalEmployeesRemote, companiesRemote, pluginInventoryRemote, messageFeedbackRemote,
+      digitalEmployeesRemote, companiesRemote, companyGroupsRemote, pluginInventoryRemote, messageFeedbackRemote,
       sessionReferencesRemote, skillMarketRemote, toolMarketRemote, mcpMarketRemote,
       hookMarketRemote, workflowMarketRemote, subagentMarketRemote,
     ]) {

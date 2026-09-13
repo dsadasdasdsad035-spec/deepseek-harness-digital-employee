@@ -295,3 +295,82 @@ async function unwrap<T>(result: Promise<RemoteResult<T>>): Promise<T> {
   if (resolved.ok) return resolved.value
   throw new Error(resolved.error.message)
 }
+
+/** Generated companyGroups namespace consumed by the console. */
+export type CompanyGroupRemote = ClientRemote['companyGroups']
+
+/** The group view unwrapped from the RemoteResult envelope. */
+export type CompanyGroupViewResult = Extract<
+  Awaited<ReturnType<CompanyGroupRemote['openCompanyGroup']>>,
+  { ok: true }
+>['value']
+
+/** Browser state for one mounted group conversation. */
+export interface CompanyGroupState {
+  status: 'idle' | 'loading' | 'ready' | 'error'
+  error: string | null
+  view: CompanyGroupViewResult | null
+}
+
+const GROUP_INITIAL: CompanyGroupState = {
+  status: 'idle',
+  error: null,
+  view: null,
+}
+
+/** Poll cadence for streaming group messages while the panel is open. */
+const GROUP_POLL_MS = 2_500
+
+/** Owns the group conversation: open, send, and message polling. */
+export class CompanyGroupStore {
+  /** Observable group state. */
+  readonly store: SnapshotStore<CompanyGroupState> = createSnapshotStore(GROUP_INITIAL)
+  private generation = 0
+  private pollTimer: ReturnType<typeof setInterval> | undefined
+
+  constructor(private readonly remote: CompanyGroupRemote) {}
+
+  /** Open (or create) one company's group and start message polling.
+   * @param companyId - the company whose group opens.
+   */
+  async open(companyId: string): Promise<void> {
+    const generation = ++this.generation
+    this.store.set({ ...this.store.getSnapshot(), status: 'loading', error: null })
+    const outcome = await this.remote.openCompanyGroup(companyId as never)
+    if (generation !== this.generation) return
+    if (!outcome.ok) {
+      this.store.set({ ...this.store.getSnapshot(), status: 'error', error: failure(outcome.error) })
+      return
+    }
+    this.store.set({ ...this.store.getSnapshot(), status: 'ready', view: outcome.value })
+    this.startPolling(companyId)
+  }
+
+  /** Land one user message; @mentions trigger employee turns host-side.
+   * @param companyId - the company whose group receives the message.
+   * @param text - the message text.
+   */
+  async send(companyId: string, text: string): Promise<void> {
+    const outcome = await this.remote.sendCompanyGroupMessage(companyId as never, text)
+    if (outcome.ok) this.store.set({ ...this.store.getSnapshot(), view: outcome.value })
+  }
+
+  /** Stop polling; the console closes the group panel. */
+  stop(): void {
+    this.generation += 1
+    if (this.pollTimer !== undefined) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = undefined
+    }
+  }
+
+  private startPolling(companyId: string): void {
+    if (this.pollTimer !== undefined) clearInterval(this.pollTimer)
+    this.pollTimer = setInterval(() => {
+      void (async () => {
+        const outcome = await this.remote.openCompanyGroup(companyId as never)
+        if (outcome.ok) this.store.set({ ...this.store.getSnapshot(), view: outcome.value })
+      })()
+    }, GROUP_POLL_MS)
+  }
+}

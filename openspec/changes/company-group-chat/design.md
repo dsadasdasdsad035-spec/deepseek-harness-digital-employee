@@ -20,9 +20,9 @@ One session per company (`groupOf(companyId)`). Its transcript is assembled from
 
 A speaking turn = one subagent-seam run started with the employee's full composition (the `subagent/compose` expert-composition hook already exists for exactly this), prompted with **only the situation**: group roster, recent group context, and the triggering fact (`task 开始/完成/失败 + 任务文本 + 产出摘要` or `用户 @你: 消息`). The employee's template prompt, skills, and tools decide what and how it answers — a 项目经理 may attach an output summary, a terse employee may answer in one line. On success the final text is quoted into the group as that employee's message; on failure/timeout a deterministic one-liner (`任务「X」完成` style) is appended instead. Model-visible ⟺ logged holds: the model call sees the group context inside its child session, and the quoted message is a logged session event.
 
-### D3. Triggers come from ledger diffs; the group log is the cursor
+### D3. Triggers come from an append-only task lifecycle log; the group log is the cursor
 
-The host plugin polls the durable task-attempt ledger (`pollIntervalMs` config, default 5 s, the same cadence as busy derivation). Each diff entry maps to a broadcast: a new attempt record = 领到任务, a success stamp = 完成, a strike/suspend = 失败. Dedup needs no new store: an attempt+state is "already reported" iff the group's own event log carries its key — the group conversation is the cursor.
+The attempt ledger is failure-state algebra (success makes records vanish), so it cannot be diffed into lifecycle. Instead the headless driver appends one line per fact (started / succeeded / failed-with-reason-and-suspension) to `$DSH_HOME/digital-employees/task-events.jsonl` (`dsh-digital-employee-file/task-events`, the ledger's cross-process lock pattern, monotonic `seq`, torn-tail tolerance) at the same three sites that already write the ledger. The host plugin tails this file (`pollIntervalMs` config, default 5 s) and maps each fact to a broadcast. Dedup needs no new store: an event `seq` is "already reported" iff the group's own event log carries its key — the group conversation is the cursor.
 
 ### D4. Mention routing reuses the same turn machinery
 

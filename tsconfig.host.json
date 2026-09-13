@@ -144,6 +144,7 @@
     { "path": "./packages/core/company" },
     { "path": "./packages/core/company-file" },
     { "path": "./packages/host/company-management" },
+    { "path": "./packages/host/company-group-chat" },
     { "path": "./packages/core/scope" },
     { "path": "./packages/typert/protocol" },
     { "path": "./packages/typert/registry" },

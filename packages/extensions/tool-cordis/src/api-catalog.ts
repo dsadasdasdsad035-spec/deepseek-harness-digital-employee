@@ -720,6 +720,37 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'companyGroupChat',
+    summary: 'Remote-only facade assembling company groups from existing services.',
+    description: 'Remote-only facade assembling company groups from existing services.',
+    methods: [
+      {
+        signature: '@Remote(\'openCompanyGroup\') async openCompanyGroup(companyId: CompanyId): Promise<CompanyGroupView>',
+        description: 'Open (or create) one company\'s group and return its current view.',
+        parameters: [{ name: 'companyId', description: 'the company whose group opens.' }],
+        returns: 'the group view: members, quoted messages, and the session id.',
+      },
+      {
+        signature: '@Remote(\'sendCompanyGroupMessage\') async sendCompanyGroupMessage(companyId: CompanyId, text: string): Promise<CompanyGroupView>',
+        description: 'Land one user message in the group; @mentions route speaking turns.',
+        parameters: [{ name: 'companyId', description: 'the company whose group receives the message.' }, { name: 'text', description: 'the user\'s message text.' }],
+        returns: 'the group view after the message landed (turns stream later).',
+      },
+      {
+        signature: 'async settle(): Promise<void>',
+        description: 'Wait for every queued speaking turn to settle.',
+        parameters: [],
+        returns: 'when the serialized turn chain is drained.',
+      },
+      {
+        signature: 'async pollNow(): Promise<void>',
+        description: 'Run one lifecycle-log poll immediately instead of waiting the interval.',
+        parameters: [],
+        returns: 'when the poll (and any queued trigger routing) completes.',
+      },
+    ],
+  },
+  {
     key: 'companyManagement',
     summary: 'Remote-only facade over the owning company and digital employee services.',
     description: 'Remote-only facade over the owning company and digital employee services.',
@@ -4282,6 +4313,22 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CompanyFloorMember',
     declaration: 'export interface CompanyFloorMember {\n    readonly instanceId: DigitalEmployeeInstanceId;\n    readonly displayName: string;\n    readonly templateId: string;\n    readonly rootSessionId?: SessionId;\n    readonly busy: boolean;\n    readonly busyKind: CompanyBusyKind | null;\n}',
+  },
+  {
+    name: 'CompanyGroupMember',
+    declaration: 'export interface CompanyGroupMember {\n    readonly employeeId: DigitalEmployeeInstanceId;\n    readonly displayName: string;\n    readonly departmentName: string;\n}',
+  },
+  {
+    name: 'CompanyGroupMessage',
+    declaration: 'export interface CompanyGroupMessage {\n    readonly seq: number;\n    readonly speakerKind: CompanyGroupSpeakerKind;\n    readonly employeeId?: DigitalEmployeeInstanceId;\n    readonly displayName: string;\n    readonly text: string;\n    readonly context?: string;\n}',
+  },
+  {
+    name: 'CompanyGroupSpeakerKind',
+    declaration: 'export type CompanyGroupSpeakerKind = \'user\' | \'employee\';',
+  },
+  {
+    name: 'CompanyGroupView',
+    declaration: 'export interface CompanyGroupView {\n    readonly companyId: string;\n    readonly companyName: string;\n    readonly sessionId: string;\n    readonly members: readonly CompanyGroupMember[];\n    readonly messages: readonly CompanyGroupMessage[];\n}',
   },
   {
     name: 'CompanyId',

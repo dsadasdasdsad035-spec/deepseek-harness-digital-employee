@@ -42,3 +42,11 @@
 
 - id: company-management
   name: '@deepseek-ai/dsh-host-company-management'
+
+- id: company-console-group-stub
+  name: './group-stub.ts'
+
+- id: company-group-chat
+  name: '@deepseek-ai/dsh-host-company-group-chat'
+  config:
+    pollIntervalMs: 500

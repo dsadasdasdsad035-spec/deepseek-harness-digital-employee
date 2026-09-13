@@ -103,6 +103,7 @@
     "@deepseek-ai/dsh-file-reference-local": "workspace:^",
     "@deepseek-ai/dsh-hooks-market": "workspace:^",
     "@deepseek-ai/dsh-host-apiproxy": "workspace:^",
+    "@deepseek-ai/dsh-host-company-group-chat": "workspace:^",
     "@deepseek-ai/dsh-host-company-management": "workspace:^",
     "@deepseek-ai/dsh-host-digital-employee-management": "workspace:^",
     "@deepseek-ai/dsh-host-directory-picker-auto": "workspace:^",

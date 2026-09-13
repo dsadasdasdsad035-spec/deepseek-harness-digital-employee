@@ -72,6 +72,11 @@ describe('company console assembled snapshot', () => {
     expect(transcript).toContain('"busyKind":"task"')
     expect(transcript).toContain('"department":"(未分配)"')
     expect(transcript).toContain('"stage":"company-deleted","remaining":0')
+    expect(transcript).toContain('"stage":"group-opened"')
+    expect(transcript).toContain('"stage":"group-mention","last":{"speakerKind":"employee","displayName":"Alice","text":"stub-turn: 收到，我按自己的节奏跟进。","context":"收到 @Alice 的消息"}')
+    expect(transcript).toContain('"stage":"group-task-broadcast"')
+    expect(transcript).toContain('"context":"task:1"')
+    expect(transcript).toContain('"stage":"group-fallback","last":{"speakerKind":"employee","displayName":"Bob","text":"收到 @Bob 的消息","context":"收到 @Bob 的消息"}')
 
     if (refreshing) await writeFile(join(fixtureDir, 'console.expected.jsonl'), transcript)
     expect(transcript).toBe(await readFile(join(fixtureDir, 'console.expected.jsonl'), 'utf8'))

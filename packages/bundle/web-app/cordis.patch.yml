@@ -216,6 +216,9 @@
     - id: company-management
       name: '@deepseek-ai/dsh-host-company-management'
 
+    - id: company-group-chat
+      name: '@deepseek-ai/dsh-host-company-group-chat'
+
     # The API gateway: the transport-agnostic dispatch face every client shape
     # shares. The base layer's agent-default-model service owns the default model.
     - id: api-gateway

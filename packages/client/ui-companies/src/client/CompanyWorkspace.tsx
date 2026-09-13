@@ -1,16 +1,18 @@
 /** Full-screen 3D company campus console rendered as a shell overlay. */
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react'
 import { Button, IconCloseOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
 import type { CompanyFloorMember, CompanyId, DepartmentId, DigitalEmployeeInstanceId } from '@deepseek-ai/dsh-api-remotes/client'
 import { CompanyScene, type FloorDepartment } from './scene.ts'
 import { COMPANY_SKINS, DEFAULT_COMPANY_SKIN } from './skins.ts'
+import type { CompanyGroupState, CompanyGroupStore } from './store.ts'
 import type { CompanyStore } from './store.ts'
 import css from './CompanyWorkspace.module.css'
 
 /** Values injected by the client plugin registration. */
 export interface CompanyWorkspaceInjected {
   controller: CompanyStore
+  groupStore: CompanyGroupStore
   hooks: {
     snapshot: CompanyStore['store']
     open: { getSnapshot(): { open: boolean }; subscribe(fn: () => void): () => void }
@@ -26,12 +28,13 @@ type WorkspaceFace = InjectFace<CompanyWorkspaceInjected>
 
 /** Render the console while its overlay is open, or nothing. */
 export function CompanyWorkspace(props: CompanyWorkspaceProps): ReactNode {
-  const { controller, useSnapshot, useOpen, close, openEmployeeWorkspace } = props
-  if (controller === undefined || useSnapshot === undefined || useOpen === undefined || close === undefined
-    || openEmployeeWorkspace === undefined) return null
+  const { controller, groupStore, useSnapshot, useOpen, close, openEmployeeWorkspace } = props
+  if (controller === undefined || groupStore === undefined || useSnapshot === undefined || useOpen === undefined
+    || close === undefined || openEmployeeWorkspace === undefined) return null
   return (
     <Console
       controller={controller}
+      groupStore={groupStore}
       useSnapshot={useSnapshot}
       useOpen={useOpen}
       close={close}
@@ -44,9 +47,16 @@ type ConsoleProps = WorkspaceFace
 
 type Mode = { kind: 'campus' } | { kind: 'floor'; companyId: CompanyId }
 
-function Console({ controller, useSnapshot, useOpen, close, openEmployeeWorkspace }: ConsoleProps): ReactNode {
+function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmployeeWorkspace }: ConsoleProps): ReactNode {
   const state = useSnapshot(value => value)
   const open = useOpen(value => value.open)
+  const groupStoreRef = groupStore.store
+  const groupState = useSyncExternalStore(
+    (onStoreChange: () => void) => groupStoreRef.subscribe(onStoreChange),
+    () => groupStoreRef.getSnapshot(),
+  )
+  const [showGroup, setShowGroup] = useState(false)
+  const [groupInput, setGroupInput] = useState('')
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<CompanyScene | null>(null)
   const [mode, setMode] = useState<Mode>({ kind: 'campus' })
@@ -219,6 +229,287 @@ function Console({ controller, useSnapshot, useOpen, close, openEmployeeWorkspac
     setBindInstance('')
   }
 
+  const sidePanelBody = (
+    <>
+      {mode.kind === 'floor' ? (
+        <button
+          className={css.headerButton}
+          type="button"
+          onClick={() => {
+            setShowGroup(true)
+            void groupStore.open(mode.companyId)
+          }}
+        >💬 公司群聊</button>
+      ) : null}
+      {state.error !== null ? <div className={css.errorText}>{state.error}</div> : null}
+      {state.status === 'loading' && state.companies.length === 0 ? <span className={css.companyMeta}>加载中…</span> : null}
+
+      {mode.kind === 'campus' ? (
+        <>
+          <span className={css.sectionTitle}>创建公司</span>
+          <label className={css.field}>
+            名称
+            <input className={css.input} value={form.name} onChange={(event) => { setForm({ ...form, name: event.target.value }) }} />
+          </label>
+          <label className={css.field}>
+            分类
+            <input className={css.input} value={form.category} placeholder="科技 / 贸易 / …" onChange={(event) => { setForm({ ...form, category: event.target.value }) }} />
+          </label>
+          <label className={css.field}>
+            法人
+            <input
+              className={css.input}
+              value={form.legalRepresentative}
+              onChange={(event) => { setForm({ ...form, legalRepresentative: event.target.value }) }}
+            />
+          </label>
+          <label className={css.field}>
+            地址
+            <input
+              className={css.input}
+              value={form.address}
+              onChange={(event) => { setForm({ ...form, address: event.target.value }) }}
+            />
+          </label>
+          <span className={css.sectionTitle}>公司（点击进入）</span>
+          {campusCompanies.map(company => (
+            <div
+              key={company.id}
+              className={css.companyCard}
+              onClick={() => { setMode({ kind: 'floor', companyId: company.id }) }}
+              onKeyDown={(event) => { if (event.key === 'Enter') setMode({ kind: 'floor', companyId: company.id }) }}
+              role="button"
+              tabIndex={0}
+            >
+              <span className={css.companyName}>{company.name}</span>
+              <span className={css.companyMeta}>
+                {company.category === '' ? '未分类' : company.category} · {String(company.memberCount)} 人 · 在忙 {String(company.busyCount)}
+              </span>
+              {company.address === '' ? null : <span className={css.companyMeta}>{company.address}</span>}
+            </div>
+          ))}
+        </>
+      ) : (
+        <>
+          <span className={css.sectionTitle}>公司信息</span>
+          <label className={css.field}>
+            名称
+            <input className={css.input} value={edit.name} onChange={(event) => { setEdit({ ...edit, name: event.target.value }) }} />
+          </label>
+          <label className={css.field}>
+            分类
+            <input
+              className={css.input}
+              value={edit.category}
+              onChange={(event) => { setEdit({ ...edit, category: event.target.value }) }}
+            />
+          </label>
+          <label className={css.field}>
+            法人
+            <input
+              className={css.input}
+              value={edit.legalRepresentative}
+              onChange={(event) => { setEdit({ ...edit, legalRepresentative: event.target.value }) }}
+            />
+          </label>
+          <label className={css.field}>
+            地址
+            <input
+              className={css.input}
+              value={edit.address}
+              onChange={(event) => { setEdit({ ...edit, address: event.target.value }) }}
+            />
+          </label>
+          <div className={css.row}>
+            <button
+              className={css.headerButton}
+              type="button"
+              onClick={() => {
+                if (edit.name.trim() === '') return
+                void controller.update({
+                  companyId: mode.companyId,
+                  name: edit.name.trim(),
+                  ...(edit.category.trim() === '' ? {} : { category: edit.category.trim() }),
+                  legalRepresentative: edit.legalRepresentative.trim(),
+                  address: edit.address.trim(),
+                })
+              }}
+            >
+              保存修改
+            </button>
+            <button
+              className={css.headerButton}
+              type="button"
+              onClick={() => {
+                if (window.confirm(`删除公司「${edit.name}」并解除全部成员绑定？`)) {
+                  void controller.delete(mode.companyId)
+                  setMode({ kind: 'campus' })
+                }
+              }}
+            >
+              删除公司
+            </button>
+          </div>
+          <label className={css.field}>
+            宣传图
+            <input className={css.input} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPromo} />
+          </label>
+          {promoError !== null ? <div className={css.errorText}>{promoError}</div> : null}
+          {[...promoImages.entries()].find(([id]) => id === mode.companyId)?.[1]
+            ? <img className={css.promoImage} src={promoImages.get(mode.companyId)} alt="宣传图" />
+            : null}
+
+          <span className={css.sectionTitle}>公司皮肤</span>
+          <div className={css.skinGrid}>
+            {COMPANY_SKINS.map((skin) => {
+              const active = (floor?.company.skinId ?? DEFAULT_COMPANY_SKIN.id) === skin.id
+              return (
+                <button
+                  key={skin.id}
+                  type="button"
+                  className={`${css.skinCard} ${active ? css.skinCardActive : ''}`}
+                  onClick={() => {
+                    void controller.update({ companyId: mode.companyId, skinId: skin.id })
+                      .then(() => controller.loadFloor(mode.companyId))
+                      .catch(() => undefined)
+                  }}
+                >
+                  <span className={css.skinSwatches}>
+                    {skin.preview.map(color => (
+                      <span key={color} className={css.skinSwatch} style={{ background: color }} />
+                    ))}
+                  </span>
+                  <span className={css.skinLabel}>
+                    {skin.label}{skin.id === DEFAULT_COMPANY_SKIN.id ? '（默认）' : ''}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <span className={css.sectionTitle}>部门</span>
+          <div className={css.row}>
+            <input
+              className={css.input}
+              value={departmentName}
+              placeholder="新部门名称"
+              onChange={(event) => { setDepartmentName(event.target.value) }}
+            />
+            <button
+              className={css.headerButton}
+              type="button"
+              onClick={() => {
+                if (departmentName.trim() === '') return
+                void controller.addDepartment(mode.companyId, departmentName.trim())
+                setDepartmentName('')
+              }}
+            >
+              添加
+            </button>
+          </div>
+          {(selected?.departments ?? []).map((department) => {
+            const members = floor?.groups
+              .find(group => group.department?.id === department.id)?.members ?? []
+            return (
+              <div key={department.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div className={css.departmentRow}>
+                  <span className={css.departmentDot} style={{ background: department.color }} />
+                  {renameDraft === department.id
+                    ? (
+                      <>
+                        <input
+                          className={css.input}
+                          value={renameText}
+                          onChange={(event) => { setRenameText(event.target.value) }}
+                          onKeyDown={(event) => {
+                            if (event.key !== 'Enter' || renameText.trim() === '') return
+                            void controller.renameDepartment(mode.companyId, department.id, renameText.trim())
+                            setRenameDraft(null)
+                          }}
+                        />
+                        <button className={css.headerButton} type="button" onClick={() => {
+                          if (renameText.trim() === '') return
+                          void controller.renameDepartment(mode.companyId, department.id, renameText.trim())
+                          setRenameDraft(null)
+                        }}>✓</button>
+                      </>
+                    )
+                    : (
+                      <>
+                        <span style={{ flex: 1 }}>{department.name} · {String(members.length)} 人</span>
+                        <button className={css.headerButton} type="button" onClick={() => { setRenameDraft(department.id); setRenameText(department.name) }}>改名</button>
+                        <button className={css.headerButton} type="button" onClick={() => {
+                          if (window.confirm(`删除部门「${department.name}」？成员将移入未分配。`)) {
+                            void controller.deleteDepartment(mode.companyId, department.id)
+                          }
+                        }}>删除</button>
+                      </>
+                    )}
+                </div>
+                {members.map(member => (
+                  <span key={member.instanceId} className={`${css.memberChip} ${controller.verdictOf(member).busy ? css.memberChipBusy : ''}`}>
+                    <span className={css.statusDot} style={{ background: controller.verdictOf(member).busy ? '#ef4444' : '#10b981' }} />
+                    {member.displayName}
+                    <button
+                      className={css.headerButton}
+                      type="button"
+                      aria-label={`解绑 ${member.displayName}`}
+                      onClick={() => { void controller.unassignEmployee(member.instanceId) }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )
+          })}
+          {floor?.groups.some(group => group.department === null)
+            ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div className={css.departmentRow}>
+                  <span className={css.departmentDot} style={{ background: '#94a3b8' }} />
+                  <span style={{ flex: 1 }}>
+                    未分配 · {String(floor.groups.find(group => group.department === null)?.members.length ?? 0)} 人
+                  </span>
+                </div>
+                {floor.groups.find(group => group.department === null)?.members.map(member => (
+                  <span key={member.instanceId} className={`${css.memberChip} ${controller.verdictOf(member).busy ? css.memberChipBusy : ''}`}>
+                    <span className={css.statusDot} style={{ background: controller.verdictOf(member).busy ? '#ef4444' : '#10b981' }} />
+                    {member.displayName}
+                    <button className={css.headerButton} type="button" aria-label={`解绑 ${member.displayName}`} onClick={() => { void controller.unassignEmployee(member.instanceId) }}>×</button>
+                  </span>
+                ))}
+              </div>
+            )
+            : null}
+
+          <span className={css.sectionTitle}>绑定员工实例</span>
+          <select
+            className={css.input}
+            value={bindDepartment === null ? '' : bindDepartment}
+            onChange={(event) => { setBindDepartment(event.target.value === '' ? null : event.target.value as DepartmentId) }}
+          >
+            <option value="">未分配</option>
+            {(selected?.departments ?? []).map(department => (
+              <option key={department.id as string} value={department.id as string}>{department.name}</option>
+            ))}
+          </select>
+          <select className={css.input} value={bindInstance} onChange={(event) => { setBindInstance(event.target.value) }}>
+            <option value="">选择在职未绑定实例…</option>
+            {state.candidates.map(candidate => (
+              <option key={candidate.instanceId as string} value={candidate.instanceId as string}>
+                {candidate.displayName}（{candidate.state === 'active' ? '在职' : '未激活'}）
+              </option>
+            ))}
+          </select>
+          <button className={`${css.headerButton} ${css.headerButtonPrimary}`} type="button" onClick={assign} disabled={bindInstance === ''}>
+            绑定到{bindDepartment === null ? '未分配' : selected?.departments.find(department => department.id === bindDepartment)?.name ?? ''}
+          </button>
+        </>
+      )}
+    </>
+  )
+
   return (
     <div className={css.shell}>
       <div className={css.header}>
@@ -251,274 +542,93 @@ function Console({ controller, useSnapshot, useOpen, close, openEmployeeWorkspac
             : null}
         </div>
         <div className={css.sidePanel}>
-          {state.error !== null ? <div className={css.errorText}>{state.error}</div> : null}
-          {state.status === 'loading' && state.companies.length === 0 ? <span className={css.companyMeta}>加载中…</span> : null}
+          {showGroup && mode.kind === 'floor'
+            ? (
+              <GroupPanel
+                state={groupState}
+                companyId={mode.companyId}
+                onBack={() => { setShowGroup(false); groupStore.stop() }}
+                onOpen={(companyId) => { void groupStore.open(companyId) }}
+                onSend={(companyId, message) => { void groupStore.send(companyId, message) }}
+                input={groupInput}
+                setInput={setGroupInput}
+              />
+            )
+            : sidePanelBody}
 
-          {mode.kind === 'campus' ? (
-            <>
-              <span className={css.sectionTitle}>创建公司</span>
-              <label className={css.field}>
-                名称
-                <input className={css.input} value={form.name} onChange={(event) => { setForm({ ...form, name: event.target.value }) }} />
-              </label>
-              <label className={css.field}>
-                分类
-                <input className={css.input} value={form.category} placeholder="科技 / 贸易 / …" onChange={(event) => { setForm({ ...form, category: event.target.value }) }} />
-              </label>
-              <label className={css.field}>
-                法人
-                <input
-                  className={css.input}
-                  value={form.legalRepresentative}
-                  onChange={(event) => { setForm({ ...form, legalRepresentative: event.target.value }) }}
-                />
-              </label>
-              <label className={css.field}>
-                地址
-                <input
-                  className={css.input}
-                  value={form.address}
-                  onChange={(event) => { setForm({ ...form, address: event.target.value }) }}
-                />
-              </label>
-              <span className={css.sectionTitle}>公司（点击进入）</span>
-              {campusCompanies.map(company => (
-                <div
-                  key={company.id}
-                  className={css.companyCard}
-                  onClick={() => { setMode({ kind: 'floor', companyId: company.id }) }}
-                  onKeyDown={(event) => { if (event.key === 'Enter') setMode({ kind: 'floor', companyId: company.id }) }}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <span className={css.companyName}>{company.name}</span>
-                  <span className={css.companyMeta}>
-                    {company.category === '' ? '未分类' : company.category} · {String(company.memberCount)} 人 · 在忙 {String(company.busyCount)}
-                  </span>
-                  {company.address === '' ? null : <span className={css.companyMeta}>{company.address}</span>}
-                </div>
-              ))}
-            </>
-          ) : (
-            <>
-              <span className={css.sectionTitle}>公司信息</span>
-              <label className={css.field}>
-                名称
-                <input className={css.input} value={edit.name} onChange={(event) => { setEdit({ ...edit, name: event.target.value }) }} />
-              </label>
-              <label className={css.field}>
-                分类
-                <input
-                  className={css.input}
-                  value={edit.category}
-                  onChange={(event) => { setEdit({ ...edit, category: event.target.value }) }}
-                />
-              </label>
-              <label className={css.field}>
-                法人
-                <input
-                  className={css.input}
-                  value={edit.legalRepresentative}
-                  onChange={(event) => { setEdit({ ...edit, legalRepresentative: event.target.value }) }}
-                />
-              </label>
-              <label className={css.field}>
-                地址
-                <input
-                  className={css.input}
-                  value={edit.address}
-                  onChange={(event) => { setEdit({ ...edit, address: event.target.value }) }}
-                />
-              </label>
-              <div className={css.row}>
-                <button
-                  className={css.headerButton}
-                  type="button"
-                  onClick={() => {
-                    if (edit.name.trim() === '') return
-                    void controller.update({
-                      companyId: mode.companyId,
-                      name: edit.name.trim(),
-                      ...(edit.category.trim() === '' ? {} : { category: edit.category.trim() }),
-                      legalRepresentative: edit.legalRepresentative.trim(),
-                      address: edit.address.trim(),
-                    })
-                  }}
-                >
-                  保存修改
-                </button>
-                <button
-                  className={css.headerButton}
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm(`删除公司「${edit.name}」并解除全部成员绑定？`)) {
-                      void controller.delete(mode.companyId)
-                      setMode({ kind: 'campus' })
-                    }
-                  }}
-                >
-                  删除公司
-                </button>
-              </div>
-              <label className={css.field}>
-                宣传图
-                <input className={css.input} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPromo} />
-              </label>
-              {promoError !== null ? <div className={css.errorText}>{promoError}</div> : null}
-              {[...promoImages.entries()].find(([id]) => id === mode.companyId)?.[1]
-                ? <img className={css.promoImage} src={promoImages.get(mode.companyId)} alt="宣传图" />
-                : null}
-
-              <span className={css.sectionTitle}>公司皮肤</span>
-              <div className={css.skinGrid}>
-                {COMPANY_SKINS.map((skin) => {
-                  const active = (floor?.company.skinId ?? DEFAULT_COMPANY_SKIN.id) === skin.id
-                  return (
-                    <button
-                      key={skin.id}
-                      type="button"
-                      className={`${css.skinCard} ${active ? css.skinCardActive : ''}`}
-                      onClick={() => {
-                        void controller.update({ companyId: mode.companyId, skinId: skin.id })
-                          .then(() => controller.loadFloor(mode.companyId))
-                          .catch(() => undefined)
-                      }}
-                    >
-                      <span className={css.skinSwatches}>
-                        {skin.preview.map(color => (
-                          <span key={color} className={css.skinSwatch} style={{ background: color }} />
-                        ))}
-                      </span>
-                      <span className={css.skinLabel}>
-                        {skin.label}{skin.id === DEFAULT_COMPANY_SKIN.id ? '（默认）' : ''}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-
-              <span className={css.sectionTitle}>部门</span>
-              <div className={css.row}>
-                <input
-                  className={css.input}
-                  value={departmentName}
-                  placeholder="新部门名称"
-                  onChange={(event) => { setDepartmentName(event.target.value) }}
-                />
-                <button
-                  className={css.headerButton}
-                  type="button"
-                  onClick={() => {
-                    if (departmentName.trim() === '') return
-                    void controller.addDepartment(mode.companyId, departmentName.trim())
-                    setDepartmentName('')
-                  }}
-                >
-                  添加
-                </button>
-              </div>
-              {(selected?.departments ?? []).map((department) => {
-                const members = floor?.groups
-                  .find(group => group.department?.id === department.id)?.members ?? []
-                return (
-                  <div key={department.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <div className={css.departmentRow}>
-                      <span className={css.departmentDot} style={{ background: department.color }} />
-                      {renameDraft === department.id
-                        ? (
-                          <>
-                            <input
-                              className={css.input}
-                              value={renameText}
-                              onChange={(event) => { setRenameText(event.target.value) }}
-                              onKeyDown={(event) => {
-                                if (event.key !== 'Enter' || renameText.trim() === '') return
-                                void controller.renameDepartment(mode.companyId, department.id, renameText.trim())
-                                setRenameDraft(null)
-                              }}
-                            />
-                            <button className={css.headerButton} type="button" onClick={() => {
-                              if (renameText.trim() === '') return
-                              void controller.renameDepartment(mode.companyId, department.id, renameText.trim())
-                              setRenameDraft(null)
-                            }}>✓</button>
-                          </>
-                        )
-                        : (
-                          <>
-                            <span style={{ flex: 1 }}>{department.name} · {String(members.length)} 人</span>
-                            <button className={css.headerButton} type="button" onClick={() => { setRenameDraft(department.id); setRenameText(department.name) }}>改名</button>
-                            <button className={css.headerButton} type="button" onClick={() => {
-                              if (window.confirm(`删除部门「${department.name}」？成员将移入未分配。`)) {
-                                void controller.deleteDepartment(mode.companyId, department.id)
-                              }
-                            }}>删除</button>
-                          </>
-                        )}
-                    </div>
-                    {members.map(member => (
-                      <span key={member.instanceId} className={`${css.memberChip} ${controller.verdictOf(member).busy ? css.memberChipBusy : ''}`}>
-                        <span className={css.statusDot} style={{ background: controller.verdictOf(member).busy ? '#ef4444' : '#10b981' }} />
-                        {member.displayName}
-                        <button
-                          className={css.headerButton}
-                          type="button"
-                          aria-label={`解绑 ${member.displayName}`}
-                          onClick={() => { void controller.unassignEmployee(member.instanceId) }}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )
-              })}
-              {floor?.groups.some(group => group.department === null)
-                ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <div className={css.departmentRow}>
-                      <span className={css.departmentDot} style={{ background: '#94a3b8' }} />
-                      <span style={{ flex: 1 }}>
-                        未分配 · {String(floor.groups.find(group => group.department === null)?.members.length ?? 0)} 人
-                      </span>
-                    </div>
-                    {floor.groups.find(group => group.department === null)?.members.map(member => (
-                      <span key={member.instanceId} className={`${css.memberChip} ${controller.verdictOf(member).busy ? css.memberChipBusy : ''}`}>
-                        <span className={css.statusDot} style={{ background: controller.verdictOf(member).busy ? '#ef4444' : '#10b981' }} />
-                        {member.displayName}
-                        <button className={css.headerButton} type="button" aria-label={`解绑 ${member.displayName}`} onClick={() => { void controller.unassignEmployee(member.instanceId) }}>×</button>
-                      </span>
-                    ))}
-                  </div>
-                )
-                : null}
-
-              <span className={css.sectionTitle}>绑定员工实例</span>
-              <select
-                className={css.input}
-                value={bindDepartment === null ? '' : bindDepartment}
-                onChange={(event) => { setBindDepartment(event.target.value === '' ? null : event.target.value as DepartmentId) }}
-              >
-                <option value="">未分配</option>
-                {(selected?.departments ?? []).map(department => (
-                  <option key={department.id as string} value={department.id as string}>{department.name}</option>
-                ))}
-              </select>
-              <select className={css.input} value={bindInstance} onChange={(event) => { setBindInstance(event.target.value) }}>
-                <option value="">选择在职未绑定实例…</option>
-                {state.candidates.map(candidate => (
-                  <option key={candidate.instanceId as string} value={candidate.instanceId as string}>
-                    {candidate.displayName}（{candidate.state === 'active' ? '在职' : '未激活'}）
-                  </option>
-                ))}
-              </select>
-              <button className={`${css.headerButton} ${css.headerButtonPrimary}`} type="button" onClick={assign} disabled={bindInstance === ''}>
-                绑定到{bindDepartment === null ? '未分配' : selected?.departments.find(department => department.id === bindDepartment)?.name ?? ''}
-              </button>
-            </>
-          )}
         </div>
       </div>
     </div>
+  )
+}
+
+/** The per-company group chat panel with member chips and a composer. */
+function GroupPanel(props: {
+  state: CompanyGroupState
+  companyId: CompanyId
+  onBack: () => void
+  onOpen: (companyId: string) => void
+  onSend: (companyId: string, message: string) => void
+  input: string
+  setInput: (value: string) => void
+}): ReactNode {
+  const { state, companyId, onBack, onOpen, onSend, input, setInput } = props
+  return (
+    <>
+      <button className={css.headerButton} type="button" onClick={onBack}>← 返回面板</button>
+      {state.status === 'loading' ? <span className={css.companyMeta}>打开群聊中…</span> : null}
+      {state.status === 'error' ? <div className={css.errorText}>{state.error}</div> : null}
+      {state.view === null ? (
+        <span className={css.companyMeta}>暂无群消息</span>
+      ) : (
+        <>
+          <span className={css.sectionTitle}>
+            {state.view.companyName} 群 · {String(state.view.members.length)} 名成员
+          </span>
+          <div className={css.groupMembers}>
+            {state.view.members.map(member => (
+              <button
+                key={member.employeeId}
+                className={css.groupMemberChip}
+                type="button"
+                onClick={() => { setInput(`${input}@${member.displayName} `) }}
+              >@{member.displayName}</button>
+            ))}
+          </div>
+          <div className={css.groupMessages}>
+            {state.view.messages.map(message => (
+              <div key={message.seq} className={message.speakerKind === 'user' ? css.groupMessageOwn : css.groupMessage}>
+                <span className={css.groupSpeaker}>{message.displayName}</span>
+                <span className={css.groupText}>{message.text}</span>
+              </div>
+            ))}
+          </div>
+          <div className={css.groupComposer}>
+            <input
+              className={css.input}
+              value={input}
+              placeholder="发消息，点成员插入 @…"
+              onChange={(event) => { setInput(event.target.value) }}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' || input.trim() === '') return
+                onSend(companyId, input.trim())
+                setInput('')
+                onOpen(companyId)
+              }}
+            />
+            <button
+              className={css.headerButton}
+              type="button"
+              disabled={input.trim() === ''}
+              onClick={() => {
+                onSend(companyId, input.trim())
+                setInput('')
+                onOpen(companyId)
+              }}
+            >发送</button>
+          </div>
+        </>
+      )}
+    </>
   )
 }

@@ -454,6 +454,14 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Owns durable company records, departments, and employee-instance bindings; the management gateway consumes the resolved state for the 3D console.',
   },
   {
+    key: 'companyGroupChat',
+    pkg: 'company-group-chat',
+    title: 'Company group chat gateway',
+    mode: 'core',
+    consumers: ['ui-companies'],
+    note: 'Assembles per-company group sessions from company bindings and the task lifecycle log; speaking turns run through the employee agent.',
+  },
+  {
     key: 'companyManagement',
     pkg: 'company-management',
     title: 'Company Host management gateway',

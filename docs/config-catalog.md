@@ -894,6 +894,24 @@ export interface Config {
 
 Source: [`packages/host/apiproxy/src/index.ts:41`](../packages/host/apiproxy/src/index.ts)
 
+<a id="deepseek-aidsh-host-company-group-chat"></a>
+
+## `@deepseek-ai/dsh-host-company-group-chat`
+
+Requires: `companies` · `digitalEmployeeAgent` · `digitalEmployees` · `sessions`
+
+```ts config-catalog
+/** Gateway configuration. */
+export interface Config {
+  /** Milliseconds between task lifecycle log polls. */
+  pollIntervalMs?: number
+  /** Milliseconds before one speaking turn falls back to the deterministic line. */
+  turnTimeoutMs?: number
+}
+```
+
+Source: [`packages/host/company-group-chat/src/index.ts:30`](../packages/host/company-group-chat/src/index.ts)
+
 <a id="deepseek-aidsh-host-company-management"></a>
 
 ## `@deepseek-ai/dsh-host-company-management`

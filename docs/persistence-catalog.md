@@ -393,6 +393,28 @@ Types: [ContentBlock](subsystems/core.md) · [TokenUsage](subsystems/llm-streami
 
 Source: [`packages/compaction/compaction/src/types.ts:33`](../packages/compaction/compaction/src/types.ts)
 
+### `company-group/*`
+
+<a id="company-groupmessage--log-only"></a>
+
+#### `company-group/message` — log-only
+
+```ts persistence-catalog
+/**
+ * One quoted message in a company group conversation.
+ *
+ * @param speakerKind - whether the user or an employee instance spoke.
+ * @param employeeId - the speaking employee instance for employee speakers.
+ * @param displayName - speaker display name at speak time.
+ * @param text - the spoken text.
+ * @param taskEventSeq - task lifecycle event seq this broadcast reports.
+ * @param context - human-readable trigger summary.
+ */
+'company-group/message': CompanyGroupMessageEvent
+```
+
+Source: [`packages/host/company-group-chat/src/types.ts:69`](../packages/host/company-group-chat/src/types.ts)
+
 ### `digital-employee/*`
 
 <a id="digital-employeeexpert-authorization-denied--log-only"></a>

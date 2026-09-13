@@ -6,10 +6,10 @@ import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import { OrganizationNav } from './CompanyNav.tsx'
 import { CompanyWorkspace, type CompanyWorkspaceInjected } from './CompanyWorkspace.tsx'
-import { CompanyStore } from './store.ts'
+import { CompanyGroupStore, CompanyStore } from './store.ts'
 
-export { CompanyStore } from './store.ts'
-export type { CompanyRemote, CompanySeatVerdict, CompanyState } from './store.ts'
+export { CompanyGroupStore, CompanyStore } from './store.ts'
+export type { CompanyGroupRemote, CompanyGroupState, CompanyGroupViewResult, CompanyRemote, CompanySeatVerdict, CompanyState } from './store.ts'
 export { OrganizationNav } from './CompanyNav.tsx'
 export type { OrganizationNavItem, OrganizationNavInjected } from './CompanyNav.tsx'
 export { CompanyWorkspace } from './CompanyWorkspace.tsx'
@@ -17,18 +17,20 @@ export type { CompanyWorkspaceInjected } from './CompanyWorkspace.tsx'
 
 /** Required client services and the generated companies namespace. */
 export const inject = [
-  'slots', 'layout', 'sessions', 'locale', 'remote', 'remote.companies',
+  'slots', 'layout', 'sessions', 'locale', 'remote', 'remote.companies', 'remote.companyGroups',
 ]
 
 /** Register one navigation command and one full-screen shell overlay console. */
 export function apply(ctx: ClientContext): void {
   const controller = new CompanyStore(ctx.remote.companies, ctx.get('sessions')?.list)
+  const groupController = new CompanyGroupStore(ctx.remote.companyGroups)
   const openStore = createSnapshotStore({ open: false })
   const layout = ctx.layout
   const open = (): void => { openStore.set({ open: true }) }
   const close = (): void => { openStore.set({ open: false }) }
   ctx.effect(() => () => {
     controller.dispose()
+    groupController.stop()
   }, 'ui-companies: dispose store')
 
   // The merged 「组织」 dropdown replaces the two standalone footer entries
@@ -57,6 +59,7 @@ export function apply(ctx: ClientContext): void {
   // shell.overlay layer and opts into pointer events for its full-screen shell.
   const injected = (): CompanyWorkspaceInjected => ({
     controller,
+    groupStore: groupController,
     hooks: { snapshot: controller.store, open: openStore },
     close,
     openEmployeeWorkspace: () => {

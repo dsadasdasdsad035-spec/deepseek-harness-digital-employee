@@ -541,8 +541,6 @@ export interface ToolResultPruneConfig {
 
 Source: [`packages/compaction/compaction-tool-result-pruner/src/types.ts:4`](../packages/compaction/compaction-tool-result-pruner/src/types.ts)
 
-<a id="deepseek-aidsh-cordis-host-runner"></a>
-
 <a id="deepseek-aidsh-company-file"></a>
 
 ## `@deepseek-ai/dsh-company-file`
@@ -560,6 +558,8 @@ export interface Config {
 ```
 
 Source: [`packages/core/company-file/src/index.ts:50`](../packages/core/company-file/src/index.ts)
+
+<a id="deepseek-aidsh-cordis-host-runner"></a>
 
 ## `@deepseek-ai/dsh-cordis-host-runner`
 
@@ -615,7 +615,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/core/digital-employee-file/src/index.ts:46`](../packages/core/digital-employee-file/src/index.ts)
+Source: [`packages/core/digital-employee-file/src/index.ts:51`](../packages/core/digital-employee-file/src/index.ts)
 
 <a id="deepseek-aidsh-e2b"></a>
 
@@ -766,7 +766,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/bundle/headless/src/index.ts:31`](../packages/bundle/headless/src/index.ts)
+Source: [`packages/bundle/headless/src/index.ts:32`](../packages/bundle/headless/src/index.ts)
 
 <a id="deepseek-aidsh-hooks-claude-code"></a>
 
@@ -896,7 +896,23 @@ export interface Config {
 
 Source: [`packages/host/apiproxy/src/index.ts:41`](../packages/host/apiproxy/src/index.ts)
 
-<a id="deepseek-aidsh-host-digital-employee-management"></a>
+<a id="deepseek-aidsh-host-company-group-chat"></a>
+
+## `@deepseek-ai/dsh-host-company-group-chat`
+
+Requires: `companies` · `digitalEmployeeAgent` · `digitalEmployees` · `sessions`
+
+```ts config-catalog
+/** Gateway configuration. */
+export interface Config {
+  /** Milliseconds between task lifecycle log polls. */
+  pollIntervalMs?: number
+  /** Milliseconds before one speaking turn falls back to the deterministic line. */
+  turnTimeoutMs?: number
+}
+```
+
+Source: [`packages/host/company-group-chat/src/index.ts:30`](../packages/host/company-group-chat/src/index.ts)
 
 <a id="deepseek-aidsh-host-company-management"></a>
 
@@ -913,6 +929,8 @@ export interface Config {
 ```
 
 Source: [`packages/host/company-management/src/index.ts:40`](../packages/host/company-management/src/index.ts)
+
+<a id="deepseek-aidsh-host-digital-employee-management"></a>
 
 ## `@deepseek-ai/dsh-host-digital-employee-management`
 
@@ -932,7 +950,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/host/digital-employee-management/src/index.ts:73`](../packages/host/digital-employee-management/src/index.ts)
+Source: [`packages/host/digital-employee-management/src/index.ts:97`](../packages/host/digital-employee-management/src/index.ts)
 
 <a id="deepseek-aidsh-host-directory-picker-browse"></a>
 

@@ -27,6 +27,10 @@
     "./task-attempts": {
       "types": "./lib/types/task-attempts.d.ts",
       "default": "./lib/types/task-attempts.js"
+    },
+    "./task-events": {
+      "types": "./lib/types/task-events.d.ts",
+      "default": "./lib/types/task-events.js"
     }
   },
   "files": [

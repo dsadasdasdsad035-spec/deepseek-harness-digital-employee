@@ -94,6 +94,37 @@ const METRO_Y = 4.5
 const RIVER_Z = 60
 const RIVER_W = 12
 
+/** Y offset sinking a standing figure into a seated posture at a desk. */
+const SEAT_SINK = -0.24
+/** NPC walking speed in world units per second. */
+const NPC_WALK_SPEED = 1.7
+
+/** One wandering member's runtime record. */
+type FloorNpc = {
+  readonly person: THREE.Group
+  label: THREE.Sprite
+  readonly screen: THREE.Mesh
+  readonly seat: THREE.Vector3
+  /** Corridor entrance of the owning room: door x plus z just outside the door. */
+  readonly door: THREE.Vector3
+  busy: boolean
+  phase: 'sit' | 'walk' | 'amenity'
+  destination: 'desk' | number
+  path: readonly THREE.Vector3[]
+  pathIndex: number
+  dwellUntil: number
+  nextDecisionAt: number
+}
+
+/** One seated member plan handed from a zone builder to the NPC spawner. */
+interface NpcSeatPlan {
+  readonly member: FloorMember
+  /** Seat offset local to the owning room group. */
+  readonly seat: THREE.Vector3
+  /** The desk screen whose emissive lights while the member works seated. */
+  readonly screen: THREE.Mesh
+}
+
 /** Deterministic tree offsets inside one cluster (seeded LCG, no Math.random). */
 function treeOffsets(count: number, spread: number, seed: number): Array<{ x: number; z: number }> {
   let state = seed >>> 0
@@ -151,7 +182,12 @@ export class CompanyScene {
   private readonly floorGroup = new THREE.Group()
   private readonly campusLights: THREE.HemisphereLight[] = []
   private readonly floorLights: THREE.HemisphereLight[] = []
-  private readonly memberMeshes = new Map<string, { group: THREE.Group; screen: THREE.Mesh; label: THREE.Sprite; body: THREE.Mesh }>()
+  /** One wandering employee NPC: person figure, desk references, and behavior. */
+  private readonly floorNpcs = new Map<string, FloorNpc>()
+  /** Corridor z-line of the current floor; NPCs route walks through it. */
+  private floorHallZ = 0
+  /** Walkable amenity anchors of the current floor. */
+  private floorAmenities: THREE.Vector3[] = []
   /** Road network graph nodes with adjacency; cars wander its edges randomly. */
   private roadGraph: Array<{ position: THREE.Vector3; neighbors: number[] }> = []
   /** Cars wandering the road graph with random edge choices and speeds. */
@@ -269,6 +305,8 @@ export class CompanyScene {
     this.roadCars.length = 0
     this.randomRails.length = 0
     this.trafficLamps.length = 0
+    this.floorNpcs.clear()
+    this.floorAmenities = []
     this.buildCity(environment)
 
     const districts: Array<[number, number]> = [[-14, -14], [14, -14], [-14, 14], [14, 14]]
@@ -1119,12 +1157,19 @@ export class CompanyScene {
     const rows = Math.ceil(offices.length / columns)
     const backW = columns * ROOM_W + (columns - 1) * BAND_GAP
     const backD = rows * ROOM_D + (rows - 1) * BAND_GAP
-    const pantryW = ceo === undefined ? 11 : 9
-    const loungeW = ceo === undefined ? 15 : 13
-    const frontPieces = ceo === undefined ? [pantryW, loungeW] : [ROOM_W, pantryW, loungeW]
+    const pantryW = ceo === undefined ? 10 : 8
+    const loungeW = ceo === undefined ? 12 : 10
+    const toiletW = ceo === undefined ? 7 : 6
+    const smokingW = ceo === undefined ? 7 : 6
+    const frontPieces = ceo === undefined
+      ? [pantryW, loungeW, toiletW, smokingW]
+      : [ROOM_W, pantryW, loungeW, toiletW, smokingW]
     const frontW = frontPieces.reduce((sum, width) => sum + width, 0) + (frontPieces.length - 1) * BAND_GAP
     const slabW = Math.max(backW, frontW, 26)
     const slabD = backD + HALL_D + ROOM_D
+    this.floorHallZ = -slabD / 2 + backD + HALL_D / 2
+    this.floorAmenities = []
+    this.floorNpcs.clear()
 
     const slab = new THREE.Mesh(
       new THREE.PlaneGeometry(slabW, slabD),
@@ -1147,8 +1192,9 @@ export class CompanyScene {
 
     offices.forEach((department, index) => {
       const room = new THREE.Group()
+      const seatPlans: NpcSeatPlan[] = []
       room.add(this.buildRoom(ROOM_W, ROOM_D, skin, { door: 'south' }))
-      room.add(this.buildDepartmentZone(department, skin))
+      room.add(this.buildDepartmentZone(department, skin, seatPlans))
       const column = index % columns
       const row = Math.floor(index / columns)
       room.position.set(
@@ -1156,31 +1202,78 @@ export class CompanyScene {
         0,
         -slabD / 2 + row * (ROOM_D + BAND_GAP) + ROOM_D / 2,
       )
+      this.spawnNpcs(seatPlans, room.position, 'south')
       this.floorGroup.add(room)
     })
 
     let cursor = -frontW / 2
     const frontCenterZ = slabD / 2 - WALL_T - ROOM_D / 2
+    const pantryIndex = ceo === undefined ? 0 : 1
+    const loungeIndex = pantryIndex + 1
+    const toiletIndex = loungeIndex + 1
     frontPieces.forEach((pieceW, index) => {
       const x = cursor + pieceW / 2
       cursor += pieceW + BAND_GAP
       if (ceo !== undefined && index === 0) {
         const room = new THREE.Group()
+        const seatPlans: NpcSeatPlan[] = []
         room.add(this.buildRoom(ROOM_W, ROOM_D, skin, { glass: true, door: 'north' }))
-        room.add(this.buildDepartmentZone(ceo, skin))
+        room.add(this.buildDepartmentZone(ceo, skin, seatPlans))
         const plate = labelSprite('总裁办公室', { size: 30, color: '#f8fafc', background: '#7f1d1dd9' })
         plate.position.set(0, 2.3, -ROOM_D / 2)
         room.add(plate)
         room.position.set(x, 0, frontCenterZ)
+        this.spawnNpcs(seatPlans, room.position, 'north')
         this.floorGroup.add(room)
         return
       }
-      const pantryIndex = ceo === undefined ? 0 : 1
-      const fixture = index === pantryIndex ? this.buildPantry(skin, pieceW) : this.buildLounge(skin, pieceW)
+      let fixture: THREE.Group
+      if (index === pantryIndex) {
+        fixture = this.buildPantry(skin, pieceW)
+        this.floorAmenities.push(new THREE.Vector3(x + pieceW / 4, 0, frontCenterZ))
+      } else if (index === loungeIndex) {
+        fixture = this.buildLounge(skin, pieceW)
+        this.floorAmenities.push(new THREE.Vector3(x - pieceW / 4, 0, frontCenterZ))
+      } else if (index === toiletIndex) {
+        fixture = this.buildToilet(skin, pieceW)
+        this.floorAmenities.push(new THREE.Vector3(x, 0, frontCenterZ))
+      } else {
+        fixture = this.buildSmokingArea(skin, pieceW)
+        this.floorAmenities.push(new THREE.Vector3(x, 0, frontCenterZ))
+      }
       fixture.position.set(x, 0, frontCenterZ)
       this.floorGroup.add(fixture)
     })
     this.setCamera('floor')
+  }
+
+  /** Register one room's seated members as wandering NPCs in world coordinates.
+   * @param seatPlans - per-member seat offsets local to the room group, with screens.
+   * @param roomOrigin - the room group's world position (room center).
+   * @param doorSide - which side of the room opens onto the corridor.
+   */
+  private spawnNpcs(seatPlans: readonly NpcSeatPlan[], roomOrigin: THREE.Vector3, doorSide: 'north' | 'south'): void {
+    for (const plan of seatPlans) {
+      const seat = plan.seat.clone().add(roomOrigin)
+      const figure = this.buildPerson(plan.member)
+      figure.person.position.copy(seat).add(new THREE.Vector3(0, 0, 0.5))
+      figure.person.position.y = SEAT_SINK
+      this.floorGroup.add(figure.person)
+      this.floorNpcs.set(plan.member.key, {
+        person: figure.person,
+        label: figure.label,
+        screen: plan.screen,
+        seat,
+        door: roomOrigin.clone().add(new THREE.Vector3(0, 0, doorSide === 'north' ? -ROOM_D / 2 - 0.5 : ROOM_D / 2 + 0.5)),
+        busy: plan.member.busy,
+        phase: 'sit',
+        destination: 'desk',
+        path: [],
+        pathIndex: 0,
+        dwellUntil: 0,
+        nextDecisionAt: 4 + Math.random() * 8,
+      })
+    }
   }
 
   /** Build one straight wall segment; horizontal runs span x, vertical runs span z.
@@ -1283,7 +1376,7 @@ export class CompanyScene {
   }
 
   /** Build one department zone rendered in the company's office skin. */
-  private buildDepartmentZone(department: FloorDepartment, skin: CompanySkin): THREE.Group {
+  private buildDepartmentZone(department: FloorDepartment, skin: CompanySkin, npcSink?: NpcSeatPlan[]): THREE.Group {
     const group = new THREE.Group()
     const office = skin.office
     const capacity = department.members.length + department.emptySeats
@@ -1324,10 +1417,77 @@ export class CompanyScene {
         group.add(desk)
         return
       }
-      const station = this.buildWorkstation(seat.member)
-      station.position.copy(position)
-      group.add(station)
+      const desk = this.buildMemberDesk(skin, seat.member.busy)
+      desk.group.position.copy(position)
+      group.add(desk.group)
+      npcSink?.push({ member: seat.member, seat: position.clone(), screen: desk.screen })
     })
+    return group
+  }
+
+  /** Build the toilet amenity: stalls along the back, a sink counter, and a label. */
+  private buildToilet(skin: CompanySkin, width: number): THREE.Group {
+    const group = new THREE.Group()
+    const fixture = new THREE.MeshStandardMaterial({ color: skin.office.fixture })
+    const ceramic = new THREE.MeshStandardMaterial({ color: 0xf8fafc })
+    const stallCount = Math.max(2, Math.floor(width / 2.6))
+    for (let index = 0; index < stallCount; index++) {
+      const stall = new THREE.Group()
+      const booth = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 1.5), ceramic)
+      booth.position.set(0, 0.8, -width / 4)
+      stall.add(booth)
+      const doorGap = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, 1.2, 0.08),
+        new THREE.MeshStandardMaterial({ color: skin.office.wall }),
+      )
+      doorGap.position.set(0, 0.8, -width / 4 + 0.78)
+      stall.add(doorGap)
+      stall.position.set((index - (stallCount - 1) / 2) * 2.2, 0, 0)
+      group.add(stall)
+    }
+    const counter = new THREE.Mesh(new THREE.BoxGeometry(width - 2.5, 0.8, 0.7), fixture)
+    counter.position.set(0, 0.4, width / 4)
+    group.add(counter)
+    for (const offset of [-0.9, 0.9]) {
+      const sink = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.16, 0.45), ceramic)
+      sink.position.set(offset, 0.88, width / 4)
+      group.add(sink)
+    }
+    const label = labelSprite('厕所', { size: 32, color: '#f8fafc', background: '#0e7490dd' })
+    label.position.set(0, 2.4, -width / 4)
+    group.add(label)
+    return group
+  }
+
+  /** Build the smoking area: a bench, an ashtray stand, a plant, and a label. */
+  private buildSmokingArea(skin: CompanySkin, width: number): THREE.Group {
+    const group = new THREE.Group()
+    const fixture = new THREE.MeshStandardMaterial({ color: skin.office.fixture })
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(width - 2, 0.4, 0.9), fixture)
+    bench.position.set(0, 0.22, width / 4)
+    group.add(bench)
+    const ashtray = new THREE.Group()
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.9, 8), fixture)
+    pole.position.y = 0.45
+    const tray = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.16, 0.18, 10), fixture)
+    tray.position.y = 0.98
+    ashtray.add(pole, tray)
+    ashtray.position.set(width / 2 - 1.4, 0, width / 4 - 1)
+    group.add(ashtray)
+    const plant = new THREE.Group()
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.35, 10), new THREE.MeshStandardMaterial({ color: 0x8a5a33 }))
+    pot.position.y = 0.18
+    const crown = new THREE.Mesh(
+      new THREE.ConeGeometry(0.42, 1.0, 8),
+      new THREE.MeshStandardMaterial({ color: 0x4d7c3f, flatShading: true }),
+    )
+    crown.position.y = 0.95
+    plant.add(pot, crown)
+    plant.position.set(-(width / 2 - 1.4), 0, width / 4)
+    group.add(plant)
+    const label = labelSprite('吸烟区', { size: 32, color: '#f8fafc', background: '#b45309dd' })
+    label.position.set(0, 2.4, width / 4)
+    group.add(label)
     return group
   }
 
@@ -1471,14 +1631,14 @@ export class CompanyScene {
   }
 
   /** Build one seated employee with a screen and status label. */
-  private buildWorkstation(member: FloorMember): THREE.Group {
-    const group = this.buildDesk(this.floorSkin)
+  private buildMemberDesk(skin: CompanySkin, busy: boolean): { group: THREE.Group; screen: THREE.Mesh } {
+    const group = this.buildDesk(skin)
     const screen = new THREE.Mesh(
       new THREE.PlaneGeometry(0.62, 0.4),
       new THREE.MeshStandardMaterial({
         color: 0x0f172a,
-        emissive: new THREE.Color(this.floorSkin.office.screenBusy),
-        emissiveIntensity: member.busy ? 0.9 : 0,
+        emissive: new THREE.Color(skin.office.screenBusy),
+        emissiveIntensity: busy ? 0.9 : 0,
       }),
     )
     screen.position.set(0, 1.02, -0.32)
@@ -1489,7 +1649,14 @@ export class CompanyScene {
     )
     stand.position.set(0, 0.76, -0.32)
     group.add(stand)
+    return { group, screen }
+  }
 
+  /** Build one independent person figure carrying its name and status chip.
+   * @param member - the seated member the figure represents.
+   * @returns the person group plus the parts whose presentation flips live.
+   */
+  private buildPerson(member: FloorMember): { person: THREE.Group; label: THREE.Sprite } {
     const person = new THREE.Group()
     const torso = new THREE.Mesh(
       new THREE.CapsuleGeometry(0.22, 0.42, 4, 10),
@@ -1502,20 +1669,120 @@ export class CompanyScene {
     )
     head.position.y = 1.05
     person.add(torso, head)
-    person.position.set(0, 0, 0.5)
-    person.rotation.y = Math.PI
-    group.add(person)
-
     const label = statusLabel(member.busy)
     label.position.set(0, 1.75, 0)
-    group.add(label)
-    const name = labelSprite(member.displayName, { size: 24, color: this.floorSkin.campus.groundStyle === 'night-grid' ? '#cbd5e1' : '#334155' })
+    person.add(label)
+    const name = labelSprite(member.displayName, {
+      size: 24,
+      color: this.floorSkin.campus.groundStyle === 'night-grid' ? '#cbd5e1' : '#334155',
+    })
     name.position.set(0, 1.42, 0)
-    group.add(name)
+    person.add(name)
+    person.userData = { kind: 'member', memberKey: member.key }
+    return { person, label }
+  }
 
-    group.userData = { kind: 'member', memberKey: member.key }
-    this.memberMeshes.set(member.key, { group, screen, label, body: torso })
-    return group
+  /** Start one NPC walking to the desk or an amenity through the corridor.
+   * Legs through the owning room always pass its door gap on the hall side.
+   * @param npc - the wandering member record.
+   * @param destination - walk target: the desk or an amenity anchor index.
+   */
+  private beginWalk(npc: FloorNpc, destination: 'desk' | number): void {
+    const toDesk = destination === 'desk'
+    const target = toDesk
+      ? npc.seat.clone().add(new THREE.Vector3(0, 0, 0.5))
+      : this.floorAmenities[destination]?.clone() ?? npc.seat.clone()
+    const from = npc.person.position.clone()
+    const inRoom = from.distanceTo(npc.seat) < ROOM_D / 2 + 1
+    const points: THREE.Vector3[] = []
+    const push = (x: number, z: number): void => {
+      const last = points.at(-1)
+      if (last !== undefined && Math.abs(last.x - x) < 0.3 && Math.abs(last.z - z) < 0.3) return
+      if (Math.abs(from.x - x) < 0.3 && Math.abs(from.z - z) < 0.3) return
+      points.push(new THREE.Vector3(x, 0, z))
+    }
+    if (inRoom && !toDesk) {
+      push(npc.door.x, from.z)
+      push(npc.door.x, this.floorHallZ)
+    } else if (!inRoom && toDesk) {
+      push(from.x, this.floorHallZ)
+      push(npc.door.x, this.floorHallZ)
+      push(npc.door.x, npc.seat.z)
+    } else if (!inRoom && !toDesk) {
+      push(from.x, this.floorHallZ)
+    }
+    push(target.x, this.floorHallZ)
+    push(target.x, target.z)
+    npc.path = points
+    npc.pathIndex = 0
+    npc.destination = destination
+    npc.phase = 'walk'
+    npc.person.position.y = 0
+    if (!toDesk) this.setScreen(npc, false)
+  }
+
+  /** Flip one desk screen's working emissive.
+   * @param npc - the member whose desk screen changes.
+   * @param on - whether the screen presents work in progress.
+   */
+  private setScreen(npc: FloorNpc, on: boolean): void {
+    ;(npc.screen.material as THREE.MeshStandardMaterial).emissiveIntensity = on ? 0.9 : 0
+  }
+
+  /** Advance every NPC one frame: decisions, walking, and seated presentation.
+   * @param delta - frame delta seconds.
+   * @param time - elapsed scene seconds.
+   */
+  private advanceNpcs(delta: number, time: number): void {
+    for (const npc of this.floorNpcs.values()) {
+      if (npc.phase === 'sit') {
+        npc.person.position.y = SEAT_SINK + (npc.busy ? Math.abs(Math.sin(time * 6)) * 0.03 : 0)
+        if (!npc.busy && time >= npc.nextDecisionAt) {
+          if (this.floorAmenities.length > 0 && Math.random() < 0.55) {
+            this.beginWalk(npc, Math.floor(Math.random() * this.floorAmenities.length))
+          } else {
+            npc.nextDecisionAt = time + 4 + Math.random() * 8
+          }
+        }
+        continue
+      }
+      if (npc.busy && npc.destination !== 'desk') {
+        this.beginWalk(npc, 'desk')
+      }
+      if (npc.phase === 'walk') {
+        const waypoint = npc.path[npc.pathIndex]
+        if (waypoint === undefined) {
+          if (npc.destination === 'desk') {
+            npc.phase = 'sit'
+            npc.person.position.copy(npc.seat.clone().add(new THREE.Vector3(0, 0, 0.5)))
+            npc.person.position.y = SEAT_SINK
+            npc.person.rotation.y = Math.PI
+            this.setScreen(npc, npc.busy)
+          } else {
+            npc.phase = 'amenity'
+            npc.dwellUntil = time + 3 + Math.random() * 5
+          }
+          continue
+        }
+        const step = NPC_WALK_SPEED * delta
+        const distance = npc.person.position.distanceTo(waypoint)
+        if (distance <= step) {
+          npc.person.position.copy(waypoint)
+          npc.pathIndex += 1
+        } else {
+          npc.person.position.lerp(waypoint, step / distance)
+          npc.person.lookAt(waypoint.x, 0, waypoint.z)
+        }
+        continue
+      }
+      // amenity dwell
+      npc.person.position.y = Math.abs(Math.sin(time * 2 + npc.seat.x)) * 0.02
+      if (npc.busy) continue
+      if (time >= npc.dwellUntil) {
+        const chain = this.floorAmenities.length > 0 && Math.random() < 0.3
+        this.beginWalk(npc, chain ? Math.floor(Math.random() * this.floorAmenities.length) : 'desk')
+      }
+    }
   }
 
   /** Flip one member's live busy presentation without rebuilding the scene.
@@ -1523,18 +1790,24 @@ export class CompanyScene {
    * @param busy - whether the member is now busy.
    */
   updateBusy(memberKey: string, busy: boolean): void {
-    const member = this.memberMeshes.get(memberKey)
-    if (member === undefined) return
-    const material = member.screen.material as THREE.MeshStandardMaterial
-    material.emissiveIntensity = busy ? 0.9 : 0
+    const npc = this.floorNpcs.get(memberKey)
+    if (npc === undefined) return
+    npc.busy = busy
     const next = statusLabel(busy)
-    next.position.copy(member.label.position)
-    const oldMap = member.label.material.map
-    member.group.children.splice(member.group.children.indexOf(member.label), 1, next)
-    member.label.material.dispose()
+    next.position.copy(npc.label.position)
+    npc.person.children.splice(npc.person.children.indexOf(npc.label), 1, next)
+    const oldMap = npc.label.material.map
+    npc.label.material.dispose()
     if (oldMap !== null) oldMap.dispose()
-    member.label = next
-    member.body.position.y = busy ? 0.66 : 0.62
+    npc.label = next
+    if (busy) {
+      // Working members head straight home; the screen lights on arrival.
+      if (npc.phase !== 'sit') this.beginWalk(npc, 'desk')
+      else this.setScreen(npc, true)
+    } else {
+      this.setScreen(npc, false)
+      npc.nextDecisionAt = 0
+    }
   }
 
   /** Render loop: damped controls, the busy typing animation, and the city movers. */
@@ -1545,11 +1818,7 @@ export class CompanyScene {
     const delta = this.clock.getDelta()
     const time = this.clock.elapsedTime
     if (this.view === 'floor') {
-      for (const member of this.memberMeshes.values()) {
-        const busy = (member.screen.material as THREE.MeshStandardMaterial).emissiveIntensity > 0
-        if (busy) member.group.position.y = Math.abs(Math.sin(time * 6 + member.body.position.x)) * 0.03
-        else member.group.position.y = 0
-      }
+      this.advanceNpcs(delta, time)
     } else {
       this.advanceRoadCars(delta)
       this.advanceRandomRails(delta)
@@ -1609,6 +1878,8 @@ export class CompanyScene {
     this.roadCars.length = 0
     this.randomRails.length = 0
     this.trafficLamps.length = 0
+    this.floorNpcs.clear()
+    this.floorAmenities = []
     clearGroup(this.campusGroup)
     clearGroup(this.floorGroup)
     this.renderer.dispose()

@@ -27,6 +27,7 @@ import {
   withTaskAttempts,
   withTaskDigest,
 } from '@deepseek-ai/dsh-digital-employee-file'
+import { appendTaskLifecycleEvent } from '@deepseek-ai/dsh-digital-employee-file/task-events'
 import type { GoalView } from '@deepseek-ai/dsh-goal'
 import type { DigitalEmployeeInstanceId } from '@deepseek-ai/dsh-digital-employee'
 // Side-effect type import: declaration-merges ctx.digitalEmployeeAgent.
@@ -209,6 +210,9 @@ async function run(
     return
   }
   const displayName = task.length > 80 ? `${task.slice(0, 77)}...` : task
+  await appendTaskLifecycleEvent({
+    kind: 'started', employeeId, taskKey: key, taskTitle: displayName, at: Date.now(),
+  })
 
   const sessionId = SessionId(`session-${randomUUID()}`)
   const defaultModel = ctx.get('agentDefaultModel')
@@ -254,6 +258,9 @@ async function run(
 
   if (outcome.kind === 'complete') {
     await withTaskAttempts((ledger) => { resetAttempt(ledger, key) })
+    await appendTaskLifecycleEvent({
+      kind: 'succeeded', employeeId, taskKey: key, taskTitle: displayName, at: Date.now(),
+    })
     await recordSuccessDigest(ctx, config, io)
     io.exit(EXIT_COMPLETE)
     return
@@ -264,6 +271,10 @@ async function run(
     const hit = applyAttemptFailure(ledger, key, reason, config.maxFailedAttempts as number)
     stampAttemptDisplay(ledger, key, displayName, employeeId)
     return hit
+  })
+  await appendTaskLifecycleEvent({
+    kind: 'failed', employeeId, taskKey: key, taskTitle: displayName, at: Date.now(), reason,
+    ...(suspended ? { suspended: true } : {}),
   })
   await promoteFailureMemory(ctx, employee, sessionId, reason)
   if (suspended) {

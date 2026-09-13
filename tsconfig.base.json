@@ -196,6 +196,8 @@
       "@deepseek-ai/dsh-host-digital-employee-management": ["./packages/host/digital-employee-management/src"],
       "@deepseek-ai/dsh-host-digital-employee-management/types": ["./packages/host/digital-employee-management/src/types.ts"],
       "@deepseek-ai/dsh-host-company-management": ["./packages/host/company-management/src"],
+      "@deepseek-ai/dsh-host-company-group-chat": ["./packages/host/company-group-chat/src"],
+      "@deepseek-ai/dsh-host-company-group-chat/types": ["./packages/host/company-group-chat/src/types.ts"],
       "@deepseek-ai/dsh-client-ui-companies": ["./packages/client/ui-companies/src"],
       "@deepseek-ai/dsh-company": ["./packages/core/company/src"],
       "@deepseek-ai/dsh-company/types": ["./packages/core/company/src/types.ts"],

@@ -559,6 +559,9 @@ importers:
       '@deepseek-ai/dsh-hooks-market':
         specifier: workspace:^
         version: link:../packages/hooks/hooks-market
+      '@deepseek-ai/dsh-host-company-group-chat':
+        specifier: workspace:*
+        version: link:../packages/host/company-group-chat
       '@deepseek-ai/dsh-host-company-management':
         specifier: workspace:*
         version: link:../packages/host/company-management
@@ -956,6 +959,9 @@ importers:
       '@deepseek-ai/dsh-company':
         specifier: workspace:^
         version: link:../../core/company
+      '@deepseek-ai/dsh-host-company-group-chat':
+        specifier: workspace:^
+        version: link:../../host/company-group-chat
       '@deepseek-ai/dsh-host-company-management':
         specifier: workspace:^
         version: link:../../host/company-management
@@ -1680,6 +1686,9 @@ importers:
       '@deepseek-ai/dsh-host-apiproxy':
         specifier: workspace:^
         version: link:../../host/apiproxy
+      '@deepseek-ai/dsh-host-company-group-chat':
+        specifier: workspace:^
+        version: link:../../host/company-group-chat
       '@deepseek-ai/dsh-host-company-management':
         specifier: workspace:^
         version: link:../../host/company-management
@@ -5771,6 +5780,49 @@ importers:
       '@deepseek-ai/dsh-typert-registry':
         specifier: workspace:^
         version: link:../../typert/registry
+
+  packages/host/company-group-chat:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@deepseek-ai/dsh-company':
+        specifier: workspace:^
+        version: link:../../core/company
+      '@deepseek-ai/dsh-digital-employee':
+        specifier: workspace:^
+        version: link:../../core/digital-employee
+      '@deepseek-ai/dsh-digital-employee-agent':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-agent
+      '@deepseek-ai/dsh-digital-employee-file':
+        specifier: workspace:^
+        version: link:../../core/digital-employee-file
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@deepseek-ai/dsh-session-title':
+        specifier: workspace:^
+        version: link:../../session/session-title
+      '@deepseek-ai/dsh-typert-generator':
+        specifier: workspace:^
+        version: link:../../typert/generator
+      '@deepseek-ai/dsh-typert-protocol':
+        specifier: workspace:^
+        version: link:../../typert/protocol
 
   packages/host/company-management:
     dependencies:

@@ -839,6 +839,41 @@ Types: [AddDepartmentRequest](../user/guide/digital-employees.zh.md) · [AssignE
 
 Source: [`packages/core/company/src/index.ts`](../../packages/core/company/src/index.ts)
 
+<a id="ctxcompanygroupchat--companygroupchatgateway"></a>
+
+### `ctx.companyGroupChat` — `CompanyGroupChatGateway`
+
+Remote-only facade assembling company groups from existing services.
+
+```ts cordis-catalog
+/** Open (or create) one company's group and return its current view.
+ * @param companyId - the company whose group opens.
+ * @returns the group view: members, quoted messages, and the session id.
+ */
+@Remote('openCompanyGroup') async openCompanyGroup(companyId: CompanyId): Promise<CompanyGroupView>
+
+/** Land one user message in the group; @mentions route speaking turns.
+ * @param companyId - the company whose group receives the message.
+ * @param text - the user's message text.
+ * @returns the group view after the message landed (turns stream later).
+ */
+@Remote('sendCompanyGroupMessage') async sendCompanyGroupMessage(companyId: CompanyId, text: string): Promise<CompanyGroupView>
+
+/** Wait for every queued speaking turn to settle.
+ * @returns when the serialized turn chain is drained.
+ */
+async settle(): Promise<void>
+
+/** Run one lifecycle-log poll immediately instead of waiting the interval.
+ * @returns when the poll (and any queued trigger routing) completes.
+ */
+async pollNow(): Promise<void>
+```
+
+Types: [CompanyGroupView](../user/guide/digital-employees.zh.md) · [CompanyId](../user/guide/digital-employees.zh.md)
+
+Source: [`packages/host/company-group-chat/src/index.ts`](../../packages/host/company-group-chat/src/index.ts)
+
 <a id="ctxcompanymanagement--companymanagementgateway"></a>
 
 ### `ctx.companyManagement` — `CompanyManagementGateway`

@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
+import { appendTaskLifecycleEvent } from '@deepseek-ai/dsh-digital-employee-file/task-events'
 import { SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 
 const configPath = process.argv[2]
@@ -26,6 +27,27 @@ function groupSummary(groups: ReadonlyArray<{
       busyKind: member.busyKind,
     })),
   }))
+}
+
+
+/** The last group message reduced to its comparable shape. */
+interface GroupMessageShape {
+  readonly speakerKind: string
+  readonly displayName: string
+  readonly text: string
+  readonly context?: string
+}
+
+/** The last group message reduced to its comparable shape. */
+function messageTail(view: { messages: ReadonlyArray<GroupMessageShape> }): GroupMessageShape | null {
+  const message = view.messages.at(-1)
+  if (message === undefined) return null
+  return {
+    speakerKind: message.speakerKind,
+    displayName: message.displayName,
+    text: message.text,
+    ...(message.context === undefined ? {} : { context: message.context }),
+  }
 }
 
 let ctx: Context | undefined
@@ -90,6 +112,34 @@ try {
   const movedFloor = await management.companyFloor({ companyId: company.id })
   acceptance('department-deleted', { groups: groupSummary(movedFloor.groups) })
 
+  const groups = ctx.get('companyGroupChat')
+  if (groups === undefined) throw new Error('the company console fixture requires the group gateway')
+  const openedGroup = await groups.openCompanyGroup(company.id)
+  acceptance('group-opened', { members: openedGroup.members.length })
+
+  await groups.sendCompanyGroupMessage(company.id, '@Alice 重点放在Q3交付')
+  await groups.settle()
+  acceptance('group-mention', {
+    last: messageTail(await groups.openCompanyGroup(company.id)),
+  })
+
+  // Prime the boot cursor, then broadcast one lifecycle fact through the log.
+  await groups.pollNow()
+  await appendTaskLifecycleEvent({
+    kind: 'succeeded', employeeId: 'company-console-bob', taskKey: 'weekly', taskTitle: '整理周报', at: 1,
+  })
+  await groups.pollNow()
+  await groups.settle()
+  acceptance('group-task-broadcast', {
+    last: messageTail(await groups.openCompanyGroup(company.id)),
+  })
+
+  await groups.sendCompanyGroupMessage(company.id, '@Bob FORCE_FAIL')
+  await groups.settle()
+  acceptance('group-fallback', {
+    last: messageTail(await groups.openCompanyGroup(company.id)),
+  })
+
   // A real 1x1 PNG admitted through the attachment pipeline.
   const png = await management.setPromoImage({
     companyId: company.id,
@@ -115,4 +165,8 @@ try {
   process.exitCode = 1
 } finally {
   await ctx?.fiber.dispose()
+  // The gateway's interval and the session store flush through disposal, but
+  // the assembled process keeps its stdio pipes until every loader fiber
+  // settles; one-shot drivers own their exit explicitly.
+  process.exit(process.exitCode ?? 0)
 }
