@@ -5,6 +5,7 @@ import commandsRemote from '@deepseek-ai/dsh-commands/remote'
 import goalsRemote from '@deepseek-ai/dsh-goal/remote'
 import dynamicRemote from '@deepseek-ai/dsh-cordis-host-runner/remote'
 import fileReferencesRemote from '@deepseek-ai/dsh-file-reference/remote'
+import companiesRemote from '@deepseek-ai/dsh-host-company-management/remote'
 import digitalEmployeesRemote from '@deepseek-ai/dsh-host-digital-employee-management/remote'
 import pluginInventoryRemote from '@deepseek-ai/dsh-host-plugin-inventory/remote'
 import messageFeedbackRemote from '@deepseek-ai/dsh-message-feedback/remote'
@@ -21,6 +22,7 @@ export type { TypertClientRemote as ClientRemote } from '@deepseek-ai/dsh-typert
 export type { PluginInventorySnapshot } from '@deepseek-ai/dsh-host-plugin-inventory/types'
 export type {} from '@deepseek-ai/dsh-commands/remote'
 export type {} from '@deepseek-ai/dsh-file-reference/remote'
+export type {} from '@deepseek-ai/dsh-host-company-management/remote'
 export type {} from '@deepseek-ai/dsh-goal/remote'
 export type {} from '@deepseek-ai/dsh-host-digital-employee-management/remote'
 export type {} from '@deepseek-ai/dsh-host-plugin-inventory/remote'
@@ -109,6 +111,31 @@ export type { JsonValue } from '@deepseek-ai/dsh-session/types'
 export type { FileReferenceCandidate } from '@deepseek-ai/dsh-file-reference/types'
 export type { SessionReferenceMentionCandidate } from '@deepseek-ai/dsh-session-reference/types'
 export type * from '@deepseek-ai/dsh-digital-employee/types'
+export type {
+  AddDepartmentRequest,
+  AssignEmployeeRequest,
+  CompanyBusyKind,
+  CompanyCandidateEmployee,
+  CompanyFloor,
+  CompanyFloorGroup,
+  CompanyFloorMember,
+  CompanyId,
+  CompanyIdRequest,
+  CompanyPromoImageRef,
+  CompanyPromoImageUpload,
+  CompanyPromoImageValue,
+  CompanyRecord,
+  CreateCompanyRequest,
+  DeleteDepartmentRequest,
+  DepartmentId,
+  DepartmentRecord,
+  EmployeeBinding,
+  RenameDepartmentRequest,
+  ReorderDepartmentsRequest,
+  SetCompanyPromoImageRequest,
+  UnassignEmployeeRequest,
+  UpdateCompanyRequest,
+} from '@deepseek-ai/dsh-company/types'
 export type {
   DigitalEmployeeDeleteMemoryRequest,
   DigitalEmployeeConfigurationAuthority,
@@ -246,7 +273,7 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
   try {
     for (const contribution of [
       commandsRemote, goalsRemote, dynamicRemote, fileReferencesRemote,
-      digitalEmployeesRemote, pluginInventoryRemote, messageFeedbackRemote,
+      digitalEmployeesRemote, companiesRemote, pluginInventoryRemote, messageFeedbackRemote,
       sessionReferencesRemote, skillMarketRemote, toolMarketRemote, mcpMarketRemote,
       hookMarketRemote, workflowMarketRemote, subagentMarketRemote,
     ]) {

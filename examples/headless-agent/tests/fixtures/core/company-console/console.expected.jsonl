@@ -1,0 +1,11 @@
+{"type":"acceptance","stage":"company-created","departments":["总裁","人力","行政","IT","销售"]}
+{"type":"acceptance","stage":"skin-default","skinId":null}
+{"type":"acceptance","stage":"skin-switched","skinId":"courtyard"}
+{"type":"acceptance","stage":"department-added","departments":["总裁","法务","人力","行政","IT","销售"]}
+{"type":"acceptance","stage":"candidates","names":["Carol"]}
+{"type":"acceptance","stage":"floor-idle","groups":[{"department":"总裁","members":[{"name":"Alice","busy":false,"busyKind":null}]},{"department":"法务","members":[]},{"department":"人力","members":[]},{"department":"行政","members":[]},{"department":"IT","members":[{"name":"Bob","busy":false,"busyKind":null}]},{"department":"销售","members":[]}]}
+{"type":"acceptance","stage":"floor-task-busy","groups":[{"department":"总裁","members":[{"name":"Alice","busy":false,"busyKind":null}]},{"department":"法务","members":[]},{"department":"人力","members":[]},{"department":"行政","members":[]},{"department":"IT","members":[{"name":"Bob","busy":true,"busyKind":"task"}]},{"department":"销售","members":[]}]}
+{"type":"acceptance","stage":"department-deleted","groups":[{"department":"总裁","members":[{"name":"Alice","busy":false,"busyKind":null}]},{"department":"法务","members":[]},{"department":"人力","members":[]},{"department":"行政","members":[]},{"department":"销售","members":[]},{"department":"(未分配)","members":[{"name":"Bob","busy":true,"busyKind":"task"}]}]}
+{"type":"acceptance","stage":"promo-set","mediaType":"image/png","width":1,"height":1}
+{"type":"acceptance","stage":"promo-read","delivered":true}
+{"type":"acceptance","stage":"company-deleted","remaining":0}

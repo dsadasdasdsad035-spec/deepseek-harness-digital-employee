@@ -734,6 +734,237 @@ roots(): Agent[]
 
 Source: [`packages/core/agent/src/index.ts`](../../packages/core/agent/src/index.ts)
 
+<a id="ctxcompanies--companies"></a>
+
+### `ctx.companies` — `Companies`
+
+Registry facade over the sole durable company provider.
+
+```ts cordis-catalog
+/**
+ * Configure the sole durable provider for the current plugin lifetime.
+ * @param provider - provider implementing company, department, and binding operations.
+ * @returns disposer that removes this exact provider.
+ */
+configureProvider(provider: CompanyProvider): () => void
+
+/** List all companies in creation order through the configured provider.
+ * @returns creation-ordered company records.
+ */
+list(): Promise<readonly CompanyRecord[]>
+
+/** Read one company through the configured provider.
+ * @param id - company identifier.
+ * @returns the record, or `undefined` when absent.
+ */
+get(id: CompanyId): Promise<CompanyRecord | undefined>
+
+/** Create one company with the preset departments through the configured provider.
+ * @param request - validated creation fields.
+ * @returns the created record.
+ */
+create(request: CreateCompanyRequest): Promise<CompanyRecord>
+
+/** Update editable company fields through the configured provider.
+ * @param request - company identifier plus changed fields.
+ * @returns the updated record.
+ */
+update(request: UpdateCompanyRequest): Promise<CompanyRecord>
+
+/** Delete one company and unbind all of its members through the configured provider.
+ * @param id - company identifier.
+ */
+delete(id: CompanyId): Promise<void>
+
+/** Append or insert one department through the configured provider.
+ * @param request - company, department name, optional color and insert position.
+ * @returns the updated record.
+ */
+addDepartment(request: AddDepartmentRequest): Promise<CompanyRecord>
+
+/** Rename one department through the configured provider.
+ * @param request - company, department, and new name.
+ * @returns the updated record.
+ */
+renameDepartment(request: RenameDepartmentRequest): Promise<CompanyRecord>
+
+/** Reorder all departments of one company through the configured provider.
+ * @param request - company and the complete ordered department-id list.
+ * @returns the updated record.
+ */
+reorderDepartments(request: ReorderDepartmentsRequest): Promise<CompanyRecord>
+
+/** Delete one department, moving members to the unassigned group.
+ * @param request - company and department identifiers.
+ * @returns the updated record.
+ */
+deleteDepartment(request: DeleteDepartmentRequest): Promise<CompanyRecord>
+
+/** Attach an admitted promotional image to one company.
+ * @param companyId - company identifier.
+ * @param ref - admitted image reference.
+ * @returns the updated record.
+ */
+setPromoImage(companyId: CompanyId, ref: CompanyPromoImageRef): Promise<CompanyRecord>
+
+/** Remove one company's promotional image reference.
+ * @param companyId - company identifier.
+ * @returns the updated record.
+ */
+removePromoImage(companyId: CompanyId): Promise<CompanyRecord>
+
+/** List all employee bindings through the configured provider.
+ * @returns detached binding records.
+ */
+listBindings(): Promise<readonly EmployeeBinding[]>
+
+/** Bind or move one employee instance inside one company.
+ * @param request - instance, company, and target department (or `null`).
+ */
+assignEmployee(request: AssignEmployeeRequest): Promise<void>
+
+/** Remove one employee instance's binding.
+ * @param request - instance identifier.
+ */
+unassignEmployee(request: UnassignEmployeeRequest): Promise<void>
+
+/** Remove bindings of instances the predicate names as gone.
+ * @param instanceExists - predicate naming which instance identifiers remain alive.
+ * @returns how many bindings were removed.
+ */
+pruneEmployeeBindings(instanceExists: (instanceId: EmployeeBinding['instanceId']) => boolean): Promise<number>
+```
+
+Types: [AddDepartmentRequest](../user/guide/digital-employees.zh.md) · [AssignEmployeeRequest](../user/guide/digital-employees.zh.md) · [CompanyId](../user/guide/digital-employees.zh.md) · [CompanyPromoImageRef](../user/guide/digital-employees.zh.md) · [CompanyProvider](../user/guide/digital-employees.zh.md) · [CompanyRecord](../user/guide/digital-employees.zh.md) · [CreateCompanyRequest](../user/guide/digital-employees.zh.md) · [DeleteDepartmentRequest](../user/guide/digital-employees.zh.md) · [EmployeeBinding](../user/guide/digital-employees.zh.md) · [RenameDepartmentRequest](../user/guide/digital-employees.zh.md) · [ReorderDepartmentsRequest](../user/guide/digital-employees.zh.md) · [UnassignEmployeeRequest](../user/guide/digital-employees.zh.md) · [UpdateCompanyRequest](../user/guide/digital-employees.zh.md)
+
+Source: [`packages/core/company/src/index.ts`](../../packages/core/company/src/index.ts)
+
+<a id="ctxcompanymanagement--companymanagementgateway"></a>
+
+### `ctx.companyManagement` — `CompanyManagementGateway`
+
+Remote-only facade over the owning company and digital employee services.
+
+```ts cordis-catalog
+/**
+ * List all companies in creation order.
+ * @returns detached company records without promo image bytes.
+ */
+@Remote('list') list(): Promise<readonly CompanyRecord[]>
+
+/**
+ * Read one company.
+ * @param request - company identity.
+ * @returns the stored record.
+ * @throws when the company does not exist.
+ */
+@Remote('get') async get(request: CompanyIdRequest): Promise<CompanyRecord>
+
+/**
+ * Create one company seeded with the preset departments.
+ * @param request - company name plus optional informational fields.
+ * @returns the created record.
+ */
+@Remote('create') create(request: CreateCompanyRequest): Promise<CompanyRecord>
+
+/**
+ * Update editable company fields.
+ * @param request - company identity plus changed fields.
+ * @returns the updated record.
+ */
+@Remote('update') update(request: UpdateCompanyRequest): Promise<CompanyRecord>
+
+/**
+ * Delete one company and unbind all of its members.
+ * @param request - company identity.
+ */
+@Remote('delete') async delete(request: CompanyIdRequest): Promise<void>
+
+/**
+ * Read one company's promotional image bytes.
+ * @param request - company identity.
+ * @returns verified image data, or `null` when the company has none.
+ */
+@Remote('promoImage') async promoImage(request: CompanyIdRequest): Promise<CompanyPromoImageValue | null>
+
+/**
+ * Admit one uploaded promotional image and attach it to the company.
+ * @param request - company identity plus encoded image upload.
+ * @returns the updated record referencing the stored image.
+ */
+@Remote('setPromoImage') async setPromoImage(request: SetCompanyPromoImageRequest): Promise<CompanyRecord>
+
+/**
+ * Remove one company's promotional image reference.
+ * @param request - company identity.
+ * @returns the updated record.
+ */
+@Remote('removePromoImage') async removePromoImage(request: CompanyIdRequest): Promise<CompanyRecord>
+
+/**
+ * Add one department to a company.
+ * @param request - company, department name, optional color and insert position.
+ * @returns the updated record.
+ */
+@Remote('addDepartment') async addDepartment(request: AddDepartmentRequest): Promise<CompanyRecord>
+
+/**
+ * Rename one department.
+ * @param request - company, department, and new name.
+ * @returns the updated record.
+ */
+@Remote('renameDepartment') async renameDepartment(request: RenameDepartmentRequest): Promise<CompanyRecord>
+
+/**
+ * Reorder all departments of one company.
+ * @param request - company and the complete ordered department-id list.
+ * @returns the updated record.
+ */
+@Remote('reorderDepartments') async reorderDepartments(request: ReorderDepartmentsRequest): Promise<CompanyRecord>
+
+/**
+ * Delete one department, moving members to the unassigned group.
+ * @param request - company and department identifiers.
+ * @returns the updated record.
+ */
+@Remote('deleteDepartment') async deleteDepartment(request: DeleteDepartmentRequest): Promise<CompanyRecord>
+
+/**
+ * List all employee bindings across companies.
+ * @returns detached binding records.
+ */
+@Remote('listBindings') listBindings(): Promise<readonly EmployeeBinding[]>
+
+/**
+ * Bind or move one employee instance inside one company.
+ * @param request - instance, company, and target department (or `null`).
+ */
+@Remote('assignEmployee') async assignEmployee(request: AssignEmployeeRequest): Promise<void>
+
+/**
+ * Remove one employee instance's binding.
+ * @param request - instance identity.
+ */
+@Remote('unassignEmployee') unassignEmployee(request: UnassignEmployeeRequest): Promise<void>
+
+/**
+ * List employee instances not bound to any company.
+ * @returns selectable instances with lifecycle state.
+ */
+@Remote('availableEmployees') async availableEmployees(): Promise<readonly CompanyCandidateEmployee[]>
+
+/**
+ * Project one company's interior render payload with live busy verdicts.
+ * @param request - company identity.
+ * @returns department groups with seated members and per-seat busy state.
+ */
+@Remote('companyFloor') async companyFloor(request: CompanyIdRequest): Promise<CompanyFloor>
+```
+
+Types: [AddDepartmentRequest](../user/guide/digital-employees.zh.md) · [AssignEmployeeRequest](../user/guide/digital-employees.zh.md) · [CompanyCandidateEmployee](../user/guide/digital-employees.zh.md) · [CompanyFloor](../user/guide/digital-employees.zh.md) · [CompanyIdRequest](../user/guide/digital-employees.zh.md) · [CompanyPromoImageValue](../user/guide/digital-employees.zh.md) · [CompanyRecord](../user/guide/digital-employees.zh.md) · [CreateCompanyRequest](../user/guide/digital-employees.zh.md) · [DeleteDepartmentRequest](../user/guide/digital-employees.zh.md) · [EmployeeBinding](../user/guide/digital-employees.zh.md) · [RenameDepartmentRequest](../user/guide/digital-employees.zh.md) · [ReorderDepartmentsRequest](../user/guide/digital-employees.zh.md) · [SetCompanyPromoImageRequest](../user/guide/digital-employees.zh.md) · [UnassignEmployeeRequest](../user/guide/digital-employees.zh.md) · [UpdateCompanyRequest](../user/guide/digital-employees.zh.md)
+
+Source: [`packages/host/company-management/src/index.ts`](../../packages/host/company-management/src/index.ts)
+
 <a id="ctxdigitalemployeeagent--digitalemployeeagent"></a>
 
 ### `ctx.digitalEmployeeAgent` — `DigitalEmployeeAgent`
@@ -1596,6 +1827,29 @@ One session committed a different agent preset to its durable log. Consumers inv
 ```
 
 Source: [`packages/preset/agent-presets/src/types.ts`](../../packages/preset/agent-presets/src/types.ts)
+
+<a id="companies-events"></a>
+
+### `companies/*` events
+
+<a id="companieschange--emit"></a>
+
+#### `companies/change` — emit
+
+A company, its departments, or its bindings changed.
+
+```ts cordis-catalog
+/**
+ * A company, its departments, or its bindings changed.
+ * @mode emit
+ * @param companyId - company whose stored data changed.
+ */
+'companies/change'(companyId: CompanyId): void
+```
+
+Types: [CompanyId](../user/guide/digital-employees.zh.md)
+
+Source: [`packages/core/company/src/index.ts`](../../packages/core/company/src/index.ts)
 
 <a id="digital-employees-events"></a>
 

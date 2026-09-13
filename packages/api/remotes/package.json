@@ -55,6 +55,8 @@
     "lib/types/**/*.d.ts"
   ],
   "dependencies": {
+    "@deepseek-ai/dsh-company": "workspace:^",
+    "@deepseek-ai/dsh-host-company-management": "workspace:^",
     "@deepseek-ai/dsh-typert-protocol": "workspace:^"
   },
   "peerDependencies": {

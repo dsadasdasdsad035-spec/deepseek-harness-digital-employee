@@ -445,6 +445,23 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Exposes typed management and atomic chat-start Remote operations while delegating durable state and Agent composition to their owning services.',
   },
   {
+    key: 'companies',
+    pkg: 'company',
+    title: 'Company registry and provider seam',
+    mode: 'seam',
+    implementations: ['company-file'],
+    consumers: ['company-management'],
+    note: 'Owns durable company records, departments, and employee-instance bindings; the management gateway consumes the resolved state for the 3D console.',
+  },
+  {
+    key: 'companyManagement',
+    pkg: 'company-management',
+    title: 'Company Host management gateway',
+    mode: 'core',
+    consumers: ['ui-companies'],
+    note: 'Exposes typed company Remote operations and the busy/idle floor projection while delegating durable state to the companies provider.',
+  },
+  {
     key: 'mcpClients',
     pkg: 'mcp-client',
     title: 'Dynamic MCP client manager',

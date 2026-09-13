@@ -3,5 +3,10 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "description": "Runnable demo: one complete headless coding-agent turn"
+  "description": "Runnable demo: one complete headless coding-agent turn",
+  "dependencies": {
+    "@deepseek-ai/dsh-company": "workspace:^",
+    "@deepseek-ai/dsh-company-file": "workspace:^",
+    "@deepseek-ai/dsh-host-company-management": "workspace:^"
+  }
 }

@@ -1,0 +1,44 @@
+# Assembled keyless fixture for the company console remotes: companies,
+# departments, employee-instance bindings, the promotional-image pipeline, and
+# the live busy/idle floor projection, over the real digital employee store,
+# attachment admission, and session persistence — with a stubbed live-agent
+# registry (this process never runs an employee agent).
+
+- id: digital-employees
+  name: '@deepseek-ai/dsh-digital-employee'
+
+- id: company-console-template
+  name: './template.ts'
+
+- id: digital-employee-file
+  name: '@deepseek-ai/dsh-digital-employee-file'
+  config:
+    path: './digital-employees.json'
+
+- id: company
+  name: '@deepseek-ai/dsh-company'
+
+- id: company-file
+  name: '@deepseek-ai/dsh-company-file'
+  config:
+    path: './companies.json'
+
+- id: company-console-agents-stub
+  name: './agents-stub.ts'
+
+- id: sessions
+  name: '@deepseek-ai/dsh-session'
+
+- id: session-persistence-jsonl
+  name: '@deepseek-ai/dsh-session-persistence-jsonl'
+  config:
+    root: './sessions-root'
+    compression: none
+
+- id: attachment-local
+  name: '@deepseek-ai/dsh-attachment-local'
+  config:
+    dshHome: './.dsh-home'
+
+- id: company-management
+  name: '@deepseek-ai/dsh-host-company-management'

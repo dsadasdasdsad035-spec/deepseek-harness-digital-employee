@@ -139,6 +139,12 @@ flowchart LR
   svc_digitalEmployeeAgent["ctx.digitalEmployeeAgent<br/>Digital employee Agent composition"]
   svc_digitalEmployeeManagement["ctx.digitalEmployeeManagement<br/>Digital employee Host management gateway"]
   pkg_ui_digital_employees["ui-digital-employees"]
+  pkg_company["company"]
+  svc_companies["ctx.companies<br/>Company registry and provider seam"]
+  pkg_company_file["company-file"]
+  pkg_company_management["company-management"]
+  svc_companyManagement["ctx.companyManagement<br/>Company Host management gateway"]
+  pkg_ui_companies["ui-companies"]
   svc_mcpClients["ctx.mcpClients<br/>Dynamic MCP client manager"]
   svc_agents["ctx.agents<br/>Agent service"]
   pkg_acp["acp"]
@@ -252,6 +258,9 @@ flowchart LR
   pkg_compaction --> svc_compaction
   pkg_compaction_basic --> svc_compaction
   pkg_compaction_tool_result_pruner --> svc_toolResultPruner
+  pkg_company --> svc_companies
+  pkg_company_file --> svc_companies
+  pkg_company_management --> svc_companyManagement
   pkg_cordis_host_runner --> svc_cordisInspect
   pkg_cordis_host_runner --> svc_dynamicCordisRunner
   pkg_credentials --> svc_credentials
@@ -367,6 +376,8 @@ flowchart LR
   svc_clientModules --> pkg_hmr
   svc_codeRuntime --> pkg_tools
   svc_compaction --> pkg_compaction_basic
+  svc_companies --> pkg_company_management
+  svc_companyManagement --> pkg_ui_companies
   svc_cordisInspect --> pkg_tool_cordis
   svc_credentials --> pkg_apiproxy
   svc_credentials --> pkg_llm_deepseek
@@ -538,6 +549,8 @@ flowchart LR
 | `ctx.digitalEmployees` | `seam` | [`digital-employee`](../packages/core/digital-employee) | [`digital-employee-file`](../packages/core/digital-employee-file) | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | - | Owns template and instance lookup, lifecycle mutation, memory, audit, and durable employee records; composition and Host task admission consume the resolved employee state. |
 | `ctx.digitalEmployeeAgent` | `core` | [`digital-employee-agent`](../packages/core/digital-employee-agent) | - | `digital-employee-management` | - | Resolves an active employee into the existing Agent, prompt, skill, tool, MCP, memory, and delegation extension points before creating an employee-owned root Session. |
 | `ctx.digitalEmployeeManagement` | `core` | `digital-employee-management` | - | `ui-digital-employees` | - | Exposes typed management and atomic chat-start Remote operations while delegating durable state and Agent composition to their owning services. |
+| `ctx.companies` | `seam` | [`company`](../packages/core/company) | [`company-file`](../packages/core/company-file) | `company-management` | - | Owns durable company records, departments, and employee-instance bindings; the management gateway consumes the resolved state for the 3D console. |
+| `ctx.companyManagement` | `core` | `company-management` | - | `ui-companies` | - | Exposes typed company Remote operations and the busy/idle floor projection while delegating durable state to the companies provider. |
 | `ctx.mcpClients` | `core` | [`mcp-client`](../packages/mcp/mcp-client) | - | [`digital-employee-agent`](../packages/core/digital-employee-agent) | - | Mounts resolved MCP server connections in the target Context and releases their fibers with the owning Agent or composition scope. |
 | `ctx.agents` | `core` | [`agent`](../packages/core/agent) | - | [`agent-loop`](../packages/core/agent-loop), [`acp`](../packages/acp/acp), `subagent-inprocess` | - | Owns live Agent handles, the create/resume factory seam, and process-local initiator propagation. |
 | `ctx.agentDefaultModel` | `core` | [`agent-default-model`](../packages/core/agent-default-model) | - | [`headless`](../packages/bundle/headless), [`host-apiproxy`](../packages/host/apiproxy) | - | Layers the default ModelSelection through settings so direct and Host-backed Agent entry points share one state owner. |

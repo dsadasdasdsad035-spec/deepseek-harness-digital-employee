@@ -620,6 +620,213 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'companies',
+    summary: 'Registry facade over the sole durable company provider.',
+    description: 'Registry facade over the sole durable company provider.',
+    methods: [
+      {
+        signature: 'configureProvider(provider: CompanyProvider): () => void',
+        description: 'Configure the sole durable provider for the current plugin lifetime.',
+        parameters: [{ name: 'provider', description: 'provider implementing company, department, and binding operations.' }],
+        returns: 'disposer that removes this exact provider.',
+      },
+      {
+        signature: 'list(): Promise<readonly CompanyRecord[]>',
+        description: 'List all companies in creation order through the configured provider.',
+        parameters: [],
+        returns: 'creation-ordered company records.',
+      },
+      {
+        signature: 'get(id: CompanyId): Promise<CompanyRecord | undefined>',
+        description: 'Read one company through the configured provider.',
+        parameters: [{ name: 'id', description: 'company identifier.' }],
+        returns: 'the record, or `undefined` when absent.',
+      },
+      {
+        signature: 'create(request: CreateCompanyRequest): Promise<CompanyRecord>',
+        description: 'Create one company with the preset departments through the configured provider.',
+        parameters: [{ name: 'request', description: 'validated creation fields.' }],
+        returns: 'the created record.',
+      },
+      {
+        signature: 'update(request: UpdateCompanyRequest): Promise<CompanyRecord>',
+        description: 'Update editable company fields through the configured provider.',
+        parameters: [{ name: 'request', description: 'company identifier plus changed fields.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: 'delete(id: CompanyId): Promise<void>',
+        description: 'Delete one company and unbind all of its members through the configured provider.',
+        parameters: [{ name: 'id', description: 'company identifier.' }],
+      },
+      {
+        signature: 'addDepartment(request: AddDepartmentRequest): Promise<CompanyRecord>',
+        description: 'Append or insert one department through the configured provider.',
+        parameters: [{ name: 'request', description: 'company, department name, optional color and insert position.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: 'renameDepartment(request: RenameDepartmentRequest): Promise<CompanyRecord>',
+        description: 'Rename one department through the configured provider.',
+        parameters: [{ name: 'request', description: 'company, department, and new name.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: 'reorderDepartments(request: ReorderDepartmentsRequest): Promise<CompanyRecord>',
+        description: 'Reorder all departments of one company through the configured provider.',
+        parameters: [{ name: 'request', description: 'company and the complete ordered department-id list.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: 'deleteDepartment(request: DeleteDepartmentRequest): Promise<CompanyRecord>',
+        description: 'Delete one department, moving members to the unassigned group.',
+        parameters: [{ name: 'request', description: 'company and department identifiers.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: 'setPromoImage(companyId: CompanyId, ref: CompanyPromoImageRef): Promise<CompanyRecord>',
+        description: 'Attach an admitted promotional image to one company.',
+        parameters: [{ name: 'companyId', description: 'company identifier.' }, { name: 'ref', description: 'admitted image reference.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: 'removePromoImage(companyId: CompanyId): Promise<CompanyRecord>',
+        description: 'Remove one company\'s promotional image reference.',
+        parameters: [{ name: 'companyId', description: 'company identifier.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: 'listBindings(): Promise<readonly EmployeeBinding[]>',
+        description: 'List all employee bindings through the configured provider.',
+        parameters: [],
+        returns: 'detached binding records.',
+      },
+      {
+        signature: 'assignEmployee(request: AssignEmployeeRequest): Promise<void>',
+        description: 'Bind or move one employee instance inside one company.',
+        parameters: [{ name: 'request', description: 'instance, company, and target department (or `null`).' }],
+      },
+      {
+        signature: 'unassignEmployee(request: UnassignEmployeeRequest): Promise<void>',
+        description: 'Remove one employee instance\'s binding.',
+        parameters: [{ name: 'request', description: 'instance identifier.' }],
+      },
+      {
+        signature: 'pruneEmployeeBindings(instanceExists: (instanceId: EmployeeBinding[\'instanceId\']) => boolean): Promise<number>',
+        description: 'Remove bindings of instances the predicate names as gone.',
+        parameters: [{ name: 'instanceExists', description: 'predicate naming which instance identifiers remain alive.' }],
+        returns: 'how many bindings were removed.',
+      },
+    ],
+  },
+  {
+    key: 'companyManagement',
+    summary: 'Remote-only facade over the owning company and digital employee services.',
+    description: 'Remote-only facade over the owning company and digital employee services.',
+    methods: [
+      {
+        signature: '@Remote(\'list\') list(): Promise<readonly CompanyRecord[]>',
+        description: 'List all companies in creation order.',
+        parameters: [],
+        returns: 'detached company records without promo image bytes.',
+      },
+      {
+        signature: '@Remote(\'get\') async get(request: CompanyIdRequest): Promise<CompanyRecord>',
+        description: 'Read one company.',
+        parameters: [{ name: 'request', description: 'company identity.' }],
+        returns: 'the stored record.',
+        throws: ['when the company does not exist.'],
+      },
+      {
+        signature: '@Remote(\'create\') create(request: CreateCompanyRequest): Promise<CompanyRecord>',
+        description: 'Create one company seeded with the preset departments.',
+        parameters: [{ name: 'request', description: 'company name plus optional informational fields.' }],
+        returns: 'the created record.',
+      },
+      {
+        signature: '@Remote(\'update\') update(request: UpdateCompanyRequest): Promise<CompanyRecord>',
+        description: 'Update editable company fields.',
+        parameters: [{ name: 'request', description: 'company identity plus changed fields.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: '@Remote(\'delete\') async delete(request: CompanyIdRequest): Promise<void>',
+        description: 'Delete one company and unbind all of its members.',
+        parameters: [{ name: 'request', description: 'company identity.' }],
+      },
+      {
+        signature: '@Remote(\'promoImage\') async promoImage(request: CompanyIdRequest): Promise<CompanyPromoImageValue | null>',
+        description: 'Read one company\'s promotional image bytes.',
+        parameters: [{ name: 'request', description: 'company identity.' }],
+        returns: 'verified image data, or `null` when the company has none.',
+      },
+      {
+        signature: '@Remote(\'setPromoImage\') async setPromoImage(request: SetCompanyPromoImageRequest): Promise<CompanyRecord>',
+        description: 'Admit one uploaded promotional image and attach it to the company.',
+        parameters: [{ name: 'request', description: 'company identity plus encoded image upload.' }],
+        returns: 'the updated record referencing the stored image.',
+      },
+      {
+        signature: '@Remote(\'removePromoImage\') async removePromoImage(request: CompanyIdRequest): Promise<CompanyRecord>',
+        description: 'Remove one company\'s promotional image reference.',
+        parameters: [{ name: 'request', description: 'company identity.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: '@Remote(\'addDepartment\') async addDepartment(request: AddDepartmentRequest): Promise<CompanyRecord>',
+        description: 'Add one department to a company.',
+        parameters: [{ name: 'request', description: 'company, department name, optional color and insert position.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: '@Remote(\'renameDepartment\') async renameDepartment(request: RenameDepartmentRequest): Promise<CompanyRecord>',
+        description: 'Rename one department.',
+        parameters: [{ name: 'request', description: 'company, department, and new name.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: '@Remote(\'reorderDepartments\') async reorderDepartments(request: ReorderDepartmentsRequest): Promise<CompanyRecord>',
+        description: 'Reorder all departments of one company.',
+        parameters: [{ name: 'request', description: 'company and the complete ordered department-id list.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: '@Remote(\'deleteDepartment\') async deleteDepartment(request: DeleteDepartmentRequest): Promise<CompanyRecord>',
+        description: 'Delete one department, moving members to the unassigned group.',
+        parameters: [{ name: 'request', description: 'company and department identifiers.' }],
+        returns: 'the updated record.',
+      },
+      {
+        signature: '@Remote(\'listBindings\') listBindings(): Promise<readonly EmployeeBinding[]>',
+        description: 'List all employee bindings across companies.',
+        parameters: [],
+        returns: 'detached binding records.',
+      },
+      {
+        signature: '@Remote(\'assignEmployee\') async assignEmployee(request: AssignEmployeeRequest): Promise<void>',
+        description: 'Bind or move one employee instance inside one company.',
+        parameters: [{ name: 'request', description: 'instance, company, and target department (or `null`).' }],
+      },
+      {
+        signature: '@Remote(\'unassignEmployee\') unassignEmployee(request: UnassignEmployeeRequest): Promise<void>',
+        description: 'Remove one employee instance\'s binding.',
+        parameters: [{ name: 'request', description: 'instance identity.' }],
+      },
+      {
+        signature: '@Remote(\'availableEmployees\') async availableEmployees(): Promise<readonly CompanyCandidateEmployee[]>',
+        description: 'List employee instances not bound to any company.',
+        parameters: [],
+        returns: 'selectable instances with lifecycle state.',
+      },
+      {
+        signature: '@Remote(\'companyFloor\') async companyFloor(request: CompanyIdRequest): Promise<CompanyFloor>',
+        description: 'Project one company\'s interior render payload with live busy verdicts.',
+        parameters: [{ name: 'request', description: 'company identity.' }],
+        returns: 'department groups with seated members and per-seat busy state.',
+      },
+    ],
+  },
+  {
     key: 'credentials',
     summary: 'Abstract credential service over two key spaces that answer two questions.',
     description: 'Abstract credential service over two key spaces that answer two questions.\n\nA CredentialRef answers "what is behind this environment-variable name", layered over the process environment, the provider-managed store, and `.env` files. One seam-wide rule binds that half: an empty stored value is absent everywhere — `resolve` skips it, `describe` reports it unconfigured — so a blank never masquerades as a configured secret.\n\nA CredentialKey answers "what credential does this plugin hold for this id". Nothing can layer here — an authorization grant has no environment to be read from — so presence of the record is the whole fact, and modifyRecord is the only write path because a correct write depends on the current value (a token refresh is read-decide-replace under one lock).',
@@ -3377,6 +3584,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [],
   },
   {
+    name: 'companies/change',
+    mode: 'emit',
+    signature: '\'companies/change\'(companyId: CompanyId): void',
+    summary: 'A company, its departments, or its bindings changed.',
+    description: 'A company, its departments, or its bindings changed.',
+    parameters: [{ name: 'companyId', description: 'company whose stored data changed.' }],
+  },
+  {
     name: 'cordis/dynamic-package',
     mode: 'emit',
     signature: '\'cordis/dynamic-package\'(pkg: DynamicCordisPackage): void',
@@ -3773,6 +3988,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface AdapterRegistrationHandle {\n    (): void;\n    replace(providers: string[]): void;\n}',
   },
   {
+    name: 'AddDepartmentRequest',
+    declaration: 'export interface AddDepartmentRequest {\n    readonly companyId: CompanyId;\n    readonly name: string;\n    readonly color?: string;\n    readonly position?: number;\n}',
+  },
+  {
     name: 'Agent',
     declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly options: AgentOptions;\n    readonly session: Session;\n    readonly inbox: Inbox;\n    readonly status: AgentStatus;\n    readonly ctx: Context;\n    cancel(cause: AgentCancelCause, options?: CancelOptions): void;\n    whenIdle(): Promise<void>;\n    runMaintenance<T>(task: (signal: AbortSignal) => Promise<T>): Promise<T>;\n    send(message: UserMessage, target: InboxTarget, wakeup: boolean): void;\n    followup(message: UserMessage): void;\n    steer(message: UserMessage): void;\n    inject(message: UserMessage): void;\n}',
   },
@@ -3871,6 +4090,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AssembledSection',
     declaration: 'export interface AssembledSection {\n    name: string;\n    text: string;\n}',
+  },
+  {
+    name: 'AssignEmployeeRequest',
+    declaration: 'export interface AssignEmployeeRequest {\n    readonly instanceId: DigitalEmployeeInstanceId;\n    readonly companyId: CompanyId;\n    readonly departmentId: DepartmentId | null;\n}',
   },
   {
     name: 'AssistantMessage',
@@ -4041,6 +4264,54 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type CompactionTrigger = \'pressure\' | \'context-overflow\';',
   },
   {
+    name: 'CompanyBusyKind',
+    declaration: 'export type CompanyBusyKind = \'chat\' | \'task\';',
+  },
+  {
+    name: 'CompanyCandidateEmployee',
+    declaration: 'export interface CompanyCandidateEmployee {\n    readonly instanceId: DigitalEmployeeInstanceId;\n    readonly displayName: string;\n    readonly templateId: string;\n    readonly state: \'inactive\' | \'active\';\n}',
+  },
+  {
+    name: 'CompanyFloor',
+    declaration: 'export interface CompanyFloor {\n    readonly company: CompanyRecord;\n    readonly groups: readonly CompanyFloorGroup[];\n}',
+  },
+  {
+    name: 'CompanyFloorGroup',
+    declaration: 'export interface CompanyFloorGroup {\n    readonly department: DepartmentRecord | null;\n    readonly members: readonly CompanyFloorMember[];\n}',
+  },
+  {
+    name: 'CompanyFloorMember',
+    declaration: 'export interface CompanyFloorMember {\n    readonly instanceId: DigitalEmployeeInstanceId;\n    readonly displayName: string;\n    readonly templateId: string;\n    readonly rootSessionId?: SessionId;\n    readonly busy: boolean;\n    readonly busyKind: CompanyBusyKind | null;\n}',
+  },
+  {
+    name: 'CompanyId',
+    declaration: 'export type CompanyId = Branded<\'CompanyId\'>;',
+  },
+  {
+    name: 'CompanyIdRequest',
+    declaration: 'export interface CompanyIdRequest {\n    readonly companyId: CompanyId;\n}',
+  },
+  {
+    name: 'CompanyPromoImageRef',
+    declaration: 'export interface CompanyPromoImageRef {\n    readonly attachmentId: string;\n    readonly mediaType: string;\n    readonly bytes: number;\n    readonly width: number;\n    readonly height: number;\n}',
+  },
+  {
+    name: 'CompanyPromoImageUpload',
+    declaration: 'export interface CompanyPromoImageUpload {\n    readonly mediaType: string;\n    readonly data: string;\n    readonly name?: string;\n}',
+  },
+  {
+    name: 'CompanyPromoImageValue',
+    declaration: 'export interface CompanyPromoImageValue {\n    readonly mediaType: string;\n    readonly dataBase64: string;\n}',
+  },
+  {
+    name: 'CompanyProvider',
+    declaration: 'export interface CompanyProvider {\n    list(): Promise<readonly CompanyRecord[]>;\n    get(id: CompanyId): Promise<CompanyRecord | undefined>;\n    create(request: CreateCompanyRequest): Promise<CompanyRecord>;\n    update(request: UpdateCompanyRequest): Promise<CompanyRecord>;\n    delete(id: CompanyId): Promise<void>;\n    addDepartment(request: AddDepartmentRequest): Promise<CompanyRecord>;\n    renameDepartment(request: RenameDepartmentRequest): Promise<CompanyRecord>;\n    reorderDepartments(request: ReorderDepartmentsRequest): Promise<CompanyRecord>;\n    deleteDepartment(request: DeleteDepartmentRequest): Promise<CompanyRecord>;\n    setPromoImage(companyId: CompanyId, ref: CompanyPromoImageRef): Promise<CompanyRecord>;\n    removePromoImage(companyId: CompanyId): Promise<CompanyRecord>;\n    listBindings(): Promise<readonly EmployeeBinding[]>;\n    assignEmployee(request: AssignEmployeeRequest): Promise<void>;\n    unassignEmployee(request: UnassignEmployeeRequest): Promise<void>;\n    pruneEmployeeBindings(instanceExists: (instanceId: EmployeeBinding[\'instanceId\']) => boolean): Promise<number>;\n}',
+  },
+  {
+    name: 'CompanyRecord',
+    declaration: 'export interface CompanyRecord {\n    readonly id: CompanyId;\n    readonly name: string;\n    readonly category: string;\n    readonly legalRepresentative: string;\n    readonly address: string;\n    readonly skinId?: string;\n    readonly promoImage?: CompanyPromoImageRef;\n    readonly departments: readonly DepartmentRecord[];\n    readonly createdAt: string;\n    readonly updatedAt: string;\n}',
+  },
+  {
     name: 'ConfinedArgv',
     declaration: 'export interface ConfinedArgv {\n    argv: string[];\n    enforcement: SandboxEnforcement;\n    denialSignatures: readonly string[];\n    runnerFailureRules: readonly RunnerFailureRule[];\n}',
   },
@@ -4121,6 +4392,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface CreateAgentOptions {\n    readonly sessionId: SessionId;\n    readonly meta?: {\n        readonly cwd?: string;\n        readonly parentSession?: SessionId;\n        readonly seedLength?: number;\n        readonly origin?: \'subagent\';\n        readonly delegationDepth?: number;\n        readonly agentPreset?: string;\n        readonly preview?: true;\n    };\n    readonly seed?: readonly SessionEvent[];\n    readonly initialMessages?: readonly UserMessage[];\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
   },
   {
+    name: 'CreateCompanyRequest',
+    declaration: 'export interface CreateCompanyRequest {\n    readonly name: string;\n    readonly category?: string;\n    readonly legalRepresentative?: string;\n    readonly address?: string;\n    readonly skinId?: string;\n}',
+  },
+  {
     name: 'CreateDigitalEmployeePreviewTaskRequest',
     declaration: 'export interface CreateDigitalEmployeePreviewTaskRequest {\n    readonly employee: ResolvedDigitalEmployee;\n    readonly sessionId: SessionId;\n    readonly workspacePath: string;\n    readonly agentOptions?: AgentOptions;\n    readonly modelSelection?: ModelSelection;\n}',
   },
@@ -4179,6 +4454,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'DelegateToDigitalEmployeeExpertRequest',
     declaration: 'export interface DelegateToDigitalEmployeeExpertRequest {\n    readonly employeeId: DigitalEmployeeInstanceId;\n    readonly expertId: ExpertId;\n    readonly provider: string;\n    readonly parent: Agent;\n    readonly parentAuthority: DigitalEmployeeParentAuthority;\n    readonly prompt: SubagentStartRequest[\'prompt\'];\n    readonly signal: AbortSignal;\n    readonly memory?: ResolveDigitalEmployeeExpertRequest[\'memory\'];\n}',
+  },
+  {
+    name: 'DeleteDepartmentRequest',
+    declaration: 'export interface DeleteDepartmentRequest {\n    readonly companyId: CompanyId;\n    readonly departmentId: DepartmentId;\n}',
+  },
+  {
+    name: 'DepartmentId',
+    declaration: 'export type DepartmentId = Branded<\'DepartmentId\'>;',
+  },
+  {
+    name: 'DepartmentRecord',
+    declaration: 'export interface DepartmentRecord {\n    readonly id: DepartmentId;\n    readonly name: string;\n    readonly color: string;\n}',
   },
   {
     name: 'DiffCallView',
@@ -4547,6 +4834,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'EmailTransport',
     declaration: 'export interface EmailTransport {\n    readonly id: string;\n    send(message: EmailMessage): Promise<EmailDelivery>;\n}',
+  },
+  {
+    name: 'EmployeeBinding',
+    declaration: 'export interface EmployeeBinding {\n    readonly instanceId: DigitalEmployeeInstanceId;\n    readonly companyId: CompanyId;\n    readonly departmentId: DepartmentId | null;\n}',
   },
   {
     name: 'EncodedImageAttachment',
@@ -5369,6 +5660,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface RedactedSecret {\n    path: string[];\n    set: boolean;\n}',
   },
   {
+    name: 'RenameDepartmentRequest',
+    declaration: 'export interface RenameDepartmentRequest {\n    readonly companyId: CompanyId;\n    readonly departmentId: DepartmentId;\n    readonly name: string;\n}',
+  },
+  {
+    name: 'ReorderDepartmentsRequest',
+    declaration: 'export interface ReorderDepartmentsRequest {\n    readonly companyId: CompanyId;\n    readonly orderedIds: readonly DepartmentId[];\n}',
+  },
+  {
     name: 'ReplayEnvelope',
     declaration: 'export interface ReplayEnvelope {\n    response: unknown;\n    blocks?: readonly unknown[];\n}',
   },
@@ -5783,6 +6082,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SessionTitleUserMessage',
     declaration: 'export interface SessionTitleUserMessage {\n    readonly seq: number;\n    readonly text: string;\n}',
+  },
+  {
+    name: 'SetCompanyPromoImageRequest',
+    declaration: 'export interface SetCompanyPromoImageRequest {\n    readonly companyId: CompanyId;\n    readonly image: CompanyPromoImageUpload;\n}',
   },
   {
     name: 'SettingsApplies',
@@ -6523,6 +6826,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TypertTypeModel',
     declaration: 'export interface TypertTypeModel {\n    readonly name: string;\n    readonly declaration: string;\n}',
+  },
+  {
+    name: 'UnassignEmployeeRequest',
+    declaration: 'export interface UnassignEmployeeRequest {\n    readonly instanceId: DigitalEmployeeInstanceId;\n}',
+  },
+  {
+    name: 'UpdateCompanyRequest',
+    declaration: 'export interface UpdateCompanyRequest {\n    readonly companyId: CompanyId;\n    readonly name?: string;\n    readonly category?: string;\n    readonly legalRepresentative?: string;\n    readonly address?: string;\n    readonly skinId?: string;\n}',
   },
   {
     name: 'UpdateDigitalEmployeeTemplateDraftRequest',

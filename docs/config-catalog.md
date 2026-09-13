@@ -539,6 +539,24 @@ export interface ToolResultPruneConfig {
 
 Source: [`packages/compaction/compaction-tool-result-pruner/src/types.ts:4`](../packages/compaction/compaction-tool-result-pruner/src/types.ts)
 
+<a id="deepseek-aidsh-company-file"></a>
+
+## `@deepseek-ai/dsh-company-file`
+
+Requires: `companies`
+
+```ts config-catalog
+/** File provider plugin configuration. */
+export interface Config {
+  /** Explicit document path; defaults under the Harness home. */
+  path?: string
+  /** Harness home used when `path` is omitted. */
+  dshHome?: string
+}
+```
+
+Source: [`packages/core/company-file/src/index.ts:50`](../packages/core/company-file/src/index.ts)
+
 <a id="deepseek-aidsh-cordis-host-runner"></a>
 
 ## `@deepseek-ai/dsh-cordis-host-runner`
@@ -875,6 +893,22 @@ export interface Config {
 ```
 
 Source: [`packages/host/apiproxy/src/index.ts:41`](../packages/host/apiproxy/src/index.ts)
+
+<a id="deepseek-aidsh-host-company-management"></a>
+
+## `@deepseek-ai/dsh-host-company-management`
+
+Requires: `agents` · `attachments` · `companies` · `digitalEmployees` · `sessionPersistence`
+
+```ts config-catalog
+/** Gateway configuration. */
+export interface Config {
+  /** Milliseconds a non-live session's writes stay fresh enough to count as task-busy. */
+  taskActiveWindowMs?: number
+}
+```
+
+Source: [`packages/host/company-management/src/index.ts:40`](../packages/host/company-management/src/index.ts)
 
 <a id="deepseek-aidsh-host-digital-employee-management"></a>
 
@@ -3456,6 +3490,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@deepseek-ai/dsh-client-ui-attachment` ([`packages/client/ui-attachment/src/index.ts`](../packages/client/ui-attachment/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-brand-official` ([`packages/client/ui-brand-official/src/index.ts`](../packages/client/ui-brand-official/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-commands` ([`packages/client/ui-commands/src/index.ts`](../packages/client/ui-commands/src/index.ts))
+- `@deepseek-ai/dsh-client-ui-companies` ([`packages/client/ui-companies/src/index.ts`](../packages/client/ui-companies/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-conversation` ([`packages/client/ui-conversation/src/index.ts`](../packages/client/ui-conversation/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-cordis` ([`packages/extensions/ui-cordis/src/index.ts`](../packages/extensions/ui-cordis/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-deliverables` — requires `systemPrompt` ([`packages/client/ui-deliverables/src/index.ts`](../packages/client/ui-deliverables/src/index.ts))
@@ -3491,6 +3526,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@deepseek-ai/dsh-command-feedback` — requires `commands` ([`packages/feedback/command-feedback/src/index.ts`](../packages/feedback/command-feedback/src/index.ts))
 - `@deepseek-ai/dsh-command-goal` — requires `commands` · `goals` ([`packages/goal/command-goal/src/index.ts`](../packages/goal/command-goal/src/index.ts))
 - `@deepseek-ai/dsh-commands` ([`packages/interaction/commands/src/index.ts`](../packages/interaction/commands/src/index.ts))
+- `@deepseek-ai/dsh-company` ([`packages/core/company/src/index.ts`](../packages/core/company/src/index.ts))
 - `@deepseek-ai/dsh-cordis-client-runner` ([`packages/extensions/cordis-client-runner/src/index.ts`](../packages/extensions/cordis-client-runner/src/index.ts))
 - `@deepseek-ai/dsh-digital-employee` ([`packages/core/digital-employee/src/index.ts`](../packages/core/digital-employee/src/index.ts))
 - `@deepseek-ai/dsh-digital-employee-agent` — requires `agentPresets` · `agents` · `digitalEmployees` · `skills` · `subagents` · `systemPrompt` · `tools` ([`packages/core/digital-employee-agent/src/index.ts`](../packages/core/digital-employee-agent/src/index.ts))

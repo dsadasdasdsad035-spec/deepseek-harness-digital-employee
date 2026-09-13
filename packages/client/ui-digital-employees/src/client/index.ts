@@ -12,7 +12,6 @@ import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import { DigitalEmployeeChatController } from './chat.ts'
 import { notificationEn, notificationZh } from './locales.ts'
 import { NotificationSettingsRow, type NotificationRowInjected } from './NotificationSettingsRow.tsx'
-import { DigitalEmployeeNav } from './DigitalEmployeeNav.tsx'
 import { DigitalEmployeeWorkspace, type DigitalEmployeeWorkspaceInjected } from './DigitalEmployeeWorkspace.tsx'
 import { DigitalEmployeeStore } from './store.ts'
 import { DigitalEmployeeConfigurationStudioStore } from './configuration-studio.ts'
@@ -23,7 +22,6 @@ export type {
 } from './store.ts'
 export { DigitalEmployeeChatController } from './chat.ts'
 export type { DigitalEmployeeChatDependencies, DigitalEmployeeChatIds } from './chat.ts'
-export { DigitalEmployeeNav } from './DigitalEmployeeNav.tsx'
 export { DigitalEmployeeWorkspace } from './DigitalEmployeeWorkspace.tsx'
 export { DigitalEmployeeConfigurationStudioStore } from './configuration-studio.ts'
 export { NotificationSettingsRow } from './NotificationSettingsRow.tsx'
@@ -76,13 +74,9 @@ export function apply(ctx: ClientContext): void {
     chat.dispose()
     controller.dispose()
   }, 'ui-digital-employees: dispose chat and store')
-  ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
-    name: 'sidebar.footer.action',
-    id: 'digital-employees',
-    order: 10,
-    label: 'Digital employees',
-    inject: () => ({ open: () => { layout.openApplication() } }),
-  }, DigitalEmployeeNav))
+  // The standalone footer entry moved into ui-companies' merged 「组织」
+  // dropdown (sidebar.footer.action id 'organization'), which opens this
+  // workspace through ctx.layout.openApplication().
   ctx.slots.inject('settings.general.item', () => ctx.slots.register({
     name: 'settings.general.item',
     id: 'notification-channels',

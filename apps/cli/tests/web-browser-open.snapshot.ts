@@ -82,7 +82,7 @@ describe.skipIf(!builtArtifactsExist)('dsh web browser-open assembled snapshot',
     }).toMatchInlineSnapshot(`
       {
         "apiKeyPresent": false,
-        "bootManifest": true,
+        "bootManifest": false,
         "dshHomePresent": false,
         "exitCode": 0,
         "openedUrl": "http://127.0.0.1:{{port}}",

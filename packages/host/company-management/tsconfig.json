@@ -1,0 +1,42 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../attachment/attachment"
+    },
+    {
+      "path": "../../core/agent"
+    },
+    {
+      "path": "../../core/company"
+    },
+    {
+      "path": "../../core/digital-employee"
+    },
+    {
+      "path": "../../core/session"
+    },
+    {
+      "path": "../../runtime-diagnostics/invariants"
+    },
+    {
+      "path": "../../session/session-persistence"
+    },
+    {
+      "path": "../../typert/protocol"
+    }
+  ]
+}

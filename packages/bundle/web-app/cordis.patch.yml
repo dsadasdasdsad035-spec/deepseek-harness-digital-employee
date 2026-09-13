@@ -202,6 +202,20 @@
       config:
         administrator: true
 
+    # Company module: durable companies binding employee instances, the file
+    # store under the Harness home, and the management gateway the 3D console
+    # consumes.
+    - id: company
+      name: '@deepseek-ai/dsh-company'
+
+    - id: company-file
+      name: '@deepseek-ai/dsh-company-file'
+      config:
+        path: !!js dshHomePath('companies/companies.json')
+
+    - id: company-management
+      name: '@deepseek-ai/dsh-host-company-management'
+
     # The API gateway: the transport-agnostic dispatch face every client shape
     # shares. The base layer's agent-default-model service owns the default model.
     - id: api-gateway
@@ -403,6 +417,10 @@
 
     - id: ui-digital-employees
       name: '@deepseek-ai/dsh-client-ui-digital-employees'
+
+    # 3D company campus console over employee instances (Three.js inlined).
+    - id: ui-companies
+      name: '@deepseek-ai/dsh-client-ui-companies'
 
 # ── the agent plane moves behind agent presets ─────────────────────────────
 #
