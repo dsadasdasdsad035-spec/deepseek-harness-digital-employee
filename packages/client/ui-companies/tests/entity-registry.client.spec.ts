@@ -66,3 +66,34 @@ describe('EntityRegistry collision', () => {
     expect(registry.cars().map(entity => entity.id)).toEqual(['car-0'])
   })
 })
+
+describe('solid walls and traffic rules', () => {
+  it('wall segments block while the door gap passes a body', () => {
+    const registry = new EntityRegistry()
+    // A room door wall: two 4-unit segments leaving a 2.4 gap centered at 0.
+    registry.register(fixture('wall-a', -3.2, 0, 2.0, 0.08))
+    registry.register(fixture('wall-b', 3.2, 0, 2.0, 0.08))
+    const body = new Vector2(0.28, 0.28)
+    expect(registry.blockingFixture(new Vector3(0, 0, 0), body)).toBeUndefined()
+    expect(registry.blockingFixture(new Vector3(-3.2, 0, 0), body)).toBeDefined()
+    expect(registry.blockingFixture(new Vector3(1.4, 0, 0), body)).toBeDefined()
+  })
+
+  it('accepts several ignore ids for the own seat fixtures', () => {
+    const registry = new EntityRegistry()
+    registry.register(fixture('fixture-desk-alice', 0, 0, 0.8, 0.45))
+    registry.register(fixture('fixture-pc-alice', 0, -0.32, 0.35, 0.12))
+    registry.register(fixture('fixture-desk-bob', 2, 0, 0.8, 0.45))
+    const at = new Vector3(0, 0, 0)
+    const body = new Vector2(0.28, 0.28)
+    expect(registry.blockingFixture(at, body, 'fixture-desk-alice', 'fixture-pc-alice')).toBeUndefined()
+    expect(registry.blockingFixture(new Vector3(2, 0, 0), body, 'fixture-desk-alice', 'fixture-pc-alice')).toBeDefined()
+  })
+
+  it('glass and perimeter walls are plain non-destructible blockers', () => {
+    const registry = new EntityRegistry()
+    registry.register(fixture('wall-ceo-glass', 0, 0, 5.5, 0.08, false))
+    expect(registry.blockingFixture(new Vector3(0, 0, 0), new Vector2(0.28, 0.28))).toBeDefined()
+    expect(registry.damageStep('wall-ceo-glass')).toBeUndefined()
+  })
+})

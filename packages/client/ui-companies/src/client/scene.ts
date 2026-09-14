@@ -80,7 +80,7 @@ const WALL_T = 0.16
 const DOOR_W = 2.4
 const ENTRANCE_W = 3.4
 const HALL_D = 4.5
-const BAND_GAP = 1.5
+const BAND_GAP = 2.6
 
 /** City plan constants: ring road, outer grid, transit lines, and river placement. */
 const RING_HALF = 26
@@ -103,6 +103,16 @@ const NPC_HALF_EXTENTS = new THREE.Vector2(0.28, 0.28)
 
 /** NPC walking speed in world units per second. */
 const NPC_WALK_SPEED = 1.7
+
+/** One room-local wall segment handed to the registry at world offset. */
+export interface WallSegmentPlan {
+  /** Segment center, local to the owning room group. */
+  readonly x: number
+  readonly z: number
+  /** Half extents on the ground plane. */
+  readonly hx: number
+  readonly hz: number
+}
 
 /** One registered world entity: located, bounded, optionally destructible. */
 export interface WorldEntity {
@@ -160,12 +170,13 @@ export class EntityRegistry {
   /** Whether one AABB at a candidate position overlaps any fixture.
    * @param position - the candidate center.
    * @param halfExtents - the mover's half extents.
-   * @param ignore - entity id excluded (e.g. the mover's own seat fixture).
+   * @param ignore - entity ids excluded (e.g. the mover's own seat fixtures).
    * @returns the blocking fixture, or undefined when the step is clear.
    */
-  blockingFixture(position: THREE.Vector3, halfExtents: THREE.Vector2, ignore?: string): WorldEntity | undefined {
+  blockingFixture(position: THREE.Vector3, halfExtents: THREE.Vector2, ...ignore: readonly string[]): WorldEntity | undefined {
+    const excluded = new Set(ignore)
     for (const fixture of this.entities.values()) {
-      if (fixture.kind !== 'fixture' || fixture.id === ignore) continue
+      if (fixture.kind !== 'fixture' || excluded.has(fixture.id)) continue
       // Toppled rubble stays visible but no longer blocks walkers.
       if (fixture.damage === 'destroyed') continue
       const dx = Math.abs(position.x - fixture.position.x)
@@ -865,6 +876,17 @@ export class CompanyScene {
         .filter(other => other !== car && other.from === car.from && other.to === car.to && other.t > car.t)
         .map(other => (other.t - car.t) * length), Number.POSITIVE_INFINITY)
       if (leaderGap < 6) continue
+      // Oncoming: a car on the reversed edge of the same street closes fast;
+      // the deterministic loser (smaller from-node position) holds until the
+      // winner clears, so nose-to-nose pass-through never happens.
+      const oncoming = this.roadCars.find(other => other !== car
+        && other.from === car.to && other.to === car.from
+        && (1 - other.t) * length - car.t * length < 6)
+      if (oncoming !== undefined) {
+        const mine = fromNode.position
+        const theirs = this.roadGraph[oncoming.from]?.position
+        if (theirs !== undefined && (mine.x + mine.z) <= (theirs.x + theirs.z)) continue
+      }
       car.t += (car.speed * delta) / Math.max(length, 0.001)
       while (car.t >= 1) {
         car.t -= 1
@@ -1316,7 +1338,7 @@ export class CompanyScene {
     slab.position.y = 0.02
     this.floorGroup.add(slab)
 
-    this.floorGroup.add(this.buildPerimeter(slabW, slabD, skin))
+    this.floorGroup.add(this.registerPerimeter(slabW, slabD, skin))
     const entrance = this.buildEntrance(skin)
     entrance.position.set(0, 0, slabD / 2 - WALL_T / 2)
     this.floorGroup.add(entrance)
@@ -1328,16 +1350,21 @@ export class CompanyScene {
     offices.forEach((department, index) => {
       const room = new THREE.Group()
       const seatPlans: NpcSeatPlan[] = []
-      room.add(this.buildRoom(ROOM_W, ROOM_D, skin, { door: 'south' }))
-      room.add(this.buildDepartmentZone(department, skin, seatPlans))
+      const walls: WallSegmentPlan[] = []
       const column = index % columns
       const row = Math.floor(index / columns)
+      // Row 0 opens south onto the corridor; deeper rows open sideways into
+      // the widened inter-row seam (their south face meets the prior row).
+      const door = row === 0 ? 'south' : (column % 2 === 0 ? 'east' : 'west')
+      room.add(this.buildRoom(ROOM_W, ROOM_D, skin, { door }, walls))
+      room.add(this.buildDepartmentZone(department, skin, seatPlans))
       room.position.set(
         (column - (columns - 1) / 2) * (ROOM_W + BAND_GAP),
         0,
         -slabD / 2 + row * (ROOM_D + BAND_GAP) + ROOM_D / 2,
       )
-      this.spawnNpcs(seatPlans, room.position, 'south')
+      this.registerWalls(`office-${String(index)}`, walls, room.position)
+      this.spawnNpcs(seatPlans, room.position, door === 'south' ? 'south' : door)
       this.floorGroup.add(room)
     })
 
@@ -1352,12 +1379,14 @@ export class CompanyScene {
       if (ceo !== undefined && index === 0) {
         const room = new THREE.Group()
         const seatPlans: NpcSeatPlan[] = []
-        room.add(this.buildRoom(ROOM_W, ROOM_D, skin, { glass: true, door: 'north' }))
+        const ceoWalls: WallSegmentPlan[] = []
+        room.add(this.buildRoom(ROOM_W, ROOM_D, skin, { glass: true, door: 'north' }, ceoWalls))
         room.add(this.buildDepartmentZone(ceo, skin, seatPlans))
         const plate = labelSprite('总裁办公室', { size: 30, color: '#f8fafc', background: '#7f1d1dd9' })
         plate.position.set(0, 2.3, -ROOM_D / 2)
         room.add(plate)
         room.position.set(x, 0, frontCenterZ)
+        this.registerWalls('ceo-office', ceoWalls, room.position)
         this.spawnNpcs(seatPlans, room.position, 'north')
         this.floorGroup.add(room)
         return
@@ -1399,7 +1428,7 @@ export class CompanyScene {
    * @param roomOrigin - the room group's world position (room center).
    * @param doorSide - which side of the room opens onto the corridor.
    */
-  private spawnNpcs(seatPlans: readonly NpcSeatPlan[], roomOrigin: THREE.Vector3, doorSide: 'north' | 'south'): void {
+  private spawnNpcs(seatPlans: readonly NpcSeatPlan[], roomOrigin: THREE.Vector3, doorSide: 'north' | 'south' | 'east' | 'west'): void {
     for (const plan of seatPlans) {
       const seat = plan.seat.clone().add(roomOrigin)
       this.floorRegistry.register({
@@ -1431,7 +1460,13 @@ export class CompanyScene {
         label: figure.label,
         screen: plan.screen,
         seat,
-        door: roomOrigin.clone().add(new THREE.Vector3(0, 0, doorSide === 'north' ? -ROOM_D / 2 - 0.5 : ROOM_D / 2 + 0.5)),
+        door: roomOrigin.clone().add(doorSide === 'north'
+          ? new THREE.Vector3(0, 0, -ROOM_D / 2 - 0.5)
+          : doorSide === 'south'
+            ? new THREE.Vector3(0, 0, ROOM_D / 2 + 0.5)
+            : doorSide === 'east'
+              ? new THREE.Vector3(ROOM_W / 2 + 0.5, 0, 0)
+              : new THREE.Vector3(-ROOM_W / 2 - 0.5, 0, 0)),
         busy: plan.member.busy,
         phase: 'sit',
         destination: 'desk',
@@ -1441,6 +1476,51 @@ export class CompanyScene {
         nextDecisionAt: 4 + Math.random() * 8,
       })
     }
+  }
+
+  /** Register room-local wall segments at their world offset.
+   * @param scope - owning scope for stable fixture ids.
+   * @param segments - room-local segment descriptors.
+   * @param origin - the owning room group's world position.
+   */
+  private registerWalls(scope: string, segments: readonly WallSegmentPlan[], origin: THREE.Vector3): void {
+    for (const [index, segment] of segments.entries()) {
+      this.floorRegistry.register({
+        id: `wall-${scope}-${String(index)}`,
+        kind: 'fixture',
+        position: new THREE.Vector3(origin.x + segment.x, 0, origin.z + segment.z),
+        halfExtents: new THREE.Vector2(segment.hx, segment.hz),
+        destructible: false,
+      })
+    }
+  }
+
+  /** Build the perimeter and register its segments; the entrance gap stays open.
+   * @param width - slab width along x.
+   * @param depth - slab depth along z.
+   * @param skin - the floor's rendering skin.
+   */
+  private registerPerimeter(width: number, depth: number, skin: CompanySkin): THREE.Group {
+    const group = this.buildPerimeter(width, depth, skin)
+    const halfT = WALL_T / 2
+    this.floorRegistry.register({ id: 'wall-perimeter-north', kind: 'fixture', position: new THREE.Vector3(0, 0, -(depth / 2 - halfT)), halfExtents: new THREE.Vector2(width / 2, halfT), destructible: false })
+    for (const side of [-1, 1]) {
+      this.floorRegistry.register({ id: `wall-perimeter-${side === -1 ? 'west' : 'east'}`, kind: 'fixture', position: new THREE.Vector3(side * (width / 2 - halfT), 0, 0), halfExtents: new THREE.Vector2(halfT, depth / 2), destructible: false })
+    }
+    // South wall splits around the entrance gap: two segments.
+    const gapHalf = ENTRANCE_W / 2
+    for (const side of [-1, 1]) {
+      const from = side === -1 ? -width / 2 : gapHalf
+      const to = side === -1 ? -gapHalf : width / 2
+      this.floorRegistry.register({
+        id: `wall-perimeter-south-${side === -1 ? 'west' : 'east'}`,
+        kind: 'fixture',
+        position: new THREE.Vector3((from + to) / 2, 0, depth / 2 - halfT),
+        halfExtents: new THREE.Vector2((to - from) / 2, halfT),
+        destructible: false,
+      })
+    }
+    return group
   }
 
   /** Build one straight wall segment; horizontal runs span x, vertical runs span z.
@@ -1503,21 +1583,74 @@ export class CompanyScene {
     width: number,
     depth: number,
     skin: CompanySkin,
-    options: { glass?: boolean; door: 'north' | 'south'; doorOffset?: number },
+    options: { glass?: boolean; door: 'north' | 'south' | 'east' | 'west'; doorOffset?: number },
+    wallSink?: WallSegmentPlan[],
   ): THREE.Group {
     const group = new THREE.Group()
     const glass = options.glass === true
+    const register = (x: number, z: number, hx: number, hz: number): void => {
+      wallSink?.push({ x, z, hx, hz })
+    }
+    const halfT = WALL_T / 2
+    if (options.door === 'east' || options.door === 'west') {
+      // Side-facing door: solid north/south walls, door split on the chosen side wall.
+      const sideSign = options.door === 'east' ? 1 : -1
+      for (const side of [-1, 1]) {
+        const wall = this.buildWallRun(depth - WALL_T, false, skin, glass)
+        wall.position.x = side * (width / 2 - halfT)
+        group.add(wall)
+        register(wall.position.x, 0, halfT, (depth - WALL_T) / 2)
+      }
+      for (const side of [-1, 1]) {
+        const wall = this.buildWallRun(width - WALL_T, true, skin, glass)
+        wall.position.z = side * (depth / 2 - halfT)
+        group.add(wall)
+        register(0, wall.position.z, (width - WALL_T) / 2, halfT)
+      }
+      const wallLength = depth - WALL_T
+      const gapStart = -wallLength / 2 + halfT
+      const gapEnd = wallLength / 2 - halfT
+      const gapCenter = options.doorOffset ?? 0
+      const segments: Array<[number, number]> = [
+        [gapStart, gapCenter - DOOR_W / 2],
+        [gapCenter + DOOR_W / 2, gapEnd],
+      ]
+      for (const [from, to] of segments) {
+        if (to - from <= 0.05) continue
+        const run = this.buildWallRun(to - from, false, skin, glass)
+        run.position.set(sideSign * (width / 2 - halfT), WALL_H / 2, (from + to) / 2)
+        group.add(run)
+        register(run.position.x, run.position.z, halfT, (to - from) / 2)
+      }
+      return group
+    }
     for (const side of [-1, 1]) {
       const wall = this.buildWallRun(depth - WALL_T, false, skin, glass)
-      wall.position.x = side * (width / 2 - WALL_T / 2)
+      wall.position.x = side * (width / 2 - halfT)
       group.add(wall)
+      register(wall.position.x, 0, halfT, (depth - WALL_T) / 2)
     }
     const back = this.buildWallRun(width - WALL_T, true, skin, glass)
-    back.position.z = (options.door === 'south' ? -1 : 1) * (depth / 2 - WALL_T / 2)
+    back.position.z = (options.door === 'south' ? -1 : 1) * (depth / 2 - halfT)
     group.add(back)
-    const doorWall = this.buildWallWithDoor(width - WALL_T, options.doorOffset ?? 0, DOOR_W, skin, glass)
-    doorWall.position.z = (options.door === 'south' ? 1 : -1) * (depth / 2 - WALL_T / 2)
-    group.add(doorWall)
+    register(0, back.position.z, (width - WALL_T) / 2, halfT)
+    // Door wall: two runs around the gap, registered as two segments.
+    const wallLength = width - WALL_T
+    const gapStart = -wallLength / 2 + halfT
+    const gapEnd = wallLength / 2 - halfT
+    const gapCenter = options.doorOffset ?? 0
+    const doorZ = (options.door === 'south' ? 1 : -1) * (depth / 2 - halfT)
+    const segments: Array<[number, number]> = [
+      [gapStart, gapCenter - DOOR_W / 2],
+      [gapCenter + DOOR_W / 2, gapEnd],
+    ]
+    for (const [from, to] of segments) {
+      if (to - from <= 0.05) continue
+      const run = this.buildWallRun(to - from, true, skin, glass)
+      run.position.set((from + to) / 2, WALL_H / 2, doorZ)
+      group.add(run)
+      register(run.position.x, doorZ, (to - from) / 2, halfT)
+    }
     return group
   }
 
@@ -1909,12 +2042,20 @@ export class CompanyScene {
       points.push(new THREE.Vector3(x, 0, z))
     }
     if (inRoom && !toDesk) {
+      // Any door side: walk to the door line, then down to the hall.
       push(npc.door.x, from.z)
       push(npc.door.x, this.floorHallZ)
     } else if (!inRoom && toDesk) {
       push(from.x, this.floorHallZ)
-      push(npc.door.x, this.floorHallZ)
-      push(npc.door.x, npc.seat.z)
+      if (Math.abs(npc.door.x - npc.seat.x) > 0.3) {
+        // Side door: hall to the door's z line, then along x through the gap.
+        push(npc.door.x, this.floorHallZ)
+        push(npc.door.x, npc.seat.z)
+        push(npc.seat.x, npc.seat.z)
+      } else {
+        push(npc.door.x, this.floorHallZ)
+        push(npc.door.x, npc.seat.z)
+      }
     } else if (!inRoom && !toDesk) {
       push(from.x, this.floorHallZ)
     }
@@ -2004,7 +2145,7 @@ export class CompanyScene {
           const next = npc.person.position.clone().lerp(waypoint, step / distance)
           // Fixture AABB blocks the step: try sliding along x, then z; a fully
           // blocked mover gains irritation and eventually re-plans home.
-          const blockedBy = this.floorRegistry.blockingFixture(next, NPC_HALF_EXTENTS)
+          const blockedBy = this.floorRegistry.blockingFixture(next, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`)
           if (blockedBy === undefined) {
             npc.person.position.copy(next)
             npc.blockedSteps = 0
@@ -2012,14 +2153,31 @@ export class CompanyScene {
           } else {
             const slideX = next.clone(); slideX.x = npc.person.position.x
             const slideZ = next.clone(); slideZ.z = npc.person.position.z
-            if (this.floorRegistry.blockingFixture(slideX, NPC_HALF_EXTENTS) === undefined) {
+            if (this.floorRegistry.blockingFixture(slideX, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`) === undefined) {
               npc.person.position.copy(slideX)
-            } else if (this.floorRegistry.blockingFixture(slideZ, NPC_HALF_EXTENTS) === undefined) {
+            } else if (this.floorRegistry.blockingFixture(slideZ, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`) === undefined) {
               npc.person.position.copy(slideZ)
             } else {
               npc.blockedSteps += 1
               npc.mood = Math.min(100, npc.mood + 4)
-              if (npc.blockedSteps >= 6) this.beginWalk(npc, 'desk')
+              if (npc.blockedSteps >= 4) {
+                // Perpendicular retreat first: one probe-checked sidestep
+                // resolves corridor stand-offs without abandoning the path.
+                const heading = waypoint.clone().sub(npc.person.position)
+                const alongX = Math.abs(heading.x) > Math.abs(heading.z)
+                const sideways = alongX
+                  ? [new THREE.Vector3(0, 0, 0.5), new THREE.Vector3(0, 0, -0.5)]
+                  : [new THREE.Vector3(0.5, 0, 0), new THREE.Vector3(-0.5, 0, 0)]
+                const retreats = sideways.map(offset => npc.person.position.clone().add(offset))
+                const open = retreats.find(spot =>
+                  this.floorRegistry.blockingFixture(spot, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`) === undefined)
+                if (open !== undefined) {
+                  npc.person.position.copy(open)
+                  npc.blockedSteps = 0
+                } else {
+                  this.beginWalk(npc, 'desk')
+                }
+              }
             }
             // A furious passer-by kicks the blocker one damage step.
             if (npc.mood >= 85 && Math.random() < 0.4) {
