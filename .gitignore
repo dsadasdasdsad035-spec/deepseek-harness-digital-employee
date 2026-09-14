@@ -47,6 +47,7 @@ worktrees/
 .typert-*/
 .codegraph/
 .codex/
+.zcode/
 digital-employees.json
 
 # Repository-root build outputs (npm publish staging)
