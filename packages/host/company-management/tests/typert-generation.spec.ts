@@ -13,6 +13,8 @@ describe('company management Typert artifacts', () => {
     expect(artifact).toBeDefined()
     expect(artifact!.remote!.dts).toContain("'companies'")
     expect(artifact!.remote!.dts).toContain('companyFloor:')
+    expect(artifact!.remote!.dts).toContain('readCompanyWorldState:')
+    expect(artifact!.remote!.dts).toContain('reportCompanyWorldState:')
     expect(artifact!.remote!.dts).toContain('assignEmployee:')
     expect(artifact!.remote!.dts).toContain('setPromoImage:')
     expect(artifact!.remote!.dts).toContain('availableEmployees:')

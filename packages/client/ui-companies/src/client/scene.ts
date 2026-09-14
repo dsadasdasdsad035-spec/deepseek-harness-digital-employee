@@ -104,6 +104,42 @@ const NPC_HALF_EXTENTS = new THREE.Vector2(0.28, 0.28)
 /** NPC walking speed in world units per second. */
 const NPC_WALK_SPEED = 1.7
 
+/** Saved car fleet entry for durable restore. */
+export interface SavedCarState {
+  readonly from: number
+  readonly to: number
+  readonly t: number
+  readonly speed: number
+}
+
+/** Car id → saved motion state. */
+export type SavedCarStates = Record<string, SavedCarState>
+
+/** Saved NPC last position on one company floor. */
+export interface SavedNpcPosition {
+  readonly x: number
+  readonly z: number
+  readonly seated: boolean
+}
+
+/** Member key → saved position. */
+export type SavedNpcPositions = Record<string, SavedNpcPosition>
+
+/** One durable report payload from the live scene. */
+export interface WorldStateSnapshot {
+  readonly cars: Record<string, SavedCarState & { readonly at: number }>
+  readonly employees: Record<string, SavedEmployeePosition>
+}
+
+/** One employee entry in a world-state snapshot. */
+export interface SavedEmployeePosition {
+  readonly companyId: string
+  readonly x: number
+  readonly z: number
+  readonly seated: boolean
+  readonly at: number
+}
+
 /** One room-local wall segment handed to the registry at world offset. */
 export interface WallSegmentPlan {
   /** Segment center, local to the owning room group. */
@@ -304,6 +340,8 @@ export class CompanyScene {
   private readonly floorLights: THREE.HemisphereLight[] = []
   /** One wandering employee NPC: person figure, desk references, and behavior. */
   private readonly floorNpcs = new Map<string, FloorNpc>()
+  /** Owning company id of the open floor; tags employee world-state reports. */
+  private floorCompanyId: string | undefined
   /** Corridor z-line of the current floor; NPCs route walks through it. */
   private floorHallZ = 0
   /** Car registry records aligned with the roadCars array order. */
@@ -406,8 +444,9 @@ export class CompanyScene {
   /** Replace the campus content with the current company list.
    * @param companies - company houses to render, each with its own skin id.
    * @param promoImages - admitted promo images keyed by company id.
+   * @param savedCars - durable fleet states keyed by stable car id; absent ids spawn randomly.
    */
-  setCampus(companies: readonly CampusCompany[], promoImages: ReadonlyMap<string, string>): void {
+  setCampus(companies: readonly CampusCompany[], promoImages: ReadonlyMap<string, string>, savedCars?: SavedCarStates): void {
     clearGroup(this.campusGroup)
     // One campus has one sky: the first company's skin sets the environment
     // while each house carries its own skin's house, plot, and decorations.
@@ -436,7 +475,7 @@ export class CompanyScene {
     this.trafficLamps.length = 0
     this.floorNpcs.clear()
     this.floorAmenities = []
-    this.buildCity(environment)
+    this.buildCity(environment, savedCars)
 
     const districts: Array<[number, number]> = [[-14, -14], [14, -14], [-14, 14], [14, 14]]
     const names = ['一区', '二区', '三区', '四区']
@@ -736,7 +775,7 @@ export class CompanyScene {
   /** Build the whole city environment around the campus and register its movers.
    * @param skin - the environment skin (the first company's).
    */
-  private buildCity(skin: CompanySkin): void {
+  private buildCity(skin: CompanySkin, savedCars?: SavedCarStates): void {
     const night = skin.campus.groundStyle === 'night-grid'
     this.buildRoad(0, -RING_HALF, 2 * RING_HALF + ROAD_W, true)
     this.buildRoad(0, RING_HALF, 2 * RING_HALF + ROAD_W, true)
@@ -795,12 +834,25 @@ export class CompanyScene {
       const color = carColors[Math.floor(Math.random() * carColors.length)] ?? 0xef4444
       const car = this.buildCar(color, night)
       this.campusGroup.add(car)
-      const from = Math.floor(Math.random() * this.roadGraph.length)
+      // Durable fleet: a saved car resumes its edge/progress/speed; only a
+      // first-appearance (or graph-changed) id gets a random spawn.
+      const saved = savedCars?.[`car-${String(index)}`]
+      const restored = saved !== undefined
+        && this.roadGraph[saved.from] !== undefined
+        && this.roadGraph[saved.to] !== undefined
+        && saved.t >= 0 && saved.t < 1 && saved.speed > 0
+      const from = restored ? saved.from : Math.floor(Math.random() * this.roadGraph.length)
       const node = this.roadGraph[from]
       if (node === undefined) continue
-      const to = node.neighbors[Math.floor(Math.random() * node.neighbors.length)]
+      const to = restored ? saved.to : node.neighbors[Math.floor(Math.random() * node.neighbors.length)]
       if (to === undefined) continue
-      this.roadCars.push({ object: car, from, to, t: Math.random(), speed: 3.5 + Math.random() * 4.5 })
+      this.roadCars.push({
+        object: car,
+        from,
+        to,
+        t: restored ? saved.t : Math.random(),
+        speed: restored ? saved.speed : 3.5 + Math.random() * 4.5,
+      })
       this.worldEntities.set(`car-${String(this.roadCars.length - 1)}`, this.floorRegistry.register({
         id: `car-${String(this.roadCars.length - 1)}`,
         kind: 'car',
@@ -1289,8 +1341,16 @@ export class CompanyScene {
    * @param companyName - title label over the floor.
    * @param skinId - the company's rendering skin; unknown ids fall back to the default.
    * @param departments - department zones with seated members and spare desks.
+   * @param companyId - owning company id tagging world-state reports.
+   * @param savedPositions - durable member positions; validated then restored, else seat.
    */
-  setFloor(companyName: string, skinId: string | undefined, departments: readonly FloorDepartment[]): void {
+  setFloor(
+    companyName: string,
+    skinId: string | undefined,
+    departments: readonly FloorDepartment[],
+    companyId?: string,
+    savedPositions?: SavedNpcPositions,
+  ): void {
     clearGroup(this.floorGroup)
     const skin = resolveCompanySkin(skinId)
     this.floorSkin = skin
@@ -1323,6 +1383,7 @@ export class CompanyScene {
     const slabW = Math.max(backW, frontW, 26)
     const slabD = backD + HALL_D + ROOM_D
     this.floorHallZ = -slabD / 2 + backD + HALL_D / 2
+    this.floorCompanyId = companyId
     this.floorAmenities = []
     this.floorAmenityNames = []
     this.floorNpcs.clear()
@@ -1420,7 +1481,59 @@ export class CompanyScene {
       fixture.position.set(x, 0, frontCenterZ)
       this.floorGroup.add(fixture)
     })
+    if (companyId !== undefined && savedPositions !== undefined) {
+      this.restoreNpcPositions(companyId, savedPositions)
+    }
     this.setCamera('floor')
+  }
+
+  /** Restore saved NPC positions with collision validation; invalid falls back to the seat.
+   * @param companyId - the floor's owning company id.
+   * @param saved - memberKey → last position on this company's floor.
+   */
+  private restoreNpcPositions(companyId: string, saved: SavedNpcPositions): void {
+    for (const npc of this.floorNpcs.values()) {
+      const entry = saved[npc.memberKey]
+      if (entry === undefined) continue
+      const spot = new THREE.Vector3(entry.x, 0, entry.z)
+      const clear = this.floorRegistry.blockingFixture(spot, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`) === undefined
+      if (!clear) continue
+      if (entry.seated) {
+        npc.phase = 'sit'
+        npc.person.position.copy(npc.seat.clone().add(new THREE.Vector3(0, 0, 0.5)))
+        npc.person.position.y = SEAT_SINK
+        npc.person.rotation.y = Math.PI
+      } else {
+        npc.phase = 'amenity'
+        npc.person.position.copy(spot)
+        npc.person.position.y = 0
+        npc.dwellUntil = 1 + Math.random() * 2
+      }
+    }
+    void companyId
+  }
+
+  /** Snapshot the live world state for durable reporting.
+   * @returns current car fleet states and visible NPC positions (null floors give no employees).
+   */
+  snapshotWorldState(): WorldStateSnapshot {
+    const cars: WorldStateSnapshot['cars'] = {}
+    for (const [index, car] of this.roadCars.entries()) {
+      cars[`car-${String(index)}`] = { from: car.from, to: car.to, t: car.t, speed: car.speed, at: Date.now() }
+    }
+    const employees: WorldStateSnapshot['employees'] = {}
+    if (this.floorCompanyId !== undefined) {
+      for (const npc of this.floorNpcs.values()) {
+        employees[npc.memberKey] = {
+          companyId: this.floorCompanyId,
+          x: npc.person.position.x,
+          z: npc.person.position.z,
+          seated: npc.phase === 'sit',
+          at: Date.now(),
+        }
+      }
+    }
+    return { cars, employees }
   }
 
   /** Register one room's seated members as wandering NPCs in world coordinates.

@@ -928,7 +928,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/host/company-management/src/index.ts:40`](../packages/host/company-management/src/index.ts)
+Source: [`packages/host/company-management/src/index.ts:43`](../packages/host/company-management/src/index.ts)
 
 <a id="deepseek-aidsh-host-digital-employee-management"></a>
 

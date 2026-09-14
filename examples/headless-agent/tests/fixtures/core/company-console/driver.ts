@@ -140,6 +140,19 @@ try {
     last: messageTail(await groups.openCompanyGroup(company.id)),
   })
 
+  // Durable world state: read empty, report, read back.
+  const worldBefore = await management.readCompanyWorldState()
+  acceptance('world-empty', { cars: Object.keys(worldBefore.cars).length, employees: Object.keys(worldBefore.employees).length })
+  await management.reportCompanyWorldState({
+    cars: { 'car-0': { from: 1, to: 2, t: 0.5, speed: 4, at: 1 } },
+    employees: { 'company-console-alice': { companyId: String(company.id), x: 3, z: -2, seated: false, at: 1 } },
+  })
+  const worldAfter = await management.readCompanyWorldState()
+  acceptance('world-reported', {
+    carT: worldAfter.cars['car-0']?.t ?? null,
+    aliceX: worldAfter.employees['company-console-alice']?.x ?? null,
+  })
+
   // A real 1x1 PNG admitted through the attachment pipeline.
   const png = await management.setPromoImage({
     companyId: company.id,

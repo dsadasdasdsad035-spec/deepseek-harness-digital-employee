@@ -24,6 +24,9 @@
       "path": "../../core/company"
     },
     {
+      "path": "../../core/company-file"
+    },
+    {
       "path": "../../core/digital-employee"
     },
     {

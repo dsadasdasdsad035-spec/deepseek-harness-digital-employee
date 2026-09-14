@@ -873,10 +873,21 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'selectable instances with lifecycle state.',
       },
       {
+        signature: '@Remote(\'readCompanyWorldState\') async readCompanyWorldState(): Promise<CompanyWorldStateView>',
+        description: 'Read the persisted world state (car fleet + employee positions).',
+        parameters: [],
+        returns: 'the saved car and employee entries; empty maps when never written.',
+      },
+      {
+        signature: '@Remote(\'reportCompanyWorldState\') async reportCompanyWorldState(request: ReportCompanyWorldStateRequest): Promise<void>',
+        description: 'Merge one world-state patch (cars/employees) durably.',
+        parameters: [{ name: 'request', description: 'entries to overlay over the saved state.' }],
+      },
+      {
         signature: '@Remote(\'companyFloor\') async companyFloor(request: CompanyIdRequest): Promise<CompanyFloor>',
-        description: 'Project one company\'s interior render payload with live busy verdicts.',
-        parameters: [{ name: 'request', description: 'company identity.' }],
-        returns: 'department groups with seated members and per-seat busy state.',
+        description: 'Project one company\'s floor: departments, seated members, and busy verdicts.',
+        parameters: [{ name: 'request', description: 'the company whose floor is projected.' }],
+        returns: 'groups with members and their live busy conclusions.',
       },
     ],
   },
@@ -4326,6 +4337,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface CompanyCandidateEmployee {\n    readonly instanceId: DigitalEmployeeInstanceId;\n    readonly displayName: string;\n    readonly templateId: string;\n    readonly state: \'inactive\' | \'active\';\n}',
   },
   {
+    name: 'CompanyCarState',
+    declaration: 'export interface CompanyCarState {\n    readonly from: number;\n    readonly to: number;\n    readonly t: number;\n    readonly speed: number;\n    readonly at: number;\n}',
+  },
+  {
+    name: 'CompanyEmployeePosition',
+    declaration: 'export interface CompanyEmployeePosition {\n    readonly companyId: string;\n    readonly x: number;\n    readonly z: number;\n    readonly seated: boolean;\n    readonly at: number;\n}',
+  },
+  {
     name: 'CompanyFloor',
     declaration: 'export interface CompanyFloor {\n    readonly company: CompanyRecord;\n    readonly groups: readonly CompanyFloorGroup[];\n}',
   },
@@ -4380,6 +4399,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CompanyRecord',
     declaration: 'export interface CompanyRecord {\n    readonly id: CompanyId;\n    readonly name: string;\n    readonly category: string;\n    readonly legalRepresentative: string;\n    readonly address: string;\n    readonly skinId?: string;\n    readonly promoImage?: CompanyPromoImageRef;\n    readonly departments: readonly DepartmentRecord[];\n    readonly createdAt: string;\n    readonly updatedAt: string;\n}',
+  },
+  {
+    name: 'CompanyWorldStateView',
+    declaration: 'export interface CompanyWorldStateView {\n    readonly cars: Readonly<Record<string, CompanyCarState>>;\n    readonly employees: Readonly<Record<string, CompanyEmployeePosition>>;\n}',
   },
   {
     name: 'ConfinedArgv',
@@ -5752,6 +5775,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ReplayEnvelope',
     declaration: 'export interface ReplayEnvelope {\n    response: unknown;\n    blocks?: readonly unknown[];\n}',
+  },
+  {
+    name: 'ReportCompanyWorldStateRequest',
+    declaration: 'export interface ReportCompanyWorldStateRequest {\n    readonly cars?: Readonly<Record<string, CompanyCarState>>;\n    readonly employees?: Readonly<Record<string, CompanyEmployeePosition>>;\n}',
   },
   {
     name: 'ReportEmployeeVisitRequest',

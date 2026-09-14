@@ -2186,6 +2186,9 @@ importers:
       '@deepseek-ai/dsh-client-ui-slots':
         specifier: workspace:^
         version: link:../ui-slots
+      '@deepseek-ai/dsh-company':
+        specifier: workspace:^
+        version: link:../../core/company
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -5848,6 +5851,9 @@ importers:
       '@deepseek-ai/dsh-company':
         specifier: workspace:^
         version: link:../../core/company
+      '@deepseek-ai/dsh-company-file':
+        specifier: workspace:^
+        version: link:../../core/company-file
       '@deepseek-ai/dsh-digital-employee':
         specifier: workspace:^
         version: link:../../core/digital-employee

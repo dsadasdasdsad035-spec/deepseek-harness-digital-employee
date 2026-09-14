@@ -71,7 +71,16 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
     if (!open) return
     void controller.load()
     controller.startPolling()
-    return () => { controller.stopPolling() }
+    const reportWorld = (): void => {
+      const snapshot = sceneRef.current?.snapshotWorldState()
+      if (snapshot !== undefined) void controller.reportWorldState(snapshot)
+    }
+    const worldTimer = setInterval(reportWorld, 5_000)
+    return () => {
+      controller.stopPolling()
+      clearInterval(worldTimer)
+      reportWorld()
+    }
   }, [controller, open])
 
   const floor = mode.kind === 'floor' ? state.floors[mode.companyId as string] : undefined
@@ -134,7 +143,7 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
 
   useEffect(() => {
     if (!open || sceneRef.current === null || mode.kind !== 'campus') return
-    sceneRef.current.setCampus(campusCompanies, promoImages)
+    sceneRef.current.setCampus(campusCompanies, promoImages, controller.worldState?.cars)
   }, [open, mode, campusCompanies, promoImages])
 
   useEffect(() => {
@@ -168,7 +177,10 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
         emptySeats: group.department === null ? 0 : spare,
       }
     })
-    sceneRef.current.setFloor(floor.company.name, floor.company.skinId, departments)
+    sceneRef.current.setFloor(
+      floor.company.name, floor.company.skinId, departments,
+      String(floor.company.id), controller.worldState?.employees,
+    )
   }, [open, mode, floor, controller])
 
   useEffect(() => {

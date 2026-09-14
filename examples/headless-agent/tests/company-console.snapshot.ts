@@ -72,6 +72,8 @@ describe('company console assembled snapshot', () => {
     expect(transcript).toContain('"busyKind":"task"')
     expect(transcript).toContain('"department":"(未分配)"')
     expect(transcript).toContain('"stage":"company-deleted","remaining":0')
+    expect(transcript).toContain('"stage":"world-empty","cars":0,"employees":0')
+    expect(transcript).toContain('"stage":"world-reported","carT":0.5,"aliceX":3')
     expect(transcript).toContain('"stage":"group-opened"')
     expect(transcript).toContain('"stage":"group-mention","last":{"speakerKind":"employee","displayName":"Alice","text":"stub-turn: 收到，我按自己的节奏跟进。","context":"收到 @Alice 的消息"}')
     expect(transcript).toContain('"stage":"group-task-broadcast"')

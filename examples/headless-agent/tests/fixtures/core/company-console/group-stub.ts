@@ -1,5 +1,6 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { taskEventsInternals } from '@deepseek-ai/dsh-digital-employee-file/task-events'
+import { worldStateInternals } from '@deepseek-ai/dsh-company-file/world-state'
 import { join } from 'node:path'
 
 /**
@@ -15,6 +16,7 @@ export const name = 'company-console-group-stub'
 /** Register the speaking-turn stub and redirect the lifecycle log. */
 export function apply(ctx: Context): void {
   taskEventsInternals.path = join(process.cwd(), 'task-events.jsonl')
+  worldStateInternals.path = join(process.cwd(), 'world-state.json')
   ctx.reflect.provide('digitalEmployeeAgent', {
     createTask: async (request: {
       initialMessage?: { content: readonly { type: string; text?: string }[] }

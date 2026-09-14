@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
 import Companies, { createCompanyEmployeeId, type CompanyId } from '@deepseek-ai/dsh-company'
 import { FileCompanyProvider } from '@deepseek-ai/dsh-company-file'
+import { worldStateInternals } from '@deepseek-ai/dsh-company-file/world-state'
 import { remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
 import { describe, expect, it, vi } from 'vitest'
 import CompanyManagementGateway from '../src/index.ts'
@@ -23,6 +24,7 @@ async function harness(root: string): Promise<{ ctx: Context; gateway: CompanyMa
   const ctx = new Context()
   await ctx.plugin(Companies)
   const store = new FileCompanyProvider(ctx, { path: join(root, 'companies.json') })
+  worldStateInternals.path = join(root, 'world-state.json')
   await store.initialize()
   ctx.companies.configureProvider(store)
 
@@ -97,12 +99,27 @@ describe('CompanyManagementGateway', () => {
       'assignEmployee',
       'unassignEmployee',
       'availableEmployees',
+      'readCompanyWorldState',
+      'reportCompanyWorldState',
       'companyFloor',
     ])
     expect(gateway.typertRemote).toMatchObject({
       serviceKey: 'companyManagement',
       namespace: 'companies',
     })
+  })
+
+  it('round-trips the durable world state', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-company-gateway-ws-'))
+    const { gateway } = await harness(root)
+    await expect(gateway.readCompanyWorldState()).resolves.toEqual({ cars: {}, employees: {} })
+    await gateway.reportCompanyWorldState({
+      cars: { 'car-0': { from: 0, to: 1, t: 0.25, speed: 4, at: 1 } },
+      employees: { 'e': { companyId: 'c', x: 1, z: 2, seated: true, at: 1 } },
+    })
+    const state = await gateway.readCompanyWorldState()
+    expect(state.cars['car-0']).toMatchObject({ t: 0.25 })
+    expect(state.employees.e).toMatchObject({ x: 1, seated: true })
   })
 
   it('projects the floor with chat-busy, task-busy, and idle members', async () => {

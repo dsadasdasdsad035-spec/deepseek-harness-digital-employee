@@ -184,3 +184,33 @@ export interface CompanyCandidateEmployee {
   readonly templateId: string
   readonly state: 'inactive' | 'active'
 }
+
+/** One car fleet entry's saved motion state. */
+export interface CompanyCarState {
+  readonly from: number
+  readonly to: number
+  readonly t: number
+  readonly speed: number
+  readonly at: number
+}
+
+/** One employee's saved last position on a company floor. */
+export interface CompanyEmployeePosition {
+  readonly companyId: string
+  readonly x: number
+  readonly z: number
+  readonly seated: boolean
+  readonly at: number
+}
+
+/** The persisted world state returned to the console. */
+export interface CompanyWorldStateView {
+  readonly cars: Readonly<Record<string, CompanyCarState>>
+  readonly employees: Readonly<Record<string, CompanyEmployeePosition>>
+}
+
+/** Merge patch for the world-state report remote. */
+export interface ReportCompanyWorldStateRequest {
+  readonly cars?: Readonly<Record<string, CompanyCarState>>
+  readonly employees?: Readonly<Record<string, CompanyEmployeePosition>>
+}

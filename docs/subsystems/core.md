@@ -997,15 +997,24 @@ Remote-only facade over the owning company and digital employee services.
  */
 @Remote('availableEmployees') async availableEmployees(): Promise<readonly CompanyCandidateEmployee[]>
 
-/**
- * Project one company's interior render payload with live busy verdicts.
- * @param request - company identity.
- * @returns department groups with seated members and per-seat busy state.
+/** Read the persisted world state (car fleet + employee positions).
+ * @returns the saved car and employee entries; empty maps when never written.
+ */
+@Remote('readCompanyWorldState') async readCompanyWorldState(): Promise<CompanyWorldStateView>
+
+/** Merge one world-state patch (cars/employees) durably.
+ * @param request - entries to overlay over the saved state.
+ */
+@Remote('reportCompanyWorldState') async reportCompanyWorldState(request: ReportCompanyWorldStateRequest): Promise<void>
+
+/** Project one company's floor: departments, seated members, and busy verdicts.
+ * @param request - the company whose floor is projected.
+ * @returns groups with members and their live busy conclusions.
  */
 @Remote('companyFloor') async companyFloor(request: CompanyIdRequest): Promise<CompanyFloor>
 ```
 
-Types: [AddDepartmentRequest](../user/guide/digital-employees.md) · [AssignEmployeeRequest](../user/guide/digital-employees.md) · [CompanyCandidateEmployee](../user/guide/digital-employees.md) · [CompanyFloor](../user/guide/digital-employees.md) · [CompanyIdRequest](../user/guide/digital-employees.md) · [CompanyPromoImageValue](../user/guide/digital-employees.md) · [CompanyRecord](../user/guide/digital-employees.md) · [CreateCompanyRequest](../user/guide/digital-employees.md) · [DeleteDepartmentRequest](../user/guide/digital-employees.md) · [EmployeeBinding](../user/guide/digital-employees.md) · [RenameDepartmentRequest](../user/guide/digital-employees.md) · [ReorderDepartmentsRequest](../user/guide/digital-employees.md) · [SetCompanyPromoImageRequest](../user/guide/digital-employees.md) · [UnassignEmployeeRequest](../user/guide/digital-employees.md) · [UpdateCompanyRequest](../user/guide/digital-employees.md)
+Types: [AddDepartmentRequest](../user/guide/digital-employees.md) · [AssignEmployeeRequest](../user/guide/digital-employees.md) · [CompanyCandidateEmployee](../user/guide/digital-employees.md) · [CompanyFloor](../user/guide/digital-employees.md) · [CompanyIdRequest](../user/guide/digital-employees.md) · [CompanyPromoImageValue](../user/guide/digital-employees.md) · [CompanyRecord](../user/guide/digital-employees.md) · [CompanyWorldStateView](../user/guide/digital-employees.md) · [CreateCompanyRequest](../user/guide/digital-employees.md) · [DeleteDepartmentRequest](../user/guide/digital-employees.md) · [EmployeeBinding](../user/guide/digital-employees.md) · [RenameDepartmentRequest](../user/guide/digital-employees.md) · [ReorderDepartmentsRequest](../user/guide/digital-employees.md) · [ReportCompanyWorldStateRequest](../user/guide/digital-employees.md) · [SetCompanyPromoImageRequest](../user/guide/digital-employees.md) · [UnassignEmployeeRequest](../user/guide/digital-employees.md) · [UpdateCompanyRequest](../user/guide/digital-employees.md)
 
 Source: [`packages/host/company-management/src/index.ts`](../../packages/host/company-management/src/index.ts)
 

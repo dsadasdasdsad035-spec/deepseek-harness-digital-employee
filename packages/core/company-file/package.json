@@ -22,12 +22,17 @@
       "types": "./lib/types/invariant.d.ts",
       "default": "./lib/invariant.js"
     },
+    "./package.json": "./package.json",
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./world-state": {
+      "types": "./lib/types/world-state.d.ts",
+      "default": "./lib/types/world-state.js"
+    }
   },
   "files": [
     "lib/index.js",
     "lib/invariant.js",
+    "lib/types/**/*.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",

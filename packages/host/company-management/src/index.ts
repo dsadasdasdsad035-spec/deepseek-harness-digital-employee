@@ -20,16 +20,19 @@ import type {
   CompanyPromoImageUpload,
   CompanyPromoImageValue,
   CompanyRecord,
+  CompanyWorldStateView,
   CreateCompanyRequest,
   DeleteDepartmentRequest,
   DigitalEmployeeInstanceId,
   EmployeeBinding,
   RenameDepartmentRequest,
   ReorderDepartmentsRequest,
+  ReportCompanyWorldStateRequest,
   SetCompanyPromoImageRequest,
   UnassignEmployeeRequest,
   UpdateCompanyRequest,
 } from '@deepseek-ai/dsh-company'
+import { readCompanyWorldState, reportCompanyWorldState } from '@deepseek-ai/dsh-company-file/world-state'
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import type { SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
 
@@ -282,6 +285,26 @@ export class CompanyManagementGateway extends TypertRemoteService {
    * Project one company's interior render payload with live busy verdicts.
    * @param request - company identity.
    * @returns department groups with seated members and per-seat busy state.
+   */
+  /** Read the persisted world state (car fleet + employee positions).
+   * @returns the saved car and employee entries; empty maps when never written.
+   */
+  @Remote('readCompanyWorldState')
+  async readCompanyWorldState(): Promise<CompanyWorldStateView> {
+    return await readCompanyWorldState()
+  }
+
+  /** Merge one world-state patch (cars/employees) durably.
+   * @param request - entries to overlay over the saved state.
+   */
+  @Remote('reportCompanyWorldState')
+  async reportCompanyWorldState(request: ReportCompanyWorldStateRequest): Promise<void> {
+    await reportCompanyWorldState(request)
+  }
+
+  /** Project one company's floor: departments, seated members, and busy verdicts.
+   * @param request - the company whose floor is projected.
+   * @returns groups with members and their live busy conclusions.
    */
   @Remote('companyFloor')
   async companyFloor(request: CompanyIdRequest): Promise<CompanyFloor> {

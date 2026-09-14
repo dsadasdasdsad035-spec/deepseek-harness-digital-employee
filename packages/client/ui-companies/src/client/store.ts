@@ -13,6 +13,8 @@ import type {
 } from '@deepseek-ai/dsh-api-remotes/client'
 import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
+import type { CompanyWorldStateView } from '@deepseek-ai/dsh-company'
+import type { WorldStateSnapshot } from './scene.ts'
 
 /** Generated namespace consumed by the console. */
 export type CompanyRemote = ClientRemote['companies']
@@ -63,6 +65,8 @@ export class CompanyStore {
   readonly store: SnapshotStore<CompanyState> = createSnapshotStore(INITIAL)
   /** Durable-visit reporter assigned by the plugin (remote-backed). */
   visitReporter: ((employeeId: string, place: string) => void) | null = null
+  /** Cached durable world state (cars + employee positions); loaded with companies. */
+  worldState: CompanyWorldStateView | null = null
   private generation = 0
   private pollTimer: ReturnType<typeof setInterval> | undefined
   private unsubscribeRunning: (() => void) | undefined
@@ -92,12 +96,14 @@ export class CompanyStore {
   async load(): Promise<void> {
     const generation = ++this.generation
     this.store.set({ ...this.store.getSnapshot(), status: 'loading', error: null })
-    const [companies, bindings, candidates] = await Promise.all([
+    const [companies, bindings, candidates, worldState] = await Promise.all([
       unwrap(this.remote.list()),
       unwrap(this.remote.listBindings()),
       unwrap(this.remote.availableEmployees()),
+      unwrap(this.remote.readCompanyWorldState()),
     ])
     if (generation !== this.generation) return
+    this.worldState = worldState
     const previous = this.store.getSnapshot()
     this.store.set({
       ...previous,
@@ -264,6 +270,13 @@ export class CompanyStore {
    */
   departmentsOf(company: CompanyRecord | undefined): readonly DepartmentRecord[] {
     return company?.departments ?? []
+  }
+
+  /** Report the live world state (cars + floor NPCs) durably.
+   * @param snapshot - the scene's current fleet and employee positions.
+   */
+  async reportWorldState(snapshot: WorldStateSnapshot): Promise<void> {
+    await this.remote.reportCompanyWorldState(snapshot).catch(() => undefined)
   }
 
   /** Stop polling and live subscriptions. */

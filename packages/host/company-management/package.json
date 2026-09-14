@@ -52,6 +52,7 @@
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-attachment": "workspace:^",
     "@deepseek-ai/dsh-company": "workspace:^",
+    "@deepseek-ai/dsh-company-file": "workspace:^",
     "@deepseek-ai/dsh-digital-employee": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-session": "workspace:^",
@@ -63,12 +64,13 @@
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-attachment": "workspace:^",
     "@deepseek-ai/dsh-company": "workspace:^",
+    "@deepseek-ai/dsh-company-file": "workspace:^",
     "@deepseek-ai/dsh-digital-employee": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-session": "workspace:^",
     "@deepseek-ai/dsh-session-persistence": "workspace:^",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:^",
-    "@deepseek-ai/dsh-typert-generator": "workspace:^"
+    "@deepseek-ai/dsh-typert-generator": "workspace:^",
+    "@deepseek-ai/dsh-typert-protocol": "workspace:^"
   },
   "dependencies": {
     "zod": "^4.4.3"
