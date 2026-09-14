@@ -1577,6 +1577,21 @@ export class CompanyScene {
     return { cars, rails }
   }
 
+  /** Capture the live floor NPC positions for in-place rebuilds.
+   * @returns memberKey → current position and seated flag.
+   */
+  preserveFloor(): SavedNpcPositions {
+    const saved: SavedNpcPositions = {}
+    for (const npc of this.floorNpcs.values()) {
+      saved[npc.memberKey] = {
+        x: npc.person.position.x,
+        z: npc.person.position.z,
+        seated: npc.phase === 'sit',
+      }
+    }
+    return saved
+  }
+
   /** Refresh the floating busy summaries without rebuilding the campus.
    * @param companies - current campus rows (member/busy counts).
    */

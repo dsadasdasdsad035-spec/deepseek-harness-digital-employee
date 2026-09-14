@@ -178,6 +178,17 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
     return () => { cancelled = true }
   }, [open, state.companies, controller])
 
+  // Structural signature: the floor object churns with every busy poll, so
+  // the rebuild must key on structure only (busy rides updateBusy live);
+  // in-place rebuilds resume NPCs from their LIVE positions.
+  const floorStructureKey = floor === undefined ? ''
+    : `${floor.company.id}:${floor.company.name}:${floor.company.skinId ?? ''}#`
+      + floor.groups.map(group => [
+        group.department === null ? '-' : `${group.department.id}:${group.department.name}:${group.department.color}`,
+        String(group.members.length),
+        group.members.map(member => String(member.instanceId)).join(','),
+      ].join('=')).join('|')
+
   useEffect(() => {
     if (!open || sceneRef.current === null || mode.kind !== 'floor' || floor === undefined) return
     const departments: FloorDepartment[] = floor.groups.map((group) => {
@@ -196,11 +207,15 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
         emptySeats: group.department === null ? 0 : spare,
       }
     })
+    const live = sceneRef.current.preserveFloor()
+    const savedPositions = Object.keys(live).length > 0 ? live : controller.worldState?.employees
     sceneRef.current.setFloor(
       floor.company.name, floor.company.skinId, departments,
-      String(floor.company.id), controller.worldState?.employees,
+      String(floor.company.id), savedPositions,
     )
-  }, [open, mode, floor, controller])
+    // The key (not floor) is the trigger: poll identity churn must never
+    // rebuild the floor and teleport its NPCs.
+  }, [open, mode, floorStructureKey])
 
   useEffect(() => {
     if (mode.kind !== 'floor' || floor === undefined || sceneRef.current === null) return
