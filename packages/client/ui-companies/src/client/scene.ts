@@ -265,6 +265,8 @@ type FloorNpc = {
   moodChip: THREE.Sprite | null
   /** Consecutive blocked steps; too many trigger a re-plan. */
   blockedSteps: number
+  /** Clock time of the last waypoint advance; a stalled walker re-plans. */
+  lastAdvanceAt: number
   readonly person: THREE.Group
   label: THREE.Sprite
   readonly screen: THREE.Mesh
@@ -1648,6 +1650,7 @@ export class CompanyScene {
       this.floorNpcs.set(plan.member.key, {
         memberKey: plan.member.key,
         mood: 0,
+        lastAdvanceAt: 0,
         moodChip: null,
         blockedSteps: 0,
         person: figure.person,
@@ -2259,6 +2262,7 @@ export class CompanyScene {
     npc.pathIndex = 0
     npc.destination = destination
     npc.phase = 'walk'
+    npc.lastAdvanceAt = this.clock.elapsedTime
     npc.person.position.y = 0
     if (!toDesk) this.setScreen(npc, false)
   }
@@ -2330,41 +2334,71 @@ export class CompanyScene {
           continue
         }
         if (yielding.has(npc.person.uuid)) continue
+        // Watchdog: a walker that stopped advancing (deadlock the slide logic
+        // cannot solve) re-plans from its current position instead of parking.
+        if (time - npc.lastAdvanceAt > 3) {
+          this.beginWalk(npc, npc.destination)
+          continue
+        }
         const step = NPC_WALK_SPEED * delta
         const distance = npc.person.position.distanceTo(waypoint)
         if (distance <= step) {
           npc.person.position.copy(waypoint)
           npc.pathIndex += 1
+          npc.lastAdvanceAt = time
         } else {
           const next = npc.person.position.clone().lerp(waypoint, step / distance)
-          // Fixture AABB blocks the step: try sliding along x, then z; a fully
-          // blocked mover gains irritation and eventually re-plans home.
+          const ownClear = (spot: THREE.Vector3): boolean =>
+            this.floorRegistry.blockingFixture(spot, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`) === undefined
+          // Fixture AABB blocks the step: detour around the obstacle's box
+          // (sidestep past its extent, rejoin beyond it); axis-aligned legs
+          // make the old slide a no-op on the movement axis.
           const blockedBy = this.floorRegistry.blockingFixture(next, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`)
           if (blockedBy === undefined) {
             npc.person.position.copy(next)
             npc.blockedSteps = 0
+            npc.lastAdvanceAt = time
             npc.person.lookAt(waypoint.x, 0, waypoint.z)
           } else {
-            const slideX = next.clone(); slideX.x = npc.person.position.x
-            const slideZ = next.clone(); slideZ.z = npc.person.position.z
-            if (this.floorRegistry.blockingFixture(slideX, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`) === undefined) {
-              npc.person.position.copy(slideX)
-            } else if (this.floorRegistry.blockingFixture(slideZ, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`) === undefined) {
-              npc.person.position.copy(slideZ)
+            const alongX = Math.abs(waypoint.x - npc.person.position.x) > Math.abs(waypoint.z - npc.person.position.z)
+            const forward = alongX
+              ? Math.sign(waypoint.x - npc.person.position.x)
+              : Math.sign(waypoint.z - npc.person.position.z)
+            const detour = [1, -1]
+              .map((side) => {
+                const margin = 0.45
+                const sidePoint = npc.person.position.clone()
+                let pastPoint: THREE.Vector3
+                if (alongX) {
+                  sidePoint.z += side * (blockedBy.halfExtents.y + margin)
+                  pastPoint = sidePoint.clone()
+                  pastPoint.x = blockedBy.position.x + forward * (blockedBy.halfExtents.x + margin)
+                } else {
+                  sidePoint.x += side * (blockedBy.halfExtents.x + margin)
+                  pastPoint = sidePoint.clone()
+                  pastPoint.z = blockedBy.position.z + forward * (blockedBy.halfExtents.y + margin)
+                }
+                return [sidePoint, pastPoint] as const
+              })
+              .find(([sidePoint, pastPoint]) => ownClear(sidePoint) && ownClear(pastPoint))
+            if (detour !== undefined) {
+              npc.path = [...detour, ...npc.path.slice(npc.pathIndex)]
+              npc.pathIndex = 0
+              npc.blockedSteps = 0
+              npc.lastAdvanceAt = time
             } else {
+              // No detour fits: retreat perpendicular, then give up to a re-plan.
               npc.blockedSteps += 1
               npc.mood = Math.min(100, npc.mood + 4)
               if (npc.blockedSteps >= 4) {
-                // Perpendicular retreat first: one probe-checked sidestep
-                // resolves corridor stand-offs without abandoning the path.
                 const heading = waypoint.clone().sub(npc.person.position)
-                const alongX = Math.abs(heading.x) > Math.abs(heading.z)
-                const sideways = alongX
+                const retreatAlongX = Math.abs(heading.x) > Math.abs(heading.z)
+                const sideways = retreatAlongX
                   ? [new THREE.Vector3(0, 0, 0.5), new THREE.Vector3(0, 0, -0.5)]
                   : [new THREE.Vector3(0.5, 0, 0), new THREE.Vector3(-0.5, 0, 0)]
-                const retreats = sideways.map(offset => npc.person.position.clone().add(offset))
-                const open = retreats.find(spot =>
-                  this.floorRegistry.blockingFixture(spot, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`) === undefined)
+                const open = sideways
+                  .map(offset => npc.person.position.clone().add(offset))
+                  .find(spot => ownClear(spot))
                 if (open !== undefined) {
                   npc.person.position.copy(open)
                   npc.blockedSteps = 0
