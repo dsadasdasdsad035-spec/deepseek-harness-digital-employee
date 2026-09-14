@@ -14,6 +14,8 @@ describe('company group chat Typert artifacts', () => {
     expect(artifact!.remote!.dts).toContain("'companyGroups'")
     expect(artifact!.remote!.dts).toContain('openCompanyGroup:')
     expect(artifact!.remote!.dts).toContain('sendCompanyGroupMessage:')
+    expect(artifact!.remote!.dts).toContain('reportEmployeeVisit:')
+    expect(artifact!.remote!.dts).toContain('employeePresence:')
 
     const packageRoot = resolve(workspaceRoot, artifact!.packageRoot)
     await expect(readFile(resolve(packageRoot, 'lib/typert.host.js'), 'utf8'))

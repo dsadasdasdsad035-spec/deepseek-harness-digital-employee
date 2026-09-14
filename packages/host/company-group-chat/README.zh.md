@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-基于既有缝的每公司工作群：每公司一个事件组装的群会话（带说话人标注的 `company-group/message` 事件），成员由公司绑定实时派生，员工人设化播报任务动态。网关尾随 headless 驱动追加的任务生命周期日志（`task-events.jsonl`，经 `@deepseek-ai/dsh-digital-employee-file/task-events`），把 领到任务 / 完成 / 失败 事实转成发言轮——一个短生命周期的员工会话（`origin: 'subagent'`，不进侧栏），携带该员工的完整组装，只注入情境、从不写台词；失败降级为确定性一句话。用户消息落群，`@显示名` 提及为该员工排一轮发言。群会话本身从不调用模型；其自身事件日志兼任播报去重游标。
+基于既有缝的每公司工作群：每公司一个事件组装的群会话（带说话人标注的 `company-group/message` 事件），成员由公司绑定实时派生，员工人设化播报任务动态。网关尾随 headless 驱动追加的任务生命周期日志（`task-events.jsonl`，经 `@deepseek-ai/dsh-digital-employee-file/task-events`），把 领到任务 / 完成 / 失败 事实转成发言轮——一个短生命周期的员工会话（`origin: 'subagent'`，不进侧栏），携带该员工的完整组装，只注入情境、从不写台词；失败降级为确定性一句话。用户消息落群，`@显示名` 提及为该员工排一轮发言。该命名空间同时承载持久 presence remotes：`reportEmployeeVisit`/`employeePresence` 写读每员工封顶的功能区到访史（`whereabouts.json`），证明实例跨刷新的连续存在。群会话本身从不调用模型；其自身事件日志兼任播报去重游标。
 
 ## Model Experience
 

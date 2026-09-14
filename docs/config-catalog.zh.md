@@ -900,7 +900,7 @@ Source: [`packages/host/apiproxy/src/index.ts:41`](../packages/host/apiproxy/src
 
 ## `@deepseek-ai/dsh-host-company-group-chat`
 
-Requires: `companies` · `digitalEmployeeAgent` · `digitalEmployees` · `sessions`
+Requires: `companies` · `digitalEmployeeAgent` · `digitalEmployees` · `sessions` · `sessionPersistence`
 
 ```ts config-catalog
 /** Gateway configuration. */
@@ -912,7 +912,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/host/company-group-chat/src/index.ts:30`](../packages/host/company-group-chat/src/index.ts)
+Source: [`packages/host/company-group-chat/src/index.ts:34`](../packages/host/company-group-chat/src/index.ts)
 
 <a id="deepseek-aidsh-host-company-management"></a>
 

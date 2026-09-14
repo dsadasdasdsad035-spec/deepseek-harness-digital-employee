@@ -49,8 +49,28 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
+/** Fold the trailing non-empty assistant texts of one event log. */
+function trailingAssistantTexts(events: readonly { type: string; data?: unknown }[]): readonly string[] {
+  const texts: string[] = []
+  for (const event of events) {
+    if (event.type !== 'assistant/message') continue
+    const message = (event.data as { message?: { content?: readonly { type: string; text?: string }[] } }).message
+    const joined = (message?.content ?? [])
+      .filter(block => block.type === 'text')
+      .map(block => block.text ?? '')
+      .join('')
+      .trim()
+    if (joined !== '') texts.push(joined)
+    if (texts.length > 3) texts.shift()
+  }
+  return texts
+}
+
 /** Remote-only facade over the owning company and digital employee services. */
 export class CompanyManagementGateway extends TypertRemoteService {
+  /** Cold chat tails per session, refreshed opportunistically per poll. */
+  private readonly chatTailCache = new Map<SessionId, readonly string[]>()
+
   static inject = ['agents', 'attachments', 'companies', 'digitalEmployees', 'sessionPersistence']
   static Config: z<Config> = z.object({
     taskActiveWindowMs: z.number().min(1_000).default(DEFAULT_TASK_ACTIVE_WINDOW_MS),
@@ -305,7 +325,10 @@ export class CompanyManagementGateway extends TypertRemoteService {
     return { company, groups }
   }
 
-  /** Floor member snapshot with its busy verdict. */
+  /** Floor member snapshot with its busy verdict and bound-screen chat tail.
+   * Tail folds the trailing assistant texts of the employee's newest session
+   * through the live store first, then the persistence backend.
+   */
   private floorMember(
     instance: DigitalEmployeeInstance,
     sessionIds: readonly SessionId[],
@@ -319,7 +342,30 @@ export class CompanyManagementGateway extends TypertRemoteService {
       ...(rootSessionId === undefined ? {} : { rootSessionId }),
       busy: verdict?.busy === true,
       busyKind: verdict?.busyKind ?? null,
+      ...rootSessionId === undefined ? {} : { chatTail: this.chatTailOf(rootSessionId) },
     }
+  }
+
+  /** Trailing assistant texts of one session for the bound screen.
+   * @param sessionId - the employee's root session.
+   * @returns up to three trailing non-empty assistant texts.
+   */
+  private chatTailOf(sessionId: SessionId): readonly string[] {
+    // The test harness stubs ctx.sessions as a bare object; tolerate absence.
+    const sessions = this.ctx.get('sessions')
+    const live = sessions?.get(sessionId)
+    if (live !== undefined) return trailingAssistantTexts(live.events)
+    const persistence = this.ctx.get('sessionPersistence')
+    if (persistence === undefined) return []
+    const cached = this.chatTailCache.get(sessionId)
+    if (cached !== undefined) return cached
+    if (typeof persistence.inspect !== 'function') return []
+    void persistence.inspect(sessionId).then((inspected) => {
+      this.chatTailCache.set(sessionId, trailingAssistantTexts(inspected.events))
+    }).catch(() => {
+      this.chatTailCache.set(sessionId, [])
+    })
+    return []
   }
 
   /** Distinct session ids attributed to one employee through its audit records, root session first. */

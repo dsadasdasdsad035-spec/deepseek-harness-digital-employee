@@ -858,9 +858,28 @@ async settle(): Promise<void>
  * @returns when the poll (and any queued trigger routing) completes.
  */
 async pollNow(): Promise<void>
+
+/** Record one employee amenity arrival into the durable history.
+ * @param request - the arriving employee and the amenity place name.
+ * @returns the updated presence view.
+ */
+@Remote('reportEmployeeVisit') async reportEmployeeVisit(request: ReportEmployeeVisitRequest): Promise<EmployeePresenceView>
+
+/** Read one employee's durable visit history.
+ * @param request - the employee whose presence is read.
+ * @returns the presence view, or an empty history for unknown employees.
+ */
+@Remote('employeePresence') async employeePresence(request: EmployeePresenceRequest): Promise<EmployeePresenceView>
+
+/** Deliver one composer submission when the target session is a group.
+ * @param sessionId - the session the composer addressed.
+ * @param text - the submitted text.
+ * @returns true when the session is a company group and the message landed.
+ */
+async deliverFromComposer(sessionId: SessionId, text: string): Promise<boolean>
 ```
 
-Types: [CompanyGroupView](../user/guide/digital-employees.md) · [CompanyId](../user/guide/digital-employees.md)
+Types: [CompanyGroupView](../user/guide/digital-employees.md) · [CompanyId](../user/guide/digital-employees.md) · [EmployeePresenceRequest](../user/guide/digital-employees.md) · [EmployeePresenceView](../user/guide/digital-employees.md) · [ReportEmployeeVisitRequest](../user/guide/digital-employees.md)
 
 Source: [`packages/host/company-group-chat/src/index.ts`](../../packages/host/company-group-chat/src/index.ts)
 

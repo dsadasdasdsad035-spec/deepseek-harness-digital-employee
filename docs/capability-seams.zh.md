@@ -147,8 +147,8 @@ flowchart LR
   pkg_company_management["company-management"]
   pkg_company_group_chat["company-group-chat"]
   svc_companyGroupChat["ctx.companyGroupChat<br/>Company group chat gateway"]
-  pkg_ui_companies["ui-companies"]
   svc_companyManagement["ctx.companyManagement<br/>Company Host management gateway"]
+  pkg_ui_companies["ui-companies"]
   svc_mcpClients["ctx.mcpClients<br/>Dynamic MCP client manager"]
   svc_agents["ctx.agents<br/>Agent service"]
   pkg_acp["acp"]
@@ -382,7 +382,6 @@ flowchart LR
   svc_codeRuntime --> pkg_tools
   svc_compaction --> pkg_compaction_basic
   svc_companies --> pkg_company_management
-  svc_companyGroupChat --> pkg_ui_companies
   svc_companyManagement --> pkg_ui_companies
   svc_cordisInspect --> pkg_tool_cordis
   svc_credentials --> pkg_apiproxy
@@ -556,7 +555,7 @@ flowchart LR
 | `ctx.digitalEmployeeAgent` | `core` | [`digital-employee-agent`](../packages/core/digital-employee-agent) | - | `digital-employee-management` | - | Resolves an active employee into the existing Agent, prompt, skill, tool, MCP, memory, and delegation extension points before creating an employee-owned root Session. |
 | `ctx.digitalEmployeeManagement` | `core` | `digital-employee-management` | - | `ui-digital-employees` | - | Exposes typed management and atomic chat-start Remote operations while delegating durable state and Agent composition to their owning services. |
 | `ctx.companies` | `seam` | [`company`](../packages/core/company) | [`company-file`](../packages/core/company-file) | `company-management` | - | Owns durable company records, departments, and employee-instance bindings; the management gateway consumes the resolved state for the 3D console. |
-| `ctx.companyGroupChat` | `core` | `company-group-chat` | - | `ui-companies` | - | Assembles per-company group sessions from company bindings and the task lifecycle log; speaking turns run through the employee agent. |
+| `ctx.companyGroupChat` | `core` | `company-group-chat` | - | - | - | Assembles per-company group sessions from company bindings and the task lifecycle log; speaking turns run through the employee agent. |
 | `ctx.companyManagement` | `core` | `company-management` | - | `ui-companies` | - | Exposes typed company Remote operations and the busy/idle floor projection while delegating durable state to the companies provider. |
 | `ctx.mcpClients` | `core` | [`mcp-client`](../packages/mcp/mcp-client) | - | [`digital-employee-agent`](../packages/core/digital-employee-agent) | - | Mounts resolved MCP server connections in the target Context and releases their fibers with the owning Agent or composition scope. |
 | `ctx.agents` | `core` | [`agent`](../packages/core/agent) | - | [`agent-loop`](../packages/core/agent-loop), [`acp`](../packages/acp/acp), `subagent-inprocess` | - | Owns live Agent handles, the create/resume factory seam, and process-local initiator propagation. |

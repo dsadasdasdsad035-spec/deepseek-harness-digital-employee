@@ -61,6 +61,8 @@ function failure(value: unknown): string {
 export class CompanyStore {
   /** Observable console state. */
   readonly store: SnapshotStore<CompanyState> = createSnapshotStore(INITIAL)
+  /** Durable-visit reporter assigned by the plugin (remote-backed). */
+  visitReporter: ((employeeId: string, place: string) => void) | null = null
   private generation = 0
   private pollTimer: ReturnType<typeof setInterval> | undefined
   private unsubscribeRunning: (() => void) | undefined
@@ -353,6 +355,18 @@ export class CompanyGroupStore {
   async send(companyId: string, text: string): Promise<void> {
     const outcome = await this.remote.sendCompanyGroupMessage(companyId as never, text)
     if (outcome.ok) this.store.set({ ...this.store.getSnapshot(), view: outcome.value })
+  }
+
+  /** Open (or create) one company's group and return its session id.
+   * @param companyId - the company whose group opens.
+   * @returns the group session id for main-surface navigation.
+   */
+  async openSession(companyId: string): Promise<string> {
+    await this.open(companyId)
+    this.stop()
+    const view = this.store.getSnapshot().view
+    if (view === null) throw new Error('company group: open produced no view')
+    return view.sessionId
   }
 
   /** Stop polling; the console closes the group panel. */

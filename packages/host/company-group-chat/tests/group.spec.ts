@@ -6,6 +6,7 @@ import Companies, { createCompanyEmployeeId, type CompanyId } from '@deepseek-ai
 import { FileCompanyProvider } from '@deepseek-ai/dsh-company-file'
 import SessionStore from '@deepseek-ai/dsh-session'
 import { appendTaskLifecycleEvent, taskEventsInternals } from '@deepseek-ai/dsh-digital-employee-file/task-events'
+import { whereaboutsInternals } from '@deepseek-ai/dsh-digital-employee-file/whereabouts'
 import { remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
 import { describe, expect, it, vi } from 'vitest'
 import CompanyGroupChatGateway from '../src/index.ts'
@@ -19,6 +20,9 @@ const EMPLOYEE_FREE = createCompanyEmployeeId('group-unbound')
 interface TestGateway {
   openCompanyGroup(companyId: CompanyId): Promise<CompanyGroupView>
   sendCompanyGroupMessage(companyId: CompanyId, text: string): Promise<CompanyGroupView>
+  deliverFromComposer(sessionId: string, text: string): Promise<boolean>
+  reportEmployeeVisit(request: { employeeId: string; place: string }): Promise<{ lastPlace: string; visits: unknown[] }>
+  employeePresence(request: { employeeId: string }): Promise<{ lastPlace: string; visits: unknown[] }>
   settle(): Promise<void>
   pollTaskEvents(): Promise<void>
 }
@@ -53,6 +57,7 @@ async function harness(options: { createTask?: (request: unknown) => FakeHandle 
 }> {
   const root = await mkdtemp(join(tmpdir(), 'dsh-company-group-'))
   taskEventsInternals.path = join(root, 'task-events.jsonl')
+  whereaboutsInternals.path = join(root, 'whereabouts.json')
 
   const ctx = new Context()
   await ctx.plugin(SessionStore)
@@ -61,6 +66,10 @@ async function harness(options: { createTask?: (request: unknown) => FakeHandle 
   await store.initialize()
   ctx.companies.configureProvider(store)
 
+  ctx.provide('sessionPersistence', {
+    list: vi.fn(async () => []),
+    inspect: vi.fn(async (id: string) => { throw new Error(`no persisted session ${id}`) }),
+  } as never)
   ctx.provide('digitalEmployees', {
     resolve: vi.fn(async (id: string) => ({
       instance: { displayName: id === EMPLOYEE_A ? '张三' : id === EMPLOYEE_B ? '李四' : '王五' },
@@ -92,7 +101,47 @@ describe('CompanyGroupChatGateway', () => {
     expect(remoteMethods(gateway as never).map(method => method.method)).toEqual([
       'openCompanyGroup',
       'sendCompanyGroupMessage',
+      'reportEmployeeVisit',
+      'employeePresence',
     ])
+  })
+
+  it('stamps the opened marker before the title on creation', async () => {
+    const { ctx, gateway, companyId } = await harness()
+    const view = await gateway.openCompanyGroup(companyId)
+    const session = ctx.sessions.get(view.sessionId as never)
+    expect(session).toBeDefined()
+    const kinds = session!.events.map(event => event.type)
+    expect(kinds[0]).toBe('company-group/opened')
+    expect(kinds[1]).toBe('session/title')
+    expect(session!.events[0]!.data).toEqual({ companyId: String(companyId) })
+    // Reopening stamps nothing new.
+    await gateway.openCompanyGroup(companyId)
+    expect(ctx.sessions.get(view.sessionId as never)!.events.filter(event => event.type === 'company-group/opened')).toHaveLength(1)
+  })
+
+  it('records and reads durable employee visit history', async () => {
+    const { gateway } = await harness()
+    const first = await gateway.reportEmployeeVisit({ employeeId: 'emp-presence', place: '吸烟区' })
+    expect(first.lastPlace).toBe('吸烟区')
+    await gateway.reportEmployeeVisit({ employeeId: 'emp-presence', place: '茶水区' })
+    const presence = await gateway.employeePresence({ employeeId: 'emp-presence' })
+    expect(presence.lastPlace).toBe('茶水区')
+    expect(presence.visits.map(visit => (visit as { place: string }).place)).toEqual(['茶水区', '吸烟区'])
+    const empty = await gateway.employeePresence({ employeeId: 'emp-unknown' })
+    expect(empty.visits).toEqual([])
+  })
+
+  it('delivers composer submissions for group sessions only', async () => {
+    const createTask = vi.fn((_request: unknown) => fakeHandle('群里收到。'))
+    const harnessResult = await harness({ createTask })
+    const { gateway } = harnessResult
+    const companyId = harnessResult.companyId
+    const view = await gateway.openCompanyGroup(companyId)
+    expect(await gateway.deliverFromComposer(view.sessionId, '大家好')).toBe(true)
+    const after = await gateway.openCompanyGroup(companyId)
+    expect(after.messages.at(-1)).toEqual(expect.objectContaining({ speakerKind: 'user', text: '大家好' }))
+    expect(await gateway.deliverFromComposer('session-unknown', 'x')).toBe(false)
   })
 
   it('opens the group idempotently', async () => {

@@ -39,6 +39,38 @@ export interface CompanyGroupView {
   readonly messages: readonly CompanyGroupMessage[]
 }
 
+
+/** One durable amenity arrival. */
+export interface EmployeeVisitEntry {
+  readonly place: string
+  readonly at: number
+}
+
+/** One employee's durable presence view. */
+export interface EmployeePresenceView {
+  readonly employeeId: string
+  readonly lastSeenAt: number
+  readonly lastPlace: string
+  readonly visits: readonly EmployeeVisitEntry[]
+}
+
+/** Request reporting one amenity arrival. */
+export interface ReportEmployeeVisitRequest {
+  readonly employeeId: DigitalEmployeeInstanceId
+  readonly place: string
+}
+
+/** Request reading one employee's presence history. */
+export interface EmployeePresenceRequest {
+  readonly employeeId: DigitalEmployeeInstanceId
+}
+
+/** Payload of the `company-group/opened` creation marker. */
+export interface CompanyGroupOpenedEvent {
+  /** The company whose group this session hosts. */
+  readonly companyId: string
+}
+
 /** Payload of one `company-group/message` session event. */
 export interface CompanyGroupMessageEvent {
   readonly speakerKind: CompanyGroupSpeakerKind
@@ -56,6 +88,12 @@ export interface CompanyGroupMessageEvent {
 
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
+    /**
+     * Creation marker: this session hosts one company's group.
+     *
+     * @param companyId - the company whose group this session hosts.
+     */
+    'company-group/opened': CompanyGroupOpenedEvent
     /**
      * One quoted message in a company group conversation.
      *

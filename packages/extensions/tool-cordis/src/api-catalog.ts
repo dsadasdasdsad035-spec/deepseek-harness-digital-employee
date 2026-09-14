@@ -393,6 +393,11 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'message', description: 'Client response carrying the server request\'s rpcId.' }],
         returns: 'Transport receipt for the response delivery.',
       },
+      {
+        signature: 'setGroupDelivery(delivery: (sessionId: SessionId, text: string) => Promise<boolean>): void',
+        description: 'Install the company-group composer delivery used by `session.prompt`: the company-group gateway self-registers when both plugins are active.',
+        parameters: [{ name: 'delivery', description: 'returns true when the addressed session is one of its groups and the submission was delivered there.' }],
+      },
     ],
   },
   {
@@ -747,6 +752,24 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Run one lifecycle-log poll immediately instead of waiting the interval.',
         parameters: [],
         returns: 'when the poll (and any queued trigger routing) completes.',
+      },
+      {
+        signature: '@Remote(\'reportEmployeeVisit\') async reportEmployeeVisit(request: ReportEmployeeVisitRequest): Promise<EmployeePresenceView>',
+        description: 'Record one employee amenity arrival into the durable history.',
+        parameters: [{ name: 'request', description: 'the arriving employee and the amenity place name.' }],
+        returns: 'the updated presence view.',
+      },
+      {
+        signature: '@Remote(\'employeePresence\') async employeePresence(request: EmployeePresenceRequest): Promise<EmployeePresenceView>',
+        description: 'Read one employee\'s durable visit history.',
+        parameters: [{ name: 'request', description: 'the employee whose presence is read.' }],
+        returns: 'the presence view, or an empty history for unknown employees.',
+      },
+      {
+        signature: 'async deliverFromComposer(sessionId: SessionId, text: string): Promise<boolean>',
+        description: 'Deliver one composer submission when the target session is a group.',
+        parameters: [{ name: 'sessionId', description: 'the session the composer addressed.' }, { name: 'text', description: 'the submitted text.' }],
+        returns: 'true when the session is a company group and the message landed.',
       },
     ],
   },
@@ -4312,7 +4335,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'CompanyFloorMember',
-    declaration: 'export interface CompanyFloorMember {\n    readonly instanceId: DigitalEmployeeInstanceId;\n    readonly displayName: string;\n    readonly templateId: string;\n    readonly rootSessionId?: SessionId;\n    readonly busy: boolean;\n    readonly busyKind: CompanyBusyKind | null;\n}',
+    declaration: 'export interface CompanyFloorMember {\n    readonly instanceId: DigitalEmployeeInstanceId;\n    readonly displayName: string;\n    readonly templateId: string;\n    readonly rootSessionId?: SessionId;\n    readonly busy: boolean;\n    readonly busyKind: CompanyBusyKind | null;\n    readonly chatTail?: readonly string[];\n}',
   },
   {
     name: 'CompanyGroupMember',
@@ -4885,6 +4908,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'EmployeeBinding',
     declaration: 'export interface EmployeeBinding {\n    readonly instanceId: DigitalEmployeeInstanceId;\n    readonly companyId: CompanyId;\n    readonly departmentId: DepartmentId | null;\n}',
+  },
+  {
+    name: 'EmployeePresenceRequest',
+    declaration: 'export interface EmployeePresenceRequest {\n    readonly employeeId: DigitalEmployeeInstanceId;\n}',
+  },
+  {
+    name: 'EmployeePresenceView',
+    declaration: 'export interface EmployeePresenceView {\n    readonly employeeId: string;\n    readonly lastSeenAt: number;\n    readonly lastPlace: string;\n    readonly visits: readonly EmployeeVisitEntry[];\n}',
+  },
+  {
+    name: 'EmployeeVisitEntry',
+    declaration: 'export interface EmployeeVisitEntry {\n    readonly place: string;\n    readonly at: number;\n}',
   },
   {
     name: 'EncodedImageAttachment',
@@ -5717,6 +5752,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ReplayEnvelope',
     declaration: 'export interface ReplayEnvelope {\n    response: unknown;\n    blocks?: readonly unknown[];\n}',
+  },
+  {
+    name: 'ReportEmployeeVisitRequest',
+    declaration: 'export interface ReportEmployeeVisitRequest {\n    readonly employeeId: DigitalEmployeeInstanceId;\n    readonly place: string;\n}',
   },
   {
     name: 'RequestContext',

@@ -4,16 +4,39 @@
     "rootDir": "src",
     "outDir": "lib/types"
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
-    { "path": "../../../vendor/cordis" },
-    { "path": "../runtime" },
-    { "path": "../locale" },
-    { "path": "../ui-slots" },
-    { "path": "../ui-primitives" },
-    { "path": "../ui-layout" },
-    { "path": "../ui-sidebar" },
-    { "path": "../../runtime-diagnostics/invariants" },
-    { "path": "../../api/remotes/tsconfig.client.json" }
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../api/remotes/tsconfig.client.json"
+    },
+    {
+      "path": "../../runtime-diagnostics/invariants"
+    },
+    {
+      "path": "../locale"
+    },
+    {
+      "path": "../runtime"
+    },
+    {
+      "path": "../ui-conversation"
+    },
+    {
+      "path": "../ui-layout"
+    },
+    {
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../ui-sidebar"
+    },
+    {
+      "path": "../ui-slots"
+    }
   ]
 }

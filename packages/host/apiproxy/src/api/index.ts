@@ -1,3 +1,4 @@
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
 /**
  * apiproxy contract-layer barrel. api/ has zero Node dependencies and is
  * importable from the browser; the TS interfaces are the authoritative contract, while HTTP,
@@ -39,6 +40,13 @@ export interface ApiProxy {
    * @returns Transport receipt for the response delivery.
    */
   respond(message: ClientResponse): Promise<RpcReceipt>
+  /**
+   * Install the company-group composer delivery used by `session.prompt`:
+   * the company-group gateway self-registers when both plugins are active.
+   * @param delivery - returns true when the addressed session is one of its
+   * groups and the submission was delivered there.
+   */
+  setGroupDelivery(delivery: (sessionId: SessionId, text: string) => Promise<boolean>): void
 }
 
 // ---- Domain interfaces and payload entities ----

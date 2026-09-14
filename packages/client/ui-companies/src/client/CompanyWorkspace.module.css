@@ -397,3 +397,40 @@
   display: flex;
   gap: 6px;
 }
+
+.chatGroupRow,
+.chatGroupRowOwn {
+  display: flex;
+  flex-direction: column;
+  margin: 6px 0;
+}
+
+.chatGroupRowOwn {
+  align-items: flex-end;
+}
+
+.chatGroupSpeaker {
+  font-size: 11px;
+  color: #6366f1;
+  margin-bottom: 1px;
+}
+
+.chatGroupBubble,
+.chatGroupBubbleOwn {
+  max-width: 78%;
+  border-radius: 10px;
+  padding: 5px 10px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chatGroupBubble {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.chatGroupBubbleOwn {
+  background: #dcfce7;
+  color: #14532d;
+}

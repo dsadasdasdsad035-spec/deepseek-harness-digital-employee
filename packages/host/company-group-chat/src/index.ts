@@ -9,6 +9,7 @@ import type {} from '@deepseek-ai/dsh-company'
 import type {} from '@deepseek-ai/dsh-digital-employee-agent'
 import type { TaskLifecycleEvent } from '@deepseek-ai/dsh-digital-employee-file/task-events'
 import { listTaskLifecycleEvents } from '@deepseek-ai/dsh-digital-employee-file/task-events'
+import { readWhereabouts, reportVisit } from '@deepseek-ai/dsh-digital-employee-file/whereabouts'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId, type Session, type SessionEvent } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-title'
@@ -18,6 +19,9 @@ import type {
   CompanyGroupMessage,
   CompanyGroupMessageEvent,
   CompanyGroupView,
+  EmployeePresenceRequest,
+  EmployeePresenceView,
+  ReportEmployeeVisitRequest,
 } from '@deepseek-ai/dsh-host-company-group-chat/types'
 
 /** Task lifecycle poll cadence; the same interval class as busy derivation. */
@@ -57,7 +61,7 @@ declare module '@deepseek-ai/cordis' {
 
 /** Remote-only facade assembling company groups from existing services. */
 export class CompanyGroupChatGateway extends TypertRemoteService {
-  static inject = ['companies', 'digitalEmployeeAgent', 'digitalEmployees', 'sessions']
+  static inject = ['companies', 'digitalEmployeeAgent', 'digitalEmployees', 'sessions', 'sessionPersistence']
   static Config: z<Config> = z.object({
     pollIntervalMs: z.number().min(500).default(DEFAULT_POLL_INTERVAL_MS),
     turnTimeoutMs: z.number().min(1_000).default(DEFAULT_TURN_TIMEOUT_MS),
@@ -76,6 +80,14 @@ export class CompanyGroupChatGateway extends TypertRemoteService {
     ctx.effect(() => {
       const timer = setInterval(() => { void this.pollTaskEvents() }, this.pollIntervalMs)
       return () => { clearInterval(timer) }
+    })
+    // Self-register the composer delivery whenever the API gateway is active;
+    // either plugin may load first, and gateway-less compositions skip this.
+    ctx.inject(['apiProxy'], (gatewayCtx: Context) => {
+      const gateway = gatewayCtx.get('apiProxy') as unknown as {
+        setGroupDelivery(delivery: (sessionId: string, text: string) => Promise<boolean>): void
+      } | undefined
+      gateway?.setGroupDelivery((sessionId: string, text: string) => this.deliverFromComposer(sessionId as SessionId, text))
     })
   }
 
@@ -119,9 +131,31 @@ export class CompanyGroupChatGateway extends TypertRemoteService {
     const company = await this.ctx.companies.get(companyId)
     if (company === undefined) throw new Error(`company group: company "${companyId}" not found`)
     const id = this.groupSessionId(companyId)
-    const existing = this.ctx.sessions.get(id)
+    let existing = this.ctx.sessions.get(id)
+    if (existing === undefined) {
+      // A host restart left the group cold: restore its full history from
+      // persistence into the live store instead of diverging on a fresh id.
+      const persistence = this.ctx.get('sessionPersistence') as unknown as {
+        list(): Promise<readonly { id: string }[]>
+        inspect(id: string): Promise<{ events: readonly SessionEvent[]; meta: { cwd?: string; createdAt: number; agentPreset?: string } }>
+      } | undefined
+      if (persistence === undefined) throw new Error('company group: session persistence unavailable')
+      const listed = (await persistence.list()).find(header => header.id === id)
+      if (listed !== undefined) {
+        const inspected = await (this.ctx.get('sessionPersistence') as unknown as { inspect(id: string): Promise<{ events: readonly SessionEvent[]; meta: { cwd?: string; createdAt: number; agentPreset?: string } }> }).inspect(id)
+        existing = this.ctx.sessions.create(id, {
+          seed: inspected.events.map(event => structuredClone(event)),
+          meta: {
+            ...inspected.meta.cwd === undefined ? {} : { cwd: inspected.meta.cwd },
+            createdAt: inspected.meta.createdAt,
+            ...inspected.meta.agentPreset === undefined ? {} : { agentPreset: inspected.meta.agentPreset },
+          },
+        })
+      }
+    }
     if (existing !== undefined) return { company, session: existing }
     const session = this.ctx.sessions.create(id, { meta: { cwd: process.cwd() } })
+    session.append('company-group/opened', { companyId })
     session.append('session/title', { title: `${company.name} 群`, messageSeqs: [], source: { kind: 'fallback' } })
     return { company, session }
   }
@@ -138,6 +172,61 @@ export class CompanyGroupChatGateway extends TypertRemoteService {
    */
   async pollNow(): Promise<void> {
     await this.pollTaskEvents()
+  }
+
+  /** Record one employee amenity arrival into the durable history.
+   * @param request - the arriving employee and the amenity place name.
+   * @returns the updated presence view.
+   */
+  @Remote('reportEmployeeVisit')
+  async reportEmployeeVisit(request: ReportEmployeeVisitRequest): Promise<EmployeePresenceView> {
+    return await reportVisit(request.employeeId, request.place, Date.now())
+  }
+
+  /** Read one employee's durable visit history.
+   * @param request - the employee whose presence is read.
+   * @returns the presence view, or an empty history for unknown employees.
+   */
+  @Remote('employeePresence')
+  async employeePresence(request: EmployeePresenceRequest): Promise<EmployeePresenceView> {
+    const store = await readWhereabouts()
+    return store[request.employeeId] ?? {
+      employeeId: request.employeeId,
+      lastSeenAt: 0,
+      lastPlace: '',
+      visits: [],
+    }
+  }
+
+  /** Deliver one composer submission when the target session is a group.
+   * @param sessionId - the session the composer addressed.
+   * @param text - the submitted text.
+   * @returns true when the session is a company group and the message landed.
+   */
+  async deliverFromComposer(sessionId: SessionId, text: string): Promise<boolean> {
+    const session = this.ctx.sessions.get(sessionId)
+    if (session === undefined) {
+      // Cold after a restart: the gateway owns its id scheme, so parse the
+      // company and let ensureGroup restore or re-create the group.
+      if (!sessionId.startsWith('session-company-group-')) return false
+      const companyId = sessionId.slice('session-company-group-'.length)
+      if (await this.ctx.companies.get(companyId as CompanyId) === undefined) return false
+      const restored = await this.ensureGroup(companyId as CompanyId)
+      this.appendMessage(restored.session, { speakerKind: 'user', displayName: '我', text })
+      const roster = await this.rosterOf(restored.company)
+      for (const member of roster) {
+        if (!text.includes(`@${member.displayName}`)) continue
+        this.enqueueTurn(restored.company, member,
+          `你在公司「${restored.company.name}」的员工群里。群里用户「@${member.displayName}」对你说：${text}。请以你自己的身份、风格和判断回复；如需补充细节可以用你的工具。只输出要发到群里的发言内容。`,
+          `回复 @${member.displayName} 的消息`)
+      }
+      return true
+    }
+    const marker = session.events.find(event => event.type === 'company-group/opened')
+    if (marker === undefined) return false
+    const companyId = (marker.data as { companyId: string }).companyId
+    await this.sendCompanyGroupMessage(companyId as CompanyId, text)
+    return true
   }
 
   /** Resolve the deterministic group session identity of one company. */

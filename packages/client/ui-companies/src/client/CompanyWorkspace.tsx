@@ -1,11 +1,11 @@
 /** Full-screen 3D company campus console rendered as a shell overlay. */
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ChangeEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { Button, IconCloseOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
 import type { CompanyFloorMember, CompanyId, DepartmentId, DigitalEmployeeInstanceId } from '@deepseek-ai/dsh-api-remotes/client'
 import { CompanyScene, type FloorDepartment } from './scene.ts'
 import { COMPANY_SKINS, DEFAULT_COMPANY_SKIN } from './skins.ts'
-import type { CompanyGroupState, CompanyGroupStore } from './store.ts'
+import type { CompanyGroupStore } from './store.ts'
 import type { CompanyStore } from './store.ts'
 import css from './CompanyWorkspace.module.css'
 
@@ -20,6 +20,8 @@ export interface CompanyWorkspaceInjected {
   close: () => void
   /** Close the console and surface the digital employee workspace. */
   openEmployeeWorkspace: () => void
+  /** Open one session in the main conversation surface. */
+  openSession: (id: string) => void
 }
 
 /** Component props supplied by the shell overlay slot. */
@@ -28,13 +30,14 @@ type WorkspaceFace = InjectFace<CompanyWorkspaceInjected>
 
 /** Render the console while its overlay is open, or nothing. */
 export function CompanyWorkspace(props: CompanyWorkspaceProps): ReactNode {
-  const { controller, groupStore, useSnapshot, useOpen, close, openEmployeeWorkspace } = props
+  const { controller, groupStore, useSnapshot, useOpen, close, openEmployeeWorkspace, openSession } = props
   if (controller === undefined || groupStore === undefined || useSnapshot === undefined || useOpen === undefined
-    || close === undefined || openEmployeeWorkspace === undefined) return null
+    || close === undefined || openEmployeeWorkspace === undefined || openSession === undefined) return null
   return (
     <Console
       controller={controller}
       groupStore={groupStore}
+      openSession={openSession}
       useSnapshot={useSnapshot}
       useOpen={useOpen}
       close={close}
@@ -47,16 +50,9 @@ type ConsoleProps = WorkspaceFace
 
 type Mode = { kind: 'campus' } | { kind: 'floor'; companyId: CompanyId }
 
-function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmployeeWorkspace }: ConsoleProps): ReactNode {
+function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmployeeWorkspace, openSession }: ConsoleProps): ReactNode {
   const state = useSnapshot(value => value)
   const open = useOpen(value => value.open)
-  const groupStoreRef = groupStore.store
-  const groupState = useSyncExternalStore(
-    (onStoreChange: () => void) => groupStoreRef.subscribe(onStoreChange),
-    () => groupStoreRef.getSnapshot(),
-  )
-  const [showGroup, setShowGroup] = useState(false)
-  const [groupInput, setGroupInput] = useState('')
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<CompanyScene | null>(null)
   const [mode, setMode] = useState<Mode>({ kind: 'campus' })
@@ -115,6 +111,7 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
       onSeatClick: (departmentKey) => { setBindDepartment(departmentKey === null ? null : departmentKey as DepartmentId) },
     })
     sceneRef.current = scene
+    scene.visitReporter = controller.visitReporter
     return () => {
       scene.dispose()
       sceneRef.current = null
@@ -157,6 +154,7 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
     if (!open || sceneRef.current === null || mode.kind !== 'floor' || floor === undefined) return
     const departments: FloorDepartment[] = floor.groups.map((group) => {
       const members = group.members.map(member => ({
+        ...member.chatTail === undefined ? {} : { chatTail: member.chatTail },
         key: member.instanceId as string,
         displayName: member.displayName,
         busy: controller.verdictOf(member).busy,
@@ -236,8 +234,10 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
           className={css.headerButton}
           type="button"
           onClick={() => {
-            setShowGroup(true)
-            void groupStore.open(mode.companyId)
+            void groupStore.openSession(mode.companyId).then((sessionId) => {
+              openSession(sessionId)
+              close()
+            }).catch(() => undefined)
           }}
         >💬 公司群聊</button>
       ) : null}
@@ -542,93 +542,10 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
             : null}
         </div>
         <div className={css.sidePanel}>
-          {showGroup && mode.kind === 'floor'
-            ? (
-              <GroupPanel
-                state={groupState}
-                companyId={mode.companyId}
-                onBack={() => { setShowGroup(false); groupStore.stop() }}
-                onOpen={(companyId) => { void groupStore.open(companyId) }}
-                onSend={(companyId, message) => { void groupStore.send(companyId, message) }}
-                input={groupInput}
-                setInput={setGroupInput}
-              />
-            )
-            : sidePanelBody}
+          {sidePanelBody}
 
         </div>
       </div>
     </div>
-  )
-}
-
-/** The per-company group chat panel with member chips and a composer. */
-function GroupPanel(props: {
-  state: CompanyGroupState
-  companyId: CompanyId
-  onBack: () => void
-  onOpen: (companyId: string) => void
-  onSend: (companyId: string, message: string) => void
-  input: string
-  setInput: (value: string) => void
-}): ReactNode {
-  const { state, companyId, onBack, onOpen, onSend, input, setInput } = props
-  return (
-    <>
-      <button className={css.headerButton} type="button" onClick={onBack}>← 返回面板</button>
-      {state.status === 'loading' ? <span className={css.companyMeta}>打开群聊中…</span> : null}
-      {state.status === 'error' ? <div className={css.errorText}>{state.error}</div> : null}
-      {state.view === null ? (
-        <span className={css.companyMeta}>暂无群消息</span>
-      ) : (
-        <>
-          <span className={css.sectionTitle}>
-            {state.view.companyName} 群 · {String(state.view.members.length)} 名成员
-          </span>
-          <div className={css.groupMembers}>
-            {state.view.members.map(member => (
-              <button
-                key={member.employeeId}
-                className={css.groupMemberChip}
-                type="button"
-                onClick={() => { setInput(`${input}@${member.displayName} `) }}
-              >@{member.displayName}</button>
-            ))}
-          </div>
-          <div className={css.groupMessages}>
-            {state.view.messages.map(message => (
-              <div key={message.seq} className={message.speakerKind === 'user' ? css.groupMessageOwn : css.groupMessage}>
-                <span className={css.groupSpeaker}>{message.displayName}</span>
-                <span className={css.groupText}>{message.text}</span>
-              </div>
-            ))}
-          </div>
-          <div className={css.groupComposer}>
-            <input
-              className={css.input}
-              value={input}
-              placeholder="发消息，点成员插入 @…"
-              onChange={(event) => { setInput(event.target.value) }}
-              onKeyDown={(event) => {
-                if (event.key !== 'Enter' || input.trim() === '') return
-                onSend(companyId, input.trim())
-                setInput('')
-                onOpen(companyId)
-              }}
-            />
-            <button
-              className={css.headerButton}
-              type="button"
-              disabled={input.trim() === ''}
-              onClick={() => {
-                onSend(companyId, input.trim())
-                setInput('')
-                onOpen(companyId)
-              }}
-            >发送</button>
-          </div>
-        </>
-      )}
-    </>
   )
 }

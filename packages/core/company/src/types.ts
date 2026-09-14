@@ -160,6 +160,8 @@ export interface CompanyFloorMember {
   readonly rootSessionId?: SessionId
   readonly busy: boolean
   readonly busyKind: CompanyBusyKind | null
+  /** Trailing texts of the employee's latest session for the bound screen; empty when none. */
+  readonly chatTail?: readonly string[]
 }
 
 /** One department group of a floor projection. */

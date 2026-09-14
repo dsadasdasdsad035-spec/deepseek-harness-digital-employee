@@ -21,6 +21,8 @@ export interface FloorMember {
   readonly key: string
   readonly displayName: string
   readonly busy: boolean
+  /** Trailing real-session texts for the bound computer screen. */
+  readonly chatTail?: readonly string[]
 }
 
 /** One department zone in the floor view. */
@@ -96,11 +98,116 @@ const RIVER_W = 12
 
 /** Y offset sinking a standing figure into a seated posture at a desk. */
 const SEAT_SINK = -0.24
+/** NPC body half extents for fixture collision probes. */
+const NPC_HALF_EXTENTS = new THREE.Vector2(0.28, 0.28)
+
 /** NPC walking speed in world units per second. */
 const NPC_WALK_SPEED = 1.7
 
+/** One registered world entity: located, bounded, optionally destructible. */
+export interface WorldEntity {
+  /** Stable registry id (builder-scoped for fixtures, mover id for dynamics). */
+  readonly id: string
+  /** Entity class used by the collision strategies. */
+  readonly kind: 'fixture' | 'npc' | 'car'
+  /** Center position in world coordinates; dynamics refresh it per frame. */
+  position: THREE.Vector3
+  /** Half extents on the ground plane (x, z) describing the AABB. */
+  readonly halfExtents: THREE.Vector2
+  /** Fixture may take visual damage; dynamics never register destructible. */
+  readonly destructible?: boolean
+  /** Fixture damage state, advanced by furious-NPC kicks. */
+  damage: 'intact' | 'damaged' | 'destroyed'
+  /** Fixture visual root; damage steps tilt or topple it in place. */
+  object?: THREE.Object3D
+}
+
+/** Per-scene registry of every located, bounded entity. */
+export class EntityRegistry {
+  private readonly entities = new Map<string, WorldEntity>()
+
+  /** Register one entity; ids are unique per scene instance.
+   * @param entity - the located entity to record.
+   * @returns the registered entity.
+   */
+  register(entity: Omit<WorldEntity, 'damage'> & Partial<Pick<WorldEntity, 'damage'>>): WorldEntity {
+    const stored: WorldEntity = { damage: 'intact', ...entity }
+    this.entities.set(entity.id, stored)
+    return stored
+  }
+
+  /** Drop every entity; the scene rebuilds.
+   * @returns when the registry is empty.
+   */
+  clear(): void {
+    this.entities.clear()
+  }
+
+  /** All static fixtures for NPC step probing.
+   * @returns fixture entities (kind === 'fixture').
+   */
+  fixtures(): WorldEntity[] {
+    return [...this.entities.values()].filter(entity => entity.kind === 'fixture')
+  }
+
+  /** All cars for the car-following gap.
+   * @returns car entities.
+   */
+  cars(): WorldEntity[] {
+    return [...this.entities.values()].filter(entity => entity.kind === 'car')
+  }
+
+  /** Whether one AABB at a candidate position overlaps any fixture.
+   * @param position - the candidate center.
+   * @param halfExtents - the mover's half extents.
+   * @param ignore - entity id excluded (e.g. the mover's own seat fixture).
+   * @returns the blocking fixture, or undefined when the step is clear.
+   */
+  blockingFixture(position: THREE.Vector3, halfExtents: THREE.Vector2, ignore?: string): WorldEntity | undefined {
+    for (const fixture of this.entities.values()) {
+      if (fixture.kind !== 'fixture' || fixture.id === ignore) continue
+      // Toppled rubble stays visible but no longer blocks walkers.
+      if (fixture.damage === 'destroyed') continue
+      const dx = Math.abs(position.x - fixture.position.x)
+      const dz = Math.abs(position.z - fixture.position.z)
+      if (dx < halfExtents.x + fixture.halfExtents.x && dz < halfExtents.y + fixture.halfExtents.y) return fixture
+    }
+    return undefined
+  }
+
+  /** Advance one destructible fixture's damage state by one step.
+   * @param id - the fixture id.
+   * @returns the next state, or undefined for unknown/already-destroyed.
+   */
+  damageStep(id: string): 'damaged' | 'destroyed' | undefined {
+    const entity = this.entities.get(id)
+    if (entity === undefined || entity.destructible !== true) return undefined
+    if (entity.damage === 'intact') {
+      entity.damage = 'damaged'
+      entity.object?.rotateZ(0.22)
+      if (entity.object !== undefined) entity.object.position.y -= 0.06
+      return 'damaged'
+    }
+    if (entity.damage === 'damaged') {
+      entity.damage = 'destroyed'
+      entity.object?.rotateX(1.15)
+      if (entity.object !== undefined) entity.object.position.y -= 0.12
+      return 'destroyed'
+    }
+    return undefined
+  }
+}
+
 /** One wandering member's runtime record. */
 type FloorNpc = {
+  /** Owning member key for durable visit reporting. */
+  readonly memberKey: string
+  /** Irritation 0..100: crowding and blocked steps accumulate, time decays. */
+  mood: number
+  /** Head-top mood chip while irritated or worse; removed when calm returns. */
+  moodChip: THREE.Sprite | null
+  /** Consecutive blocked steps; too many trigger a re-plan. */
+  blockedSteps: number
   readonly person: THREE.Group
   label: THREE.Sprite
   readonly screen: THREE.Mesh
@@ -123,6 +230,8 @@ interface NpcSeatPlan {
   readonly seat: THREE.Vector3
   /** The desk screen whose emissive lights while the member works seated. */
   readonly screen: THREE.Mesh
+  /** The desk group for fixture-damage visuals. */
+  readonly deskGroup: THREE.Group
 }
 
 /** Deterministic tree offsets inside one cluster (seeded LCG, no Math.random). */
@@ -186,8 +295,16 @@ export class CompanyScene {
   private readonly floorNpcs = new Map<string, FloorNpc>()
   /** Corridor z-line of the current floor; NPCs route walks through it. */
   private floorHallZ = 0
-  /** Walkable amenity anchors of the current floor. */
+  /** Car registry records aligned with the roadCars array order. */
+  private readonly worldEntities = new Map<string, WorldEntity>()
+  /** Located, bounded entities of the active floor (fixtures + movers). */
+  private readonly floorRegistry = new EntityRegistry()
+  /** Amenity place names aligned with the anchors. */
+  private floorAmenityNames: string[] = []
+  /** Amenity place names aligned with the anchors. */
   private floorAmenities: THREE.Vector3[] = []
+  /** Durable-visit reporter injected by the plugin; absent in tests. */
+  visitReporter: ((employeeId: string, place: string) => void) | null = null
   /** Road network graph nodes with adjacency; cars wander its edges randomly. */
   private roadGraph: Array<{ position: THREE.Vector3; neighbors: number[] }> = []
   /** Cars wandering the road graph with random edge choices and speeds. */
@@ -303,6 +420,7 @@ export class CompanyScene {
 
     this.roadGraph = []
     this.roadCars.length = 0
+    this.worldEntities.clear()
     this.randomRails.length = 0
     this.trafficLamps.length = 0
     this.floorNpcs.clear()
@@ -672,6 +790,12 @@ export class CompanyScene {
       const to = node.neighbors[Math.floor(Math.random() * node.neighbors.length)]
       if (to === undefined) continue
       this.roadCars.push({ object: car, from, to, t: Math.random(), speed: 3.5 + Math.random() * 4.5 })
+      this.worldEntities.set(`car-${String(this.roadCars.length - 1)}`, this.floorRegistry.register({
+        id: `car-${String(this.roadCars.length - 1)}`,
+        kind: 'car',
+        position: car.position.clone(),
+        halfExtents: new THREE.Vector2(0.8, 1.6),
+      }))
     }
 
     const rails: Array<[THREE.Group, number, number, number, number, number, number]> = [
@@ -735,6 +859,12 @@ export class CompanyScene {
       let toNode = this.roadGraph[car.to]
       if (fromNode === undefined || toNode === undefined) continue
       const length = fromNode.position.distanceTo(toNode.position)
+      // Car-following: hold while a same-direction leader on this edge sits
+      // inside the gap; cars queue instead of passing through each other.
+      const leaderGap = Math.min(...this.roadCars
+        .filter(other => other !== car && other.from === car.from && other.to === car.to && other.t > car.t)
+        .map(other => (other.t - car.t) * length), Number.POSITIVE_INFINITY)
+      if (leaderGap < 6) continue
       car.t += (car.speed * delta) / Math.max(length, 0.001)
       while (car.t >= 1) {
         car.t -= 1
@@ -753,6 +883,9 @@ export class CompanyScene {
       if (fromNode === undefined || toNode === undefined) continue
       car.object.position.lerpVectors(fromNode.position, toNode.position, car.t)
       car.object.lookAt(toNode.position)
+    }
+    for (const [index, car] of this.roadCars.entries()) {
+      this.worldEntities.get(`car-${String(index)}`)?.position.copy(car.object.position)
     }
   }
 
@@ -1169,7 +1302,9 @@ export class CompanyScene {
     const slabD = backD + HALL_D + ROOM_D
     this.floorHallZ = -slabD / 2 + backD + HALL_D / 2
     this.floorAmenities = []
+    this.floorAmenityNames = []
     this.floorNpcs.clear()
+    this.floorRegistry.clear()
 
     const slab = new THREE.Mesh(
       new THREE.PlaneGeometry(slabW, slabD),
@@ -1230,15 +1365,27 @@ export class CompanyScene {
       let fixture: THREE.Group
       if (index === pantryIndex) {
         fixture = this.buildPantry(skin, pieceW)
+        this.floorRegistry.register({ id: 'fixture-pantry-counter', kind: 'fixture', position: new THREE.Vector3(x, 0, frontCenterZ + pieceW / 4), halfExtents: new THREE.Vector2((pieceW - 2.5) / 2, 0.35), destructible: true, object: fixture })
+        this.floorAmenityNames.push('茶水区')
         this.floorAmenities.push(new THREE.Vector3(x + pieceW / 4, 0, frontCenterZ))
       } else if (index === loungeIndex) {
         fixture = this.buildLounge(skin, pieceW)
+        this.floorRegistry.register({ id: 'fixture-lounge-sofa', kind: 'fixture', position: new THREE.Vector3(x - pieceW / 4, 0, frontCenterZ + 1.8), halfExtents: new THREE.Vector2(2, 0.55), destructible: true, object: fixture })
+        this.floorRegistry.register({ id: 'fixture-lounge-table', kind: 'fixture', position: new THREE.Vector3(x, 0, frontCenterZ), halfExtents: new THREE.Vector2(0.9, 0.48), destructible: true, object: fixture })
+        this.floorAmenityNames.push('休息区')
         this.floorAmenities.push(new THREE.Vector3(x - pieceW / 4, 0, frontCenterZ))
       } else if (index === toiletIndex) {
         fixture = this.buildToilet(skin, pieceW)
+        for (const offset of [-1, 1]) {
+          this.floorRegistry.register({ id: `fixture-toilet-sink-${offset}`, kind: 'fixture', position: new THREE.Vector3(x + offset * 0.9, 0, frontCenterZ + pieceW / 4), halfExtents: new THREE.Vector2(0.4, 0.35), destructible: true, object: fixture })
+        }
+        this.floorAmenityNames.push('厕所')
         this.floorAmenities.push(new THREE.Vector3(x, 0, frontCenterZ))
       } else {
         fixture = this.buildSmokingArea(skin, pieceW)
+        this.floorRegistry.register({ id: 'fixture-smoking-bench', kind: 'fixture', position: new THREE.Vector3(x, 0, frontCenterZ + pieceW / 4), halfExtents: new THREE.Vector2((pieceW - 2) / 2, 0.45), destructible: true, object: fixture })
+        this.floorRegistry.register({ id: 'fixture-smoking-ashtray', kind: 'fixture', position: new THREE.Vector3(x + pieceW / 2 - 1.4, 0, frontCenterZ + pieceW / 4 - 1), halfExtents: new THREE.Vector2(0.25, 0.25), destructible: true, object: fixture })
+        this.floorAmenityNames.push('吸烟区')
         this.floorAmenities.push(new THREE.Vector3(x, 0, frontCenterZ))
       }
       fixture.position.set(x, 0, frontCenterZ)
@@ -1255,11 +1402,31 @@ export class CompanyScene {
   private spawnNpcs(seatPlans: readonly NpcSeatPlan[], roomOrigin: THREE.Vector3, doorSide: 'north' | 'south'): void {
     for (const plan of seatPlans) {
       const seat = plan.seat.clone().add(roomOrigin)
+      this.floorRegistry.register({
+        id: `fixture-desk-${plan.member.key}`,
+        kind: 'fixture',
+        position: seat.clone(),
+        halfExtents: new THREE.Vector2(0.8, 0.45),
+        destructible: true,
+        object: plan.deskGroup,
+      })
+      this.floorRegistry.register({
+        id: `fixture-pc-${plan.member.key}`,
+        kind: 'fixture',
+        position: seat.clone().add(new THREE.Vector3(0, 0, -0.32)),
+        halfExtents: new THREE.Vector2(0.35, 0.12),
+        destructible: true,
+        object: plan.screen,
+      })
       const figure = this.buildPerson(plan.member)
       figure.person.position.copy(seat).add(new THREE.Vector3(0, 0, 0.5))
       figure.person.position.y = SEAT_SINK
       this.floorGroup.add(figure.person)
       this.floorNpcs.set(plan.member.key, {
+        memberKey: plan.member.key,
+        mood: 0,
+        moodChip: null,
+        blockedSteps: 0,
         person: figure.person,
         label: figure.label,
         screen: plan.screen,
@@ -1420,7 +1587,8 @@ export class CompanyScene {
       const desk = this.buildMemberDesk(skin, seat.member.busy)
       desk.group.position.copy(position)
       group.add(desk.group)
-      npcSink?.push({ member: seat.member, seat: position.clone(), screen: desk.screen })
+      npcSink?.push({ member: seat.member, seat: position.clone(), screen: desk.screen, deskGroup: desk.group })
+      this.applyChatTail(desk.panel, seat.member)
     })
     return group
   }
@@ -1631,7 +1799,7 @@ export class CompanyScene {
   }
 
   /** Build one seated employee with a screen and status label. */
-  private buildMemberDesk(skin: CompanySkin, busy: boolean): { group: THREE.Group; screen: THREE.Mesh } {
+  private buildMemberDesk(skin: CompanySkin, busy: boolean): { group: THREE.Group; screen: THREE.Mesh; panel: THREE.Mesh } {
     const group = this.buildDesk(skin)
     const screen = new THREE.Mesh(
       new THREE.PlaneGeometry(0.62, 0.4),
@@ -1649,7 +1817,46 @@ export class CompanyScene {
     )
     stand.position.set(0, 0.76, -0.32)
     group.add(stand)
-    return { group, screen }
+    const panel = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.78, 0.5),
+      new THREE.MeshStandardMaterial({ color: 0xf8fafc }),
+    )
+    panel.position.set(0, 1.02, 0.34)
+    panel.rotation.y = Math.PI
+    group.add(panel)
+    return { group, screen, panel }
+  }
+
+  /** Paint one employee's real-session tail onto the bound screen panel.
+   * @param panel - the side screen mesh of the member's desk.
+   * @param member - the seated member whose latest texts render.
+   */
+  private applyChatTail(panel: THREE.Mesh, member: FloorMember): void {
+    const tail = member.chatTail ?? []
+    const canvas = document.createElement('canvas')
+    canvas.width = 256
+    canvas.height = 164
+    const draw = canvas.getContext('2d')
+    if (draw === null) return
+    draw.fillStyle = '#0b1220'
+    draw.fillRect(0, 0, canvas.width, canvas.height)
+    draw.font = '13px system-ui, "PingFang SC", sans-serif'
+    draw.fillStyle = '#a5f3fc'
+    let y = 20
+    for (const line of tail.slice(-3)) {
+      for (const chunk of line.slice(0, 60).match(/.{1,18}/g) ?? []) {
+        draw.fillText(chunk, 8, y)
+        y += 16
+        if (y > canvas.height - 8) break
+      }
+      if (y > canvas.height - 8) break
+    }
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.colorSpace = THREE.SRGBColorSpace
+    const material = panel.material as THREE.MeshStandardMaterial
+    material.map = texture
+    material.color.setHex(0xffffff)
+    material.needsUpdate = true
   }
 
   /** Build one independent person figure carrying its name and status chip.
@@ -1734,7 +1941,25 @@ export class CompanyScene {
    * @param time - elapsed scene seconds.
    */
   private advanceNpcs(delta: number, time: number): void {
+    // Pairwise crowding: close walkers yield (skip this frame's step) and
+    // both accumulate irritation; O(n^2) over a room-scale roster.
+    const walkers = [...this.floorNpcs.values()].filter(npc => npc.phase === 'walk')
+    const yielding = new Set<string>()
+    for (let i = 0; i < walkers.length; i++) {
+      for (let j = i + 1; j < walkers.length; j++) {
+        const left = walkers[i]
+        const right = walkers[j]
+        if (left === undefined || right === undefined) continue
+        if (left.person.position.distanceTo(right.person.position) < 0.7) {
+          yielding.add(right.person.uuid)
+          left.mood = Math.min(100, left.mood + 2)
+          right.mood = Math.min(100, right.mood + 2)
+        }
+      }
+    }
     for (const npc of this.floorNpcs.values()) {
+      npc.mood = Math.max(0, npc.mood - delta * 1.5)
+      this.syncMoodChip(npc)
       if (npc.phase === 'sit') {
         npc.person.position.y = SEAT_SINK + (npc.busy ? Math.abs(Math.sin(time * 6)) * 0.03 : 0)
         if (!npc.busy && time >= npc.nextDecisionAt) {
@@ -1754,6 +1979,7 @@ export class CompanyScene {
         if (waypoint === undefined) {
           if (npc.destination === 'desk') {
             npc.phase = 'sit'
+            if (this.visitReporter !== null) this.visitReporter(npc.memberKey, '工位')
             npc.person.position.copy(npc.seat.clone().add(new THREE.Vector3(0, 0, 0.5)))
             npc.person.position.y = SEAT_SINK
             npc.person.rotation.y = Math.PI
@@ -1761,17 +1987,46 @@ export class CompanyScene {
           } else {
             npc.phase = 'amenity'
             npc.dwellUntil = time + 3 + Math.random() * 5
+            const place = this.floorAmenityNames[typeof npc.destination === 'number' ? npc.destination : 0]
+            if (place !== undefined && this.visitReporter !== null) {
+              this.visitReporter(npc.memberKey, place)
+            }
           }
           continue
         }
+        if (yielding.has(npc.person.uuid)) continue
         const step = NPC_WALK_SPEED * delta
         const distance = npc.person.position.distanceTo(waypoint)
         if (distance <= step) {
           npc.person.position.copy(waypoint)
           npc.pathIndex += 1
         } else {
-          npc.person.position.lerp(waypoint, step / distance)
-          npc.person.lookAt(waypoint.x, 0, waypoint.z)
+          const next = npc.person.position.clone().lerp(waypoint, step / distance)
+          // Fixture AABB blocks the step: try sliding along x, then z; a fully
+          // blocked mover gains irritation and eventually re-plans home.
+          const blockedBy = this.floorRegistry.blockingFixture(next, NPC_HALF_EXTENTS)
+          if (blockedBy === undefined) {
+            npc.person.position.copy(next)
+            npc.blockedSteps = 0
+            npc.person.lookAt(waypoint.x, 0, waypoint.z)
+          } else {
+            const slideX = next.clone(); slideX.x = npc.person.position.x
+            const slideZ = next.clone(); slideZ.z = npc.person.position.z
+            if (this.floorRegistry.blockingFixture(slideX, NPC_HALF_EXTENTS) === undefined) {
+              npc.person.position.copy(slideX)
+            } else if (this.floorRegistry.blockingFixture(slideZ, NPC_HALF_EXTENTS) === undefined) {
+              npc.person.position.copy(slideZ)
+            } else {
+              npc.blockedSteps += 1
+              npc.mood = Math.min(100, npc.mood + 4)
+              if (npc.blockedSteps >= 6) this.beginWalk(npc, 'desk')
+            }
+            // A furious passer-by kicks the blocker one damage step.
+            if (npc.mood >= 85 && Math.random() < 0.4) {
+              this.floorRegistry.damageStep(blockedBy.id)
+              npc.mood = Math.max(0, npc.mood - 40)
+            }
+          }
         }
         continue
       }
@@ -1782,6 +2037,23 @@ export class CompanyScene {
         const chain = this.floorAmenities.length > 0 && Math.random() < 0.3
         this.beginWalk(npc, chain ? Math.floor(Math.random() * this.floorAmenities.length) : 'desk')
       }
+    }
+  }
+
+  /** Show or clear the head-top mood chip at the irritation threshold.
+   * @param npc - the member whose mood presentation syncs.
+   */
+  private syncMoodChip(npc: FloorNpc): void {
+    const irritated = npc.mood >= 50
+    if (irritated && npc.moodChip === null) {
+      const chip = labelSprite('😡', { size: 30 })
+      chip.position.set(0, 2.15, 0)
+      npc.person.add(chip)
+      npc.moodChip = chip
+    } else if (!irritated && npc.moodChip !== null) {
+      npc.person.remove(npc.moodChip)
+      npc.moodChip.material.dispose()
+      npc.moodChip = null
     }
   }
 

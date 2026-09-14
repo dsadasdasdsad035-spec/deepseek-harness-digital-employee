@@ -2264,6 +2264,7 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
   }
 
   const api: ApiProxy = {
+    setGroupDelivery: () => {},
     sessions: {
       list: request => ok(request, { items: [...sessions].sort((a, b) => b.updatedAt - a.updatedAt) }),
       search: (request, signal) => {

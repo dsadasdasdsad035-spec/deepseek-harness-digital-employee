@@ -413,7 +413,22 @@ Source: [`packages/compaction/compaction/src/types.ts:33`](../packages/compactio
 'company-group/message': CompanyGroupMessageEvent
 ```
 
-Source: [`packages/host/company-group-chat/src/types.ts:69`](../packages/host/company-group-chat/src/types.ts)
+Source: [`packages/host/company-group-chat/src/types.ts:107`](../packages/host/company-group-chat/src/types.ts)
+
+<a id="company-groupopened--log-only"></a>
+
+#### `company-group/opened` — log-only
+
+```ts persistence-catalog
+/**
+ * Creation marker: this session hosts one company's group.
+ *
+ * @param companyId - the company whose group this session hosts.
+ */
+'company-group/opened': CompanyGroupOpenedEvent
+```
+
+Source: [`packages/host/company-group-chat/src/types.ts:96`](../packages/host/company-group-chat/src/types.ts)
 
 ### `digital-employee/*`
 

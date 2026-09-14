@@ -22,8 +22,8 @@
       "types": "./lib/types/invariant.d.ts",
       "default": "./lib/invariant.js"
     },
-    "./src/*": "./src/*",
     "./package.json": "./package.json",
+    "./src/*": "./src/*",
     "./task-attempts": {
       "types": "./lib/types/task-attempts.d.ts",
       "default": "./lib/types/task-attempts.js"
@@ -31,6 +31,10 @@
     "./task-events": {
       "types": "./lib/types/task-events.d.ts",
       "default": "./lib/types/task-events.js"
+    },
+    "./whereabouts": {
+      "types": "./lib/types/whereabouts.d.ts",
+      "default": "./lib/types/whereabouts.js"
     }
   },
   "files": [

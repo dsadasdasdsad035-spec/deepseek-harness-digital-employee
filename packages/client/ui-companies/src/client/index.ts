@@ -7,10 +7,15 @@ import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import { OrganizationNav } from './CompanyNav.tsx'
 import { CompanyWorkspace, type CompanyWorkspaceInjected } from './CompanyWorkspace.tsx'
 import { CompanyGroupStore, CompanyStore } from './store.ts'
+import { companyGroupMessageDefinition } from './group-definition.ts'
+import { GroupMessageNodeView } from './GroupMessageNodeView.tsx'
 
 export { CompanyGroupStore, CompanyStore } from './store.ts'
 export type { CompanyGroupRemote, CompanyGroupState, CompanyGroupViewResult, CompanyRemote, CompanySeatVerdict, CompanyState } from './store.ts'
 export { OrganizationNav } from './CompanyNav.tsx'
+export { companyGroupMessageDefinition } from './group-definition.ts'
+export type { CompanyGroupMessageChatData } from './group-definition.ts'
+export { GroupMessageNodeView } from './GroupMessageNodeView.tsx'
 export type { OrganizationNavItem, OrganizationNavInjected } from './CompanyNav.tsx'
 export { CompanyWorkspace } from './CompanyWorkspace.tsx'
 export type { CompanyWorkspaceInjected } from './CompanyWorkspace.tsx'
@@ -18,12 +23,22 @@ export type { CompanyWorkspaceInjected } from './CompanyWorkspace.tsx'
 /** Required client services and the generated companies namespace. */
 export const inject = [
   'slots', 'layout', 'sessions', 'locale', 'remote', 'remote.companies', 'remote.companyGroups',
+  'conversationEvents',
 ]
 
 /** Register one navigation command and one full-screen shell overlay console. */
 export function apply(ctx: ClientContext): void {
+  ctx.conversationEvents.register(companyGroupMessageDefinition)
+  ctx.slots.inject('conversation.chat.node', () => ctx.slots.register(
+    { name: 'conversation.chat.node', key: 'company-group-message' }, GroupMessageNodeView))
   const controller = new CompanyStore(ctx.remote.companies, ctx.get('sessions')?.list)
   const groupController = new CompanyGroupStore(ctx.remote.companyGroups)
+  // Durable whereabouts: scene arrival hooks report through the group gateway.
+  controller.visitReporter = (employeeId: string, place: string) => {
+    void ctx.remote.companyGroups.reportEmployeeVisit({ employeeId: employeeId as never, place })
+      .then(() => undefined)
+      .catch(() => undefined)
+  }
   const openStore = createSnapshotStore({ open: false })
   const layout = ctx.layout
   const open = (): void => { openStore.set({ open: true }) }
@@ -61,6 +76,11 @@ export function apply(ctx: ClientContext): void {
     controller,
     groupStore: groupController,
     hooks: { snapshot: controller.store, open: openStore },
+    openSession: (id: string) => {
+      // The client session list only refreshes on reconnect; a just-created
+      // group session must be pulled into the baseline before selecting it.
+      void ctx.sessions.refresh().then(() => { ctx.sessions.open(id as never) }).catch(() => undefined)
+    },
     close,
     openEmployeeWorkspace: () => {
       close()

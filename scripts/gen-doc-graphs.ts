@@ -458,7 +458,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'company-group-chat',
     title: 'Company group chat gateway',
     mode: 'core',
-    consumers: ['ui-companies'],
+    consumers: [],
     note: 'Assembles per-company group sessions from company bindings and the task lifecycle log; speaking turns run through the employee agent.',
   },
   {
