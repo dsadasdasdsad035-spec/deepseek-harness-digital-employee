@@ -352,6 +352,17 @@ export class CompanyScene {
   private readonly floorLights: THREE.HemisphereLight[] = []
   /** One wandering employee NPC: person figure, desk references, and behavior. */
   private readonly floorNpcs = new Map<string, FloorNpc>()
+  /** In-flight camera focus tween (position + target, eased). */
+  private focusTween: {
+    readonly fromPos: THREE.Vector3
+    readonly toPos: THREE.Vector3
+    readonly fromTarget: THREE.Vector3
+    readonly toTarget: THREE.Vector3
+    readonly start: number
+    readonly duration: number
+  } | null = null
+  /** Object the camera tracks after a focus click; cleared on view switch. */
+  private followObject: THREE.Object3D | null = null
   /** Owning company id of the open floor; tags employee world-state reports. */
   private floorCompanyId: string | undefined
   /** Corridor z-line of the current floor; NPCs route walks through it. */
@@ -443,6 +454,8 @@ export class CompanyScene {
    */
   setCamera(view: 'campus' | 'floor'): void {
     this.view = view
+    this.focusTween = null
+    this.followObject = null
     if (view === 'campus') {
       this.camera.position.set(18, 16, 24)
       this.controls.target.set(0, 0, 0)
@@ -451,6 +464,54 @@ export class CompanyScene {
       this.controls.target.set(0, 0, 1)
     }
     this.controls.update()
+  }
+
+  /** Ease the camera onto one entity and keep tracking it while it moves.
+   * @param object - the entity to frame (its world position is re-read each
+   * frame, so walking NPCs and driving cars stay centered).
+   * @param distance - camera distance from the focus point.
+   * @param height - focus point height above the entity's ground position.
+   */
+  focusOn(object: THREE.Object3D, distance: number, height: number): void {
+    this.followObject = object
+    const target = object.position.clone()
+    target.y = height
+    const direction = this.camera.position.clone().sub(this.controls.target).normalize()
+    const toPos = target.clone().add(direction.multiplyScalar(distance))
+    this.focusTween = {
+      fromPos: this.camera.position.clone(),
+      toPos,
+      fromTarget: this.controls.target.clone(),
+      toTarget: target.clone(),
+      start: this.clock.elapsedTime,
+      duration: 0.7,
+    }
+  }
+
+  /** Advance the focus tween and follow tracking one frame. */
+  private advanceFocus(time: number): void {
+    const follow = this.followObject
+    if (follow !== null && follow.parent === null) {
+      this.followObject = null
+      return
+    }
+    if (this.focusTween !== null) {
+      const raw = Math.min((time - this.focusTween.start) / this.focusTween.duration, 1)
+      const eased = raw * raw * (3 - 2 * raw)
+      this.camera.position.lerpVectors(this.focusTween.fromPos, this.focusTween.toPos, eased)
+      this.controls.target.lerpVectors(this.focusTween.fromTarget, this.focusTween.toTarget, eased)
+      if (raw >= 1) this.focusTween = null
+      return
+    }
+    if (follow !== null) {
+      // Track: shift the orbit center with the entity, preserving the user's
+      // viewing offset so rotation and zoom stay untouched.
+      const next = follow.position.clone()
+      next.y = this.controls.target.y
+      const delta = next.sub(this.controls.target)
+      this.controls.target.add(delta)
+      this.camera.position.add(delta)
+    }
   }
 
   /** Replace the campus content with the current company list.
@@ -873,6 +934,7 @@ export class CompanyScene {
         t: restored ? saved.t : Math.random(),
         speed: restored ? saved.speed : 3.5 + Math.random() * 4.5,
       })
+      car.userData = { kind: 'car' }
       this.worldEntities.set(`car-${String(this.roadCars.length - 1)}`, this.floorRegistry.register({
         id: `car-${String(this.roadCars.length - 1)}`,
         kind: 'car',
@@ -2482,6 +2544,7 @@ export class CompanyScene {
       this.advanceRandomRails(delta)
       this.updateTrafficLamps(time)
     }
+    this.advanceFocus(time)
     this.controls.update()
     this.renderer.render(active, this.camera)
   }
@@ -2514,8 +2577,16 @@ export class CompanyScene {
         this.callbacks.onCompanyClick(data.companyId as string)
         return
       }
-      if (data.kind === 'member' && this.callbacks.onMemberClick !== undefined) {
-        this.callbacks.onMemberClick(data.memberKey as string)
+      if (data.kind === 'car') {
+        this.focusOn(hit.object.parent ?? hit.object, 10, 1.2)
+        return
+      }
+      if (data.kind === 'member') {
+        const person = findPersonGroup(hit.object)
+        if (person !== null) this.focusOn(person, 5.5, 1.1)
+        if (this.callbacks.onMemberClick !== undefined) {
+          this.callbacks.onMemberClick(data.memberKey as string)
+        }
         return
       }
       if (data.kind === 'seat' && this.callbacks.onSeatClick !== undefined) {
@@ -2542,6 +2613,16 @@ export class CompanyScene {
     clearGroup(this.floorGroup)
     this.renderer.dispose()
   }
+}
+
+/** Walk up to the person group owning one member hit. */
+function findPersonGroup(object: THREE.Object3D): THREE.Group | null {
+  for (let current: THREE.Object3D | null = object; current !== null; current = current.parent) {
+    if ('kind' in current.userData && (current.userData as { kind?: string }).kind === 'member') {
+      return current instanceof THREE.Group ? current : null
+    }
+  }
+  return null
 }
 
 /** Walk up to the nearest group carrying interaction data. */
