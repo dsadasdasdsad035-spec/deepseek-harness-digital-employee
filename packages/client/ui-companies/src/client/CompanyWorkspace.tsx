@@ -141,10 +141,29 @@ function Console({ controller, groupStore, useSnapshot, useOpen, close, openEmpl
     }
   }), [state.companies, state.floors, controller])
 
+  // Structural signature: busy-count churn must NOT rebuild the campus (the
+  // whole scene — cars included — would otherwise reset on every poll); the
+  // busy text refreshes through updateCampusSummaries instead.
+  const campusStructureKey = campusCompanies.map(company => [
+    company.id, company.name, company.category, company.address,
+    company.skinId ?? '', String(company.memberCount),
+  ].join(':')).join('|') + `#${String(promoImages.size)}`
+
   useEffect(() => {
     if (!open || sceneRef.current === null || mode.kind !== 'campus') return
-    sceneRef.current.setCampus(campusCompanies, promoImages, controller.worldState?.cars)
-  }, [open, mode, campusCompanies, promoImages])
+    // In-place rebuilds resume from the LIVE motion snapshot (exact cars and
+    // rails); the durable host state seeds only the first build.
+    const live = sceneRef.current.preserveMotion()
+    const savedCars = Object.keys(live.cars).length > 0 ? live.cars : controller.worldState?.cars
+    sceneRef.current.setCampus(campusCompanies, promoImages, savedCars, live.rails)
+    // The key (not campusCompanies) is the trigger: busy-poll identity churn
+    // must never rebuild the campus and reset its motion.
+  }, [open, mode, campusStructureKey])
+
+  useEffect(() => {
+    if (!open || sceneRef.current === null || mode.kind !== 'campus') return
+    sceneRef.current.updateCampusSummaries(campusCompanies)
+  }, [open, mode, campusCompanies])
 
   useEffect(() => {
     if (!open) return

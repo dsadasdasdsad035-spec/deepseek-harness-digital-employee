@@ -112,6 +112,16 @@ export interface SavedCarState {
   readonly speed: number
 }
 
+/** Saved rail-run resume state; line geometry is fixed per index. */
+export interface SavedRailState {
+  readonly t: number
+  readonly direction: 1 | -1
+  readonly speed: number
+}
+
+/** Rail index → saved resume state. */
+export type SavedRailStates = Record<string, SavedRailState>
+
 /** Car id → saved motion state. */
 export type SavedCarStates = Record<string, SavedCarState>
 
@@ -445,8 +455,14 @@ export class CompanyScene {
    * @param companies - company houses to render, each with its own skin id.
    * @param promoImages - admitted promo images keyed by company id.
    * @param savedCars - durable fleet states keyed by stable car id; absent ids spawn randomly.
+   * @param savedRails - rail-run resume states; in-place rebuilds continue exactly.
    */
-  setCampus(companies: readonly CampusCompany[], promoImages: ReadonlyMap<string, string>, savedCars?: SavedCarStates): void {
+  setCampus(
+    companies: readonly CampusCompany[],
+    promoImages: ReadonlyMap<string, string>,
+    savedCars?: SavedCarStates,
+    savedRails?: SavedRailStates,
+  ): void {
     clearGroup(this.campusGroup)
     // One campus has one sky: the first company's skin sets the environment
     // while each house carries its own skin's house, plot, and decorations.
@@ -475,7 +491,7 @@ export class CompanyScene {
     this.trafficLamps.length = 0
     this.floorNpcs.clear()
     this.floorAmenities = []
-    this.buildCity(environment, savedCars)
+    this.buildCity(environment, savedCars, savedRails)
 
     const districts: Array<[number, number]> = [[-14, -14], [14, -14], [-14, 14], [14, 14]]
     const names = ['一区', '二区', '三区', '四区']
@@ -651,6 +667,7 @@ export class CompanyScene {
     )
     summary.position.y = (2.2 + 1.55) * scale
     group.add(summary)
+    ;(group.userData as { summary?: THREE.Sprite }).summary = summary
 
     const billboardMaterial: THREE.MeshStandardMaterial = promoDataUrl === undefined
       ? new THREE.MeshStandardMaterial({ color: 0xf8fafc, side: THREE.DoubleSide })
@@ -676,7 +693,8 @@ export class CompanyScene {
       group.add(sign)
     }
 
-    group.userData = { kind: 'company', companyId: company.id }
+    group.userData = { kind: 'company', companyId: company.id, summary }
+    ;(group.userData as { summary: THREE.Sprite }).summary = summary
     return group
   }
 
@@ -775,7 +793,7 @@ export class CompanyScene {
   /** Build the whole city environment around the campus and register its movers.
    * @param skin - the environment skin (the first company's).
    */
-  private buildCity(skin: CompanySkin, savedCars?: SavedCarStates): void {
+  private buildCity(skin: CompanySkin, savedCars?: SavedCarStates, savedRails?: SavedRailStates): void {
     const night = skin.campus.groundStyle === 'night-grid'
     this.buildRoad(0, -RING_HALF, 2 * RING_HALF + ROAD_W, true)
     this.buildRoad(0, RING_HALF, 2 * RING_HALF + ROAD_W, true)
@@ -867,18 +885,26 @@ export class CompanyScene {
       [this.buildHighSpeedRail(), HSR_X, HSR_X, -95, HSR_Y + 0.37, 11, 17],
       [this.buildMetro(), METRO_X, METRO_X, -95, METRO_Y + 0.32, 8, 13],
     ]
-    for (const [object, x1, x2, zOrStart, y, minSpeed, maxSpeed] of rails) {
+    rails.forEach(([object, x1, x2, zOrStart, y, minSpeed, maxSpeed], index) => {
       this.campusGroup.add(object)
       const alongZ = x1 === x2
       const from = new THREE.Vector3(x1, y, zOrStart)
       const to = alongZ ? new THREE.Vector3(x2, y, -zOrStart) : new THREE.Vector3(x2, y, zOrStart)
-      const direction = Math.random() < 0.5 ? 1 : -1
+      const saved = savedRails?.[`rail-${String(index)}`]
+      const restored = saved !== undefined && saved.t >= 0 && saved.t <= 1 && saved.speed > 0
+      const direction = restored ? saved.direction : (Math.random() < 0.5 ? 1 : -1)
       this.randomRails.push({
-        object, from, to, t: direction === 1 ? 0 : 1,
-        speed: minSpeed + Math.random() * (maxSpeed - minSpeed),
-        direction, dwell: 0, minSpeed, maxSpeed,
+        object,
+        from,
+        to,
+        t: restored ? saved.t : (direction === 1 ? 0 : 1),
+        speed: restored ? saved.speed : minSpeed + Math.random() * (maxSpeed - minSpeed),
+        direction,
+        dwell: 0,
+        minSpeed,
+        maxSpeed,
       })
-    }
+    })
   }
 
   /** Build the road-graph adjacency the wandering cars traverse. */
@@ -1534,6 +1560,46 @@ export class CompanyScene {
       }
     }
     return { cars, employees }
+  }
+
+  /** Capture the live campus motion for in-place rebuilds.
+   * @returns current car and rail states keyed by their stable ids.
+   */
+  preserveMotion(): { cars: SavedCarStates; rails: SavedRailStates } {
+    const cars: SavedCarStates = {}
+    for (const [index, car] of this.roadCars.entries()) {
+      cars[`car-${String(index)}`] = { from: car.from, to: car.to, t: car.t, speed: car.speed }
+    }
+    const rails: SavedRailStates = {}
+    for (const [index, rail] of this.randomRails.entries()) {
+      rails[`rail-${String(index)}`] = { t: rail.t, direction: rail.direction, speed: rail.speed }
+    }
+    return { cars, rails }
+  }
+
+  /** Refresh the floating busy summaries without rebuilding the campus.
+   * @param companies - current campus rows (member/busy counts).
+   */
+  updateCampusSummaries(companies: readonly CampusCompany[]): void {
+    for (const company of companies) {
+      const house = this.campusGroup.children.find(child =>
+        (child.userData as { kind?: string }).kind === 'company'
+        && (child.userData as { companyId?: string }).companyId === company.id)
+      if (house === undefined) continue
+      const previous = (house.userData as { summary?: THREE.Sprite }).summary
+      if (previous === undefined) continue
+      const next = labelSprite(
+        `${company.category === '' ? '未分类' : company.category} · ${String(company.memberCount)} 人 · 在忙 ${String(company.busyCount)}`,
+        { size: 30, color: '#eef2ff', background: '#1e293bcc' },
+      )
+      next.position.copy(previous.position)
+      house.add(next)
+      house.remove(previous)
+      const oldMap = previous.material.map
+      previous.material.dispose()
+      if (oldMap !== null) oldMap.dispose()
+      ;(house.userData as { summary: THREE.Sprite }).summary = next
+    }
   }
 
   /** Register one room's seated members as wandering NPCs in world coordinates.
