@@ -101,6 +101,9 @@ const SEAT_SINK = -0.24
 /** NPC body half extents for fixture collision probes. */
 const NPC_HALF_EXTENTS = new THREE.Vector2(0.28, 0.28)
 
+/** Probe spacing for whole-segment walk clearance, smaller than the smallest fixture so no sliver is stepped over. */
+const SEGMENT_PROBE_STEP = 0.15
+
 /** NPC walking speed in world units per second. */
 const NPC_WALK_SPEED = 1.7
 
@@ -232,6 +235,36 @@ export class EntityRegistry {
     return undefined
   }
 
+  /**
+   * Whether a mover can traverse the whole straight segment without entering a
+   * fixture. Endpoint-only checks miss a blocker sitting between them, so a
+   * segment is probed at `SEGMENT_PROBE_STEP` spacing from `from` to `to`.
+   * @param from - segment start (the mover's current position).
+   * @param to - segment end.
+   * @param halfExtents - the mover's half extents.
+   * @param ignore - entity ids excluded (the mover's own seat fixtures).
+   * @returns the first blocking fixture along the segment, or undefined when the whole segment is clear.
+   */
+  segmentBlockingFixture(
+    from: THREE.Vector3,
+    to: THREE.Vector3,
+    halfExtents: THREE.Vector2,
+    ...ignore: readonly string[]
+  ): WorldEntity | undefined {
+    const dx = to.x - from.x
+    const dz = to.z - from.z
+    const length = Math.hypot(dx, dz)
+    const steps = Math.max(1, Math.ceil(length / SEGMENT_PROBE_STEP))
+    const probe = new THREE.Vector3()
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps
+      probe.set(from.x + dx * t, 0, from.z + dz * t)
+      const hit = this.blockingFixture(probe, halfExtents, ...ignore)
+      if (hit !== undefined) return hit
+    }
+    return undefined
+  }
+
   /** Advance one destructible fixture's damage state by one step.
    * @param id - the fixture id.
    * @returns the next state, or undefined for unknown/already-destroyed.
@@ -335,6 +368,132 @@ function groundMaterial(skin: CompanySkin): THREE.Material {
   if (style === 'reflective') return new THREE.MeshPhysicalMaterial({ color: skin.campus.ground, metalness: 0.2, roughness: 0.25 })
   if (style === 'grass') return new THREE.MeshStandardMaterial({ color: skin.campus.ground, roughness: 1 })
   return new THREE.MeshStandardMaterial({ color: skin.campus.ground, roughness: 0.9 })
+}
+
+/** Consecutive blocked frames before a walker retreats or re-plans. */
+const NPC_BLOCKED_LIMIT = 4
+
+/** Per-frame mood added by one blocked frame. */
+const NPC_BLOCK_MOOD_STEP = 4
+
+/** Inputs for one blocked-step resolution. */
+export interface BlockedStepInput {
+  /** Blocked frames accumulated so far. */
+  readonly blockedSteps: number
+  /** Irritation carried into this frame, 0..100. */
+  readonly mood: number
+  /** Adopted side point, when a traversable detour was found. */
+  readonly sidePoint?: THREE.Vector3
+  /** Adopted rejoin point, when a traversable detour was found. */
+  readonly pastPoint?: THREE.Vector3
+  /** Sign of travel along the blocked axis. */
+  readonly forward: number
+}
+
+/** Environment a blocked step is resolved against. */
+export interface BlockedStepContext {
+  /** The walker's current position. */
+  readonly from: THREE.Vector3
+  /** Whether the blocking leg runs along x (else z). */
+  readonly alongX: boolean
+  /** Whether a candidate point is reachable without entering a fixture. */
+  readonly legClear: (spot: THREE.Vector3) => boolean
+}
+
+/** Outcome of resolving one blocked walker frame. */
+export interface BlockedStepResolution {
+  /** Adopted detour points (prepended to the path), when a traversable one exists. */
+  readonly detour?: readonly [THREE.Vector3, THREE.Vector3]
+  /** Updated blocked-frame count. */
+  readonly blockedSteps: number
+  /** Updated mood after any block increment. */
+  readonly mood: number
+  /** Perpendicular retreat position, when the block limit was reached and one is open. */
+  readonly retreat?: THREE.Vector3
+  /** Whether the walker must re-plan from its current position. */
+  readonly replan: boolean
+}
+
+/** Frequency with which a seated idle member chooses to leave its desk (else waits). */
+const SEATED_LEAVE_PROBABILITY = 0.55
+/** Lower bound, seconds, of a seated idle member's next decision after it stays. */
+const SEATED_WAIT_MIN_SECONDS = 4
+/** Span, seconds, added to the lower bound for the next decision. */
+const SEATED_WAIT_SPAN_SECONDS = 8
+
+/** Inputs for one seated idle decision. */
+export interface SeatedIdleInput {
+  /** Elapsed scene seconds. */
+  readonly time: number
+  /** Time the member next becomes eligible to decide; it decides at or after this. */
+  readonly nextDecisionAt: number
+  /** Number of amenity anchors the member may pick from. */
+  readonly amenityCount: number
+  /** Draw for leave-vs-wait. */
+  readonly leaveRoll: number
+  /** Draw for which amenity to visit. */
+  readonly pickRoll: number
+  /** Draw for how long to wait when it stays. */
+  readonly waitRoll: number
+}
+
+/** Outcome of one seated idle decision: leave for an amenity, or wait longer. */
+export interface SeatedIdleDecision {
+  /** Amenity anchor to walk to, or null to stay seated. */
+  readonly destination: number | null
+  /** Next eligibility time, meaningful only when staying. */
+  readonly nextDecisionAt: number
+}
+
+/**
+ * Decide whether a seated idle member leaves for an amenity or waits. Depends
+ * only on its inputs — busy state is deliberately absent, so a working member
+ * wanders on the same cadence as an idle one. Pure so the cadence is testable
+ * without a WebGL scene.
+ * @param input - elapsed time, eligibility time, amenity count, and draws.
+ * @returns the chosen destination (or null) and the next eligibility time.
+ */
+export function seatedIdleDecision(input: SeatedIdleInput): SeatedIdleDecision {
+  if (input.nextDecisionAt > input.time) return { destination: null, nextDecisionAt: input.nextDecisionAt }
+  if (input.amenityCount > 0 && input.leaveRoll < SEATED_LEAVE_PROBABILITY) {
+    const pick = Math.floor(input.pickRoll * input.amenityCount)
+    return { destination: Math.min(input.amenityCount - 1, pick), nextDecisionAt: input.nextDecisionAt }
+  }
+  return {
+    destination: null,
+    nextDecisionAt: input.time + SEATED_WAIT_MIN_SECONDS + input.waitRoll * SEATED_WAIT_SPAN_SECONDS,
+  }
+}
+
+/**
+ * Resolve one frame in which a walker's interpolated step is blocked, keeping
+ * the "advance or re-plan" invariant: an adopted detour must be fully
+ * traversable, an untraversable frame counts toward the give-up limit, and a
+ * stall that reaches that limit retreats or re-plans instead of spinning.
+ * Pure so the walker invariants are testable without a WebGL scene.
+ * @param input - blocked frames so far and the accepted detour, when any.
+ * @param context - walker position, blocked axis, and reachability probe.
+ * @returns the detour to adopt, updated counters, and any retreat/re-plan order.
+ */
+export function resolveBlockedStep(
+  input: BlockedStepInput,
+  context: BlockedStepContext,
+): BlockedStepResolution {
+  if (input.sidePoint !== undefined && input.pastPoint !== undefined) {
+    return { detour: [input.sidePoint, input.pastPoint], blockedSteps: 0, mood: input.mood, replan: false }
+  }
+  const blockedSteps = input.blockedSteps + 1
+  const mood = Math.min(100, input.mood + NPC_BLOCK_MOOD_STEP)
+  if (blockedSteps < NPC_BLOCKED_LIMIT) return { blockedSteps, mood, replan: false }
+  const sideways = context.alongX
+    ? [new THREE.Vector3(0, 0, 0.5), new THREE.Vector3(0, 0, -0.5)]
+    : [new THREE.Vector3(0.5, 0, 0), new THREE.Vector3(-0.5, 0, 0)]
+  const retreat = sideways
+    .map(offset => context.from.clone().add(offset))
+    .find(spot => context.legClear(spot))
+  return retreat === undefined
+    ? { blockedSteps, mood, replan: true }
+    : { blockedSteps: 0, mood, retreat, replan: false }
 }
 
 /** Owns the renderer, camera, controls, both scene graphs, and the animation loop. */
@@ -2292,34 +2451,74 @@ export class CompanyScene {
       ? npc.seat.clone().add(new THREE.Vector3(0, 0, 0.5))
       : this.floorAmenities[destination]?.clone() ?? npc.seat.clone()
     const from = npc.person.position.clone()
-    const inRoom = from.distanceTo(npc.seat) < ROOM_D / 2 + 1
+    // Inside-room test over the room's own footprint around the seat. A radius
+    // test reached a unit beyond the room and misjudged a walker waiting just
+    // outside the door wall as being inside, routing it straight through it.
+    const inRoom = Math.abs(from.x - npc.seat.x) <= ROOM_W / 2
+      && Math.abs(from.z - npc.seat.z) <= ROOM_D / 2
+    const ignores = [`fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`] as const
     const points: THREE.Vector3[] = []
-    const push = (x: number, z: number): void => {
-      const last = points.at(-1)
+    const append = (list: THREE.Vector3[], x: number, z: number): void => {
+      const last = list.at(-1)
       if (last !== undefined && Math.abs(last.x - x) < 0.3 && Math.abs(last.z - z) < 0.3) return
       if (Math.abs(from.x - x) < 0.3 && Math.abs(from.z - z) < 0.3) return
-      points.push(new THREE.Vector3(x, 0, z))
+      list.push(new THREE.Vector3(x, 0, z))
     }
-    if (inRoom && !toDesk) {
-      // Any door side: walk to the door line, then down to the hall.
-      push(npc.door.x, from.z)
-      push(npc.door.x, this.floorHallZ)
-    } else if (!inRoom && toDesk) {
-      push(from.x, this.floorHallZ)
-      if (Math.abs(npc.door.x - npc.seat.x) > 0.3) {
-        // Side door: hall to the door's z line, then along x through the gap.
-        push(npc.door.x, this.floorHallZ)
-        push(npc.door.x, npc.seat.z)
-        push(npc.seat.x, npc.seat.z)
-      } else {
-        push(npc.door.x, this.floorHallZ)
-        push(npc.door.x, npc.seat.z)
+    // Routes are door-aware on both sides, so a re-plan (the busy flip and the
+    // stalled-walker watchdog both re-enter here) never sends a walker backwards:
+    // one already inside travels the door's x column within the room instead of
+    // stepping out to the hall first, which oscillated against re-planning.
+    const insideToDesk = (list: THREE.Vector3[]): void => {
+      append(list, npc.door.x, from.z)
+      append(list, npc.door.x, npc.seat.z)
+      append(list, npc.seat.x, npc.seat.z)
+    }
+    const outsideToDesk = (list: THREE.Vector3[]): void => {
+      append(list, from.x, this.floorHallZ)
+      append(list, npc.door.x, this.floorHallZ)
+      append(list, npc.door.x, npc.seat.z)
+      append(list, npc.seat.x, npc.seat.z)
+    }
+    const insideToOutside = (list: THREE.Vector3[]): void => {
+      append(list, npc.door.x, from.z)
+      append(list, npc.door.x, this.floorHallZ)
+    }
+    const outsideToTarget = (list: THREE.Vector3[]): void => {
+      append(list, from.x, this.floorHallZ)
+    }
+    if (toDesk) {
+      if (inRoom) insideToDesk(points)
+      else outsideToDesk(points)
+      append(points, target.x, target.z)
+    } else {
+      if (inRoom) insideToOutside(points)
+      else outsideToTarget(points)
+      append(points, target.x, this.floorHallZ)
+      append(points, target.x, target.z)
+    }
+    // Cross-room check as a safety net: a route can still be blocked by an
+    // unexpected fixture. Rebuild through the door without reverting progress.
+    const legsClear = (list: readonly THREE.Vector3[]): boolean => {
+      let previous = from
+      for (const point of list) {
+        if (this.floorRegistry.segmentBlockingFixture(previous, point, NPC_HALF_EXTENTS, ...ignores) !== undefined) return false
+        previous = point
       }
-    } else if (!inRoom && !toDesk) {
-      push(from.x, this.floorHallZ)
+      return true
     }
-    push(target.x, this.floorHallZ)
-    push(target.x, target.z)
+    if (!legsClear(points)) {
+      points.length = 0
+      if (toDesk) {
+        if (inRoom) insideToDesk(points)
+        else outsideToDesk(points)
+        append(points, target.x, target.z)
+      } else {
+        if (inRoom) insideToOutside(points)
+        else outsideToTarget(points)
+        append(points, target.x, this.floorHallZ)
+        append(points, target.x, target.z)
+      }
+    }
     npc.path = points
     npc.pathIndex = 0
     npc.destination = destination
@@ -2363,17 +2562,19 @@ export class CompanyScene {
       this.syncMoodChip(npc)
       if (npc.phase === 'sit') {
         npc.person.position.y = SEAT_SINK + (npc.busy ? Math.abs(Math.sin(time * 6)) * 0.03 : 0)
-        if (!npc.busy && time >= npc.nextDecisionAt) {
-          if (this.floorAmenities.length > 0 && Math.random() < 0.55) {
-            this.beginWalk(npc, Math.floor(Math.random() * this.floorAmenities.length))
-          } else {
-            npc.nextDecisionAt = time + 4 + Math.random() * 8
-          }
-        }
+        // Busy is presentation only: it never gates the idle decision, so a
+        // working member wanders on the same cadence as an idle one.
+        const decision = seatedIdleDecision({
+          time,
+          nextDecisionAt: npc.nextDecisionAt,
+          amenityCount: this.floorAmenities.length,
+          leaveRoll: Math.random(),
+          pickRoll: Math.random(),
+          waitRoll: Math.random(),
+        })
+        if (decision.destination !== null) this.beginWalk(npc, decision.destination)
+        else npc.nextDecisionAt = decision.nextDecisionAt
         continue
-      }
-      if (npc.busy && npc.destination !== 'desk') {
-        this.beginWalk(npc, 'desk')
       }
       if (npc.phase === 'walk') {
         const waypoint = npc.path[npc.pathIndex]
@@ -2410,12 +2611,16 @@ export class CompanyScene {
           npc.lastAdvanceAt = time
         } else {
           const next = npc.person.position.clone().lerp(waypoint, step / distance)
-          const ownClear = (spot: THREE.Vector3): boolean =>
-            this.floorRegistry.blockingFixture(spot, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`) === undefined
+          const ignores = [`fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`] as const
+          // A detour is only viable when the WHOLE leg is traversable, not just
+          // its endpoints: an endpoint-only check adopts a detour whose entry
+          // leg is blocked, so the walker never advances and re-detours forever.
+          const legClear = (spot: THREE.Vector3): boolean =>
+            this.floorRegistry.segmentBlockingFixture(npc.person.position, spot, NPC_HALF_EXTENTS, ...ignores) === undefined
           // Fixture AABB blocks the step: detour around the obstacle's box
           // (sidestep past its extent, rejoin beyond it); axis-aligned legs
           // make the old slide a no-op on the movement axis.
-          const blockedBy = this.floorRegistry.blockingFixture(next, NPC_HALF_EXTENTS, `fixture-desk-${npc.memberKey}`, `fixture-pc-${npc.memberKey}`)
+          const blockedBy = this.floorRegistry.blockingFixture(next, NPC_HALF_EXTENTS, ...ignores)
           if (blockedBy === undefined) {
             npc.person.position.copy(next)
             npc.blockedSteps = 0
@@ -2442,33 +2647,26 @@ export class CompanyScene {
                 }
                 return [sidePoint, pastPoint] as const
               })
-              .find(([sidePoint, pastPoint]) => ownClear(sidePoint) && ownClear(pastPoint))
-            if (detour !== undefined) {
-              npc.path = [...detour, ...npc.path.slice(npc.pathIndex)]
+              .find(([sidePoint, pastPoint]) => legClear(sidePoint) && legClear(pastPoint))
+            const blocked = resolveBlockedStep(
+              {
+                blockedSteps: npc.blockedSteps,
+                mood: npc.mood,
+                forward,
+                ...detour === undefined ? {} : { sidePoint: detour[0], pastPoint: detour[1] },
+              },
+              { from: npc.person.position, alongX, legClear },
+            )
+            if (blocked.detour !== undefined) {
+              // The whole leg is traversable, so the walker advances toward
+              // sidePoint next frame; this frame is not a block.
+              npc.path = [blocked.detour[0], blocked.detour[1], ...npc.path.slice(npc.pathIndex)]
               npc.pathIndex = 0
-              npc.blockedSteps = 0
-              npc.lastAdvanceAt = time
-            } else {
-              // No detour fits: retreat perpendicular, then give up to a re-plan.
-              npc.blockedSteps += 1
-              npc.mood = Math.min(100, npc.mood + 4)
-              if (npc.blockedSteps >= 4) {
-                const heading = waypoint.clone().sub(npc.person.position)
-                const retreatAlongX = Math.abs(heading.x) > Math.abs(heading.z)
-                const sideways = retreatAlongX
-                  ? [new THREE.Vector3(0, 0, 0.5), new THREE.Vector3(0, 0, -0.5)]
-                  : [new THREE.Vector3(0.5, 0, 0), new THREE.Vector3(-0.5, 0, 0)]
-                const open = sideways
-                  .map(offset => npc.person.position.clone().add(offset))
-                  .find(spot => ownClear(spot))
-                if (open !== undefined) {
-                  npc.person.position.copy(open)
-                  npc.blockedSteps = 0
-                } else {
-                  this.beginWalk(npc, 'desk')
-                }
-              }
             }
+            npc.blockedSteps = blocked.blockedSteps
+            npc.mood = blocked.mood
+            if (blocked.retreat !== undefined) npc.person.position.copy(blocked.retreat)
+            if (blocked.replan) this.beginWalk(npc, 'desk')
             // A furious passer-by kicks the blocker one damage step.
             if (npc.mood >= 85 && Math.random() < 0.4) {
               this.floorRegistry.damageStep(blockedBy.id)
@@ -2480,7 +2678,6 @@ export class CompanyScene {
       }
       // amenity dwell
       npc.person.position.y = Math.abs(Math.sin(time * 2 + npc.seat.x)) * 0.02
-      if (npc.busy) continue
       if (time >= npc.dwellUntil) {
         const chain = this.floorAmenities.length > 0 && Math.random() < 0.3
         this.beginWalk(npc, chain ? Math.floor(Math.random() * this.floorAmenities.length) : 'desk')
@@ -2520,10 +2717,11 @@ export class CompanyScene {
     npc.label.material.dispose()
     if (oldMap !== null) oldMap.dispose()
     npc.label = next
+    // Busy drives presentation only. A member that is seated lights its screen;
+    // a member away from its desk keeps its current trip and shows the label
+    // alone — it is never routed home just because it went busy.
     if (busy) {
-      // Working members head straight home; the screen lights on arrival.
-      if (npc.phase !== 'sit') this.beginWalk(npc, 'desk')
-      else this.setScreen(npc, true)
+      if (npc.phase === 'sit') this.setScreen(npc, true)
     } else {
       this.setScreen(npc, false)
       npc.nextDecisionAt = 0

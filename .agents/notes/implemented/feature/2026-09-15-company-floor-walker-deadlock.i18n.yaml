@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-15-company-floor-walker-deadlock.md
+2026-09-15-company-floor-walker-deadlock.md: 14b4a444ee9d8e75fa73be462c488a1db605a9c1
+2026-09-15-company-floor-walker-deadlock.zh.md: 997bb011590fe0042d8cca9ec216dc01f708c804
