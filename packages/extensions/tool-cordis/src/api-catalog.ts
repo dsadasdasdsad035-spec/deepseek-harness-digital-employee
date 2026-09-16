@@ -393,11 +393,6 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'message', description: 'Client response carrying the server request\'s rpcId.' }],
         returns: 'Transport receipt for the response delivery.',
       },
-      {
-        signature: 'setGroupDelivery(delivery: (sessionId: SessionId, text: string) => Promise<boolean>): void',
-        description: 'Install the company-group composer delivery used by `session.prompt`: the company-group gateway self-registers when both plugins are active.',
-        parameters: [{ name: 'delivery', description: 'returns true when the addressed session is one of its groups and the submission was delivered there.' }],
-      },
     ],
   },
   {
@@ -726,8 +721,8 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
   },
   {
     key: 'companyGroupChat',
-    summary: 'Remote-only facade assembling company groups from existing services.',
-    description: 'Remote-only facade assembling company groups from existing services.',
+    summary: 'Lead-routed company groups assembled from existing services.',
+    description: 'Lead-routed company groups assembled from existing services.',
     methods: [
       {
         signature: '@Remote(\'openCompanyGroup\') async openCompanyGroup(companyId: CompanyId): Promise<CompanyGroupView>',
@@ -736,22 +731,16 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the group view: members, quoted messages, and the session id.',
       },
       {
-        signature: '@Remote(\'sendCompanyGroupMessage\') async sendCompanyGroupMessage(companyId: CompanyId, text: string): Promise<CompanyGroupView>',
-        description: 'Land one user message in the group; @mentions route speaking turns.',
-        parameters: [{ name: 'companyId', description: 'the company whose group receives the message.' }, { name: 'text', description: 'the user\'s message text.' }],
-        returns: 'the group view after the message landed (turns stream later).',
+        signature: '@Remote(\'listCompanyGroupMembers\') async listCompanyGroupMembers(companyId: CompanyId): Promise<CompanyGroupMember[]>',
+        description: 'Read one company\'s current group roster without opening its group.\n\nRead-only by contract: the mention picker re-queries on every keystroke, so this must not create the group session, dispatch queued deliveries, or consult session persistence — that work belongs to CompanyGroupChatGateway.openCompanyGroup.',
+        parameters: [{ name: 'companyId', description: 'the company whose bound members are read.' }],
+        returns: 'the company\'s current group members with resolved display names.',
       },
       {
-        signature: 'async settle(): Promise<void>',
-        description: 'Wait for every queued speaking turn to settle.',
-        parameters: [],
-        returns: 'when the serialized turn chain is drained.',
-      },
-      {
-        signature: 'async pollNow(): Promise<void>',
-        description: 'Run one lifecycle-log poll immediately instead of waiting the interval.',
-        parameters: [],
-        returns: 'when the poll (and any queued trigger routing) completes.',
+        signature: '@Remote(\'cancelCompanyGroupTurn\') cancelCompanyGroupTurn(companyId: CompanyId): boolean',
+        description: 'Cancel the currently speaking member turn of one company\'s group.',
+        parameters: [{ name: 'companyId', description: 'the company whose speaking member is cancelled.' }],
+        returns: 'true when a live member turn was cancelled.',
       },
       {
         signature: '@Remote(\'reportEmployeeVisit\') async reportEmployeeVisit(request: ReportEmployeeVisitRequest): Promise<EmployeePresenceView>',
@@ -766,10 +755,15 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the presence view, or an empty history for unknown employees.',
       },
       {
-        signature: 'async deliverFromComposer(sessionId: SessionId, text: string): Promise<boolean>',
-        description: 'Deliver one composer submission when the target session is a group.',
-        parameters: [{ name: 'sessionId', description: 'the session the composer addressed.' }, { name: 'text', description: 'the submitted text.' }],
-        returns: 'true when the session is a company group and the message landed.',
+        signature: 'async settle(): Promise<void>',
+        description: 'Wait for every in-flight member delivery chain to drain.',
+        parameters: [],
+      },
+      {
+        signature: 'async pollNow(): Promise<void>',
+        description: 'Run one lifecycle-log poll immediately instead of waiting the interval.',
+        parameters: [],
+        returns: 'when the poll (and any queued trigger routing) completes.',
       },
     ],
   },
@@ -958,6 +952,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         signature: 'async createTask( request: CreateDigitalEmployeeTaskRequest, resolvedEmployee?: ResolvedDigitalEmployee, ): Promise<AgentHandle>',
         description: 'Resolve an active employee, then create its fully composed root Agent.',
         parameters: [{ name: 'request', description: 'employee identity plus root Agent creation options.' }, { name: 'resolvedEmployee', description: 'exact Host-authorized composition, when already resolved.' }],
+        returns: 'the published Agent handle.',
+      },
+      {
+        signature: 'async resumeTask( request: ResumeDigitalEmployeeTaskRequest, resolvedEmployee?: ResolvedDigitalEmployee, ): Promise<AgentHandle>',
+        description: 'Resume one persisted employee root session under the employee\'s current composition. The persisted identity event must name the same employee; identity and instruction events already in the log are never re-appended, so the resumed Agent carries exactly the history it produced.',
+        parameters: [{ name: 'request', description: 'employee identity plus resume Agent creation options.' }, { name: 'resolvedEmployee', description: 'exact Host-authorized composition, when already resolved.' }],
         returns: 'the published Agent handle.',
       },
       {
@@ -5847,6 +5847,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ResumeAgentOptions',
     declaration: 'export interface ResumeAgentOptions {\n    readonly resumeSessionId: SessionId;\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
+  },
+  {
+    name: 'ResumeDigitalEmployeeTaskRequest',
+    declaration: 'export interface ResumeDigitalEmployeeTaskRequest {\n    readonly employeeId: DigitalEmployeeInstanceId;\n    readonly resumeSessionId: SessionId;\n    readonly memory?: Omit<DigitalEmployeeMemoryQuery, \'employeeId\'>;\n    readonly agentOptions?: AgentOptions;\n    readonly modelSelection?: ModelSelection;\n    readonly signal?: AbortSignal;\n}',
   },
   {
     name: 'RpcError',

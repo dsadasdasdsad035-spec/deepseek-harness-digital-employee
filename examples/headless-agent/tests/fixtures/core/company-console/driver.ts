@@ -5,10 +5,19 @@ import { dirname } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
 import { appendTaskLifecycleEvent } from '@deepseek-ai/dsh-digital-employee-file/task-events'
+import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('company console driver requires a config path')
+
+/** Land one user message through the group's standard prompt path: the Lead followup. */
+async function sendGroupMessage(ctx: Context, sessionId: string, text: string): Promise<void> {
+  const agent = ctx.agents.get(SessionId(sessionId))
+  if (agent === undefined) throw new Error(`group Lead agent "${sessionId}" is not live`)
+  agent.followup(createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'user' } }))
+  await agent.whenIdle()
+}
 
 function acceptance(stage: string, data: Readonly<Record<string, unknown>>): void {
   process.stdout.write(`${JSON.stringify({ type: 'acceptance', stage, ...data })}\n`)
@@ -117,7 +126,7 @@ try {
   const openedGroup = await groups.openCompanyGroup(company.id)
   acceptance('group-opened', { members: openedGroup.members.length })
 
-  await groups.sendCompanyGroupMessage(company.id, '@Alice 重点放在Q3交付')
+  await sendGroupMessage(ctx, openedGroup.sessionId, '@Alice 重点放在Q3交付')
   await groups.settle()
   acceptance('group-mention', {
     last: messageTail(await groups.openCompanyGroup(company.id)),
@@ -134,7 +143,7 @@ try {
     last: messageTail(await groups.openCompanyGroup(company.id)),
   })
 
-  await groups.sendCompanyGroupMessage(company.id, '@Bob FORCE_FAIL')
+  await sendGroupMessage(ctx, openedGroup.sessionId, '@Bob FORCE_FAIL')
   await groups.settle()
   acceptance('group-fallback', {
     last: messageTail(await groups.openCompanyGroup(company.id)),

@@ -413,7 +413,7 @@ Source: [`packages/compaction/compaction/src/types.ts:33`](../packages/compactio
 'company-group/message': CompanyGroupMessageEvent
 ```
 
-Source: [`packages/host/company-group-chat/src/types.ts:107`](../packages/host/company-group-chat/src/types.ts)
+Source: [`packages/host/company-group-chat/src/types.ts:129`](../packages/host/company-group-chat/src/types.ts)
 
 <a id="company-groupopened--log-only"></a>
 
@@ -428,7 +428,43 @@ Source: [`packages/host/company-group-chat/src/types.ts:107`](../packages/host/c
 'company-group/opened': CompanyGroupOpenedEvent
 ```
 
-Source: [`packages/host/company-group-chat/src/types.ts:96`](../packages/host/company-group-chat/src/types.ts)
+Source: [`packages/host/company-group-chat/src/types.ts:118`](../packages/host/company-group-chat/src/types.ts)
+
+<a id="company-groupturn-delivered--log-only"></a>
+
+#### `company-group/turn-delivered` — log-only
+
+```ts persistence-catalog
+/**
+ * One settled delivery: the queued member turn spoke, degraded to its
+ * deterministic fallback, or was dropped (member no longer bound).
+ *
+ * @param queueSeq - seq of the settled `company-group/turn-queued` event.
+ */
+'company-group/turn-delivered': CompanyGroupTurnDeliveredEvent
+```
+
+Source: [`packages/host/company-group-chat/src/types.ts:147`](../packages/host/company-group-chat/src/types.ts)
+
+<a id="company-groupturn-queued--log-only"></a>
+
+#### `company-group/turn-queued` — log-only
+
+```ts persistence-catalog
+/**
+ * One queued delivery into an employee's continuable member session.
+ *
+ * @param employeeId - the employee whose member session receives the delivery.
+ * @param memberSessionId - browser-safe member session identity.
+ * @param displayName - speaker display name at queue time.
+ * @param situation - the delivery situation handed to the member turn.
+ * @param context - human-readable trigger summary.
+ * @param dedupKey - task lifecycle dedup cursor.
+ */
+'company-group/turn-queued': CompanyGroupTurnQueuedEvent
+```
+
+Source: [`packages/host/company-group-chat/src/types.ts:140`](../packages/host/company-group-chat/src/types.ts)
 
 ### `digital-employee/*`
 

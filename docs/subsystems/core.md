@@ -833,7 +833,7 @@ Source: [`packages/core/company/src/index.ts`](../../packages/core/company/src/i
 
 ### `ctx.companyGroupChat` — `CompanyGroupChatGateway`
 
-Remote-only facade assembling company groups from existing services.
+Lead-routed company groups assembled from existing services.
 
 ```ts cordis-catalog
 /** Open (or create) one company's group and return its current view.
@@ -842,22 +842,22 @@ Remote-only facade assembling company groups from existing services.
  */
 @Remote('openCompanyGroup') async openCompanyGroup(companyId: CompanyId): Promise<CompanyGroupView>
 
-/** Land one user message in the group; @mentions route speaking turns.
- * @param companyId - the company whose group receives the message.
- * @param text - the user's message text.
- * @returns the group view after the message landed (turns stream later).
+/** Read one company's current group roster without opening its group.
+ *
+ * Read-only by contract: the mention picker re-queries on every keystroke, so
+ * this must not create the group session, dispatch queued deliveries, or
+ * consult session persistence — that work belongs to
+ * {@link CompanyGroupChatGateway.openCompanyGroup}.
+ * @param companyId - the company whose bound members are read.
+ * @returns the company's current group members with resolved display names.
  */
-@Remote('sendCompanyGroupMessage') async sendCompanyGroupMessage(companyId: CompanyId, text: string): Promise<CompanyGroupView>
+@Remote('listCompanyGroupMembers') async listCompanyGroupMembers(companyId: CompanyId): Promise<CompanyGroupMember[]>
 
-/** Wait for every queued speaking turn to settle.
- * @returns when the serialized turn chain is drained.
+/** Cancel the currently speaking member turn of one company's group.
+ * @param companyId - the company whose speaking member is cancelled.
+ * @returns true when a live member turn was cancelled.
  */
-async settle(): Promise<void>
-
-/** Run one lifecycle-log poll immediately instead of waiting the interval.
- * @returns when the poll (and any queued trigger routing) completes.
- */
-async pollNow(): Promise<void>
+@Remote('cancelCompanyGroupTurn') cancelCompanyGroupTurn(companyId: CompanyId): boolean
 
 /** Record one employee amenity arrival into the durable history.
  * @param request - the arriving employee and the amenity place name.
@@ -871,15 +871,16 @@ async pollNow(): Promise<void>
  */
 @Remote('employeePresence') async employeePresence(request: EmployeePresenceRequest): Promise<EmployeePresenceView>
 
-/** Deliver one composer submission when the target session is a group.
- * @param sessionId - the session the composer addressed.
- * @param text - the submitted text.
- * @returns true when the session is a company group and the message landed.
+/** Wait for every in-flight member delivery chain to drain. */
+async settle(): Promise<void>
+
+/** Run one lifecycle-log poll immediately instead of waiting the interval.
+ * @returns when the poll (and any queued trigger routing) completes.
  */
-async deliverFromComposer(sessionId: SessionId, text: string): Promise<boolean>
+async pollNow(): Promise<void>
 ```
 
-Types: [CompanyGroupView](../user/guide/digital-employees.md) · [CompanyId](../user/guide/digital-employees.md) · [EmployeePresenceRequest](../user/guide/digital-employees.md) · [EmployeePresenceView](../user/guide/digital-employees.md) · [ReportEmployeeVisitRequest](../user/guide/digital-employees.md)
+Types: [CompanyGroupMember](../user/guide/digital-employees.md) · [CompanyGroupView](../user/guide/digital-employees.md) · [CompanyId](../user/guide/digital-employees.md) · [EmployeePresenceRequest](../user/guide/digital-employees.md) · [EmployeePresenceView](../user/guide/digital-employees.md) · [ReportEmployeeVisitRequest](../user/guide/digital-employees.md)
 
 Source: [`packages/host/company-group-chat/src/index.ts`](../../packages/host/company-group-chat/src/index.ts)
 
@@ -1032,6 +1033,17 @@ Composes a resolved employee through preset and system-prompt extensions.
  * @returns the published Agent handle.
  */
 async createTask( request: CreateDigitalEmployeeTaskRequest, resolvedEmployee?: ResolvedDigitalEmployee, ): Promise<AgentHandle>
+
+/**
+ * Resume one persisted employee root session under the employee's current
+ * composition. The persisted identity event must name the same employee;
+ * identity and instruction events already in the log are never re-appended,
+ * so the resumed Agent carries exactly the history it produced.
+ * @param request - employee identity plus resume Agent creation options.
+ * @param resolvedEmployee - exact Host-authorized composition, when already resolved.
+ * @returns the published Agent handle.
+ */
+async resumeTask( request: ResumeDigitalEmployeeTaskRequest, resolvedEmployee?: ResolvedDigitalEmployee, ): Promise<AgentHandle>
 
 /**
  * Create a temporary, non-persisted preview Agent from a validated synthetic employee.

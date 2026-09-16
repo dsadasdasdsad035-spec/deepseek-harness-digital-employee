@@ -1950,15 +1950,7 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     return ok(request, namespaceView(descriptor))
   }
 
-  // Company-group composer delivery; installed through setGroupDelivery by the
-  // group gateway whenever both plugins are active (either load order).
-  let groupDelivery: ((sessionId: SessionId, text: string) => Promise<boolean>) | undefined
-
   return {
-    setGroupDelivery(delivery: (sessionId: SessionId, text: string) => Promise<boolean>): void {
-      groupDelivery = delivery
-    },
-
     sessions: {
       // Attached sessions summarize from memory; persisted-but-unattached (cold)
       // sessions merge in from the persistence store so history survives restarts.
@@ -2393,24 +2385,8 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             details: { value: clientTimeZone },
           })
         }
-        // Company group sessions have no root Agent: the composer submission
-        // routes through the group gateway's installed delivery when present.
-        if (groupDelivery !== undefined) {
-          const groupText = content
-            .filter(part => part.type === 'text')
-            .map(part => part.text)
-            .join('')
-          if (groupText === '') {
-            return err(request, {
-              code: 'attachment-error',
-              message: 'Company group conversations accept text messages only.',
-              details: { reason: 'GROUP_REQUIRES_TEXT' },
-            })
-          }
-          if (await groupDelivery(sessionId, groupText)) {
-            return ok(request, { accepted: true })
-          }
-        }
+        // Company groups are ordinary Lead-routed sessions: their prompt goes
+        // through the same agent followup path as every chat session.
         const resolved = await turnAgentFor<{ accepted: true }>(request, sessionId)
         if ('refused' in resolved) return resolved.refused
         const agent = resolved.agent

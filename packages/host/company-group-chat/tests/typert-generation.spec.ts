@@ -13,7 +13,8 @@ describe('company group chat Typert artifacts', () => {
     expect(artifact).toBeDefined()
     expect(artifact!.remote!.dts).toContain("'companyGroups'")
     expect(artifact!.remote!.dts).toContain('openCompanyGroup:')
-    expect(artifact!.remote!.dts).toContain('sendCompanyGroupMessage:')
+    expect(artifact!.remote!.dts).toContain('listCompanyGroupMembers:')
+    expect(artifact!.remote!.dts).toContain('cancelCompanyGroupTurn:')
     expect(artifact!.remote!.dts).toContain('reportEmployeeVisit:')
     expect(artifact!.remote!.dts).toContain('employeePresence:')
 

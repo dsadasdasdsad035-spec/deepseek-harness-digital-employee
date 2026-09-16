@@ -16,7 +16,6 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
     }
   }
   return {
-    setGroupDelivery: () => {},
     sessions: {
       async list(request) {
         if (overrides.crashOn === 'session.list') throw new Error('impl crashed')

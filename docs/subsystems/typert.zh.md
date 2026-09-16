@@ -246,17 +246,7 @@ Root interface of the unified API. New client-request domain = one new file pair
  * @returns Transport receipt for the response delivery.
  */
 respond(message: ClientResponse): Promise<RpcReceipt>
-
-/**
- * Install the company-group composer delivery used by `session.prompt`:
- * the company-group gateway self-registers when both plugins are active.
- * @param delivery - returns true when the addressed session is one of its
- * groups and the submission was delivered there.
- */
-setGroupDelivery(delivery: (sessionId: SessionId, text: string) => Promise<boolean>): void
 ```
-
-Types: [SessionId](core.zh.md)
 
 Source: [`packages/host/apiproxy/src/api/index.ts`](../../packages/host/apiproxy/src/api/index.ts)
 

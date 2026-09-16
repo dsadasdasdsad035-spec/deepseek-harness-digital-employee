@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-host-company-group-chat",
-  "description": "Per-company work groups: event-sourced group sessions with employee-voiced task broadcasts",
+  "description": "Per-company work groups on the agent-loop spine: Lead-routed group sessions driving continuable employee member sessions",
   "version": "0.1.1-rc.2",
   "publishConfig": {
     "access": "public"

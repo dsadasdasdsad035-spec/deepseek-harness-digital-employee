@@ -86,6 +86,28 @@ export interface CompanyGroupMessageEvent {
   readonly context?: string
 }
 
+/** Payload of one `company-group/turn-queued` session event. */
+export interface CompanyGroupTurnQueuedEvent {
+  /** The employee whose continuable member session receives the delivery. */
+  readonly employeeId: DigitalEmployeeInstanceId
+  /** Browser-safe member session identity for live generation projection. */
+  readonly memberSessionId: string
+  /** Speaker display name at queue time, for the group view's typing indicator. */
+  readonly displayName: string
+  /** The delivery situation handed to the member turn; never a script. */
+  readonly situation: string
+  /** Human-readable trigger summary; also the deterministic fallback line basis. */
+  readonly context: string
+  /** Task lifecycle dedup cursor (`task:<seq>`); mention deliveries carry none. */
+  readonly dedupKey?: string
+}
+
+/** Payload of one `company-group/turn-delivered` session event. */
+export interface CompanyGroupTurnDeliveredEvent {
+  /** Seq of the `company-group/turn-queued` event this delivery settled. */
+  readonly queueSeq: number
+}
+
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
     /**
@@ -105,5 +127,23 @@ declare module '@deepseek-ai/dsh-session/types' {
      * @param context - human-readable trigger summary.
      */
     'company-group/message': CompanyGroupMessageEvent
+    /**
+     * One queued delivery into an employee's continuable member session.
+     *
+     * @param employeeId - the employee whose member session receives the delivery.
+     * @param memberSessionId - browser-safe member session identity.
+     * @param displayName - speaker display name at queue time.
+     * @param situation - the delivery situation handed to the member turn.
+     * @param context - human-readable trigger summary.
+     * @param dedupKey - task lifecycle dedup cursor.
+     */
+    'company-group/turn-queued': CompanyGroupTurnQueuedEvent
+    /**
+     * One settled delivery: the queued member turn spoke, degraded to its
+     * deterministic fallback, or was dropped (member no longer bound).
+     *
+     * @param queueSeq - seq of the settled `company-group/turn-queued` event.
+     */
+    'company-group/turn-delivered': CompanyGroupTurnDeliveredEvent
   }
 }

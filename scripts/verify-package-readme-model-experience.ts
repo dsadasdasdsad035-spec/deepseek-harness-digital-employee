@@ -61,7 +61,7 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/client/hmr': { kind: 'none', reason: 'Browser-side UI plugin layer; registers nothing model-facing.' },
   'packages/core/company': { kind: 'none', reason: 'Company Service Definition; stores company records and registers nothing model-facing.' },
   'packages/core/company-file': { kind: 'none', reason: 'File-backed company store; registers nothing model-facing.' },
-  'packages/host/company-group-chat': { kind: 'none', reason: 'The gateway only quotes speaking-turn outputs into group sessions; the employee model calls run in the digital employee agent child sessions.' },
+  'packages/host/company-group-chat': { kind: 'none', reason: 'The gateway routes mentions and quotes member utterances into the group session; the employee model calls run in the continuable member sessions.' },
   'packages/host/company-management': { kind: 'none', reason: 'Console-facing Remote gateway; registers nothing model-facing.' },
   'packages/client/ui-companies': { kind: 'none', reason: 'Browser-side console plugin; registers nothing model-facing.' },
   'packages/interaction/notification': { kind: 'none', reason: 'Host-side alert delivery; the seam registers no prompt, schema, or result of its own.' },

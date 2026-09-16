@@ -1,13 +1,14 @@
 import type { Context } from '@deepseek-ai/cordis'
 
 /**
- * Keyless live-agent stub: the company floor projection only reads the
- * registry for in-process running agents, and this fixture has none — every
- * lookup resolves to `undefined`, exactly like an idle deployment.
+ * Real agent spine for the fixture: the company group Lead is a true root
+ * Agent whose router spends zero model calls, so the loop loads without any
+ * LLM adapter. The floor projection reads the same live registry; with no
+ * declarative agents configured, every running verdict stays idle.
  */
 export const name = 'company-console-agents-stub'
 
-/** Register the stub registry the management gateway injects. */
+/** Mount the registry and loop the group gateway drives. */
 export function apply(ctx: Context): void {
-  ctx.reflect.provide('agents', { get: () => undefined })
+  void ctx
 }

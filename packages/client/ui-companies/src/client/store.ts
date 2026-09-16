@@ -320,6 +320,9 @@ export type CompanyGroupViewResult = Extract<
   { ok: true }
 >['value']
 
+/** One bound group member as the mention picker reads it. */
+export type CompanyGroupMemberView = CompanyGroupViewResult['members'][number]
+
 /** Browser state for one mounted group conversation. */
 export interface CompanyGroupState {
   status: 'idle' | 'loading' | 'ready' | 'error'
@@ -361,15 +364,6 @@ export class CompanyGroupStore {
     this.startPolling(companyId)
   }
 
-  /** Land one user message; @mentions trigger employee turns host-side.
-   * @param companyId - the company whose group receives the message.
-   * @param text - the message text.
-   */
-  async send(companyId: string, text: string): Promise<void> {
-    const outcome = await this.remote.sendCompanyGroupMessage(companyId as never, text)
-    if (outcome.ok) this.store.set({ ...this.store.getSnapshot(), view: outcome.value })
-  }
-
   /** Open (or create) one company's group and return its session id.
    * @param companyId - the company whose group opens.
    * @returns the group session id for main-surface navigation.
@@ -380,6 +374,16 @@ export class CompanyGroupStore {
     const view = this.store.getSnapshot().view
     if (view === null) throw new Error('company group: open produced no view')
     return view.sessionId
+  }
+
+  /**
+   * Read one company's current bound members without opening its group.
+   * @param companyId - the company whose roster is read.
+   * @returns the bound members, or an empty roster on transport failure.
+   */
+  async membersOf(companyId: string): Promise<readonly CompanyGroupMemberView[]> {
+    const outcome = await this.remote.listCompanyGroupMembers(companyId as never)
+    return outcome.ok ? outcome.value : []
   }
 
   /** Stop polling; the console closes the group panel. */

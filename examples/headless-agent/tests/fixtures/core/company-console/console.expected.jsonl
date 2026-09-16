@@ -7,9 +7,9 @@
 {"type":"acceptance","stage":"floor-task-busy","groups":[{"department":"总裁","members":[{"name":"Alice","busy":false,"busyKind":null}]},{"department":"法务","members":[]},{"department":"人力","members":[]},{"department":"行政","members":[]},{"department":"IT","members":[{"name":"Bob","busy":true,"busyKind":"task"}]},{"department":"销售","members":[]}]}
 {"type":"acceptance","stage":"department-deleted","groups":[{"department":"总裁","members":[{"name":"Alice","busy":false,"busyKind":null}]},{"department":"法务","members":[]},{"department":"人力","members":[]},{"department":"行政","members":[]},{"department":"销售","members":[]},{"department":"(未分配)","members":[{"name":"Bob","busy":true,"busyKind":"task"}]}]}
 {"type":"acceptance","stage":"group-opened","members":2}
-{"type":"acceptance","stage":"group-mention","last":{"speakerKind":"employee","displayName":"Alice","text":"stub-turn: 收到，我按自己的节奏跟进。","context":"收到 @Alice 的消息"}}
-{"type":"acceptance","stage":"group-task-broadcast","last":{"speakerKind":"employee","displayName":"Bob","text":"stub-turn: 收到，我按自己的节奏跟进。","context":"task:1"}}
-{"type":"acceptance","stage":"group-fallback","last":{"speakerKind":"employee","displayName":"Bob","text":"收到 @Bob 的消息","context":"收到 @Bob 的消息"}}
+{"type":"acceptance","stage":"group-mention","last":{"speakerKind":"employee","displayName":"Alice","text":"stub-turn: 收到，我按自己的节奏跟进。","context":"回复 @Alice 的消息"}}
+{"type":"acceptance","stage":"group-task-broadcast","last":{"speakerKind":"employee","displayName":"Bob","text":"stub-turn: 收到，我按自己的节奏跟进。","context":"任务完成「整理周报」"}}
+{"type":"acceptance","stage":"group-fallback","last":{"speakerKind":"employee","displayName":"Bob","text":"回复 @Bob 的消息","context":"回复 @Bob 的消息"}}
 {"type":"acceptance","stage":"world-empty","cars":0,"employees":0}
 {"type":"acceptance","stage":"world-reported","carT":0.5,"aliceX":3}
 {"type":"acceptance","stage":"promo-set","mediaType":"image/png","width":1,"height":1}
