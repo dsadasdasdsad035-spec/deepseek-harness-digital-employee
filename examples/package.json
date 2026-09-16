@@ -36,6 +36,7 @@
     "@deepseek-ai/dsh-digital-employee": "workspace:*",
     "@deepseek-ai/dsh-digital-employee-agent": "workspace:*",
     "@deepseek-ai/dsh-digital-employee-file": "workspace:*",
+    "@deepseek-ai/dsh-digital-employee-sqlite": "workspace:*",
     "@deepseek-ai/dsh-e2b": "workspace:*",
     "@deepseek-ai/dsh-experimental-agent-team": "workspace:*",
     "@deepseek-ai/dsh-experimental-tool-agent-team": "workspace:*",

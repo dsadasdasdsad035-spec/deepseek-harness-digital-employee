@@ -35,4 +35,4 @@ Provider 本身不直接增加 token；Consumer 控制请求中包含的有界�
 
 ## 已知限制与后续工作
 
-- **单个 JSON 文档**：大规模员工集合需要替换为数据库 Provider；Service Definition 允许在不改动 Consumer 的情况下替换实现。
+- **单个 JSON 文档**：写入在写锁下整体重写文档；多进程共享部署应使用 SQLite Provider（`@deepseek-ai/dsh-digital-employee-sqlite`），它可以在不改动 Consumer 的情况下替换本实现。

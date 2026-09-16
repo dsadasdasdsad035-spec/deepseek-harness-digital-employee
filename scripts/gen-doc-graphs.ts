@@ -424,7 +424,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'digital-employee',
     title: 'Digital employee registry and provider seam',
     mode: 'seam',
-    implementations: ['digital-employee-file'],
+    implementations: ['digital-employee-file', 'digital-employee-sqlite'],
     consumers: ['digital-employee-agent', 'digital-employee-management'],
     note: 'Owns template and instance lookup, lifecycle mutation, memory, audit, and durable employee records; composition and Host task admission consume the resolved employee state.',
   },

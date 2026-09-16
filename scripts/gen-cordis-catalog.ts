@@ -628,6 +628,7 @@ const DIGITAL_EMPLOYEE_TYPE_EXEMPTIONS = Object.fromEntries([
   'DigitalEmployeeInstance',
   'DigitalEmployeeMemoryCandidate',
   'DigitalEmployeeMemoryDecision',
+  'ResumeDigitalEmployeeTaskRequest',
   'DigitalEmployeeMemoryId',
   'DigitalEmployeeMemoryProjectionEvent',
   'DigitalEmployeeMemoryQuery',

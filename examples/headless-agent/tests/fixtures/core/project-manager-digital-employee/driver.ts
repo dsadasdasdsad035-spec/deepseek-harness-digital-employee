@@ -73,11 +73,34 @@ try {
   const visibleTools = tools.schemas(scope)
     .map(tool => tool.name)
     .sort()
+  // The loader path must honor the same restriction as the catalog: a skill
+  // that EXISTS globally but is absent from this employee's authority must be
+  // neither listable nor loadable in the employee scope.
+  const foreignSkill = 'foreign-skill'
+  ctx.skills.register({ name: foreignSkill, description: 'Foreign', source: 'fixture', content: 'Foreign body.' })
+  const foreignVisible = (await ctx.skills.list()).map(skill => skill.name).includes(foreignSkill)
+  // Re-list the employee scope after registering: the foreign skill must stay
+  // absent from the restricted view even though it now exists globally.
+  const foreignListed = (await skills.list({ scope })).map(skill => skill.name).includes(foreignSkill)
+  const foreignLoaded = await skills.get(foreignSkill, { scope })
+  acceptance('skill-isolation', {
+    foreignSkill,
+    foreignVisibleGlobally: foreignVisible,
+    foreignListed,
+    foreignLoadable: foreignLoaded !== undefined,
+  })
   try {
     await turnSettled.promise
   } finally {
     dispose()
   }
+  // The model-visible session skill catalog: the entries actually injected as
+  // a `skill-catalog` context message, not the registry restriction view.
+  const catalogSkills = handle.agent.session.events
+    .flatMap(event => event.type === 'user/message' && event.data.source.kind === 'skill-catalog'
+      ? event.data.source.entries.map(entry => entry.name)
+      : [])
+    .sort()
   const eventText = JSON.stringify(handle.agent.session.events)
   const decision = await ctx.digitalEmployeeAgent.promoteMemory(handle.agent, {
     employeeId: instance.id,
@@ -91,6 +114,20 @@ try {
     },
   })
   const finalEventText = JSON.stringify(handle.agent.session.events)
+  // The composition-mounted memory tool must be reachable in the employee
+  // scope and its save must flow through the same promotion policy.
+  const memoryTool = tools.get('employee_memory', scope)
+  if (memoryTool === undefined) throw new Error('employee memory tool was not mounted')
+  const memoryToolResult = await memoryTool.execute({
+    action: 'save',
+    content: 'Atlas rollout pauses if the rollback owner is unreachable.',
+    tags: ['atlas', 'rollback'],
+  }, { agent: handle.agent, signal: new AbortController().signal } as never) as { kind: string; memoryId?: string }
+  acceptance('memory-tool', {
+    kind: memoryToolResult.kind,
+    memoryIdAssigned: memoryToolResult.memoryId !== undefined,
+    decisionLogged: finalEventText.includes('digital-employee/memory-decision'),
+  })
   acceptance('composition', {
     skills: template.capabilities.skills,
     tools: template.capabilities.tools,
@@ -100,6 +137,10 @@ try {
     visibleSkills,
     visibleTools: visibleTools.filter(name => !name.startsWith('mcp__')),
     visibleMcpToolCount: visibleTools.filter(name => name.startsWith('mcp__')).length,
+  })
+  acceptance('skill-catalog', {
+    catalogSkills,
+    equalsAuthority: JSON.stringify(catalogSkills) === JSON.stringify([...template.capabilities.skills].sort()),
   })
   acceptance('memory-projected', {
     projected: eventText.includes('digital-employee/memory-projection'),

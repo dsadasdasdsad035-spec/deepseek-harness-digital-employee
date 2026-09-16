@@ -136,6 +136,7 @@ flowchart LR
   pkg_digital_employee["digital-employee"]
   svc_digitalEmployees["ctx.digitalEmployees<br/>Digital employee registry and provider seam"]
   pkg_digital_employee_file["digital-employee-file"]
+  pkg_digital_employee_sqlite["digital-employee-sqlite"]
   svc_digitalEmployeeAgent["ctx.digitalEmployeeAgent<br/>Digital employee Agent composition"]
   svc_digitalEmployeeManagement["ctx.digitalEmployeeManagement<br/>Digital employee Host management gateway"]
   pkg_ui_digital_employees["ui-digital-employees"]
@@ -272,6 +273,7 @@ flowchart LR
   pkg_digital_employee_agent --> svc_digitalEmployeeAgent
   pkg_digital_employee_file --> svc_digitalEmployees
   pkg_digital_employee_management --> svc_digitalEmployeeManagement
+  pkg_digital_employee_sqlite --> svc_digitalEmployees
   pkg_directory_picker --> svc_directoryPicker
   pkg_directory_picker_browse --> svc_directoryPicker
   pkg_directory_picker_native --> svc_directoryPicker
@@ -549,7 +551,7 @@ flowchart LR
 | `ctx.userAccounts` | `seam` | [`user-accounts`](../packages/account/user-accounts) | - | `webserver`, [`host-webserver`](../packages/host/webserver) | - | SQLite user store with argon2id hashing, email verification codes, single-use reset tokens, and signed session cookies; the web auth gate redirects unauthenticated traffic to the login page. |
 | `ctx.notifications` | `seam` | [`notification`](../packages/interaction/notification) | - | [`headless`](../packages/bundle/headless) | - | Providers register delivery channels under stable ids (generic-webhook, wechat-work-bot, feishu-bot ship as subpath plugins of the seam package); send resolves to a closed delivery outcome and never rejects, so a failing alert path cannot crash the calling task flow. |
 | `ctx.hookMarket` | `core` | [`hooks-market`](../packages/hooks/hooks-market) | - | `ui-skill-market`, `digital-employee-management` | [`hook-protocol`](../packages/hooks/hook-protocol) | Owns hook package lifecycle and credential-reference configuration; employee compositions resolve hook references and mount passive interception plus invocable `hook__<id>` tools through the shared hook protocol. |
-| `ctx.digitalEmployees` | `seam` | [`digital-employee`](../packages/core/digital-employee) | [`digital-employee-file`](../packages/core/digital-employee-file) | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | - | Owns template and instance lookup, lifecycle mutation, memory, audit, and durable employee records; composition and Host task admission consume the resolved employee state. |
+| `ctx.digitalEmployees` | `seam` | [`digital-employee`](../packages/core/digital-employee) | [`digital-employee-file`](../packages/core/digital-employee-file), [`digital-employee-sqlite`](../packages/core/digital-employee-sqlite) | [`digital-employee-agent`](../packages/core/digital-employee-agent), `digital-employee-management` | - | Owns template and instance lookup, lifecycle mutation, memory, audit, and durable employee records; composition and Host task admission consume the resolved employee state. |
 | `ctx.digitalEmployeeAgent` | `core` | [`digital-employee-agent`](../packages/core/digital-employee-agent) | - | `digital-employee-management` | - | Resolves an active employee into the existing Agent, prompt, skill, tool, MCP, memory, and delegation extension points before creating an employee-owned root Session. |
 | `ctx.digitalEmployeeManagement` | `core` | `digital-employee-management` | - | `ui-digital-employees` | - | Exposes typed management and atomic chat-start Remote operations while delegating durable state and Agent composition to their owning services. |
 | `ctx.companies` | `seam` | [`company`](../packages/core/company) | [`company-file`](../packages/core/company-file) | `company-management` | - | Owns durable company records, departments, and employee-instance bindings; the management gateway consumes the resolved state for the 3D console. |

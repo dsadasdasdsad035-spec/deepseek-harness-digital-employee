@@ -35,4 +35,4 @@ Changes to resolved identity, authority, or retrieved memory may change Consumer
 
 ## Known Limitations and Deferred Work
 
-- **Single JSON document** - large employee fleets will require an alternative database Provider; the Service Definition permits that replacement without changing Consumers.
+- **Single JSON document** - writes rewrite the whole document under a writer lock; shared multi-process deployments should use the SQLite Provider (`@deepseek-ai/dsh-digital-employee-sqlite`), which replaces this backend without changing Consumers.

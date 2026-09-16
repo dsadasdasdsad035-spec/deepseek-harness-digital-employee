@@ -141,6 +141,7 @@
     { "path": "./packages/core/digital-employee" },
     { "path": "./packages/core/digital-employee-agent" },
     { "path": "./packages/core/digital-employee-file" },
+    { "path": "./packages/core/digital-employee-sqlite" },
     { "path": "./packages/core/company" },
     { "path": "./packages/core/company-file" },
     { "path": "./packages/host/company-management" },

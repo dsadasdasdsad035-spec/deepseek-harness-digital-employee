@@ -14,7 +14,7 @@ The task-console remotes read and write the autonomous-task attempt ledger under
 
 The gateway delegates all authority to `ctx.digitalEmployees`, `ctx.digitalEmployeeAgent`, and the live Agent registry. The browser client does not reproduce lifecycle, authorization, task ownership, memory, upgrade, or import validation.
 
-`startChat` accepts a caller-generated Session ID, one submission identity, and non-empty text or encoded images. The Host resolves current employee availability, snapshots `ctx.agentDefaultModel`, creates the employee root Agent with the Host process working directory, admits attachments, and queues the standard first user message as one operation. Repeating the same submission shares its accepted result; reusing its identity with different task data is rejected. Validation, cancellation, attachment admission, or first-message failure disposes unpublished work and returns no usable empty employee Session.
+`startChat` accepts a caller-generated Session ID, one submission identity, and non-empty text or encoded images. The Host resolves current employee availability, snapshots `ctx.agentDefaultModel`, creates the employee root Agent with the Host process working directory, projects the employee's most recent long-term memories up to `memoryProjectionLimit` (default 5, range 1-50), admits attachments, and queues the standard first user message as one operation. Repeating the same submission shares its accepted result; reusing its identity with different task data is rejected. Validation, cancellation, attachment admission, or first-message failure disposes unpublished work and returns no usable empty employee Session.
 
 ## Configuration Studio
 

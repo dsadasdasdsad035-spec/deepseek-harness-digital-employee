@@ -601,19 +601,35 @@ Requires: `digitalEmployees`
 
 ```ts config-catalog
 /** File provider plugin configuration. */
-export interface Config {
-  /** Explicit document path; defaults under the Harness home. */
-  path?: string
-  /** Harness home used when `path` is omitted. */
-  dshHome?: string
-  /** Whether promotion policy may retain candidates marked sensitive. */
-  allowSensitiveMemory?: boolean
-  /** Maximum requested retention period for one long-term memory. */
-  maxRetentionDays?: number
-}
+export interface Config extends EmployeeProviderStorageConfig {}
 ```
 
-Source: [`packages/core/digital-employee-file/src/index.ts:51`](../packages/core/digital-employee-file/src/index.ts)
+Depends on: [`EmployeeProviderStorageConfig`](../packages/core/digital-employee/src/index.ts)
+
+Source: [`packages/core/digital-employee-file/src/index.ts:56`](../packages/core/digital-employee-file/src/index.ts)
+
+<a id="deepseek-aidsh-digital-employee-sqlite"></a>
+
+## `@deepseek-ai/dsh-digital-employee-sqlite`
+
+Requires: `digitalEmployees`
+
+```ts config-catalog
+/** SQLite provider plugin configuration. */
+export interface Config extends EmployeeProviderStorageConfig {
+  /** SQLite `journal_mode`; `wal` suits local disks, rollback modes suit network mounts. */
+  journalMode?: JournalMode
+  /** Maximum wait in milliseconds for a competing SQLite lock. */
+  busyTimeoutMs?: number
+}
+
+/** Durable journal modes accepted by the backend. */
+export type JournalMode = 'wal' | 'delete' | 'truncate' | 'persist'
+```
+
+Depends on: [`EmployeeProviderStorageConfig`](../packages/core/digital-employee/src/index.ts)
+
+Source: [`packages/core/digital-employee-sqlite/src/index.ts:67`](../packages/core/digital-employee-sqlite/src/index.ts)
 
 <a id="deepseek-aidsh-e2b"></a>
 
@@ -898,19 +914,21 @@ Source: [`packages/host/apiproxy/src/index.ts:41`](../packages/host/apiproxy/src
 
 ## `@deepseek-ai/dsh-host-company-group-chat`
 
-Requires: `companies` · `digitalEmployeeAgent` · `digitalEmployees` · `sessions` · `sessionPersistence`
+Requires: `agents` · `companies` · `digitalEmployeeAgent` · `digitalEmployees` · `sessions` · `sessionPersistence`
 
 ```ts config-catalog
 /** Gateway configuration. */
 export interface Config {
   /** Milliseconds between task lifecycle log polls. */
   pollIntervalMs?: number
-  /** Milliseconds before one speaking turn falls back to the deterministic line. */
+  /** Milliseconds before one member turn is cancelled and degrades to its fallback line. */
   turnTimeoutMs?: number
+  /** Most-recent long-term memories projected into each member session. */
+  memberMemoryProjectionLimit?: number
 }
 ```
 
-Source: [`packages/host/company-group-chat/src/index.ts:34`](../packages/host/company-group-chat/src/index.ts)
+Source: [`packages/host/company-group-chat/src/index.ts:38`](../packages/host/company-group-chat/src/index.ts)
 
 <a id="deepseek-aidsh-host-company-management"></a>
 
@@ -945,6 +963,8 @@ export interface Config {
   successCacheMaxEntries?: number
   /** Milliseconds a completed submission remains reusable. */
   successCacheTtlMs?: number
+  /** Most-recent long-term memories projected into each started chat. */
+  memoryProjectionLimit?: number
 }
 ```
 
@@ -2166,7 +2186,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/skill/skill/src/index.ts:307`](../packages/skill/skill/src/index.ts)
+Source: [`packages/skill/skill/src/index.ts:316`](../packages/skill/skill/src/index.ts)
 
 <a id="deepseek-aidsh-skill-filesystem"></a>
 
@@ -2993,7 +3013,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/skill/tool-skill/src/index.ts:61`](../packages/skill/tool-skill/src/index.ts)
+Source: [`packages/skill/tool-skill/src/index.ts:62`](../packages/skill/tool-skill/src/index.ts)
 
 <a id="deepseek-aidsh-tool-str-replace-editor"></a>
 

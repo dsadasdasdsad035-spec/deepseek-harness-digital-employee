@@ -1122,6 +1122,29 @@ describe('SkillRegistry scoped layers', () => {
     expect((await ctx.skills.list({ scope: key })).map(skill => skill.name)).toEqual(['allowed', 'ambient'])
   })
 
+  it('refuses to load an allowlisted-out skill in the scoped view', async () => {
+    // The loader path (`get`) must honor the same restriction as the catalog:
+    // an employee whose authority omits a skill can neither list nor load it.
+    const ctx = new Context()
+    await ctx.plugin(SkillRegistry)
+    registerProvider(ctx, new MemoryProvider([
+      memorySkill('own-skill', 'Own', 100),
+      memorySkill('foreign-skill', 'Foreign', 100),
+    ]))
+    const key = { employee: 'alpha' }
+    const employee = createScope(ctx, key)
+    scopedSkills(employee.ctx).restrict({ allow: ['own-skill'] })
+
+    const own = await ctx.skills.get('own-skill', { scope: key })
+    expect(own?.content).toBe('own-skill body.')
+    const foreign = await ctx.skills.get('foreign-skill', { scope: key })
+    expect(foreign).toBeUndefined()
+
+    await employee.dispose()
+    const foreignAfter = await ctx.skills.get('foreign-skill', { scope: key })
+    expect(foreignAfter?.content).toBe('foreign-skill body.')
+  })
+
   it('files a scoped provider into its layer and merges it into that scope view only', async () => {
     const ctx = new Context()
     await ctx.plugin(SkillRegistry)

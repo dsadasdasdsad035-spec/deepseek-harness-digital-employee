@@ -114,7 +114,7 @@ function harness(options: {
 
 async function gatewayFor(
   setup: ReturnType<typeof harness>,
-  config: { successCacheMaxEntries?: number; successCacheTtlMs?: number } = {},
+  config: { successCacheMaxEntries?: number; successCacheTtlMs?: number; memoryProjectionLimit?: number } = {},
 ): Promise<StartChatGateway> {
   await setup.ctx.plugin(DigitalEmployeeManagementGateway, config)
   return setup.ctx.get('digitalEmployeeManagement') as unknown as StartChatGateway
@@ -132,6 +132,24 @@ function request(overrides: Partial<StartChatRequest> = {}): StartChatRequest {
 }
 
 describe('DigitalEmployeeManagementGateway startChat', () => {
+  it('passes the bounded most-recent memory query to task creation', async () => {
+    const setup = harness()
+    const gateway = await gatewayFor(setup, { memoryProjectionLimit: 7 })
+    await gateway.startChat(request(), new AbortController().signal)
+    expect(setup.createTask).toHaveBeenCalledWith(expect.objectContaining({
+      memory: { text: '', scopes: ['long-term'], limit: 7 },
+    }) as unknown, expect.anything() as unknown)
+  })
+
+  it('defaults the memory projection bound to five records', async () => {
+    const setup = harness()
+    const gateway = await gatewayFor(setup)
+    await gateway.startChat(request(), new AbortController().signal)
+    expect(setup.createTask).toHaveBeenCalledWith(expect.objectContaining({
+      memory: { text: '', scopes: ['long-term'], limit: 5 },
+    }) as unknown, expect.anything() as unknown)
+  })
+
   it('resolves the employee and admits the first user message before returning the Session', async () => {
     const setup = harness()
     const gateway = await gatewayFor(setup)

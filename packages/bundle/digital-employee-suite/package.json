@@ -42,7 +42,7 @@
     "@deepseek-ai/dsh-client-ui-digital-employees": "workspace:^",
     "@deepseek-ai/dsh-digital-employee": "workspace:^",
     "@deepseek-ai/dsh-digital-employee-agent": "workspace:^",
-    "@deepseek-ai/dsh-digital-employee-file": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee-sqlite": "workspace:^",
     "@deepseek-ai/dsh-digital-employee-example-template": "workspace:^",
     "@deepseek-ai/dsh-host-digital-employee-management": "workspace:^"
   },

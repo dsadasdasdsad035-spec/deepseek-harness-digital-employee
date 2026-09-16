@@ -14,7 +14,7 @@ Remote 方法名在 `digitalEmployees` 内唯一，并直接描述管理操作�
 
 gateway 把所有权威操作委托给 `ctx.digitalEmployees`、`ctx.digitalEmployeeAgent` 与活跃 Agent 注册表。浏览器客户端不会重复实现生命周期、授权、任务归属、记忆、升级或导入验证。
 
-`startChat` 接受调用方生成的 Session ID、一个提交身份，以及非空文本或编码图像。Host 在同一项操作中解析员工当前可用性、快照 `ctx.agentDefaultModel`、使用 Host 进程工作目录创建员工根 Agent、接纳附件，并排入标准的首条用户消息。重复同一提交会共享其已接受结果；使用不同任务数据复用该身份会被拒绝。验证、取消、附件接纳或首条消息失败时，Host 会 dispose 未发布的工作，不会返回可用的空员工 Session。
+`startChat` 接受调用方生成的 Session ID、一个提交身份，以及非空文本或编码图像。Host 在同一项操作中解析员工当前可用性、快照 `ctx.agentDefaultModel`、使用 Host 进程工作目录创建员工根 Agent、接纳附件，并排入标准的首条用户消息。重复同一提交会共享其已接受结果；使用不同任务数据复用该身份会被拒绝。验证、取消、附件接纳或首条消息失败时，Host 会 dispose 未发布的工作，不会返回可用的空员工 Session，并将员工最近的长期记忆按 `memoryProjectionLimit`（默认 5，范围 1-50）投影进会话。
 
 ## 配置工作室
 

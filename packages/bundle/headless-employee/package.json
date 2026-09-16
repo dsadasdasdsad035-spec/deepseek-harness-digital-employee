@@ -43,7 +43,7 @@
     "@deepseek-ai/dsh-digital-employee": "workspace:^",
     "@deepseek-ai/dsh-digital-employee-agent": "workspace:^",
     "@deepseek-ai/dsh-digital-employee-example-template": "workspace:^",
-    "@deepseek-ai/dsh-digital-employee-file": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee-sqlite": "workspace:^",
     "@deepseek-ai/dsh-goal": "workspace:^",
     "@deepseek-ai/dsh-goal-round-driver": "workspace:^",
     "@deepseek-ai/dsh-headless": "workspace:^",

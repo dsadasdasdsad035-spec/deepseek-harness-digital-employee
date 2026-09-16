@@ -16,6 +16,8 @@ The catalog is omitted when no model-invocable skills are initially available, a
 
 `catalogDescriptionMaxLength` controls normalized catalog descriptions; rendering XML-escapes them. Its default is `500` and values must be integers of at least `3`, which reserves room for a truncation ellipsis. The [skill catalog hot-refresh Agent Note](../../../.agents/notes/implemented/feature/2026-07-27-skill-catalog-hot-refresh.md) owns the durable initial catalog and replacement lifecycle.
 
+A consumer that restricts an agent to a declared business-tool allowlist must keep `SKILL_LOADER_TOOL_NAME` (`skill`) in that allowlist: masking the loader masks the catalog with it. The digital employee composition does this for every employee that declares skills.
+
 ## Tool: `skill`
 
 | Arg | Type | Notes |

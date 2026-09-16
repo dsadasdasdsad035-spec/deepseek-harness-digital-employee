@@ -9,9 +9,7 @@ import type {
   CreateDigitalEmployeeRequest,
   ApplyDigitalEmployeeUpgradeRequest,
   AppendDigitalEmployeeAuditRequest,
-  DigitalEmployeeAuditId,
   DigitalEmployeeAuditRecord,
-  DigitalEmployeeCompositionId,
   DigitalEmployeeIdentityEvent,
   DigitalEmployeeInstance,
   DigitalEmployeeInstanceId,
@@ -21,44 +19,55 @@ import type {
   DigitalEmployeeMemoryId,
   DigitalEmployeeMemoryQuery,
   DigitalEmployeeMemoryRecord,
-  DigitalEmployeeOperationId,
-  DigitalEmployeeSubmissionId,
   DigitalEmployeeExportArtifact,
   DigitalEmployeeUpgradePreview,
   ExportDigitalEmployeeRequest,
   PreviewDigitalEmployeeUpgradeRequest,
   DigitalEmployeeTemplate,
   DigitalEmployeeTemplateId,
-  DigitalEmployeeTaskId,
-  ExpertId,
   ResolvedDigitalEmployee,
 } from './types.ts'
 import { DigitalEmployeeTemplateSchema } from './schema.ts'
 
 export type * from './types.ts'
 export { assertLifecycleTransition, DigitalEmployeeTemplateSchema } from './schema.ts'
-
-/**
- * Construct a template ID after validation at the owning parser boundary.
- * @param value - validated wire value.
- * @returns branded template identifier.
- */
-export const createDigitalEmployeeTemplateId = (value: string): DigitalEmployeeTemplateId =>
-  value as DigitalEmployeeTemplateId
-/**
- * Construct an employee instance ID after validation at the owning parser boundary.
- * @param value - validated wire value.
- * @returns branded employee identifier.
- */
-export const createDigitalEmployeeInstanceId = (value: string): DigitalEmployeeInstanceId =>
-  value as DigitalEmployeeInstanceId
-/**
- * Construct a resolved composition ID from its deterministic digest.
- * @param value - complete validated composition digest.
- * @returns branded composition identifier.
- */
-export const createDigitalEmployeeCompositionId = (value: string): DigitalEmployeeCompositionId =>
-  value as DigitalEmployeeCompositionId
+export * from './ids.ts'
+export {
+  assertAuthoritySubset,
+  assertRedactedAuditMetadata,
+  authorityDifference,
+  copyAuthority,
+  copyInstance,
+  copyMemory,
+  intersectAuthority,
+  memoryMatchScore,
+  parseExportArtifact,
+  portableMemory,
+  unionAuthority,
+} from './domain.ts'
+export { EMPLOYEES_DOCUMENT_SCHEMA_VERSION, parseEmployeeDocument } from './document.ts'
+export {
+  DigitalEmployeeProviderBase,
+  type EmployeeProviderStorageConfig,
+  acceptedLongTermMemory,
+  applyUpgradeTo,
+  buildAuditRecord,
+  employeeExportArtifact,
+  importedEmployee,
+  importedMemories,
+  type MemoryPromotionPolicy,
+  memoryPromotionRejection,
+  newEmployeeInstance,
+  type EmployeeTemplateSource,
+  rankMemories,
+  requestApplyUpgrade,
+  requestUpgradePreview,
+  requiredEmployeeTemplate,
+  resolveEmployee,
+  reviewPromotion,
+  upgradePreview,
+} from './provider.ts'
+export { parseAuditRecord, parseMemoryProvenance } from './document.ts'
 
 /**
  * Project creation-time digital employee ownership from a restored Session log.
@@ -73,47 +82,6 @@ export function projectDigitalEmployeeOwnership(
   }
   return undefined
 }
-/**
- * Construct a memory ID after validation at the owning parser boundary.
- * @param value - validated wire value.
- * @returns branded memory identifier.
- */
-export const createDigitalEmployeeMemoryId = (value: string): DigitalEmployeeMemoryId =>
-  value as DigitalEmployeeMemoryId
-/**
- * Construct a task ID after validation at the owning parser boundary.
- * @param value - validated task identity.
- * @returns branded employee task identifier.
- */
-export const createDigitalEmployeeTaskId = (value: string): DigitalEmployeeTaskId =>
-  value as DigitalEmployeeTaskId
-/**
- * Construct a submission ID after validation at the owning client boundary.
- * @param value - validated task-start submission identity.
- * @returns branded submission identifier.
- */
-export const createDigitalEmployeeSubmissionId = (value: string): DigitalEmployeeSubmissionId =>
-  value as DigitalEmployeeSubmissionId
-/**
- * Construct an expert ID after validation at the owning parser boundary.
- * @param value - validated wire value.
- * @returns branded expert identifier.
- */
-export const createExpertId = (value: string): ExpertId => value as ExpertId
-/**
- * Construct an audit ID after validation at the owning parser boundary.
- * @param value - validated wire value.
- * @returns branded audit identifier.
- */
-export const createDigitalEmployeeAuditId = (value: string): DigitalEmployeeAuditId =>
-  value as DigitalEmployeeAuditId
-/**
- * Construct an operation ID after validation at the owning parser boundary.
- * @param value - validated wire value.
- * @returns branded operation identifier.
- */
-export const createDigitalEmployeeOperationId = (value: string): DigitalEmployeeOperationId =>
-  value as DigitalEmployeeOperationId
 
 /** Provider operations installed behind the stable digital employee service. */
 export interface DigitalEmployeeProvider {

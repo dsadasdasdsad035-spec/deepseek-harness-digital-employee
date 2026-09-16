@@ -28,6 +28,15 @@ const RUNTIME_RANK = 250
 export const BUNDLED_SKILL_RANK = 600
 
 /**
+ * Canonical name of the skill loader tool. The skill capability seam owns this
+ * name: the tool consumer registers it, and a consumer that restricts an agent
+ * to its declared business tools must keep it visible, because masking the
+ * loader also removes the model-visible session skill catalog (the loader and
+ * its catalog are published together).
+ */
+export const SKILL_LOADER_TOOL_NAME = 'skill'
+
+/**
  * Return whether a string is a valid kebab-case skill name.
  * @param name - candidate skill name to validate.
  * @returns whether the name matches the public skill-name grammar.

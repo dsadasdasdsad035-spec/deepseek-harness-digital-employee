@@ -97,7 +97,7 @@
     "@deepseek-ai/dsh-digital-employee": "workspace:^",
     "@deepseek-ai/dsh-digital-employee-agent": "workspace:^",
     "@deepseek-ai/dsh-digital-employee-example-template": "workspace:^",
-    "@deepseek-ai/dsh-digital-employee-file": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee-sqlite": "workspace:^",
     "@deepseek-ai/dsh-email": "workspace:^",
     "@deepseek-ai/dsh-file-reference": "workspace:^",
     "@deepseek-ai/dsh-file-reference-local": "workspace:^",

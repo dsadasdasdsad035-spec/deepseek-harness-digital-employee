@@ -17,6 +17,7 @@ import {
   isSkillName,
   isUserInvocable,
   renderSkillContent,
+  SKILL_LOADER_TOOL_NAME,
   type SkillInvocationSource,
   type SkillSummary,
 } from '@deepseek-ai/dsh-skill'
@@ -79,7 +80,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   assertPositiveInteger('catalogDescriptionMaxLength', catalogDescriptionMaxLength, 3)
 
   const skillTool = defineTool({
-    name: 'skill',
+    name: SKILL_LOADER_TOOL_NAME,
     description: 'Load the full instructions for an available skill. Call this with the exact skill name from the session skill catalog before acting on a task that names or clearly matches that skill.',
     parameters: {
       name: { type: 'string', required: true, description: 'The exact skill name from the available skills list.' },

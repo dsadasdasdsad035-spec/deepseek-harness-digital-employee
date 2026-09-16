@@ -4,3 +4,10 @@
 
 - id: project-manager-test-tools
   name: '@deepseek-ai/dsh-project-manager-test-digital-employee/tools'
+
+# The declared skills above reach the model only through this preset's own
+# catalog and loader: the employee composition keeps the loader visible past
+# its business-tool restriction, and fails loud when a skill-declaring preset
+# omits it.
+- id: tool-skill
+  name: '@deepseek-ai/dsh-tool-skill'

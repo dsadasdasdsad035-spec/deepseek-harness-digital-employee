@@ -14,10 +14,8 @@
     - id: digital-employee-example-template
       name: '@deepseek-ai/dsh-digital-employee-example-template'
 
-    - id: digital-employee-file
-      name: '@deepseek-ai/dsh-digital-employee-file'
-      config:
-        path: !!js dshHomePath('digital-employees/employees.json')
+    - id: digital-employee-sqlite
+      name: '@deepseek-ai/dsh-digital-employee-sqlite'
 
     - id: digital-employee-agent
       name: '@deepseek-ai/dsh-digital-employee-agent'

@@ -33,7 +33,7 @@ import type {
 } from '@deepseek-ai/dsh-agent'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
 import type { ContentBlock, UserMessage } from '@deepseek-ai/dsh-llm'
-import type { SessionId } from '@deepseek-ai/dsh-session'
+import { SessionId } from '@deepseek-ai/dsh-session'
 import type {
   ContinuableStart,
   SubagentDescendantListEntry,
@@ -44,7 +44,8 @@ import type {
   SubagentStartRequest,
 } from '@deepseek-ai/dsh-subagent'
 import type {} from '@deepseek-ai/dsh-agent-presets'
-import type {} from '@deepseek-ai/dsh-skill'
+import { scopeOf } from '@deepseek-ai/dsh-scope'
+import { SKILL_LOADER_TOOL_NAME } from '@deepseek-ai/dsh-skill'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import type {} from '@deepseek-ai/dsh-tools'
 import type { McpServerConfig } from '@deepseek-ai/dsh-mcp-client'
@@ -68,6 +69,10 @@ const INSTRUCTIONS_SECTION = 'digital-employee:instructions'
 const MEMORY_SECTION = 'digital-employee:memory'
 const EXPERT_COMPOSITION_KEY = 'digitalEmployeeExpert'
 const EXPERT_TOOL_NAME = 'delegate_to_expert'
+/** Composition-mounted employee memory tool: model-facing save and search. */
+const MEMORY_TOOL_NAME = 'employee_memory'
+/** Exported for composition consumers that must keep the tool visible. */
+export { MEMORY_TOOL_NAME }
 
 interface DigitalEmployeeExpertComposition {
   readonly employeeId: string
@@ -92,6 +97,22 @@ export interface CreateDigitalEmployeeTaskRequest {
   readonly initialMessage?: UserMessage
   /** Optional bounded employee-memory retrieval performed before Session creation. */
   readonly memory?: Omit<DigitalEmployeeMemoryQuery, 'employeeId'>
+  /** Optional cancellation for resolution and unpublished Agent setup. */
+  readonly signal?: AbortSignal
+}
+
+/** Input for resuming one persisted employee root session under its current composition. */
+export interface ResumeDigitalEmployeeTaskRequest {
+  /** Active employee whose composition rebuilds the resumed Agent's scoped world. */
+  readonly employeeId: DigitalEmployeeInstanceId
+  /** Persisted session identity to load and resume. */
+  readonly resumeSessionId: SessionId
+  /** Optional bounded memory query projected into the resumed Session prompt. */
+  readonly memory?: Omit<DigitalEmployeeMemoryQuery, 'employeeId'>
+  /** Optional model and loop configuration for the resumed Agent. */
+  readonly agentOptions?: AgentOptions
+  /** Optional complete model selection installed for prompt assembly and request routing. */
+  readonly modelSelection?: ModelSelection
   /** Optional cancellation for resolution and unpublished Agent setup. */
   readonly signal?: AbortSignal
 }
@@ -266,6 +287,72 @@ export class DigitalEmployeeAgent extends Service {
         agent.session.append('digital-employee/instructions', {
           revision: employee.instructions.revision,
         })
+        if (memoryProjection !== undefined) {
+          agent.session.append('digital-employee/memory-projection', memoryProjection)
+        }
+        await this.compose(agentCtx, employee, memoryProjection, mcpServers)
+      },
+    })
+    return this.trackRootHandle(employee.instance.id, handle)
+  }
+
+  /**
+   * Resume one persisted employee root session under the employee's current
+   * composition. The persisted identity event must name the same employee;
+   * identity and instruction events already in the log are never re-appended,
+   * so the resumed Agent carries exactly the history it produced.
+   * @param request - employee identity plus resume Agent creation options.
+   * @param resolvedEmployee - exact Host-authorized composition, when already resolved.
+   * @returns the published Agent handle.
+   */
+  async resumeTask(
+    request: ResumeDigitalEmployeeTaskRequest,
+    resolvedEmployee?: ResolvedDigitalEmployee,
+  ): Promise<AgentHandle> {
+    const employee = resolvedEmployee ?? await this.ctx.digitalEmployees.resolve(request.employeeId)
+    if (employee.instance.id !== request.employeeId) {
+      throw new Error(
+        `resolved digital employee "${employee.instance.id}" does not match requested employee `
+        + `"${request.employeeId}"`,
+      )
+    }
+    const mcpServers = await this.resolveMcpServers(employee, request.resumeSessionId)
+    const agentOptions = request.modelSelection === undefined
+      ? request.agentOptions
+      : {
+        ...request.agentOptions,
+        provider: request.modelSelection.provider,
+        model: request.modelSelection.model,
+      }
+    const handle = await this.ctx.agents.resume({
+      resumeSessionId: request.resumeSessionId,
+      ...agentOptions === undefined ? {} : { agentOptions },
+      ...request.signal === undefined ? {} : { signal: request.signal },
+      setup: async (agentCtx) => {
+        const agent = agentCtx.agent
+        if (agent === undefined) {
+          throw new Error('digital employee task resume setup has no scoped Agent')
+        }
+        const identity = agent.session.events
+          .find(event => event.type === 'digital-employee/identity')
+        if (identity === undefined || identity.data.employeeId !== employee.instance.id) {
+          throw new Error(
+            `session "${request.resumeSessionId}" does not belong to digital employee `
+            + `"${employee.instance.id}"`,
+          )
+        }
+        if (request.modelSelection !== undefined) {
+          installModelSelection(agentCtx, {
+            current: request.modelSelection,
+            assembled: undefined,
+          })
+        }
+        const memoryProjection = request.memory === undefined
+          ? undefined
+          : projectMemory(await this.ctx.digitalEmployees.queryMemory({
+            employeeId: employee.instance.id,
+            ...request.memory,
+          }))
         if (memoryProjection !== undefined) {
           agent.session.append('digital-employee/memory-projection', memoryProjection)
         }
@@ -600,11 +687,19 @@ export class DigitalEmployeeAgent extends Service {
       throw new Error('digital employee Agent composition requires skills and tools in the Agent scope')
     }
     this.mountExpertDelegationTool(agentCtx, employee)
+    this.mountEmployeeMemoryTool(agentCtx, employee)
     const hookToolNames = await this.mountEmployeeHooks(agentCtx, employee)
     const workflowToolNames = await this.mountEmployeeWorkflows(agentCtx, employee)
     await this.mountEmployeeSubagentAssets(agentCtx, employee)
     skills.restrict({ allow: employee.authority.skills })
-    tools.restrict({ allow: [...employee.authority.tools, ...hookToolNames, ...workflowToolNames] })
+    tools.restrict({
+      allow: [
+        ...employee.authority.tools,
+        ...hookToolNames,
+        ...workflowToolNames,
+        ...this.requiredSkillLoaderTools(agentCtx, employee),
+      ],
+    })
     const resolvedMcpServers = mcpServers ?? (employee.mcpServers.length === 0
       ? []
       : await this.resolveMcpServers(employee, requireMcpSessionId(agentCtx)))
@@ -645,6 +740,35 @@ export class DigitalEmployeeAgent extends Service {
         text: renderMemory(memoryProjection),
       })
     }
+  }
+
+  /**
+   * Resolve the skill-loader tool names that must survive this employee's
+   * business-tool restriction. The skill seam publishes the loader and its
+   * model-visible catalog together and suppresses both when the loader is
+   * masked, so restricting to business tools alone would silently strip every
+   * authorized skill from the model. An employee that declares skills but runs
+   * on a preset without the loader is misconfigured and fails here rather than
+   * composing an employee whose skills the model cannot see.
+   * @param agentCtx - the employee's Agent scope after its preset mounted.
+   * @param employee - the resolved employee whose authority decides whether skills are declared.
+   * @returns the loader tool names to keep visible (empty when no skills are declared).
+   */
+  private requiredSkillLoaderTools(agentCtx: Context, employee: ResolvedDigitalEmployee): string[] {
+    if (employee.authority.skills.length === 0) return []
+    const tools = agentCtx.get('tools')
+    if (tools === undefined) {
+      throw new Error('digital employee composition requires tools in the Agent scope')
+    }
+    const scope = scopeOf(agentCtx)
+    if (tools.get(SKILL_LOADER_TOOL_NAME, scope) === undefined) {
+      throw new Error(
+        `digital employee "${employee.instance.id}" declares skills but its preset `
+        + `"${employee.template.preset}" does not mount the skill loader tool `
+        + `"${SKILL_LOADER_TOOL_NAME}" (add the tool-skill plugin to the preset)`,
+      )
+    }
+    return [SKILL_LOADER_TOOL_NAME]
   }
 
   /**
@@ -736,6 +860,105 @@ export class DigitalEmployeeAgent extends Service {
       .flatMap(pkg => pkg.descriptor.subagents.map(persona => ({ pkg, persona })))
     const dispose = mountEmployeeSubagents(agentCtx, bindings)
     agentCtx.effect(() => dispose, 'subagent-market.employee-bindings')
+  }
+
+  /**
+   * Mount the employee memory tool: `save` submits a long-term candidate
+   * through controlled promotion with session provenance, and `search` runs a
+   * bounded employee-owned query. Memory is intrinsic to the employee concept,
+   * so the tool mounts for every employee and the promotion policy (duplicate,
+   * sensitivity, retention) governs writes.
+   * @param agentCtx - the employee's Agent scope after its preset mounted.
+   * @param employee - the resolved employee whose records the tool touches.
+   */
+  private mountEmployeeMemoryTool(
+    agentCtx: Context,
+    employee: ResolvedDigitalEmployee,
+  ): void {
+    const scopedTools = agentCtx.get('tools')
+    scopedTools?.register(defineTool({
+      name: MEMORY_TOOL_NAME,
+      description: 'Save or search this digital employee\'s long-term memories. '
+        + 'Use `save` to record a durable experience, decision, or preference; '
+        + 'use `search` to recall your own recorded memories.',
+      parameters: {
+        action: {
+          type: 'string',
+          required: true,
+          description: 'The memory action: "save" or "search".',
+        },
+        content: {
+          type: 'string',
+          description: 'Save action: the memory content (non-empty after trimming).',
+        },
+        tags: {
+          type: 'array',
+          description: 'Save action: short lookup tags for the memory.',
+          items: { type: 'string' },
+        },
+        text: {
+          type: 'string',
+          description: 'Search action: literal text to match against tags and content; empty lists every memory.',
+        },
+        limit: {
+          type: 'integer',
+          description: 'Search action: maximum records to return (1-20, default 5).',
+        },
+      },
+      output: {
+        schema: { type: 'object', additionalProperties: true },
+        render: (_args, value) => [{
+          type: 'text',
+          text: JSON.stringify(value, null, 2),
+        }],
+      },
+      isConcurrencySafe: args => (args as { action?: unknown }).action === 'search',
+      execute: async (args, exec) => {
+        const request = memoryToolArgs(args)
+        if (exec.agent === undefined) {
+          throw new Error('employee_memory requires a calling agent')
+        }
+        if (request.action === 'save') {
+          const content = request.content?.trim()
+          if (content === undefined || content === '') {
+            throw new Error('employee_memory save requires non-empty content')
+          }
+          const decision = await this.promoteMemory(exec.agent, {
+            employeeId: employee.instance.id,
+            content,
+            tags: request.tags ?? [],
+            sensitive: false,
+            provenance: {
+              sessionId: SessionId(exec.agent.id),
+              source: 'employee-memory-tool',
+              recordedAt: new Date().toISOString(),
+            },
+          })
+          return decision.kind === 'accepted'
+            ? { action: 'save', kind: 'accepted', memoryId: decision.memory.id }
+            : { action: 'save', kind: 'rejected', reason: decision.reason }
+        }
+        const limit = request.limit ?? 5
+        if (!Number.isInteger(limit) || limit < 1 || limit > 20) {
+          throw new Error('employee_memory search limit must be an integer between 1 and 20')
+        }
+        const memories = await this.ctx.digitalEmployees.queryMemory({
+          employeeId: employee.instance.id,
+          text: request.text ?? '',
+          scopes: ['long-term'],
+          limit,
+        })
+        return {
+          action: 'search',
+          memories: memories.map(memory => ({
+            id: memory.id,
+            content: memory.content,
+            tags: [...memory.tags],
+            recordedAt: memory.provenance.recordedAt,
+          })),
+        }
+      },
+    }))
   }
 
   private mountExpertDelegationTool(
@@ -830,11 +1053,13 @@ export class DigitalEmployeeAgent extends Service {
     if (skills === undefined || tools === undefined) {
       throw new Error('digital employee expert composition requires skills and tools in the Agent scope')
     }
-    skills.restrict({
-      allow: expert.capabilities.skills.filter(skill => employee.authority.skills.includes(skill)),
-    })
+    const expertSkills = expert.capabilities.skills.filter(skill => employee.authority.skills.includes(skill))
+    skills.restrict({ allow: expertSkills })
     tools.restrict({
-      allow: expert.capabilities.tools.filter(tool => employee.authority.tools.includes(tool)),
+      allow: [
+        ...expert.capabilities.tools.filter(tool => employee.authority.tools.includes(tool)),
+        ...expertSkills.length === 0 ? [] : this.requiredSkillLoaderTools(childCtx, employee),
+      ],
     })
     const authorized = new Set(expert.capabilities.mcpServers)
     const unauthorized = composition.mcpServerIds.find(id =>
@@ -913,8 +1138,17 @@ export class DigitalEmployeeAgent extends Service {
     employee: ResolvedDigitalEmployee,
     mcpServers: readonly McpServerConfig[],
   ): void {
-    const agent = agentCtx.get('agent')
-    if (agent === undefined) return
+    // The acting Agent rides this scope as a property (agent-loop calls
+    // `extend({ agent })`), not as a provided service: `agentCtx.get('agent')`
+    // reads only the service store and would miss it. Absence here is a
+    // composition wiring fault, never a reason to skip the audit silently.
+    const agent = agentCtx.agent
+    if (agent === undefined) {
+      throw new Error(
+        `digital employee "${employee.instance.id}" audit installation found no Agent `
+        + 'in its composition context; the composing scope exposed none',
+      )
+    }
     const mcpIds = new Map(mcpServers.map((server, index) => [
       server.serverName,
       employee.mcpServers[index]?.id ?? server.serverName,
@@ -1359,3 +1593,49 @@ function intersection<T>(
 }
 
 export default DigitalEmployeeAgent
+
+/** Validated `employee_memory` tool arguments. */
+interface MemoryToolArgs {
+  readonly action: 'save' | 'search'
+  readonly content?: string
+  readonly tags?: readonly string[]
+  readonly text?: string
+  readonly limit?: number
+}
+
+/**
+ * Narrow and validate the memory tool's frozen model arguments.
+ * @param value - snapshotted tool arguments.
+ * @returns the typed memory tool request.
+ * @throws when the action is missing or unknown, or fields have wrong types.
+ */
+function memoryToolArgs(value: unknown): MemoryToolArgs {
+  const input = typeof value === 'object' && value !== null ? value as Record<string, unknown> : {}
+  const action = input.action
+  if (action !== 'save' && action !== 'search') {
+    throw new Error('employee_memory action must be "save" or "search"')
+  }
+  const content = input.content
+  if (content !== undefined && typeof content !== 'string') {
+    throw new Error('employee_memory content must be a string')
+  }
+  const rawTags = input.tags
+  if (rawTags !== undefined && (!Array.isArray(rawTags) || rawTags.some(tag => typeof tag !== 'string'))) {
+    throw new Error('employee_memory tags must be an array of strings')
+  }
+  const text = input.text
+  if (text !== undefined && typeof text !== 'string') {
+    throw new Error('employee_memory text must be a string')
+  }
+  const limit = input.limit
+  if (limit !== undefined && (typeof limit !== 'number' || !Number.isInteger(limit))) {
+    throw new Error('employee_memory limit must be an integer')
+  }
+  return {
+    action,
+    ...content === undefined ? {} : { content },
+    ...rawTags === undefined ? {} : { tags: rawTags as readonly string[] },
+    ...text === undefined ? {} : { text },
+    ...limit === undefined ? {} : { limit },
+  }
+}

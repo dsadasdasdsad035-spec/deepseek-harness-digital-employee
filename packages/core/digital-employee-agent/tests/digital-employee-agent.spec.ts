@@ -21,6 +21,15 @@ import DigitalEmployeeAgent, {
   type ResolvedDigitalEmployeeExpert,
 } from '@deepseek-ai/dsh-digital-employee-agent'
 
+/**
+ * A composition context shaped like production: agent-loop exposes the acting
+ * Agent as a scope property (`extend({ agent })`), not as a provided service.
+ */
+function actingAgentCtx(ctx: Context): Context {
+  const id = SessionId('composition-test-agent')
+  return ctx.extend({ agent: { id, session: { id } } })
+}
+
 function resolved(root: string, id: string, displayName: string, personality?: string): ResolvedDigitalEmployee {
   const templatePersonality = 'Careful and evidence-driven.'
   const template = {
@@ -171,6 +180,158 @@ describe('DigitalEmployeeAgent', () => {
       .not.toBe(digitalEmployeeCompositionId(firstComposition))
   })
 
+  it('keeps the skill loader visible past the business-tool restriction when skills are declared', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-skill-loader-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Plan the delivery.', 'utf8')
+    const base = resolved(root, 'alpha', 'Alpha')
+    const employee = {
+      ...base,
+      authority: { ...base.authority, skills: ['project-planning', 'risk-review'] },
+    } satisfies ResolvedDigitalEmployee
+    const restrictTools = vi.fn()
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    // The preset mounted the skill loader; the employee restriction must keep it.
+    ctx.provide('tools', {
+      register: vi.fn(),
+      restrict: restrictTools,
+      get: (name: string) => name === 'skill' ? { name: 'skill' } : undefined,
+    } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const scope = createScope(ctx, { employee: 'alpha' })
+
+    await ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), employee)
+
+    expect(restrictTools).toHaveBeenCalledWith({ allow: ['skill'] })
+    await scope.dispose()
+  })
+
+  it('fails composition when skills are declared but the preset mounts no skill loader', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-skill-loader-missing-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Plan the delivery.', 'utf8')
+    const base = resolved(root, 'alpha', 'Alpha')
+    const employee = {
+      ...base,
+      authority: { ...base.authority, skills: ['project-planning'] },
+    } satisfies ResolvedDigitalEmployee
+    const restrictTools = vi.fn()
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: restrictTools, get: () => undefined } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const scope = createScope(ctx, { employee: 'alpha' })
+
+    await expect(ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), employee))
+      .rejects.toThrow('does not mount the skill loader tool')
+    expect(restrictTools).not.toHaveBeenCalled()
+    await scope.dispose()
+  })
+
+  it('adds no skill loader for an employee that declares no skills', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-no-skills-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Work.', 'utf8')
+    const restrictTools = vi.fn()
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: restrictTools, get: () => undefined } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const scope = createScope(ctx, { employee: 'alpha' })
+
+    await ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), resolved(root, 'alpha', 'Alpha'))
+
+    expect(restrictTools).toHaveBeenCalledWith({ allow: [] })
+    await scope.dispose()
+  })
+
+  it('restricts the skill registry to exactly the authorized set, sharing one loader name', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-skill-authority-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Plan the delivery.', 'utf8')
+    const base = resolved(root, 'alpha', 'Alpha')
+    const employee = {
+      ...base,
+      authority: { ...base.authority, skills: ['project-planning', 'risk-review'] },
+    } satisfies ResolvedDigitalEmployee
+    const restrictSkills = vi.fn()
+    const restrictTools = vi.fn()
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
+    ctx.provide('skills', { restrict: restrictSkills } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', {
+      register: vi.fn(),
+      restrict: restrictTools,
+      get: (name: string) => name === 'skill' ? { name: 'skill' } : undefined,
+    } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const scope = createScope(ctx, { employee: 'alpha' })
+
+    await ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), employee)
+
+    // Authorized skills only: one outside the authority can never appear in the
+    // registry view that drives the model-visible catalog.
+    expect(restrictSkills).toHaveBeenCalledWith({ allow: ['project-planning', 'risk-review'] })
+    expect(restrictTools).toHaveBeenCalledWith({ allow: ['skill'] })
+    await scope.dispose()
+  })
+
+  it('records capability attribution when the scope exposes the Agent as a property', async () => {
+    // Regression: the acting Agent rides the scope as a property (agent-loop
+    // calls `extend({ agent })`), never as a provided service. Reading it as a
+    // service silently skipped every audit record and the downstream busy
+    // verdict that depends on them.
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-audit-scope-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Verify every material claim.', 'utf8')
+    const employee = resolved(root, 'alpha', 'Alpha')
+    const appendAudit = vi.fn(() => Promise.resolve())
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', {
+      resolve: vi.fn(),
+      appendAudit,
+    } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: vi.fn() } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const sessionId = SessionId('property-agent-session')
+    const scope = createScope(ctx, { employee: 'alpha' })
+    // Exactly the real shape: `extend`, never `provide`.
+    const agentCtx = scope.ctx.extend({ agent: { id: sessionId, session: { id: sessionId } } })
+    expect(agentCtx.get('agent')).toBeUndefined()
+
+    await ctx.digitalEmployeeAgent.compose(agentCtx, employee)
+
+    expect(appendAudit).toHaveBeenCalledWith(expect.objectContaining({
+      employeeId: employee.instance.id,
+      sessionId,
+      agentId: sessionId,
+      category: 'capability',
+      action: 'capabilities.configured',
+      outcome: 'succeeded',
+    }))
+    await scope.dispose()
+  })
+
   it('mounts the resolved preset and projects employee instructions into only that agent scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-agent-'))
     await writeFile(join(root, 'AGENTS.md'), 'Verify every material claim.', 'utf8')
@@ -181,24 +342,26 @@ describe('DigitalEmployeeAgent', () => {
     const restrictTools = vi.fn()
     ctx.provide('agentPresets', { mount } as never)
     ctx.provide('agents', { create: vi.fn() } as never)
-    ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: restrictSkills } as never)
     ctx.provide('subagents', {} as never)
-    ctx.provide('tools', { restrict: restrictTools } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: restrictTools } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const alphaKey = { employee: 'alpha' }
     const betaKey = { employee: 'beta' }
     const alpha = createScope(ctx, alphaKey)
     const beta = createScope(ctx, betaKey)
+    const alphaCtx = actingAgentCtx(alpha.ctx)
+    const betaCtx = actingAgentCtx(beta.ctx)
 
     await ctx.digitalEmployeeAgent.compose(
-      alpha.ctx,
+      alphaCtx,
       resolved(root, 'alpha', 'Alpha', 'Direct and concise.'),
     )
-    await ctx.digitalEmployeeAgent.compose(beta.ctx, resolved(root, 'beta', 'Beta'))
+    await ctx.digitalEmployeeAgent.compose(betaCtx, resolved(root, 'beta', 'Beta'))
 
-    expect(mount).toHaveBeenNthCalledWith(1, alpha.ctx, 'coding')
-    expect(mount).toHaveBeenNthCalledWith(2, beta.ctx, 'coding')
+    expect(mount).toHaveBeenNthCalledWith(1, alphaCtx, 'coding')
+    expect(mount).toHaveBeenNthCalledWith(2, betaCtx, 'coding')
     expect(restrictSkills).toHaveBeenNthCalledWith(1, { allow: [] })
     expect(restrictSkills).toHaveBeenNthCalledWith(2, { allow: [] })
     expect(restrictTools).toHaveBeenNthCalledWith(1, { allow: [] })
@@ -249,7 +412,7 @@ describe('DigitalEmployeeAgent', () => {
     await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: vi.fn() } as never)
-    ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {
       list: () => ['spawn'],
@@ -259,10 +422,12 @@ describe('DigitalEmployeeAgent', () => {
     await ctx.plugin(DigitalEmployeeAgent)
     const scope = createScope(ctx, { employee: 'alpha' })
 
-    await ctx.digitalEmployeeAgent.compose(scope.ctx, employee)
+    await ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), employee)
 
-    expect(register).toHaveBeenCalledTimes(1)
-    expect(register.mock.calls[0]?.[0]).toMatchObject({
+    const definitions = register.mock.calls.map(call => call[0] as { name: string })
+    expect(definitions.map(definition => definition.name)).toContain('employee_memory')
+    expect(definitions.filter(definition => definition.name === 'delegate_to_expert')).toHaveLength(1)
+    expect(definitions.find(definition => definition.name === 'delegate_to_expert')).toMatchObject({
       name: 'delegate_to_expert',
       description: expect.stringContaining('reviewer') as string,
     })
@@ -294,7 +459,7 @@ describe('DigitalEmployeeAgent', () => {
     await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: vi.fn() } as never)
-    ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {
       list: () => ['spawn'],
@@ -303,7 +468,7 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('tools', { restrict: () => {}, register } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const scope = createScope(ctx, { employee: 'alpha' })
-    await ctx.digitalEmployeeAgent.compose(scope.ctx, employee)
+    await ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), employee)
     const tool = register.mock.calls[0]?.[0] as {
       execute(args: unknown, exec: { agent?: object; signal: AbortSignal }): Promise<unknown>
     }
@@ -337,10 +502,10 @@ describe('DigitalEmployeeAgent', () => {
     await ctx.plugin(SystemPrompt)
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: vi.fn() } as never)
-    ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const employee = resolved(root, 'alpha', 'Alpha')
     const escaped = {
@@ -349,7 +514,7 @@ describe('DigitalEmployeeAgent', () => {
     }
     const scope = createScope(ctx, { employee: 'alpha' })
 
-    await expect(ctx.digitalEmployeeAgent.compose(scope.ctx, escaped))
+    await expect(ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), escaped))
       .rejects.toThrow('escapes plugin root')
     await scope.dispose()
   })
@@ -360,11 +525,11 @@ describe('DigitalEmployeeAgent', () => {
     const createAgent = vi.fn()
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: createAgent } as never)
-    ctx.provide('digitalEmployees', { resolve: resolveEmployee } as never)
+    ctx.provide('digitalEmployees', { resolve: resolveEmployee , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
     ctx.provide('systemPrompt', { section: vi.fn() } as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
 
     await expect(ctx.digitalEmployeeAgent.createTask({
@@ -399,7 +564,7 @@ describe('DigitalEmployeeAgent', () => {
       const ctx = new Context()
       ctx.provide('agentPresets', { mount: vi.fn(() => Promise.resolve()) } as never)
       ctx.provide('agents', { create: vi.fn() } as never)
-      ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+      ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
       ctx.provide('skills', { restrict: vi.fn() } as never)
       ctx.provide('subagents', {} as never)
       ctx.provide('tools', {
@@ -420,17 +585,17 @@ describe('DigitalEmployeeAgent', () => {
     await host.plugin(DigitalEmployeeAgent)
 
     const x = createScope(host, { employee: 'x' })
-    await expect(host.digitalEmployeeAgent.compose(x.ctx, {
+    await expect(host.digitalEmployeeAgent.compose(actingAgentCtx(x.ctx), {
       ...resolved(root, 'x', 'X'),
       hooks: ['missing-hooks'],
     })).rejects.toThrow('hook references are unresolved: missing-hooks')
 
     const y = createScope(host, { employee: 'y' })
-    await host.digitalEmployeeAgent.compose(y.ctx, { ...resolved(root, 'y', 'Y'), hooks: ['echo-hooks'] })
+    await host.digitalEmployeeAgent.compose(actingAgentCtx(y.ctx), { ...resolved(root, 'y', 'Y'), hooks: ['echo-hooks'] })
     expect(registeredTools).toContain('hook__echo')
     const z = createScope(host, { employee: 'z' })
-    await host.digitalEmployeeAgent.compose(z.ctx, resolved(root, 'z', 'Z'))
-    expect(registeredTools).toEqual(['hook__echo'])
+    await host.digitalEmployeeAgent.compose(actingAgentCtx(z.ctx), resolved(root, 'z', 'Z'))
+    expect(registeredTools.filter((name: string) => name.startsWith('hook__'))).toEqual(['hook__echo'])
   })
 
   it('drains owned expert trees and root Agents before employee deletion', async () => {
@@ -451,7 +616,7 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', { drainContinuableDescendants } as never)
     ctx.provide('systemPrompt', { section: vi.fn() } as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
 
     const handle = await ctx.digitalEmployeeAgent.createTask({
@@ -497,12 +662,12 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: createAgent } as never)
     ctx.provide('credentials', { resolve: resolveCredential } as never)
-    ctx.provide('digitalEmployees', { resolve: () => Promise.resolve(withMcp) } as never)
+    ctx.provide('digitalEmployees', { resolve: () => Promise.resolve(withMcp) , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('mcpClients', { mount: vi.fn() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
     ctx.provide('systemPrompt', {} as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
 
     await expect(ctx.digitalEmployeeAgent.createTask({
@@ -549,7 +714,7 @@ describe('DigitalEmployeeAgent', () => {
         } as never)
         agentCtx.provide('skills', { restrict: () => {} } as never)
         agentCtx.provide('systemPrompt', { section: () => {} } as never)
-        agentCtx.provide('tools', { restrict: () => {} } as never)
+        agentCtx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
         await request.setup(agentCtx)
         return { agent: agentCtx.agent, dispose: async () => {} }
       },
@@ -568,7 +733,7 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
     ctx.provide('systemPrompt', { section: () => {} } as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
 
     await ctx.digitalEmployeeAgent.createTask({
@@ -661,7 +826,7 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
     ctx.provide('systemPrompt', {} as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
 
     await expect(ctx.digitalEmployeeAgent.resolveExpert({
@@ -725,11 +890,11 @@ describe('DigitalEmployeeAgent', () => {
     const ctx = new Context()
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: vi.fn() } as never)
-    ctx.provide('digitalEmployees', { resolve: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn() , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', { start, startContinuable } as never)
     ctx.provide('systemPrompt', {} as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const parent = {
       id: SessionId('parent'),
@@ -1067,7 +1232,7 @@ describe('DigitalEmployeeAgent', () => {
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
     ctx.provide('systemPrompt', { section: vi.fn() } as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const childCtx = createScope(ctx, { child: 'expert' }).ctx
     const child = {
@@ -1161,11 +1326,11 @@ describe('DigitalEmployeeAgent', () => {
     const ctx = new Context()
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: vi.fn() } as never)
-    ctx.provide('digitalEmployees', { promoteMemory } as never)
+    ctx.provide('digitalEmployees', { promoteMemory , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
     ctx.provide('systemPrompt', {} as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const candidate = {
       employeeId: accepted.memory.employeeId,
@@ -1197,11 +1362,11 @@ describe('DigitalEmployeeAgent', () => {
     const ctx = new Context()
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: vi.fn() } as never)
-    ctx.provide('digitalEmployees', { promoteMemory } as never)
+    ctx.provide('digitalEmployees', { promoteMemory , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', {} as never)
     ctx.provide('systemPrompt', {} as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const candidate = {
       employeeId: createDigitalEmployeeInstanceId('preview'),
@@ -1242,11 +1407,11 @@ describe('DigitalEmployeeAgent', () => {
     const ctx = new Context()
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: vi.fn() } as never)
-    ctx.provide('digitalEmployees', {} as never)
+    ctx.provide('digitalEmployees', { appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', { start } as never)
     ctx.provide('systemPrompt', {} as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const expert = {
       employeeId: createDigitalEmployeeInstanceId('alpha'),
@@ -1350,11 +1515,11 @@ describe('DigitalEmployeeAgent', () => {
     const ctx = new Context()
     ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
     ctx.provide('agents', { create: vi.fn() } as never)
-    ctx.provide('digitalEmployees', { resolve: () => Promise.resolve(employee) } as never)
+    ctx.provide('digitalEmployees', { resolve: () => Promise.resolve(employee) , appendAudit: () => Promise.resolve() } as never)
     ctx.provide('skills', { restrict: () => {} } as never)
     ctx.provide('subagents', { followup, interrupt, listDescendants } as never)
     ctx.provide('systemPrompt', {} as never)
-    ctx.provide('tools', { restrict: () => {} } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: () => {} } as never)
     await ctx.plugin(DigitalEmployeeAgent)
     const parent = { id: SessionId('parent') }
     const childId = SessionId('expert-child')
@@ -1451,17 +1616,18 @@ describe('DigitalEmployeeAgent', () => {
     })
     ctx.provide('agentPresets', { mount } as never)
     ctx.provide('agents', { create: createAgent } as never)
+    const appendAudit = vi.fn(() => Promise.resolve())
     ctx.provide('digitalEmployees', {
       resolve: () => Promise.resolve(currentEmployee),
       queryMemory,
-      appendAudit: vi.fn(() => Promise.resolve()),
+      appendAudit,
     } as never)
     ctx.provide('skills', { restrict: restrictSkills } as never)
     ctx.provide('subagents', {} as never)
     ctx.provide('systemPrompt', {
       section,
     } as never)
-    ctx.provide('tools', { restrict: restrictTools } as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: restrictTools } as never)
     await ctx.plugin(DigitalEmployeeAgent)
 
     const initialMessage = createUserMessage({
@@ -1528,6 +1694,17 @@ describe('DigitalEmployeeAgent', () => {
     expect(mount).toHaveBeenCalled()
     expect(restrictSkills).toHaveBeenCalledWith({ allow: [] })
     expect(restrictTools).toHaveBeenCalledWith({ allow: [] })
+    // The acting Agent rides the composition scope as a property, not a
+    // service: this mock uses bare `extend({ agent })`, the real agent-loop
+    // shape. Capability attribution must still land.
+    expect(appendAudit).toHaveBeenCalledWith(expect.objectContaining({
+      employeeId: employee.instance.id,
+      sessionId: SessionId('employee-task'),
+      agentId: SessionId('employee-task'),
+      category: 'capability',
+      action: 'capabilities.configured',
+      outcome: 'succeeded',
+    }))
 
     const creationIdentity = session.events.find(event => event.type === 'digital-employee/identity')
     currentEmployee = {
@@ -1555,5 +1732,356 @@ describe('DigitalEmployeeAgent', () => {
       templateVersion: '1.0.0',
       compositionId: expect.stringMatching(/^sha256:[0-9a-f]{64}$/) as string,
     })
+  })
+
+  it('resumes a persisted employee session under the current composition without re-appending identity events', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-resume-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Verify every material claim.', 'utf8')
+    const employee = resolved(root, 'alpha', 'Alpha')
+    const identityEvent = {
+      seq: 0,
+      at: 0,
+      type: 'digital-employee/identity',
+      data: {
+        employeeId: employee.instance.id,
+        displayName: 'Alpha',
+        templateId: employee.template.id,
+        templateVersion: employee.template.version,
+        compositionId: 'sha256:' + '0'.repeat(64),
+        personality: employee.personality,
+      },
+    } as never
+    const append = vi.fn()
+    const resumedSession = { id: SessionId('employee-member'), events: [identityEvent], append }
+    const resume = vi.fn(async (options: { setup: (agentCtx: unknown) => Promise<void> }) => {
+      const agent = { id: resumedSession.id, session: resumedSession }
+      const agentCtx = createScope(ctx, { member: 'alpha' }).ctx.extend({ agent })
+      await options.setup(agentCtx)
+      return { agent, dispose: vi.fn() }
+    })
+    const mount = vi.fn(() => Promise.resolve())
+    const appendAudit = vi.fn(() => Promise.resolve())
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount } as never)
+    ctx.provide('agents', { create: vi.fn(), resume } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn(() => Promise.resolve(employee)), appendAudit } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: vi.fn() } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+
+    const handle = await ctx.digitalEmployeeAgent.resumeTask({
+      employeeId: employee.instance.id,
+      resumeSessionId: SessionId('employee-member'),
+    })
+    expect(handle.agent.id).toBe(SessionId('employee-member'))
+    expect(resume).toHaveBeenCalledWith(expect.objectContaining({
+      resumeSessionId: SessionId('employee-member'),
+    }))
+    expect(mount).toHaveBeenCalledWith(expect.anything(), 'coding')
+    expect(append).not.toHaveBeenCalled()
+    // Resume path must attribute too: the audit used to be skipped silently
+    // because the scope's Agent was read as a service.
+    expect(appendAudit).toHaveBeenCalledWith(expect.objectContaining({
+      employeeId: employee.instance.id,
+      sessionId: SessionId('employee-member'),
+      agentId: SessionId('employee-member'),
+      action: 'capabilities.configured',
+    }))
+  })
+
+  it('refuses to resume a persisted session that belongs to another employee', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-resume-mismatch-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Verify every material claim.', 'utf8')
+    const employee = resolved(root, 'alpha', 'Alpha')
+    const otherIdentity = {
+      seq: 0, at: 0, type: 'digital-employee/identity',
+      data: {
+        employeeId: createDigitalEmployeeInstanceId('beta'),
+        displayName: 'Beta', templateId: employee.template.id, templateVersion: employee.template.version,
+        compositionId: 'sha256:' + '0'.repeat(64), personality: employee.personality,
+      },
+    } as never
+    const resume = vi.fn(async (options: { setup: (agentCtx: unknown) => Promise<void> }) => {
+      const agentCtx = createScope(ctx, { member: 'alpha' }).ctx.extend({
+        agent: { session: { id: SessionId('employee-member'), events: [otherIdentity], append: vi.fn() } },
+      })
+      await options.setup(agentCtx)
+      return { agent: {}, dispose: vi.fn() }
+    })
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: vi.fn(() => Promise.resolve()) } as never)
+    ctx.provide('agents', { create: vi.fn(), resume } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn(() => Promise.resolve(employee)) , appendAudit: () => Promise.resolve() } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: vi.fn() } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+
+    await expect(ctx.digitalEmployeeAgent.resumeTask({
+      employeeId: employee.instance.id,
+      resumeSessionId: SessionId('employee-member'),
+    })).rejects.toThrow('does not belong to digital employee')
+  })
+
+  it('re-projects bounded memory into a resumed session when the request asks for it', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-resume-memory-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Verify every material claim.', 'utf8')
+    const employee = resolved(root, 'alpha', 'Alpha')
+    const identityEvent = {
+      seq: 0,
+      at: 0,
+      type: 'digital-employee/identity',
+      data: {
+        employeeId: employee.instance.id,
+        displayName: 'Alpha',
+        templateId: employee.template.id,
+        templateVersion: employee.template.version,
+        compositionId: 'sha256:' + '0'.repeat(64),
+        personality: employee.personality,
+      },
+    } as never
+    const append = vi.fn()
+    const resumedSession = { id: SessionId('employee-member'), events: [identityEvent], append }
+    const resume = vi.fn(async (options: { setup: (agentCtx: unknown) => Promise<void> }) => {
+      const agent = { id: resumedSession.id, session: resumedSession }
+      const agentCtx = createScope(ctx, { member: 'alpha' }).ctx.extend({ agent })
+      await options.setup(agentCtx)
+      return { agent, dispose: vi.fn() }
+    })
+    const mount = vi.fn(() => Promise.resolve())
+    const queryMemory = vi.fn(() => Promise.resolve([{
+      id: createDigitalEmployeeMemoryId('memory-resumed'),
+      employeeId: employee.instance.id,
+      scope: 'long-term' as const,
+      content: 'Rollback needs an owner.',
+      tags: ['rollback'],
+      sensitive: false,
+      provenance: {
+        sessionId: SessionId('origin-session'),
+        source: 'employee-memory-tool',
+        recordedAt: '2026-09-16T00:00:00.000Z',
+      },
+    }]))
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount } as never)
+    ctx.provide('agents', { create: vi.fn(), resume } as never)
+    ctx.provide('digitalEmployees', {
+      resolve: vi.fn(() => Promise.resolve(employee)),
+      queryMemory,
+      appendAudit: () => Promise.resolve(),
+    } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', { register: vi.fn(), restrict: vi.fn() } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+
+    await ctx.digitalEmployeeAgent.resumeTask({
+      employeeId: employee.instance.id,
+      resumeSessionId: SessionId('employee-member'),
+      memory: { text: '', scopes: ['long-term'], limit: 4 },
+    })
+    expect(queryMemory).toHaveBeenCalledWith({
+      employeeId: employee.instance.id,
+      text: '',
+      scopes: ['long-term'],
+      limit: 4,
+    })
+    const projection = append.mock.calls
+      .map(call => call[0] as string)
+      .find(name => name === 'digital-employee/memory-projection')
+    expect(projection).toBe('digital-employee/memory-projection')
+    const projected = append.mock.calls
+      .find(call => call[0] === 'digital-employee/memory-projection')?.[1] as {
+      memories: readonly { content: string }[]
+    }
+    expect(projected.memories).toHaveLength(1)
+    expect(projected.memories[0]?.content).toBe('Rollback needs an owner.')
+  })
+
+  it('mounts the employee memory tool and keeps it visible past tool restriction', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-memory-tool-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Plan the delivery.', 'utf8')
+    const employee = resolved(root, 'alpha', 'Alpha')
+    const registered = new Map<string, { name: string; execute: (args: unknown, exec: unknown) => Promise<unknown> }>()
+    const restrictTools = vi.fn()
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn(), appendAudit: () => Promise.resolve() } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', {
+      register: (definition: { name: string; execute: (args: unknown, exec: unknown) => Promise<unknown> }) => {
+        registered.set(definition.name, definition)
+      },
+      restrict: restrictTools,
+      get: () => undefined,
+    } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const scope = createScope(ctx, { employee: 'alpha' })
+
+    await ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), employee)
+
+    expect(registered.get('employee_memory')?.name).toBe('employee_memory')
+    // Scope-local names are not restrictable: the memory tool must stay out of
+    // the global allow list and remains visible by the registry's contract.
+    expect(restrictTools).toHaveBeenCalledWith({ allow: [...employee.authority.tools] })
+    await scope.dispose()
+  })
+
+  it('saves employee memories through controlled promotion and records the session decision', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-memory-save-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Plan the delivery.', 'utf8')
+    const employee = resolved(root, 'alpha', 'Alpha')
+    const memoryId = createDigitalEmployeeMemoryId('memory-saved')
+    const promoteMemory = vi.fn((_candidate?: unknown): Promise<{ kind: 'accepted'; memory: { id: typeof memoryId } } | { kind: 'rejected'; reason: string }> => Promise.resolve({
+      kind: 'accepted' as const,
+      memory: {
+        id: memoryId,
+        employeeId: employee.instance.id,
+        scope: 'long-term' as const,
+        content: 'Durable fact.',
+        tags: ['fact'],
+        sensitive: false,
+        provenance: {
+          sessionId: SessionId('memory-agent'),
+          source: 'employee-memory-tool',
+          recordedAt: '2026-09-16T00:00:00.000Z',
+        },
+      },
+    }))
+    let memoryTool: { execute: (args: unknown, exec: unknown) => Promise<unknown> } | undefined
+    const append = vi.fn()
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn(), promoteMemory, appendAudit: () => Promise.resolve() } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', {
+      register: (definition: { name: string; execute: (args: unknown, exec: unknown) => Promise<unknown> }) => {
+        if (definition.name === 'employee_memory') memoryTool = definition
+      },
+      restrict: vi.fn(),
+      get: () => undefined,
+    } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const scope = createScope(ctx, { employee: 'alpha' })
+    await ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), employee)
+
+    const agent = {
+      id: SessionId('memory-agent'),
+      session: { id: SessionId('memory-agent'), header: undefined, append },
+    }
+    await expect(memoryTool?.execute(
+      { action: 'save', content: '  Durable fact.  ', tags: ['fact'] },
+      { agent, signal: new AbortController().signal },
+    )).resolves.toEqual({ action: 'save', kind: 'accepted', memoryId })
+    const candidate = promoteMemory.mock.calls[0]?.[0] as {
+      employeeId: typeof employee.instance.id
+      content: string
+      tags: string[]
+      sensitive: boolean
+      provenance: { sessionId: unknown; source: string; recordedAt: string }
+    }
+    expect(candidate).toEqual({
+      employeeId: employee.instance.id,
+      content: 'Durable fact.',
+      tags: ['fact'],
+      sensitive: false,
+      provenance: {
+        sessionId: SessionId('memory-agent'),
+        source: 'employee-memory-tool',
+        recordedAt: candidate?.provenance.recordedAt,
+      },
+    })
+    expect(candidate.provenance.recordedAt).toMatch(/^\d{4}-/u)
+    expect(append).toHaveBeenCalledWith('digital-employee/memory-decision', expect.objectContaining({
+      employeeId: employee.instance.id,
+    }) as unknown)
+
+    // Policy rejections reach the model as the tool result, and empty content fails loudly.
+    promoteMemory.mockResolvedValue({ kind: 'rejected', reason: 'duplicate long-term memory content' })
+    await expect(memoryTool?.execute(
+      { action: 'save', content: 'Durable fact.', tags: [] },
+      { agent, signal: new AbortController().signal },
+    )).resolves.toEqual({ action: 'save', kind: 'rejected', reason: 'duplicate long-term memory content' })
+    await expect(memoryTool?.execute(
+      { action: 'save', content: '   ' },
+      { agent, signal: new AbortController().signal },
+    )).rejects.toThrow('requires non-empty content')
+    await scope.dispose()
+  })
+
+  it('searches only the composed employee memories under the validated bound', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'dsh-digital-employee-memory-search-'))
+    await writeFile(join(root, 'AGENTS.md'), 'Plan the delivery.', 'utf8')
+    const employee = resolved(root, 'alpha', 'Alpha')
+    const queryMemory = vi.fn(() => Promise.resolve([{
+      id: createDigitalEmployeeMemoryId('memory-note'),
+      employeeId: employee.instance.id,
+      scope: 'long-term' as const,
+      content: 'Launch needs a rollback owner.',
+      tags: ['launch'],
+      sensitive: false,
+      provenance: {
+        sessionId: SessionId('search-session'),
+        source: 'employee-memory-tool',
+        recordedAt: '2026-09-16T00:00:00.000Z',
+      },
+    }]))
+    let memoryTool: { execute: (args: unknown, exec: unknown) => Promise<unknown> } | undefined
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt, { includeHarnessIdentity: false })
+    ctx.provide('agentPresets', { mount: () => Promise.resolve() } as never)
+    ctx.provide('agents', { create: vi.fn() } as never)
+    ctx.provide('digitalEmployees', { resolve: vi.fn(), queryMemory, appendAudit: () => Promise.resolve() } as never)
+    ctx.provide('skills', { restrict: vi.fn() } as never)
+    ctx.provide('subagents', {} as never)
+    ctx.provide('tools', {
+      register: (definition: { name: string; execute: (args: unknown, exec: unknown) => Promise<unknown> }) => {
+        if (definition.name === 'employee_memory') memoryTool = definition
+      },
+      restrict: vi.fn(),
+      get: () => undefined,
+    } as never)
+    await ctx.plugin(DigitalEmployeeAgent)
+    const scope = createScope(ctx, { employee: 'alpha' })
+    await ctx.digitalEmployeeAgent.compose(actingAgentCtx(scope.ctx), employee)
+    const agent = { id: SessionId('search-agent'), session: { id: SessionId('search-agent') } }
+
+    await expect(memoryTool?.execute(
+      { action: 'search', text: 'launch' },
+      { agent, signal: new AbortController().signal },
+    )).resolves.toEqual({
+      action: 'search',
+      memories: [{
+        id: createDigitalEmployeeMemoryId('memory-note'),
+        content: 'Launch needs a rollback owner.',
+        tags: ['launch'],
+        recordedAt: '2026-09-16T00:00:00.000Z',
+      }],
+    })
+    expect(queryMemory).toHaveBeenCalledWith({
+      employeeId: employee.instance.id,
+      text: 'launch',
+      scopes: ['long-term'],
+      limit: 5,
+    })
+    await expect(memoryTool?.execute(
+      { action: 'search', text: '', limit: 21 },
+      { agent, signal: new AbortController().signal },
+    )).rejects.toThrow('between 1 and 20')
+    await expect(memoryTool?.execute(
+      { action: 'restart' },
+      { agent, signal: new AbortController().signal },
+    )).rejects.toThrow('must be "save" or "search"')
+    await scope.dispose()
   })
 })

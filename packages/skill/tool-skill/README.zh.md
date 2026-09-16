@@ -16,6 +16,8 @@
 
 `catalogDescriptionMaxLength` 控制规范化后的目录描述，渲染时会对其执行 XML 转义。其默认值是 `500`，且必须是不小于 `3` 的整数，以便为截断省略号保留空间。[skill 目录热刷新 Agent Note](../../../.agents/notes/implemented/feature/2026-07-27-skill-catalog-hot-refresh.zh.md) 负责定义持久初始目录和替换目录的生命周期。
 
+把某 agent 限制在声明业务工具白名单上的消费者，必须把 `SKILL_LOADER_TOOL_NAME`（`skill`）保留在白名单内：遮蔽加载器会连同目录一起遮蔽。数字员工组装对每个声明了技能的员工都这样做。
+
 ## 工具：`skill`
 
 | 参数 | 类型 | 说明 |

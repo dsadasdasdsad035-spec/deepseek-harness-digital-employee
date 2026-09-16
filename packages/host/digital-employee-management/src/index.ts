@@ -103,6 +103,8 @@ export interface Config {
   successCacheMaxEntries?: number
   /** Milliseconds a completed submission remains reusable. */
   successCacheTtlMs?: number
+  /** Most-recent long-term memories projected into each started chat. */
+  memoryProjectionLimit?: number
 }
 
 declare module '@deepseek-ai/cordis' {
@@ -130,7 +132,9 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     studioFile: z.string().default(DEFAULT_STUDIO_FILE),
     successCacheMaxEntries: z.number().step(1).min(1).default(DEFAULT_SUCCESS_CACHE_MAX_ENTRIES),
     successCacheTtlMs: z.number().step(1).min(1).default(DEFAULT_SUCCESS_CACHE_TTL_MS),
+    memoryProjectionLimit: z.number().step(1).min(1).max(50).default(5),
   })
+  private readonly memoryProjectionLimit: number
   private readonly chatStarts = new Map<
     DigitalEmployeeStartChatRequest['submissionId'],
     {
@@ -152,6 +156,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     const studioFile = resolve(config.studioFile ?? DEFAULT_STUDIO_FILE)
     this.successCacheMaxEntries = config.successCacheMaxEntries ?? DEFAULT_SUCCESS_CACHE_MAX_ENTRIES
     this.successCacheTtlMs = config.successCacheTtlMs ?? DEFAULT_SUCCESS_CACHE_TTL_MS
+    this.memoryProjectionLimit = config.memoryProjectionLimit ?? 5
     this.administrator = config.administrator ?? false
     this.configurationStudio = new ConfigurationStudioStore(studioFile)
     this.studioRoot = dirname(studioFile)
@@ -1146,6 +1151,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
       employeeId: request.employeeId,
       sessionId: request.sessionId,
       meta: { cwd: workspace.path },
+      memory: { text: '', scopes: ['long-term'], limit: this.memoryProjectionLimit },
       agentOptions: {
         provider: modelSelection.provider,
         model: modelSelection.model,

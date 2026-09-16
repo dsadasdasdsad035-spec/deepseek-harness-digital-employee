@@ -39,6 +39,15 @@ describe('project-manager digital employee assembled snapshot', () => {
     expect(transcript).toContain('"stage":"workflow-complete"')
     expect(transcript).toContain('"projected":true')
     expect(transcript).toContain('"durableAttribution":true')
+    // The declared skills must reach the model, not just the registry.
+    expect(transcript).toContain('"stage":"skill-catalog","catalogSkills":["project-planning","risk-review","status-reporting"],"equalsAuthority":true')
+    // The composition-mounted memory tool must save through controlled
+    // promotion and record the decision on the session log.
+    expect(transcript).toContain('"stage":"memory-tool","kind":"accepted","memoryIdAssigned":true,"decisionLogged":true')
+    expect(transcript).toContain('"visibleTools":["delegate_to_expert","employee_memory","project_board","project_document","skill"]')
+    // A skill that exists globally but is absent from the employee's authority
+    // must be neither listed nor loadable in the employee scope.
+    expect(transcript).toContain('"stage":"skill-isolation","foreignSkill":"foreign-skill","foreignVisibleGlobally":true,"foreignListed":false,"foreignLoadable":false')
     if (refreshing) await writeFile(expectedPath, transcript)
     expect(transcript).toBe(await readFile(expectedPath, 'utf8'))
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
