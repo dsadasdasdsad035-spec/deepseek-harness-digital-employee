@@ -244,7 +244,7 @@ git commit -m "feat(digital-employee-ui): add chat mentions"
 - 修改：`packages/api/remotes/tests/digital-employees.client.spec.ts`
 - 修改：`packages/bundle/web-app/cordis.patch.yml`
 - 修改：`packages/bundle/web-app/package.json`
-- 修改：`packages/bundle/web-app/tests/digital-employee-composition.spec.ts`
+- 修改：`packages/bundle/digital-employee-suite/tests/composition.spec.ts`
 - 修改：`packages/client/ui-digital-employees/package.json`
 - 修改：`tsconfig.client.json`
 - 修改：`tsconfig.host.json`
@@ -259,7 +259,7 @@ git commit -m "feat(digital-employee-ui): add chat mentions"
 ```sh
 pnpm exec vitest run \
   packages/api/remotes/tests/digital-employees.client.spec.ts \
-  packages/bundle/web-app/tests/digital-employee-composition.spec.ts
+  packages/bundle/digital-employee-suite/tests/composition.spec.ts
 ```
 
 - [ ] **步骤 3：更新 manifests 与 compiler faces**
@@ -269,7 +269,7 @@ pnpm exec vitest run \
 - [ ] **步骤 4：运行构建烟测并提交**
 
 ```sh
-pnpm exec vitest run packages/api/remotes/tests/digital-employees.client.spec.ts packages/bundle/web-app/tests/digital-employee-composition.spec.ts
+pnpm exec vitest run packages/api/remotes/tests/digital-employees.client.spec.ts packages/bundle/digital-employee-suite/tests/composition.spec.ts
 pnpm run typecheck
 pnpm run build
 git add packages/api/remotes packages/bundle/web-app packages/client/ui-digital-employees tsconfig.client.json tsconfig.host.json pnpm-lock.yaml

@@ -25,3 +25,11 @@
 - [x] 4.3 Add Web E2E coverage for Digital employees, Template configuration, Skill/Tool/MCP market navigation, and `@数字员工`.
 - [x] 4.4 Add a keyless assembled snapshot or update the applicable snapshot harness for the new product-visible composition.
 - [x] 4.5 Run focused tests, typecheck, build, and the repository pre-push checks; record any environment-blocked checks.
+
+## 5. Domain Ownership Flip (2026-09-22)
+
+- [x] 5.1 Move the Skill/Tool/MCP/Hook/Workflow/Subagent marketplace, digital employee, and company Host and browser rows from `dsh-web-app/cordis.patch.yml` into the suite patch, keeping each row's config and relative order.
+- [x] 5.2 Move the domain package dependencies from `dsh-web-app` to the suite and add the suite to the `apps/cli` dependency closure so the profile module fallback resolves it.
+- [x] 5.3 Stack the suite in `PROFILE_TEMPLATES.web` and register the pre-split `[base, web-app]` tuple in `INSTALLATION_OWNED_PROFILE_TUPLES`.
+- [x] 5.4 Update the assembled composition harnesses (assembled boot, Web e2e scaffold, Web presets e2e) to the three-layer bundle stack.
+- [x] 5.5 Rewrite the suite composition test for full domain ownership (row split across both patches, ordering, target-local paths) and delete the superseded Web bundle specs.

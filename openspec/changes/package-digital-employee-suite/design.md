@@ -25,11 +25,15 @@ Create a new bundle package with a `cordis.patch.yml` that references the existi
 
 ### Define one remote composition owner
 
-The suite bundle SHALL either own the `api-remotes` contribution or document that it is supplied by the base Web bundle. The package MUST NOT add a second `skillMarket`, `toolMarket`, `mcpMarket`, or digital employee remote namespace when the consuming profile already loads one. Composition tests will assert unique loader IDs and remote method namespaces.
+The suite bundle owns every marketplace, digital employee, and company Host row and its browser rows; the Web bundle keeps the shared `api-remotes` carrier and the generic browser surface, and documents that the suite's generated Typert Host methods travel over it. Neither bundle duplicates the other's loader IDs, so loading both cannot register a second `skillMarket`, `toolMarket`, `mcpMarket`, company, or digital employee namespace. Composition tests assert the exact row split across both patches.
 
-### Keep marketplace support in the first suite
+### Keep marketplace and company support in the one suite
 
-The first distributable package will include the marketplace Host and client contributions because Template configuration depends on their catalogs. The bundle may later be split into core and marketplace packages after a stable extension contract exists.
+The distributable package includes the marketplace and company Host and client contributions — the marketplaces provision employees and companies bind them — because Template configuration depends on their catalogs. One installable package is the single entry for all three domains; splitting it further waits for a stable extension contract.
+
+### Stack the suite in the shipped web profile template
+
+`PROFILE_TEMPLATES.web` composes `[dsh-base, dsh-web-app, dsh-digital-employee-suite]`, so the shipped surface keeps every capability after the row split, and `dsh plugin --profile <name> add @deepseek-ai/dsh-digital-employee-suite` is the out-of-tree entry for everyone else. The pre-split `[dsh-base, dsh-web-app]` tuple is registered as installation-owned, so an existing web profile normalizes to the new template on its next load; any customized list stays user-owned.
 
 ### Resolve all durable paths from the target Harness home
 
@@ -50,7 +54,8 @@ The cross-project test will create a temporary profile and Harness home, install
 ## Migration Plan
 
 1. Add and build the bundle alongside the existing Web bundle.
-2. Install it in an isolated profile and run the cross-project smoke test.
-3. Document the supported profile composition, including how to avoid loading duplicate digital employee or marketplace entries.
-4. Release the bundle without changing existing user-home files.
-5. To roll back, remove the bundle from the profile and restart; preserved user data becomes visible again when a compatible bundle is installed.
+2. Move the marketplace, digital employee, and company rows and dependencies from `dsh-web-app` into the suite; the Web bundle keeps the shared carrier.
+3. Stack the suite in `PROFILE_TEMPLATES.web` and register the pre-split web tuple as installation-owned so existing profiles normalize on next load.
+4. Update the assembled composition harnesses to the three-layer stack and run the cross-project smoke test against it.
+5. Release the bundle without changing existing user-home files.
+6. To roll back, remove the bundle from the profile and restart; preserved user data becomes visible again when a compatible bundle is installed.

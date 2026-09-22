@@ -183,6 +183,9 @@ importers:
       '@deepseek-ai/dsh-digital-employee-file':
         specifier: workspace:^
         version: link:../../packages/core/digital-employee-file
+      '@deepseek-ai/dsh-digital-employee-suite':
+        specifier: workspace:^
+        version: link:../../packages/bundle/digital-employee-suite
       '@deepseek-ai/dsh-fs-local':
         specifier: workspace:^
         version: link:../../packages/fs/fs-local
@@ -1386,9 +1389,21 @@ importers:
 
   packages/bundle/digital-employee-suite:
     dependencies:
+      '@deepseek-ai/dsh-client-ui-companies':
+        specifier: workspace:^
+        version: link:../../client/ui-companies
       '@deepseek-ai/dsh-client-ui-digital-employees':
         specifier: workspace:^
         version: link:../../client/ui-digital-employees
+      '@deepseek-ai/dsh-client-ui-skill-market':
+        specifier: workspace:^
+        version: link:../../client/ui-skill-market
+      '@deepseek-ai/dsh-company':
+        specifier: workspace:^
+        version: link:../../core/company
+      '@deepseek-ai/dsh-company-file':
+        specifier: workspace:^
+        version: link:../../core/company-file
       '@deepseek-ai/dsh-digital-employee':
         specifier: workspace:^
         version: link:../../core/digital-employee
@@ -1401,9 +1416,39 @@ importers:
       '@deepseek-ai/dsh-digital-employee-sqlite':
         specifier: workspace:^
         version: link:../../core/digital-employee-sqlite
+      '@deepseek-ai/dsh-hooks-market':
+        specifier: workspace:^
+        version: link:../../hooks/hooks-market
+      '@deepseek-ai/dsh-host-company-group-chat':
+        specifier: workspace:^
+        version: link:../../host/company-group-chat
+      '@deepseek-ai/dsh-host-company-management':
+        specifier: workspace:^
+        version: link:../../host/company-management
       '@deepseek-ai/dsh-host-digital-employee-management':
         specifier: workspace:^
         version: link:../../host/digital-employee-management
+      '@deepseek-ai/dsh-mcp-client':
+        specifier: workspace:^
+        version: link:../../mcp/mcp-client
+      '@deepseek-ai/dsh-mcp-market':
+        specifier: workspace:^
+        version: link:../../mcp/mcp-market
+      '@deepseek-ai/dsh-project-manager-test-digital-employee':
+        specifier: workspace:^
+        version: link:../../examples/project-manager-test-digital-employee
+      '@deepseek-ai/dsh-skill-market':
+        specifier: workspace:^
+        version: link:../../skill/skill-market
+      '@deepseek-ai/dsh-subagent-market':
+        specifier: workspace:^
+        version: link:../../subagent/subagent-market
+      '@deepseek-ai/dsh-tool-market':
+        specifier: workspace:^
+        version: link:../../tool/tool-market
+      '@deepseek-ai/dsh-workflow-market':
+        specifier: workspace:^
+        version: link:../../workflow/workflow-market
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -1548,9 +1593,6 @@ importers:
       '@deepseek-ai/dsh-client-ui-commands':
         specifier: workspace:^
         version: link:../../client/ui-commands
-      '@deepseek-ai/dsh-client-ui-companies':
-        specifier: workspace:^
-        version: link:../../client/ui-companies
       '@deepseek-ai/dsh-client-ui-conversation':
         specifier: workspace:^
         version: link:../../client/ui-conversation
@@ -1560,9 +1602,6 @@ importers:
       '@deepseek-ai/dsh-client-ui-deliverables':
         specifier: workspace:^
         version: link:../../client/ui-deliverables
-      '@deepseek-ai/dsh-client-ui-digital-employees':
-        specifier: workspace:^
-        version: link:../../client/ui-digital-employees
       '@deepseek-ai/dsh-client-ui-directory-picker-browse':
         specifier: workspace:^
         version: link:../../client/ui-directory-picker-browse
@@ -1620,9 +1659,6 @@ importers:
       '@deepseek-ai/dsh-client-ui-skill':
         specifier: workspace:^
         version: link:../../client/ui-skill
-      '@deepseek-ai/dsh-client-ui-skill-market':
-        specifier: workspace:^
-        version: link:../../client/ui-skill-market
       '@deepseek-ai/dsh-client-ui-subagent':
         specifier: workspace:^
         version: link:../../client/ui-subagent
@@ -1650,30 +1686,12 @@ importers:
       '@deepseek-ai/dsh-code-runtime-worker-thread':
         specifier: workspace:^
         version: link:../../code-runtime/code-runtime-worker-thread
-      '@deepseek-ai/dsh-company':
-        specifier: workspace:^
-        version: link:../../core/company
-      '@deepseek-ai/dsh-company-file':
-        specifier: workspace:^
-        version: link:../../core/company-file
       '@deepseek-ai/dsh-cordis-client-runner':
         specifier: workspace:^
         version: link:../../extensions/cordis-client-runner
       '@deepseek-ai/dsh-cordis-host-runner':
         specifier: workspace:^
         version: link:../../extensions/cordis-host-runner
-      '@deepseek-ai/dsh-digital-employee':
-        specifier: workspace:^
-        version: link:../../core/digital-employee
-      '@deepseek-ai/dsh-digital-employee-agent':
-        specifier: workspace:^
-        version: link:../../core/digital-employee-agent
-      '@deepseek-ai/dsh-digital-employee-example-template':
-        specifier: workspace:^
-        version: link:../../examples/digital-employee-template
-      '@deepseek-ai/dsh-digital-employee-sqlite':
-        specifier: workspace:^
-        version: link:../../core/digital-employee-sqlite
       '@deepseek-ai/dsh-email':
         specifier: workspace:^
         version: link:../../email/email
@@ -1683,21 +1701,9 @@ importers:
       '@deepseek-ai/dsh-file-reference-local':
         specifier: workspace:^
         version: link:../../context/file-reference-local
-      '@deepseek-ai/dsh-hooks-market':
-        specifier: workspace:^
-        version: link:../../hooks/hooks-market
       '@deepseek-ai/dsh-host-apiproxy':
         specifier: workspace:^
         version: link:../../host/apiproxy
-      '@deepseek-ai/dsh-host-company-group-chat':
-        specifier: workspace:^
-        version: link:../../host/company-group-chat
-      '@deepseek-ai/dsh-host-company-management':
-        specifier: workspace:^
-        version: link:../../host/company-management
-      '@deepseek-ai/dsh-host-digital-employee-management':
-        specifier: workspace:^
-        version: link:../../host/digital-employee-management
       '@deepseek-ai/dsh-host-directory-picker-auto':
         specifier: workspace:^
         version: link:../../host/directory-picker-auto
@@ -1719,18 +1725,9 @@ importers:
       '@deepseek-ai/dsh-launch-environment':
         specifier: workspace:^
         version: link:../../util/launch-environment
-      '@deepseek-ai/dsh-mcp-client':
-        specifier: workspace:^
-        version: link:../../mcp/mcp-client
-      '@deepseek-ai/dsh-mcp-market':
-        specifier: workspace:^
-        version: link:../../mcp/mcp-market
       '@deepseek-ai/dsh-message-feedback':
         specifier: workspace:^
         version: link:../../feedback/message-feedback
-      '@deepseek-ai/dsh-project-manager-test-digital-employee':
-        specifier: workspace:^
-        version: link:../../examples/project-manager-test-digital-employee
       '@deepseek-ai/dsh-session-log-export':
         specifier: workspace:^
         version: link:../../session-query/session-log-export
@@ -1743,9 +1740,6 @@ importers:
       '@deepseek-ai/dsh-session-stats':
         specifier: workspace:^
         version: link:../../session/session-stats
-      '@deepseek-ai/dsh-skill-market':
-        specifier: workspace:^
-        version: link:../../skill/skill-market
       '@deepseek-ai/dsh-storage':
         specifier: workspace:^
         version: link:../../storage/storage
@@ -1755,24 +1749,15 @@ importers:
       '@deepseek-ai/dsh-storage-json':
         specifier: workspace:^
         version: link:../../storage/storage-json
-      '@deepseek-ai/dsh-subagent-market':
-        specifier: workspace:^
-        version: link:../../subagent/subagent-market
       '@deepseek-ai/dsh-subprocess':
         specifier: workspace:^
         version: link:../../subprocess/subprocess
-      '@deepseek-ai/dsh-tool-market':
-        specifier: workspace:^
-        version: link:../../tool/tool-market
       '@deepseek-ai/dsh-user-accounts':
         specifier: workspace:^
         version: link:../../account/user-accounts
       '@deepseek-ai/dsh-web-frontend':
         specifier: workspace:^
         version: link:../../../apps/web
-      '@deepseek-ai/dsh-workflow-market':
-        specifier: workspace:^
-        version: link:../../workflow/workflow-market
       '@deepseek-ai/dsh-workspace':
         specifier: workspace:^
         version: link:../../workspace/workspace

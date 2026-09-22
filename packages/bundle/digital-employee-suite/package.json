@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-digital-employee-suite",
-  "description": "Optional Web bundle extension for digital employee management and Template configuration",
+  "description": "Installable Web bundle layer owning the marketplace, digital employee, and company domains: six marketplaces, the employee runtime and management stack, the 3D company campus, and their browser rows",
   "version": "0.1.1-rc.2",
   "publishConfig": {
     "access": "public"
@@ -39,12 +39,26 @@
     }
   },
   "dependencies": {
+    "@deepseek-ai/dsh-client-ui-companies": "workspace:^",
     "@deepseek-ai/dsh-client-ui-digital-employees": "workspace:^",
+    "@deepseek-ai/dsh-client-ui-skill-market": "workspace:^",
+    "@deepseek-ai/dsh-company": "workspace:^",
+    "@deepseek-ai/dsh-company-file": "workspace:^",
     "@deepseek-ai/dsh-digital-employee": "workspace:^",
     "@deepseek-ai/dsh-digital-employee-agent": "workspace:^",
-    "@deepseek-ai/dsh-digital-employee-sqlite": "workspace:^",
     "@deepseek-ai/dsh-digital-employee-example-template": "workspace:^",
-    "@deepseek-ai/dsh-host-digital-employee-management": "workspace:^"
+    "@deepseek-ai/dsh-digital-employee-sqlite": "workspace:^",
+    "@deepseek-ai/dsh-hooks-market": "workspace:^",
+    "@deepseek-ai/dsh-host-company-group-chat": "workspace:^",
+    "@deepseek-ai/dsh-host-company-management": "workspace:^",
+    "@deepseek-ai/dsh-host-digital-employee-management": "workspace:^",
+    "@deepseek-ai/dsh-mcp-client": "workspace:^",
+    "@deepseek-ai/dsh-mcp-market": "workspace:^",
+    "@deepseek-ai/dsh-project-manager-test-digital-employee": "workspace:^",
+    "@deepseek-ai/dsh-skill-market": "workspace:^",
+    "@deepseek-ai/dsh-subagent-market": "workspace:^",
+    "@deepseek-ai/dsh-tool-market": "workspace:^",
+    "@deepseek-ai/dsh-workflow-market": "workspace:^"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis-plugin-loader": "workspace:^",

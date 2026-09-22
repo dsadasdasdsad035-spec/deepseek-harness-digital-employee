@@ -1,8 +1,28 @@
 ## Purpose
 
-Provide a distributable Harness bundle that installs the complete digital employee experience into another project without copying machine-local employees, credentials, templates, or marketplace packages.
+Provide a distributable Harness bundle that installs the complete digital employee experience — marketplaces, employees, and the companies that bind them — into another project without copying machine-local employees, credentials, templates, or marketplace packages.
 
 ## ADDED Requirements
+
+### Requirement: Suite owns the three domain row sets
+
+The system SHALL keep every marketplace (Skill/Tool/MCP/Hook/Workflow/Subagent), digital employee, and company Host row and its browser rows in the suite bundle's patch layer, and the generic Web bundle MUST NOT mount any of those rows; the Web bundle remains the owner of the shared api-remotes carrier the suite's remotes travel over.
+
+#### Scenario: Split ownership across the Web and suite patches
+
+- **WHEN** both bundle patches are inspected
+- **THEN** every domain row id appears exactly once, in the suite patch
+- **THEN** the Web patch still mounts `api-remotes` and none of the domain packages
+
+### Requirement: Shipped web profile keeps every capability
+
+The system SHALL stack the suite after the Web bundle in the shipped web profile template, and SHALL normalize an existing profile whose bundle list is exactly the pre-split Web tuple to that template, leaving every other list user-owned.
+
+#### Scenario: Boot an existing pre-split web profile
+
+- **WHEN** a web profile with the `[dsh-base, dsh-web-app]` bundle list loads
+- **THEN** its manifest is rewritten to the current template including the suite
+- **THEN** a profile with any other bundle list is left untouched
 
 ### Requirement: Installable suite bundle
 

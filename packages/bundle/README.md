@@ -9,8 +9,8 @@ The manifest declaration, not this directory, defines Bundle identity. Domain pa
 | Package | Role | ctx key |
 |---|---|---|
 | [`base/`](base/README.md) | The shared dsh core every profile applies first | — (patch only) |
-| [`web-app/`](web-app/README.md) | Browser surface: web patch layer + runtime glue plugin | mounts rows |
+| [`web-app/`](web-app/README.md) | The generic browser surface: web patch layer + runtime glue plugin | mounts rows |
 | [`headless/`](headless/README.md) | Direct one-shot task mode over base, with no Host or Web layer | mounts `headless-runner` |
-| [`digital-employee-suite/`](digital-employee-suite/README.md) | Optional Web extension for digital employee operations and Template configuration | mounts digital employee rows |
+| [`digital-employee-suite/`](digital-employee-suite/README.md) | The marketplace, digital employee, and company domains as one installable layer the web profile stacks | mounts domain rows |
 
 In-box bundles resolve from the dsh installation; out-of-tree bundles install into a profile through `dsh plugin --profile <name> add <package>`.

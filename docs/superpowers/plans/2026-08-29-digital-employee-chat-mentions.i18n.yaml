@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/superpowers/plans/2026-08-29-digital-employee-chat-mentions.md
-2026-08-29-digital-employee-chat-mentions.md: 5b59de81ae85b77ee857cd414217a821eaa290a1
-2026-08-29-digital-employee-chat-mentions.zh.md: 896cdfe5c0aab62403a32e1317204b7d4c602aae
+2026-08-29-digital-employee-chat-mentions.md: 6d9a36eff73886437e1be7a2b14e6defbc6c1905
+2026-08-29-digital-employee-chat-mentions.zh.md: 3a99858247e6d5c77aa27b64fde6ebfb19fba7d9

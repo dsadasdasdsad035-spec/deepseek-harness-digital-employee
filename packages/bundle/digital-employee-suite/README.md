@@ -2,11 +2,11 @@
 
 English | [中文](README.zh.md)
 
-An optional profile bundle extension for the Web surface. It adds digital employee operations, Template configuration, example templates, durable employee persistence, and the `@数字员工` input source to a profile that already contains `@deepseek-ai/dsh-base` and `@deepseek-ai/dsh-web-app`.
+An installable profile bundle layer that owns the three business domains over a Web surface: the Skill/Tool/MCP/Hook/Workflow/Subagent marketplaces, the digital employee runtime with management and Template configuration, and the company module with the 3D campus console and group chat. Apply it over `@deepseek-ai/dsh-base` and `@deepseek-ai/dsh-web-app`; the shipped web profile template already stacks it, so a normal `dsh web` deployment has every capability.
 
-Install it in a consuming profile with `dsh plugin --profile <name> add @deepseek-ai/dsh-digital-employee-suite`, or add the package to the profile and include it after `@deepseek-ai/dsh-web-app` in `dsh.profile.bundles`. The bundle deliberately does not duplicate `api-remotes`, Skill/Tool/MCP marketplace rows, or their settings UI; those rows remain owned by `dsh-web-app`.
+Install it into any other profile with `dsh plugin --profile <name> add @deepseek-ai/dsh-digital-employee-suite`, or add the package to the profile and include it after `@deepseek-ai/dsh-web-app` in `dsh.profile.bundles`. The bundle owns every domain Host row and its browser rows (`ui-skill-market`, `ui-digital-employees`, `ui-companies`); `dsh-web-app` stays the owner of the shared `api-remotes` carrier those domains' remotes travel over, and loading both never duplicates a namespace.
 
-All employee records and template configuration are target-local. The bundle contains no user employees, templates, marketplace archives, absolute development paths, or resolved credential values. Removing or upgrading the bundle does not remove files under `$DSH_HOME`.
+All employee records, company stores, and marketplace installations are target-local. The bundle contains no user employees, companies, templates, marketplace archives, absolute development paths, or resolved credential values. Removing or upgrading the bundle does not remove files under `$DSH_HOME`.
 
 ## Model Experience
 
@@ -14,7 +14,7 @@ All employee records and template configuration are target-local. The bundle con
 
 #### What the model sees
 
-When a user starts a chat with a managed digital employee (`@数字员工` input source or the management page), the composed Host resolves that employee's published template, instructions, declared Skills, Tools, MCP servers, experts, and memory projection, then appends the durable `digital-employee/identity` event recording the resolved composition. The suite adds the management and chat entry points; the Web bundle supplies the shared marketplace and API remote composition.
+When a user starts a chat with a managed digital employee (`@数字员工` input source or the management page), the composed Host resolves that employee's published template, instructions, declared Skills, Tools, MCP servers, experts, and memory projection, then appends the durable `digital-employee/identity` event recording the resolved composition. The suite owns the marketplace, employee, and company contributions; the Web bundle supplies the shared API carrier.
 
 #### Token effect
 
@@ -26,6 +26,6 @@ The published template version and stable instruction assets form the reusable p
 
 ## Known Limitations and Deferred Work
 
-- **Web bundle prerequisite** - this extension does not duplicate the Web bundle's API remote or Skill/Tool/MCP marketplace rows; the consuming profile must provide `@deepseek-ai/dsh-web-app`.
+- **Web bundle prerequisite** - the suite's remotes travel over the `api-remotes` carrier and browser roster the Web bundle mounts; the consuming profile must provide `@deepseek-ai/dsh-web-app`.
 - **Restart activation** - newly installed Tool and MCP packages become selectable only after their normal Host activation and restart checks succeed.
-- **Target-local configuration** - employee records, Template configuration drafts, and marketplace installations are intentionally not migrated from the bundle author's machine.
+- **Target-local configuration** - employee records, company stores, Template configuration drafts, and marketplace installations are intentionally not migrated from the bundle author's machine.

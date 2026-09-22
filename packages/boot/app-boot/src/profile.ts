@@ -112,13 +112,17 @@ export function resolveProfileDir(name: string, home: string = resolveDshHome())
 
 /** The shipped profile templates auto-initialized on first use, by name. */
 export const PROFILE_TEMPLATES: Record<string, readonly string[]> = {
-  web: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'],
+  web: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-digital-employee-suite'],
   headless: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'],
   'headless-employee': ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless', '@deepseek-ai/dsh-headless-employee'],
 }
 
 /** Installation-owned bundle tuples normalized to the shipped template. */
 const INSTALLATION_OWNED_PROFILE_TUPLES: Record<string, readonly string[]> = {
+  // The marketplace/employee/company rows moved from dsh-web-app into
+  // dsh-digital-employee-suite; a pre-split web profile normalizes to the
+  // new template so the shipped web surface keeps every capability.
+  web: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'],
   headless: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-headless'],
 }
 

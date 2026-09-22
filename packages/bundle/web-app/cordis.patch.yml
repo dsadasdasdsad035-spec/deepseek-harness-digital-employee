@@ -117,105 +117,11 @@
     - id: plugin-inventory
       name: '@deepseek-ai/dsh-host-plugin-inventory'
 
-    # Persistent marketplace authority. Its generated Typert Host methods join
-    # api-remotes and travel over the shared /api carrier; skill-filesystem
-    # remains the discovery owner for this user-skill directory.
-    - id: skill-market
-      name: '@deepseek-ai/dsh-skill-market'
-      config:
-        installRoot: !!js dshHomePath('skills')
-
-    # Signed Tool packages are validated and published here, then activated
-    # only by a fresh Host composition.
-    - id: tool-market
-      name: '@deepseek-ai/dsh-tool-market'
-      config:
-        installRoot: !!js dshHomePath('tools')
-        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
-        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
-        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
-
-    # Durable digital employee Definition, file Provider, existing-Agent
-    # composition Consumer, and typed management Remote.
-    - id: digital-employees
-      name: '@deepseek-ai/dsh-digital-employee'
-
-    - id: digital-employee-example-template
-      name: '@deepseek-ai/dsh-digital-employee-example-template'
-
-    - id: mcp-client
-      name: '@deepseek-ai/dsh-mcp-client'
-      config:
-        mode: manager
-
-    # Declarative MCP packages persist credential references only. The manager
-    # resolves those references while activating configurations at startup.
-    - id: mcp-market
-      name: '@deepseek-ai/dsh-mcp-market'
-      config:
-        installRoot: !!js dshHomePath('mcp-packages')
-        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
-        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
-        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
-
-    # Signed hook packages persist credential references only; the employee
-    # composition bridge mounts bound hooks per instance.
-    - id: hooks-market
-      name: '@deepseek-ai/dsh-hooks-market'
-      config:
-        installRoot: !!js dshHomePath('hook-packages')
-        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
-        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
-        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
-
-    # Signed workflow and subagent packages persist nothing secret; employee
-    # compositions mount bound assets per instance.
-    - id: workflow-market
-      name: '@deepseek-ai/dsh-workflow-market'
-      config:
-        installRoot: !!js dshHomePath('workflow-packages')
-        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
-        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
-        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
-
-    - id: subagent-market
-      name: '@deepseek-ai/dsh-subagent-market'
-      config:
-        installRoot: !!js dshHomePath('subagent-packages')
-        trustedPublishers: !!js JSON.parse(process.env.DSH_MARKET_TRUSTED_PUBLISHERS ?? '[]')
-        trustedPublishersFile: !!js dshHomePath('market-publishers.json')
-        allowUnsignedPackages: !!js process.env.DSH_MARKET_ALLOW_UNSIGNED !== '0'
-
-    - id: project-manager-test-template
-      name: '@deepseek-ai/dsh-project-manager-test-digital-employee'
-
-    - id: digital-employee-sqlite
-      name: '@deepseek-ai/dsh-digital-employee-sqlite'
-
-    - id: digital-employee-agent
-      name: '@deepseek-ai/dsh-digital-employee-agent'
-
-    - id: digital-employee-management
-      name: '@deepseek-ai/dsh-host-digital-employee-management'
-      config:
-        administrator: true
-
-    # Company module: durable companies binding employee instances, the file
-    # store under the Harness home, and the management gateway the 3D console
-    # consumes.
-    - id: company
-      name: '@deepseek-ai/dsh-company'
-
-    - id: company-file
-      name: '@deepseek-ai/dsh-company-file'
-      config:
-        path: !!js dshHomePath('companies/companies.json')
-
-    - id: company-management
-      name: '@deepseek-ai/dsh-host-company-management'
-
-    - id: company-group-chat
-      name: '@deepseek-ai/dsh-host-company-group-chat'
+    # Marketplace, digital employee, and company domains are NOT part of the
+    # generic surface: the dsh-digital-employee-suite bundle owns their Host
+    # and browser rows, and the shipped web profile template stacks it after
+    # this bundle. The suite's generated Typert Host methods still travel over
+    # the api-remotes carrier mounted below.
 
     # The API gateway: the transport-agnostic dispatch face every client shape
     # shares. The base layer's agent-default-model service owns the default model.
@@ -411,17 +317,9 @@
     - id: ui-trajectory
       name: '@deepseek-ai/dsh-client-ui-trajectory'
 
-    # Settings-slot contribution backed by ctx.remote.skillMarket through the
-    # generated api-remotes client mounted above.
-    - id: ui-skill-market
-      name: '@deepseek-ai/dsh-client-ui-skill-market'
-
-    - id: ui-digital-employees
-      name: '@deepseek-ai/dsh-client-ui-digital-employees'
-
-    # 3D company campus console over employee instances (Three.js inlined).
-    - id: ui-companies
-      name: '@deepseek-ai/dsh-client-ui-companies'
+    # The marketplace, digital employee, and company browser rows are owned by
+    # the dsh-digital-employee-suite bundle (ui-skill-market,
+    # ui-digital-employees, ui-companies).
 
 # ── the agent plane moves behind agent presets ─────────────────────────────
 #

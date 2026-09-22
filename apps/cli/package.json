@@ -81,6 +81,7 @@
     "@deepseek-ai/dsh-tool-todo": "workspace:^",
     "@deepseek-ai/dsh-tool-web": "workspace:^",
     "@deepseek-ai/dsh-tool-workflow": "workspace:^",
+    "@deepseek-ai/dsh-digital-employee-suite": "workspace:^",
     "@deepseek-ai/dsh-web-app": "workspace:^",
     "@deepseek-ai/dsh-workflow-worker-thread": "workspace:^",
     "commander": "^15.0.0",

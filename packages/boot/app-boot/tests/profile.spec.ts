@@ -151,7 +151,9 @@ describe('loadProfile', () => {
     // The web template auto-initializes on first load. Bundle resolution
     // cannot be asserted to fail here: the source-plane test runner resolves
     // @deepseek-ai/* through tsconfig paths regardless of the staged anchor.
-    expect(PROFILE_TEMPLATES.web).toContain('@deepseek-ai/dsh-base')
+    expect(PROFILE_TEMPLATES.web).toEqual([
+      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-digital-employee-suite',
+    ])
     try {
       loadProfile('t', 'web', anchor, home)
     } catch {
@@ -185,6 +187,33 @@ describe('loadProfile', () => {
     loadProfile('t', 'headless', anchor, customHome)
     expect(readProfileManifest('t', custom).dsh?.profile?.bundles).toEqual([
       '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-headless', 'custom-bundle',
+    ])
+  })
+
+  it('normalizes the pre-suite web tuple so the split keeps every capability', () => {
+    // The marketplace/employee/company rows moved from dsh-web-app into
+    // dsh-digital-employee-suite; a web profile from before the split gains
+    // the suite layer, while a customized list stays user-owned.
+    const anchor = stageInstallation({
+      '@deepseek-ai/dsh-base': { patch: '[]\n' },
+      '@deepseek-ai/dsh-web-app': { patch: '[]\n' },
+      '@deepseek-ai/dsh-digital-employee-suite': { patch: '[]\n' },
+      'custom-bundle': { patch: '[]\n' },
+    })
+    const home = tmp()
+    const stock = resolveProfileDir('web', home)
+    initProfile(stock, ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'])
+    loadProfile('t', 'web', anchor, home)
+    expect(readProfileManifest('t', stock).dsh?.profile?.bundles).toEqual([
+      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-digital-employee-suite',
+    ])
+
+    const customHome = tmp()
+    const custom = resolveProfileDir('web', customHome)
+    initProfile(custom, ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', 'custom-bundle'])
+    loadProfile('t', 'web', anchor, customHome)
+    expect(readProfileManifest('t', custom).dsh?.profile?.bundles).toEqual([
+      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', 'custom-bundle',
     ])
   })
 
