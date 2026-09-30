@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-storage-json`.
- * @module @deepseek-ai/dsh-storage-json/invariant
+ * Package-owned invariant companion for `@qq296629801/dsh-storage-json`.
+ * @module @qq296629801/dsh-storage-json/invariant
  */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-storage-json'
+const PACKAGE_NAME = '@qq296629801/dsh-storage-json'
 
 /** Cordis companion plugin name. */
 export const name = 'storage-json-invariant'

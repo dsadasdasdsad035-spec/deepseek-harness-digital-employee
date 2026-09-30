@@ -7,8 +7,8 @@
 
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-workflow'
+import type { Context } from '@qq296629801/cordis'
+import type {} from '@qq296629801/dsh-workflow'
 import type { InstalledWorkflowPackage } from './index.ts'
 
 /** One resolved binding: an installed package plus one of its workflows. */

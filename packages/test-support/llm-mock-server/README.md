@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-llm-mock-server`
+# `@qq296629801/dsh-llm-mock-server`
 
 English | [中文](README.zh.md)
 

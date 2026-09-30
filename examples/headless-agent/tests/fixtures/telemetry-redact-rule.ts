@@ -1,4 +1,4 @@
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 
 /**
  * Deployment-style redaction rule for the telemetry e2e: scrubs the fixture

@@ -1,11 +1,11 @@
 /**
  * Live Typert Remote dispatch over Cordis Services and registered providers.
  * Transport, request correlation, and response envelopes belong to Connection.
- * @module @deepseek-ai/dsh-api-gateway
+ * @module @qq296629801/dsh-api-gateway
  */
 
-import { Context, Service, symbols } from '@deepseek-ai/cordis'
-import type { ConnectionRpcHandler } from '@deepseek-ai/dsh-client-connection'
+import { Context, Service, symbols } from '@qq296629801/cordis'
+import type { ConnectionRpcHandler } from '@qq296629801/dsh-client-connection'
 import {
   remoteMethods,
   TypertLookupFailure,
@@ -13,7 +13,7 @@ import {
   type InvocationParameterDescriptor,
   type TypertCodec,
   type TypertGatewayBinding,
-} from '@deepseek-ai/dsh-typert-protocol'
+} from '@qq296629801/dsh-typert-protocol'
 import type {
   InvokeRemoteRequest,
   TypertGateway,

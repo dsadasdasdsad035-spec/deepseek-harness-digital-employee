@@ -5,15 +5,15 @@
  * web surface by the web-app bundle; without it the webserver serves with no
  * gate (the pre-account behavior).
  *
- * @module @deepseek-ai/dsh-user-accounts/gate
+ * @module @qq296629801/dsh-user-accounts/gate
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
 
 // Type-only: pulls ctx.email into this program.
-import type {} from '@deepseek-ai/dsh-email'
+import type {} from '@qq296629801/dsh-email'
 import type { SessionIdentity } from './index.ts'
 
 /** Stable Cordis plugin name. */

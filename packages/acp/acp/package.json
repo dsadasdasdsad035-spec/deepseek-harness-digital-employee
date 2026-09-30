@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-acp",
+  "name": "@qq296629801/dsh-acp",
   "description": "Automation-only Agent Client Protocol server for driving DeepSeek Harness agents over JSON-RPC stdio",
   "version": "0.1.1-rc.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/dsadasdasdsad035-spec/deepseek-harness-digital-employee.git",
     "directory": "packages/acp/acp"
   },
   "type": "module",
@@ -33,27 +33,27 @@
   "license": "MIT",
   "dependencies": {
     "@agentclientprotocol/sdk": "0.25.1",
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@qq296629801/schemastery": "workspace:^"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-user-approval": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-attachment": "workspace:^",
+    "@qq296629801/dsh-agent": "workspace:^",
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/dsh-llm": "workspace:^",
+    "@qq296629801/dsh-session": "workspace:^",
+    "@qq296629801/dsh-user-approval": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-agent-loop": "workspace:^",
-    "@deepseek-ai/dsh-agent-loop-testkit": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-tools": "workspace:^",
-    "@deepseek-ai/dsh-user-approval": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-attachment": "workspace:^",
+    "@qq296629801/dsh-agent": "workspace:^",
+    "@qq296629801/dsh-agent-loop": "workspace:^",
+    "@qq296629801/dsh-agent-loop-testkit": "workspace:^",
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/dsh-llm": "workspace:^",
+    "@qq296629801/dsh-session": "workspace:^",
+    "@qq296629801/dsh-tools": "workspace:^",
+    "@qq296629801/dsh-user-approval": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   }
 }

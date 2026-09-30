@@ -1,7 +1,7 @@
 /** Browser state for Tool and MCP package marketplace tabs. */
 
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
-import type { SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+import { createSnapshotStore } from '@qq296629801/dsh-client-runtime/client'
+import type { SnapshotStore } from '@qq296629801/dsh-client-runtime/client'
 import type {
   ClientRemote,
   HookMarketEntry,
@@ -11,7 +11,7 @@ import type {
   McpMarketPackageId,
   ToolMarketEntry,
   ToolMarketPackageId,
-} from '@deepseek-ai/dsh-api-remotes/client'
+} from '@qq296629801/dsh-api-remotes/client'
 import { arrayBufferToBase64, validateUploadFile } from './store.ts'
 
 type Status = 'idle' | 'loading' | 'ready' | 'error'

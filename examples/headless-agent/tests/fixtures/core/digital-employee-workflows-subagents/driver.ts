@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { generateKeyPairSync } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
-import type { Context } from '@deepseek-ai/cordis'
-import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import { signMarketplacePackage } from '@deepseek-ai/dsh-marketplace-core'
+import type { Context } from '@qq296629801/cordis'
+import { boot, resolveConfigPath } from '@qq296629801/dsh-app-boot'
+import { signMarketplacePackage } from '@qq296629801/dsh-marketplace-core'
 // Type-only: declaration-merges ctx.workflowMarket for the host-side install probe.
-import type {} from '@deepseek-ai/dsh-workflow-market'
-import type {} from '@deepseek-ai/dsh-subagent-market'
+import type {} from '@qq296629801/dsh-workflow-market'
+import type {} from '@qq296629801/dsh-subagent-market'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('driver requires config path')

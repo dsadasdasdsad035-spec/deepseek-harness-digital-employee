@@ -10,10 +10,10 @@ import type {
   DigitalEmployeeInstanceId,
   EmployeeBinding,
   SessionId,
-} from '@deepseek-ai/dsh-api-remotes/client'
-import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
-import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
-import type { CompanyWorldStateView } from '@deepseek-ai/dsh-company'
+} from '@qq296629801/dsh-api-remotes/client'
+import { createSnapshotStore, type SnapshotStore } from '@qq296629801/dsh-client-runtime/client'
+import type { RemoteResult } from '@qq296629801/dsh-typert-protocol'
+import type { CompanyWorldStateView } from '@qq296629801/dsh-company'
 import type { WorldStateSnapshot } from './scene.ts'
 
 /** Generated namespace consumed by the console. */

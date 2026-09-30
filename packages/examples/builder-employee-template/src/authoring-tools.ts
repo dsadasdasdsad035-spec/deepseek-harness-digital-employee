@@ -5,9 +5,9 @@
  * @module
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type {} from '@deepseek-ai/dsh-host-digital-employee-management'
-import type {} from '@deepseek-ai/dsh-tools'
+import type { Context } from '@qq296629801/cordis'
+import type {} from '@qq296629801/dsh-host-digital-employee-management'
+import type {} from '@qq296629801/dsh-tools'
 
 /** Management gateway face the tools call; structural for testability. */
 interface AuthoringGateway {

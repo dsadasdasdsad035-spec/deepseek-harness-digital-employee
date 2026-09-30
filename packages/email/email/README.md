@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-email
+# @qq296629801/dsh-email
 
 English | [中文](README.zh.md)
 

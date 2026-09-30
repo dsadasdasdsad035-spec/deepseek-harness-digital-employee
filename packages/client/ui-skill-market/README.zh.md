@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-client-ui-skill-market`
+# `@qq296629801/dsh-client-ui-skill-market`
 
 [English](README.md) | 中文
 
@@ -6,7 +6,7 @@
 
 ## 组合
 
-插件通过客户端 slots 注册本地化词典、设置导航项和设置区。它调用 `@deepseek-ai/dsh-api-remotes` 生成的 `ctx.remote.skillMarket` 命名空间；压缩包校验、所有权判定和文件系统变更仍由宿主负责。
+插件通过客户端 slots 注册本地化词典、设置导航项和设置区。它调用 `@qq296629801/dsh-api-remotes` 生成的 `ctx.remote.skillMarket` 命名空间；压缩包校验、所有权判定和文件系统变更仍由宿主负责。
 
 该设置区只展示宿主返回的受管清单。由文件系统发现的手工管理技能不在此视图中，也不能在此升级或卸载。
 

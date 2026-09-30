@@ -6,11 +6,11 @@
  *   - 卸载时清空注册条目与字典
  */
 
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import { describe, expect, it } from 'vitest'
-import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-runtime/client'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
+import { resolveSlotLabel } from '@qq296629801/dsh-client-ui-slots'
+import { SlotRegistry } from '@qq296629801/dsh-client-runtime/client'
+import { LocaleRuntime } from '@qq296629801/dsh-client-locale/client'
 import { apply, inject } from '../src/client/index.ts'
 import { SkillMarketSection } from '../src/client/SkillMarketSection.tsx'
 

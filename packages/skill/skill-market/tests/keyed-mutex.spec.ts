@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { KeyedMutex } from '@deepseek-ai/dsh-marketplace-core'
+import { KeyedMutex } from '@qq296629801/dsh-marketplace-core'
 
 interface Deferred {
   readonly promise: Promise<void>

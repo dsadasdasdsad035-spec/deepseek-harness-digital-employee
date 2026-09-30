@@ -1,4 +1,4 @@
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import { defineTool } from '@qq296629801/dsh-tools'
 
 export const name = 'marketplace-tool-template'
 export const inject = ['tools']

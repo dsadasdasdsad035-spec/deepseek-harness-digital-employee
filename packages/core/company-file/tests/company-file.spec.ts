@@ -1,10 +1,10 @@
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import Companies, { createCompanyEmployeeId, type CompanyId } from '@deepseek-ai/dsh-company'
+import { Context } from '@qq296629801/cordis'
+import Companies, { createCompanyEmployeeId, type CompanyId } from '@qq296629801/dsh-company'
 import { describe, expect, it } from 'vitest'
-import { FileCompanyProvider } from '@deepseek-ai/dsh-company-file'
+import { FileCompanyProvider } from '@qq296629801/dsh-company-file'
 
 async function harness(path: string): Promise<{ ctx: Context; provider: FileCompanyProvider }> {
   const ctx = new Context()

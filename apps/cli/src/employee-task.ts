@@ -4,7 +4,7 @@
  * resolves the ledger under `$DSH_HOME` and mutates it through the same
  * locked transactions the headless driver and the Web console use, so all
  * three writers serialize on one lock.
- * @module @deepseek-ai/dsh/employee-task
+ * @module @qq296629801/dsh/employee-task
  */
 
 import { Command, CommanderError } from 'commander'
@@ -12,7 +12,7 @@ import {
   listTaskAttempts,
   withTaskAttempts,
   type TaskAttemptRecord,
-} from '@deepseek-ai/dsh-digital-employee-file'
+} from '@qq296629801/dsh-digital-employee-file'
 
 const USAGE = 'Usage: dsh employee-task <list | resume <key> | discard <key>>'
 

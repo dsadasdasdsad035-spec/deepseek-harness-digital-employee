@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-session-telemetry
+# @qq296629801/dsh-session-telemetry
 
 English | [中文](README.zh.md)
 

@@ -1,7 +1,7 @@
 /** Web Session-log download command over the host endpoint owned by ApiProxy. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { CommandResult } from '@deepseek-ai/dsh-commands'
+import type { Context } from '@qq296629801/cordis'
+import type { CommandResult } from '@qq296629801/dsh-commands'
 
 export const name = 'session-log-download'
 export const inject = ['commands']

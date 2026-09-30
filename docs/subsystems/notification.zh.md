@@ -2,7 +2,7 @@
 
 [English](notification.md) | 中文
 
-[`@deepseek-ai/dsh-notification`](../../packages/interaction/notification) 是通道注册表式的告警 seam（`ctx.notifications`）。`send()` 解析为封闭的投递结果且永不 reject：未知通道或抛出异常的通道都会成为可见的失败结果，因此发起通知的任务流程不会因告警路径缺失或损坏而崩溃。三个内置 provider 以子路径插件发布——`generic-webhook`、`wechat-work-bot`、`feishu-bot`——各自经 [`ctx.credentials`](credentials.zh.md) 的引用名解析自己的 webhook URL（及可选签名密钥），带有限重试与单次超时。
+[`@qq296629801/dsh-notification`](../../packages/interaction/notification) 是通道注册表式的告警 seam（`ctx.notifications`）。`send()` 解析为封闭的投递结果且永不 reject：未知通道或抛出异常的通道都会成为可见的失败结果，因此发起通知的任务流程不会因告警路径缺失或损坏而崩溃。三个内置 provider 以子路径插件发布——`generic-webhook`、`wechat-work-bot`、`feishu-bot`——各自经 [`ctx.credentials`](credentials.zh.md) 的引用名解析自己的 webhook URL（及可选签名密钥），带有限重试与单次超时。
 
 来源：[`packages/interaction/notification/src/types.ts`](../../packages/interaction/notification/src/types.ts)
 
@@ -55,7 +55,7 @@ interface NotificationChannel {
 
 ## 消费方
 
-员工任务驱动器（[`@deepseek-ai/dsh-headless/employee`](../../packages/bundle/headless) / [`dsh-headless-employee`](../../packages/bundle/headless-employee))）在达到配置的连续失败上限后发送一条挂起告警；成功运行按契约保持静默。
+员工任务驱动器（[`@qq296629801/dsh-headless/employee`](../../packages/bundle/headless) / [`dsh-headless-employee`](../../packages/bundle/headless-employee))）在达到配置的连续失败上限后发送一条挂起告警；成功运行按契约保持静默。
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 

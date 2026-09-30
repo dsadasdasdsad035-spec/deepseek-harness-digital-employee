@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-companies
+# @qq296629801/dsh-client-ui-companies
 
 English | [中文](README.zh.md)
 

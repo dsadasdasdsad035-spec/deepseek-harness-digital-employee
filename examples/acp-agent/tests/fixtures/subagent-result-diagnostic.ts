@@ -1,12 +1,12 @@
 /** Deterministic provider for model-visible foreground and Job diagnostic snapshots. */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 import {
   NO_START_CAPABILITIES,
   type ResolvedSubagentStartRequest,
   type SubagentProvider,
-} from '@deepseek-ai/dsh-subagent'
-import { SessionId } from '@deepseek-ai/dsh-session'
+} from '@qq296629801/dsh-subagent'
+import { SessionId } from '@qq296629801/dsh-session'
 
 export const name = 'subagent-result-diagnostic'
 export const inject = ['subagents']

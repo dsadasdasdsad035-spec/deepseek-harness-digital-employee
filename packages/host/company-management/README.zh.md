@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-host-company-management
+# @qq296629801/dsh-host-company-management
 
 [English](README.md) | 中文
 

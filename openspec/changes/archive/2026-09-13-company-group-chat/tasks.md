@@ -2,7 +2,7 @@
 
 ## 1. Host: group conversation model
 
-- [x] 1.1 New package `@deepseek-ai/dsh-host-company-group-chat`: group session per company (`groupOf`), `company-group/message` typed event `{speaker: 'user' | instanceId, displayName, text, context}`, open/append/list remotes on the `companies` Typert gateway
+- [x] 1.1 New package `@qq296629801/dsh-host-company-group-chat`: group session per company (`groupOf`), `company-group/message` typed event `{speaker: 'user' | instanceId, displayName, text, context}`, open/append/list remotes on the `companies` Typert gateway
 - [x] 1.2 Unit tests: group open is idempotent, messages persist and replay, membership snapshot derives from live bindings
 - [x] 1.3 Typert artifacts regenerated + sync spec updated (zod dependency, gateway namespace test)
 

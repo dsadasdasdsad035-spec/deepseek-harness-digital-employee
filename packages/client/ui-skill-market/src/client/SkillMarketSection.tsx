@@ -4,12 +4,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, DragEvent, ReactNode } from 'react'
 import {
   Button, IconCloseOutline16, IconSearchOutline16, IconTrashOutline16, Modal,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
+} from '@qq296629801/dsh-client-ui-primitives'
+import type { InjectFace } from '@qq296629801/dsh-client-ui-slots'
 import type {
   HookMarketEntry, HookMarketPackageId, McpMarketEntry, McpMarketPackageId,
   SkillMarketEntry, SkillMarketSkillId, ToolMarketEntry, ToolMarketPackageId,
-} from '@deepseek-ai/dsh-api-remotes/client'
+} from '@qq296629801/dsh-api-remotes/client'
 import { filterSkills, MAX_UPLOAD_BYTES } from './store.ts'
 import type { SkillMarketStore } from './store.ts'
 import {

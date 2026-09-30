@@ -1,10 +1,10 @@
-/** Package-owned invariant companion. @module @deepseek-ai/dsh-message-feedback/invariant */
+/** Package-owned invariant companion. @module @qq296629801/dsh-message-feedback/invariant */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-message-feedback'
+const PACKAGE_NAME = '@qq296629801/dsh-message-feedback'
 
 /** Cordis companion plugin name. */
 export const name = 'message-feedback-invariant'

@@ -10,8 +10,8 @@
 
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
-import type { SkillMarketEntry, SkillMarketSkillId } from '@deepseek-ai/dsh-api-remotes/client'
+import { bindSnapshotSelector } from '@qq296629801/dsh-client-test-runtime'
+import type { SkillMarketEntry, SkillMarketSkillId } from '@qq296629801/dsh-api-remotes/client'
 import { SkillMarketSection } from '../src/client/SkillMarketSection.tsx'
 import type { SkillMarketSectionInjected, SkillMarketSectionProps } from '../src/client/SkillMarketSection.tsx'
 import { SkillMarketStore } from '../src/client/store.ts'

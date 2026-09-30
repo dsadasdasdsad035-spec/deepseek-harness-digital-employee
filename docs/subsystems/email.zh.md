@@ -2,7 +2,7 @@
 
 [English](email.md) | 中文
 
-[`@deepseek-ai/dsh-email`](../../packages/email/email) 是通道注册表式的邮件 seam（`ctx.email`）。`send()` 解析为封闭的投递结果且永不 reject；provider 以稳定 id 注册纯文本 SMTP 通道，并经 [`ctx.credentials`](credentials.zh.md) 引用解析自身凭证，因此 SMTP 账号或授权码不会落入 cordis.yml。
+[`@qq296629801/dsh-email`](../../packages/email/email) 是通道注册表式的邮件 seam（`ctx.email`）。`send()` 解析为封闭的投递结果且永不 reject；provider 以稳定 id 注册纯文本 SMTP 通道，并经 [`ctx.credentials`](credentials.zh.md) 引用解析自身凭证，因此 SMTP 账号或授权码不会落入 cordis.yml。
 
 来源：[`packages/email/email/src/types.ts`](../../packages/email/email/src/types.ts)
 

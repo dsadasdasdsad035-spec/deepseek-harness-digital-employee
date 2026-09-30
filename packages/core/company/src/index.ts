@@ -1,9 +1,9 @@
 /**
  * Company Service Definition: durable companies binding digital employee instances.
- * @module @deepseek-ai/dsh-company
+ * @module @qq296629801/dsh-company
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service } from '@qq296629801/cordis'
 import type {
   AddDepartmentRequest,
   AssignEmployeeRequest,
@@ -149,7 +149,7 @@ export interface CompanyProvider {
   pruneEmployeeBindings(instanceExists: (instanceId: EmployeeBinding['instanceId']) => boolean): Promise<number>
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
   /** Durable company store Service Definition. */
     companies: Companies

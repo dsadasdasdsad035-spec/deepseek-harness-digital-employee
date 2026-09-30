@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { WorkspaceTypertGenerator } from '@deepseek-ai/dsh-typert-generator'
+import { WorkspaceTypertGenerator } from '@qq296629801/dsh-typert-generator'
 import { describe, expect, it } from 'vitest'
 
 const workspaceRoot = resolve(import.meta.dirname, '../../../..')
@@ -8,7 +8,7 @@ const workspaceRoot = resolve(import.meta.dirname, '../../../..')
 describe('skill marketplace Typert artifacts', () => {
   it('keeps the generated Host and Remote artifacts in sync', async () => {
     const [artifact] = new WorkspaceTypertGenerator(workspaceRoot)
-      .generate(['@deepseek-ai/dsh-skill-market'], ['host'])
+      .generate(['@qq296629801/dsh-skill-market'], ['host'])
 
     expect(artifact).toBeDefined()
     expect(artifact!.face).toBe('host')

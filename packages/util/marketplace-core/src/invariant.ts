@@ -1,12 +1,12 @@
 /**
  * Package-owned invariant companion for marketplace-core.
- * @module @deepseek-ai/dsh-marketplace-core/invariant
+ * @module @qq296629801/dsh-marketplace-core/invariant
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-marketplace-core'
+const PACKAGE_NAME = '@qq296629801/dsh-marketplace-core'
 
 /** Cordis companion plugin name. */
 export const name = 'marketplace-core-invariant'

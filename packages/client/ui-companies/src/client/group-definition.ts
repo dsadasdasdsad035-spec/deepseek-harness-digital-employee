@@ -2,8 +2,8 @@
 
 import type {
   ChatConversationViewNode, ConversationNodeDefinition,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@qq296629801/dsh-client-runtime/client'
+import type {} from '@qq296629801/dsh-client-ui-conversation/client'
 
 /** Keyed Chat payload for one quoted company group message. */
 export interface CompanyGroupMessageChatData {
@@ -13,7 +13,7 @@ export interface CompanyGroupMessageChatData {
   readonly context?: string
 }
 
-declare module '@deepseek-ai/dsh-client-ui-conversation/client' {
+declare module '@qq296629801/dsh-client-ui-conversation/client' {
   interface ChatNodeDataMap {
     /** One quoted company group message attributed to its speaker. */
     'company-group-message': CompanyGroupMessageChatData

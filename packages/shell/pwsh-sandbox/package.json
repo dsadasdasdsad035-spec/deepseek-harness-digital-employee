@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-pwsh-sandbox",
+  "name": "@qq296629801/dsh-pwsh-sandbox",
   "description": "Sandbox-consuming implementation of the DeepSeek Harness PowerShell executor seam (confines every command via ctx.sandbox, reports denial/enforcement result facts)",
   "version": "0.1.1-rc.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/dsadasdasdsad035-spec/deepseek-harness-digital-employee.git",
     "directory": "packages/shell/pwsh-sandbox"
   },
   "type": "module",
@@ -32,21 +32,21 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-shell": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-pwsh-local": "workspace:^",
-    "@deepseek-ai/dsh-sandbox": "workspace:^",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-shell": "workspace:^",
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/dsh-pwsh-local": "workspace:^",
+    "@qq296629801/dsh-sandbox": "workspace:^",
+    "@qq296629801/dsh-sandbox-policy": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-shell": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-pwsh-local": "workspace:^",
-    "@deepseek-ai/dsh-sandbox": "workspace:^",
-    "@deepseek-ai/dsh-sandbox-local": "workspace:^",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:^",
-    "@deepseek-ai/dsh-subprocess-local": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-shell": "workspace:^",
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/dsh-pwsh-local": "workspace:^",
+    "@qq296629801/dsh-sandbox": "workspace:^",
+    "@qq296629801/dsh-sandbox-local": "workspace:^",
+    "@qq296629801/dsh-sandbox-policy": "workspace:^",
+    "@qq296629801/dsh-subprocess-local": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   }
 }

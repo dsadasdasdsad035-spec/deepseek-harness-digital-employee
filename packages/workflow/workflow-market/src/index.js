@@ -4,7 +4,7 @@
  * Installs and manages signed workflow packages; employee-scoped mounting
  * lives in the composition bridge, which reads installed descriptors through
  * `installedPackages`.
- * @module @deepseek-ai/dsh-workflow-market
+ * @module @qq296629801/dsh-workflow-market
  */
 var __runInitializers = (this && this.__runInitializers) || function (thisArg, initializers, value) {
     var useValue = arguments.length > 2;
@@ -40,9 +40,9 @@ var __esDecorate = (this && this.__esDecorate) || function (ctor, descriptorIn, 
     if (target) Object.defineProperty(target, contextIn.name, descriptor);
     done = true;
 };
-import z from '@deepseek-ai/schemastery';
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol';
-import { combineTrustedPublisherRecords, readTrustedPublisherFileSync, } from '@deepseek-ai/dsh-marketplace-core';
+import z from '@qq296629801/schemastery';
+import { Remote, TypertRemoteService } from '@qq296629801/dsh-typert-protocol';
+import { combineTrustedPublisherRecords, readTrustedPublisherFileSync, } from '@qq296629801/dsh-marketplace-core';
 import { WorkflowMarketService } from "./service.js";
 export { mountEmployeeWorkflows } from "./bridge.js";
 /** Cordis plugin name used by loader diagnostics. */

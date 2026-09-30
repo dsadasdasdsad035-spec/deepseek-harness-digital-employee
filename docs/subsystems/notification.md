@@ -2,7 +2,7 @@
 
 English | [中文](notification.zh.md)
 
-[`@deepseek-ai/dsh-notification`](../../packages/interaction/notification) is the channel-registry alert seam (`ctx.notifications`). `send()` resolves to a closed delivery outcome and never rejects: an unknown channel or a throwing channel becomes a visible failure result, so the calling task flow survives an absent or broken alert path. Three built-in providers ship as subpath plugins — `generic-webhook`, `wechat-work-bot`, and `feishu-bot` — each resolving its webhook URL (and optional signing secret) through [`ctx.credentials`](credentials.md) reference names, with bounded retries and a per-attempt timeout.
+[`@qq296629801/dsh-notification`](../../packages/interaction/notification) is the channel-registry alert seam (`ctx.notifications`). `send()` resolves to a closed delivery outcome and never rejects: an unknown channel or a throwing channel becomes a visible failure result, so the calling task flow survives an absent or broken alert path. Three built-in providers ship as subpath plugins — `generic-webhook`, `wechat-work-bot`, and `feishu-bot` — each resolving its webhook URL (and optional signing secret) through [`ctx.credentials`](credentials.md) reference names, with bounded retries and a per-attempt timeout.
 
 Source: [`packages/interaction/notification/src/types.ts`](../../packages/interaction/notification/src/types.ts)
 
@@ -55,7 +55,7 @@ interface NotificationChannel {
 
 ## Consumers
 
-The employee task driver ([`@deepseek-ai/dsh-headless/employee`](../../packages/bundle/headless) / [`dsh-headless-employee`](../../packages/bundle/headless-employee)) sends one suspension alert after the configured consecutive-failure ceiling; successful runs stay silent by contract.
+The employee task driver ([`@qq296629801/dsh-headless/employee`](../../packages/bundle/headless) / [`dsh-headless-employee`](../../packages/bundle/headless-employee)) sends one suspension alert after the configured consecutive-failure ceiling; successful runs stay silent by contract.
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 

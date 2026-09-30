@@ -1,8 +1,8 @@
-# @deepseek-ai/dsh-digital-employee-sqlite
+# @qq296629801/dsh-digital-employee-sqlite
 
 [English](README.md) | 中文
 
-`@deepseek-ai/dsh-digital-employee` 的 SQLite 型 Provider。它把员工实例、长期记忆与审计记录存入 `$DSH_HOME/digital-employees/employees.db` 这一个仅所有者可访问的数据库中，提升与检索策略与文件型 Provider 完全一致。
+`@qq296629801/dsh-digital-employee` 的 SQLite 型 Provider。它把员工实例、长期记忆与审计记录存入 `$DSH_HOME/digital-employees/employees.db` 这一个仅所有者可访问的数据库中，提升与检索策略与文件型 Provider 完全一致。
 
 ## 配置
 

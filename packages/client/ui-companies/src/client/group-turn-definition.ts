@@ -2,8 +2,8 @@
 
 import type {
   ChatConversationViewNode, ConversationNodeDefinition,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@qq296629801/dsh-client-runtime/client'
+import type {} from '@qq296629801/dsh-client-ui-conversation/client'
 
 /** Keyed Chat payload for one in-flight or settled member delivery. */
 export interface CompanyGroupTurnChatData {
@@ -12,7 +12,7 @@ export interface CompanyGroupTurnChatData {
   readonly settled: boolean
 }
 
-declare module '@deepseek-ai/dsh-client-ui-conversation/client' {
+declare module '@qq296629801/dsh-client-ui-conversation/client' {
   interface ChatNodeDataMap {
     /** One member delivery's typing indicator attributed to its speaker. */
     'company-group-turn': CompanyGroupTurnChatData

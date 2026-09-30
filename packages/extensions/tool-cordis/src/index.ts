@@ -1,20 +1,20 @@
 /**
  * Model-facing Cordis runtime/package inspection, define, run, stop, and remove tools.
- * @module @deepseek-ai/dsh-tool-cordis
+ * @module @qq296629801/dsh-tool-cordis
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
+import type { Context } from '@qq296629801/cordis'
+import type { Agent, PreStepDecision } from '@qq296629801/dsh-agent'
 import {
   CordisDynamicPackageId, CordisDynamicPluginId,
-} from '@deepseek-ai/dsh-cordis-host-runner'
-import type { DynamicCordisReference } from '@deepseek-ai/dsh-cordis-host-runner'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { JsonValue } from '@deepseek-ai/dsh-session'
-import type { UserMessage } from '@deepseek-ai/dsh-session'
-import { defineTool } from '@deepseek-ai/dsh-tools'
-import type { ToolExecution } from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+} from '@qq296629801/dsh-cordis-host-runner'
+import type { DynamicCordisReference } from '@qq296629801/dsh-cordis-host-runner'
+import { createUserMessage } from '@qq296629801/dsh-llm'
+import type { JsonValue } from '@qq296629801/dsh-session'
+import type { UserMessage } from '@qq296629801/dsh-session'
+import { defineTool } from '@qq296629801/dsh-tools'
+import type { ToolExecution } from '@qq296629801/dsh-tools'
+import type {} from '@qq296629801/dsh-system-prompt'
 import { missingServices, providedServices } from './inspect.ts'
 import {
   presentDefineCall, presentInspectListCall, presentInspectQueryCall, presentInspectSelfCall, presentRunCall,

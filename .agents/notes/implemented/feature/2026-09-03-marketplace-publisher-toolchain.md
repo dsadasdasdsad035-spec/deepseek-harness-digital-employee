@@ -10,7 +10,7 @@ Tool and MCP marketplace packages require a signed descriptor from an explicitly
 
 ## Decision
 
-`@deepseek-ai/dsh-marketplace-core` owns the producer side beside its validators. `signMarketplacePackage()` signs an in-memory descriptor and exact file inventory; `buildMarketplacePackage()` reads a source directory, requires the descriptor's `files` keys to match the directory exactly, and delegates to the same signing path. Both re-run the installer-shared archive, descriptor, file-table, and signature checks over their own output before returning bytes, so builder acceptance and installer acceptance cannot drift apart.
+`@qq296629801/dsh-marketplace-core` owns the producer side beside its validators. `signMarketplacePackage()` signs an in-memory descriptor and exact file inventory; `buildMarketplacePackage()` reads a source directory, requires the descriptor's `files` keys to match the directory exactly, and delegates to the same signing path. Both re-run the installer-shared archive, descriptor, file-table, and signature checks over their own output before returning bytes, so builder acceptance and installer acceptance cannot drift apart.
 
 The `dsh-market-package` bin wraps the builder. It takes a source directory, kind, real publisher id, and either an existing Ed25519 private key or a request to generate one (`0600`). stdout carries exactly the `DSH_MARKET_TRUSTED_PUBLISHERS` JSON array derived from the signing key; private key bytes never enter the archive, trust record, or stdout.
 

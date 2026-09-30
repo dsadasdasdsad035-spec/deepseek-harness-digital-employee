@@ -2,7 +2,7 @@
 
 English | [中文](user-accounts.zh.md)
 
-[`@deepseek-ai/dsh-user-accounts`](../../packages/account/user-accounts) is the account system for the Web surface (`ctx.userAccounts`): SQLite user store, argon2id password hashing, email verification codes, single-use reset tokens, HMAC-signed session cookies, and login rate limiting. The web auth gate redirects unauthenticated traffic to `/login` and keeps `/register`, `/forgot`, `/reset`, `/api/auth/*`, and static assets public.
+[`@qq296629801/dsh-user-accounts`](../../packages/account/user-accounts) is the account system for the Web surface (`ctx.userAccounts`): SQLite user store, argon2id password hashing, email verification codes, single-use reset tokens, HMAC-signed session cookies, and login rate limiting. The web auth gate redirects unauthenticated traffic to `/login` and keeps `/register`, `/forgot`, `/reset`, `/api/auth/*`, and static assets public.
 
 Source: [`packages/account/user-accounts/src/index.ts`](../../packages/account/user-accounts/src/index.ts)
 

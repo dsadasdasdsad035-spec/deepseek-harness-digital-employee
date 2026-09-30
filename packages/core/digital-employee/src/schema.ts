@@ -1,10 +1,10 @@
 /**
  * Validation for trusted template contributions and durable lifecycle requests.
- * @module @deepseek-ai/dsh-digital-employee/schema
+ * @module @qq296629801/dsh-digital-employee/schema
  */
 
 import { isAbsolute } from 'node:path'
-import type { CredentialRef } from '@deepseek-ai/dsh-credentials'
+import type { CredentialRef } from '@qq296629801/dsh-credentials'
 import type {
   DigitalEmployeeAuthority,
   DigitalEmployeeDelegationPolicy,

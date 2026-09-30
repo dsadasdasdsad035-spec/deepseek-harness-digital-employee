@@ -5,10 +5,10 @@
  * authority, and filesystem mutation remain on the Host.
  */
 
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
-import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
-import type {} from '@deepseek-ai/dsh-api-remotes/client'
+import type { ClientContext } from '@qq296629801/dsh-client-runtime/client'
+import type {} from '@qq296629801/dsh-client-ui-settings/client'
+import type {} from '@qq296629801/dsh-client-locale/client'
+import type {} from '@qq296629801/dsh-api-remotes/client'
 import { SkillMarketSection } from './SkillMarketSection.tsx'
 import type { SkillMarketSectionInjected } from './SkillMarketSection.tsx'
 import { SkillMarketStore } from './store.ts'
@@ -38,7 +38,7 @@ export type {
 export type { SkillMarketKey } from './locales.ts'
 export { TEMPLATE_ARCHIVE_FILENAME, TEMPLATE_ARCHIVE_URL } from './SkillMarketSection.tsx'
 
-declare module '@deepseek-ai/dsh-client-ui-slots' {
+declare module '@qq296629801/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
     /** Skill marketplace settings copy. */
     'settings.skill-market': SkillMarketKey

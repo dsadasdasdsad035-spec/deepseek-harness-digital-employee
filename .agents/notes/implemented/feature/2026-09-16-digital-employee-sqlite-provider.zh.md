@@ -10,9 +10,9 @@ Status: implemented
 
 ## 决策
 
-`@deepseek-ai/dsh-digital-employee-sqlite` 在 `node:sqlite` 上实现了完整的 `DigitalEmployeeProvider`，web、headless-employee、digital-employee-suite 三个 bundle 改为挂载它而不是文件 provider。该 provider 遵循 session-persistence-sqlite 的纪律：保留 `application_id`、严格 `user_version` 且不做迁移、每次打开做规范模式对象比对、每次写事务内重新校验归属。跨进程协调交给 SQLite 自己的锁与 busy 超时，替代文件锁。
+`@qq296629801/dsh-digital-employee-sqlite` 在 `node:sqlite` 上实现了完整的 `DigitalEmployeeProvider`，web、headless-employee、digital-employee-suite 三个 bundle 改为挂载它而不是文件 provider。该 provider 遵循 session-persistence-sqlite 的纪律：保留 `application_id`、严格 `user_version` 且不做迁移、每次打开做规范模式对象比对、每次写事务内重新校验归属。跨进程协调交给 SQLite 自己的锁与 busy 超时，替代文件锁。
 
-该 provider 通过构造方式保证提升与检索策略与文件 provider 完全一致：授权代数、记忆排序、可移植工件解析、审计脱敏检查和 `employees.json` 文档解析器都移入了 `@deepseek-ai/dsh-digital-employee`（`domain.ts`、`document.ts`、`ids.ts`），两个 provider 都调用它们。一次性旧数据导入：首次打开且数据库为空时，旁边的 `employees.json` 会被校验并在单个事务中导入，随后改名 `employees.json.imported`；之后手工删除数据库会再次导入归档。
+该 provider 通过构造方式保证提升与检索策略与文件 provider 完全一致：授权代数、记忆排序、可移植工件解析、审计脱敏检查和 `employees.json` 文档解析器都移入了 `@qq296629801/dsh-digital-employee`（`domain.ts`、`document.ts`、`ids.ts`），两个 provider 都调用它们。一次性旧数据导入：首次打开且数据库为空时，旁边的 `employees.json` 会被校验并在单个事务中导入，随后改名 `employees.json.imported`；之后手工删除数据库会再次导入归档。
 
 文件 provider 保留在仓库中：测试 fixture 固定使用它（其快照手工写 `employees.json` 种子），自主任务台账包（`task-attempts`、`task-events`、`whereabouts`）也继续留在该包。
 

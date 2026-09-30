@@ -7,11 +7,11 @@
  */
 
 import { generateKeyPairSync } from 'node:crypto'
-import type { Context } from '@deepseek-ai/cordis'
-import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import { CallId } from '@deepseek-ai/dsh-llm'
-import { signMarketplacePackage } from '@deepseek-ai/dsh-marketplace-core'
+import type { Context } from '@qq296629801/cordis'
+import { boot, resolveConfigPath } from '@qq296629801/dsh-app-boot'
+import { credentialRef } from '@qq296629801/dsh-credentials'
+import { CallId } from '@qq296629801/dsh-llm'
+import { signMarketplacePackage } from '@qq296629801/dsh-marketplace-core'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('mcp-market stdio driver requires a config path')

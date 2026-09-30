@@ -1,5 +1,5 @@
 /** Client-safe subagent marketplace requests, inventory, and declared failures. */
-import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { Branded } from '@qq296629801/dsh-brand'
 /** Stable identity of one managed subagent package. */
 export type SubagentMarketPackageId = Branded<'SubagentMarketPackageId'>
 /** One declared subagent entry in a managed package, credential-free. */

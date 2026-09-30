@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-session-query-sqlite
+# @qq296629801/dsh-session-query-sqlite
 
 [English](README.md) | 中文
 

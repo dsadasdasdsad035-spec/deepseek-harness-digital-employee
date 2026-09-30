@@ -1,13 +1,13 @@
 /**
  * Package-owned invariant companion for the hook marketplace.
- * @module @deepseek-ai/dsh-hooks-market/invariant
+ * @module @qq296629801/dsh-hooks-market/invariant
  */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-hooks-market'
+const PACKAGE_NAME = '@qq296629801/dsh-hooks-market'
 
 /** Cordis companion plugin name. */
 export const name = 'hooks-market-invariant'

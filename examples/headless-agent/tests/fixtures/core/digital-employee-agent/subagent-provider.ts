@@ -1,6 +1,6 @@
-import type { Context } from '@deepseek-ai/cordis'
-import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import type { Context } from '@qq296629801/cordis'
+import type { SubagentProvider } from '@qq296629801/dsh-subagent'
+import { SessionId } from '@qq296629801/dsh-session'
 
 const provider: SubagentProvider = {
   name: 'digital-employee-fixture',

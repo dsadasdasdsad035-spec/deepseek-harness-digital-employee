@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { digestInternals, internals, listTaskAttempts, withTaskAttempts } from '@deepseek-ai/dsh-digital-employee-file'
+import { digestInternals, internals, listTaskAttempts, withTaskAttempts } from '@qq296629801/dsh-digital-employee-file'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 

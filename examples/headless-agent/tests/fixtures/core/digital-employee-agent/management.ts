@@ -1,6 +1,6 @@
-import type { Context } from '@deepseek-ai/cordis'
-import type { Plugin } from '@deepseek-ai/cordis'
-import DigitalEmployeeManagement from '@deepseek-ai/dsh-host-digital-employee-management'
+import type { Context } from '@qq296629801/cordis'
+import type { Plugin } from '@qq296629801/cordis'
+import DigitalEmployeeManagement from '@qq296629801/dsh-host-digital-employee-management'
 
 const workspaceRegistryService = {
   get: (id: string) => id === 'digital-employee-management-workspace'

@@ -2,7 +2,7 @@
 
 import { lstat, readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
-import { KeyedMutex } from '@deepseek-ai/dsh-marketplace-core'
+import { KeyedMutex } from '@qq296629801/dsh-marketplace-core'
 import {
   ArchiveValidationError,
   decodeArchiveBase64,
@@ -17,11 +17,11 @@ import {
   uninstallManagedPackage,
   verifyPackageFileHashes,
   verifyPublisherSignature,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 import type {
   TrustedPublisher,
   WorkflowPackageDescriptor,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 import type {
   WorkflowMarketEntry,
   WorkflowMarketFailure,

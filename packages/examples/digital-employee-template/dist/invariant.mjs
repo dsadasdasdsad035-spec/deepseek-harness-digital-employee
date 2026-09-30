@@ -1,5 +1,5 @@
 //#region src/invariant.ts
-const PACKAGE_NAME = "@deepseek-ai/dsh-digital-employee-example-template";
+const PACKAGE_NAME = "@qq296629801/dsh-digital-employee-example-template";
 /** Cordis companion plugin name. */
 const name = "digital-employee-example-template-invariant";
 /** Service required before the companion can reserve package ownership. */

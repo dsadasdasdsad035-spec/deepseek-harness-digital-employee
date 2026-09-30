@@ -1,5 +1,5 @@
 /**
- * @deepseek-ai/dsh-headless/employee — one-shot digital-employee task driver.
+ * @qq296629801/dsh-headless/employee — one-shot digital-employee task driver.
  * When the command line selects an employee (`dsh --profile headless
  * --employee <id> "task"`), this runner composes the employee's root Agent
  * through `digitalEmployeeAgent`, arms the task text as a goal the round
@@ -9,12 +9,12 @@
  * suspension plus an optional channel notification after consecutive
  * failures reach the configured ceiling.
  *
- * @module @deepseek-ai/dsh-headless/employee
+ * @module @qq296629801/dsh-headless/employee
  */
 
 import { randomUUID } from 'node:crypto'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
 import {
   applyAttemptFailure,
   attemptKeyOf,
@@ -26,15 +26,15 @@ import {
   stampAttemptDisplay,
   withTaskAttempts,
   withTaskDigest,
-} from '@deepseek-ai/dsh-digital-employee-file'
-import { appendTaskLifecycleEvent } from '@deepseek-ai/dsh-digital-employee-file/task-events'
-import type { GoalView } from '@deepseek-ai/dsh-goal'
-import type { DigitalEmployeeInstanceId } from '@deepseek-ai/dsh-digital-employee'
+} from '@qq296629801/dsh-digital-employee-file'
+import { appendTaskLifecycleEvent } from '@qq296629801/dsh-digital-employee-file/task-events'
+import type { GoalView } from '@qq296629801/dsh-goal'
+import type { DigitalEmployeeInstanceId } from '@qq296629801/dsh-digital-employee'
 // Side-effect type import: declaration-merges ctx.digitalEmployeeAgent.
-import type {} from '@deepseek-ai/dsh-digital-employee-agent'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
+import type {} from '@qq296629801/dsh-digital-employee-agent'
+import { createUserMessage } from '@qq296629801/dsh-llm'
+import type { Agent } from '@qq296629801/dsh-agent'
+import { SessionId, type SessionEvent } from '@qq296629801/dsh-session'
 import { HEADLESS_STARTUP_SERVICE, type HeadlessStartupValues } from './startup.ts'
 
 /** Stable Cordis plugin name. */

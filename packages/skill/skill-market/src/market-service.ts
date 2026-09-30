@@ -26,7 +26,7 @@
  *     the stream via the returned terminator, so a high-ratio archive cannot
  *     allocate beyond the per-archive cap.
  *
- * @module @deepseek-ai/dsh-skill-market/market-service
+ * @module @qq296629801/dsh-skill-market/market-service
  */
 
 import {
@@ -40,7 +40,7 @@ import {
 } from 'node:fs/promises'
 import { join, posix, relative, resolve, sep } from 'node:path'
 import { randomBytes } from 'node:crypto'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import {
   decodeArchiveBase64,
   inspectZipArchive,
@@ -49,10 +49,10 @@ import {
   MAX_FILE_COUNT,
   MAX_ZIP_BYTES,
   KeyedMutex,
-} from '@deepseek-ai/dsh-marketplace-core'
-import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
-import { parseSkillDescriptor } from '@deepseek-ai/dsh-skill-filesystem'
-import { isSkillName } from '@deepseek-ai/dsh-skill'
+} from '@qq296629801/dsh-marketplace-core'
+import { resolveDshHome } from '@qq296629801/dsh-home-paths'
+import { parseSkillDescriptor } from '@qq296629801/dsh-skill-filesystem'
+import { isSkillName } from '@qq296629801/dsh-skill'
 import {
   SkillMarketError,
   type SkillMarketBanner,

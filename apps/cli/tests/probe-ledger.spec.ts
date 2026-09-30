@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { internals, withTaskAttempts } from '@deepseek-ai/dsh-digital-employee-file'
+import { internals, withTaskAttempts } from '@qq296629801/dsh-digital-employee-file'
 import { describe, expect, it } from 'vitest'
 
 describe('probe', () => {

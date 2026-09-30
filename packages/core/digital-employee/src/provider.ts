@@ -3,11 +3,11 @@
  * the file and SQLite providers resolve employees and apply memory policy
  * through these functions, so storage backends stay thin adapters with
  * identical behavior by construction.
- * @module @deepseek-ai/dsh-digital-employee/provider
+ * @module @qq296629801/dsh-digital-employee/provider
  */
 
 import { randomUUID } from 'node:crypto'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import { SessionId } from '@qq296629801/dsh-session'
 import {
   createDigitalEmployeeAuditId,
   createDigitalEmployeeInstanceId,

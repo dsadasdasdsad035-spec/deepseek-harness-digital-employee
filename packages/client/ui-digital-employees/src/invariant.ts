@@ -1,8 +1,8 @@
 /** Invariant companion for the browser-only digital employee workspace. */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-client-ui-digital-employees'
+const PACKAGE_NAME = '@qq296629801/dsh-client-ui-digital-employees'
 
 /** Cordis companion plugin name. */
 export const name = 'client-ui-digital-employees-invariant'

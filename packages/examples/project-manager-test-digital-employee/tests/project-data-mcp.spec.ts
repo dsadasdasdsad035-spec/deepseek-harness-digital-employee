@@ -1,8 +1,8 @@
-import { Context } from '@deepseek-ai/cordis'
-import { CallId } from '@deepseek-ai/dsh-llm'
-import { apply as applyMcp } from '@deepseek-ai/dsh-mcp-client/src/index.ts'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
+import { Context } from '@qq296629801/cordis'
+import { CallId } from '@qq296629801/dsh-llm'
+import { apply as applyMcp } from '@qq296629801/dsh-mcp-client/src/index.ts'
+import SystemPrompt from '@qq296629801/dsh-system-prompt'
+import ToolRuntime from '@qq296629801/dsh-tools'
 import { describe, expect, it } from 'vitest'
 import { PROJECT_MANAGER_TEMPLATE } from '../src/index.ts'
 

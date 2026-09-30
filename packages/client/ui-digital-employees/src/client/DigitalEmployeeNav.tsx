@@ -1,6 +1,6 @@
 /** Sidebar entry that opens the digital employee workspace. */
 import type { ReactNode } from 'react'
-import { IconUserOutline16, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconUserOutline16, Tooltip } from '@qq296629801/dsh-client-ui-primitives'
 import css from './DigitalEmployeeWorkspace.module.css'
 
 /** Sidebar owner and injected action props. */

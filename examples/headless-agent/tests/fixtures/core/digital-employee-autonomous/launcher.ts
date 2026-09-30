@@ -1,5 +1,5 @@
-import type { Context } from '@deepseek-ai/cordis'
-import { HEADLESS_STARTUP_SERVICE } from '@deepseek-ai/dsh-headless/startup'
+import type { Context } from '@qq296629801/cordis'
+import { HEADLESS_STARTUP_SERVICE } from '@qq296629801/dsh-headless/startup'
 
 /** The deterministic employee id the prepared store file carries. */
 export const EMPLOYEE_ID = 'employee-autonomous-ada'

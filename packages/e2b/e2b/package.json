@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-e2b",
+  "name": "@qq296629801/dsh-e2b",
   "description": "Shared E2B sandbox lifecycle for DeepSeek Harness provider adapters",
   "version": "0.1.1-rc.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/dsadasdasdsad035-spec/deepseek-harness-digital-employee.git",
     "directory": "packages/e2b/e2b"
   },
   "type": "module",
@@ -32,17 +32,17 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   },
   "dependencies": {
     "e2b": "2.29.1",
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@qq296629801/schemastery": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-loader-smoke": "workspace:^",
-    "@deepseek-ai/dsh-sandbox-policy": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/dsh-loader-smoke": "workspace:^",
+    "@qq296629801/dsh-sandbox-policy": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   }
 }

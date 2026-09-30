@@ -24,6 +24,6 @@ None.
 
 ## Impact
 
-- `@deepseek-ai/dsh-project-manager-test-digital-employee` template, instructions, and tests.
+- `@qq296629801/dsh-project-manager-test-digital-employee` template, instructions, and tests.
 - Digital employee creation orchestration and its Host/Web assembled composition.
 - Existing project-manager fixture documentation, Agent Note, and deterministic snapshot coverage.

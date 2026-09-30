@@ -1,12 +1,12 @@
 /**
  * Digital employee domain records shared by providers and consumers.
- * @module @deepseek-ai/dsh-digital-employee/types
+ * @module @qq296629801/dsh-digital-employee/types
  */
 
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { CredentialRef } from '@deepseek-ai/dsh-credentials'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { Branded } from '@qq296629801/dsh-brand'
+import type { CredentialRef } from '@qq296629801/dsh-credentials'
+import type { ContentBlock } from '@qq296629801/dsh-llm'
+import type { SessionId } from '@qq296629801/dsh-session/types'
 
 /** Stable identifier of a reusable digital employee template. */
 export type DigitalEmployeeTemplateId = Branded<'DigitalEmployeeTemplateId'>
@@ -245,7 +245,7 @@ export interface DigitalEmployeeMemoryDecisionEvent {
     | { readonly kind: 'rejected'; readonly reason: string }
 }
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@qq296629801/dsh-session/types' {
   interface SessionEventMap {
     /**
      * Creation-time employee ownership and resolved composition identity for

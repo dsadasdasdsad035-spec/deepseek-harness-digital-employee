@@ -2,7 +2,7 @@
 
 English | [中文](email.zh.md)
 
-[`@deepseek-ai/dsh-email`](../../packages/email/email) is the transport-registry email seam (`ctx.email`). `send()` resolves to a closed delivery outcome and never rejects; providers register plain-text SMTP transports under stable ids and resolve their credentials through [`ctx.credentials`](credentials.md) references, so no SMTP account or authorization code lands in cordis.yml.
+[`@qq296629801/dsh-email`](../../packages/email/email) is the transport-registry email seam (`ctx.email`). `send()` resolves to a closed delivery outcome and never rejects; providers register plain-text SMTP transports under stable ids and resolve their credentials through [`ctx.credentials`](credentials.md) references, so no SMTP account or authorization code lands in cordis.yml.
 
 Source: [`packages/email/email/src/types.ts`](../../packages/email/email/src/types.ts)
 

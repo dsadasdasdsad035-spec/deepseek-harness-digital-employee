@@ -1,8 +1,8 @@
 /** 包级 invariant companion 与空 node 半。 */
 
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import InvariantRegistry from '@deepseek-ai/dsh-invariants'
+import { Context } from '@qq296629801/cordis'
+import InvariantRegistry from '@qq296629801/dsh-invariants'
 import * as SkillMarketInvariant from '../src/invariant.ts'
 
 describe('invariant companion', () => {

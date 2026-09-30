@@ -3,13 +3,13 @@
  * long-term memories, and audits; writes commit through serialized immediate
  * transactions with schema-ownership revalidation, so a headless employee
  * process and the web service can share the store without a file lock.
- * @module @deepseek-ai/dsh-digital-employee-sqlite
+ * @module @qq296629801/dsh-digital-employee-sqlite
  */
 
 import { mkdir, readFile, rename, rm } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
 import type { DatabaseSync } from 'node:sqlite'
 import {
   type ApplyDigitalEmployeeUpgradeRequest,
@@ -43,8 +43,8 @@ import {
   rankMemories,
   requestApplyUpgrade,
   reviewPromotion,
-} from '@deepseek-ai/dsh-digital-employee'
-import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+} from '@qq296629801/dsh-digital-employee'
+import { resolveDshHome } from '@qq296629801/dsh-home-paths'
 import {
   assertDatabasePath,
   decodeAuditRow,

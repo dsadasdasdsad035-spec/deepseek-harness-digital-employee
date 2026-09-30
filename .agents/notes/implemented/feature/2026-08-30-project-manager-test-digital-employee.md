@@ -10,7 +10,7 @@ The minimal digital employee example cannot prove that an employee's declared sk
 
 ## Decision
 
-`@deepseek-ai/dsh-project-manager-test-digital-employee` provides the offline `project-manager-test` template. The template owns static Atlas skills, project-board and project-document tools, a stdio project-data MCP server, project-manager instructions, and bounded seed memory.
+`@qq296629801/dsh-project-manager-test-digital-employee` provides the offline `project-manager-test` template. The template owns static Atlas skills, project-board and project-document tools, a stdio project-data MCP server, project-manager instructions, and bounded seed memory.
 
 The assembled headless fixture starts an isolated employee through the existing digital employee Consumer. Its deterministic transcript records the resolved capability list, memory projection, tool and MCP use, and a durable project-decision result.
 

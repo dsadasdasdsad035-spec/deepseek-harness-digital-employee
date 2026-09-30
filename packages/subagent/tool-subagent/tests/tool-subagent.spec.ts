@@ -2,25 +2,25 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import { CallId } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { TOOL_ABORTED_BEFORE_DISPATCH } from '@deepseek-ai/dsh-tools'
-import { assembleContextFor, type Agent } from '@deepseek-ai/dsh-agent'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
-import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SubagentRuntime from '@deepseek-ai/dsh-subagent'
-import type { SubagentStartRequest } from '@deepseek-ai/dsh-subagent'
-import LocalJobRegistry from '@deepseek-ai/dsh-jobs-local'
-import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
-import * as ToolTasks from '@deepseek-ai/dsh-tool-jobs'
+import { Context } from '@qq296629801/cordis'
+import Loader from '@qq296629801/cordis-plugin-loader'
+import { CallId } from '@qq296629801/dsh-llm'
+import SystemPrompt from '@qq296629801/dsh-system-prompt'
+import ToolRuntime, { TOOL_ABORTED_BEFORE_DISPATCH } from '@qq296629801/dsh-tools'
+import { assembleContextFor, type Agent } from '@qq296629801/dsh-agent'
+import AgentRegistry from '@qq296629801/dsh-agent'
+import AgentLoop from '@qq296629801/dsh-agent-loop'
+import { mountAgentLoopTestDependencies } from '@qq296629801/dsh-agent-loop-testkit'
+import JsonlSessionPersistence from '@qq296629801/dsh-session-persistence-jsonl'
+import SubagentRuntime from '@qq296629801/dsh-subagent'
+import type { SubagentStartRequest } from '@qq296629801/dsh-subagent'
+import LocalJobRegistry from '@qq296629801/dsh-jobs-local'
+import * as SubagentSpawn from '@qq296629801/dsh-subagent-spawn-in-process'
+import * as ToolTasks from '@qq296629801/dsh-tool-jobs'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as mock from './scripted-provider.ts'
 import * as tool from '../src/index.ts'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import { SessionId } from '@qq296629801/dsh-session'
 
 const testToolSignal = new AbortController().signal
 
@@ -902,7 +902,7 @@ describe('dsh-tool-subagent background mode', () => {
     const ctx = await setup({ provider: 'mock' })
     const result = await callSubagent(ctx, { description: 'd', prompt: 'p', run_in_background: true })
     expect(result.isError).toBe(true)
-    expect(text(result)).toContain('background jobs unavailable: load @deepseek-ai/dsh-jobs')
+    expect(text(result)).toContain('background jobs unavailable: load @qq296629801/dsh-jobs')
   })
 
   it('skips background startup when the tool signal is already aborted', async () => {

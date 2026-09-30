@@ -1,6 +1,6 @@
-import type { Context } from '@deepseek-ai/cordis'
-import { taskEventsInternals } from '@deepseek-ai/dsh-digital-employee-file/task-events'
-import { worldStateInternals } from '@deepseek-ai/dsh-company-file/world-state'
+import type { Context } from '@qq296629801/cordis'
+import { taskEventsInternals } from '@qq296629801/dsh-digital-employee-file/task-events'
+import { worldStateInternals } from '@qq296629801/dsh-company-file/world-state'
 import { join } from 'node:path'
 
 /**

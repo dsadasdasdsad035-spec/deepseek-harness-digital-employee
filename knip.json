@@ -112,13 +112,13 @@
         "**/*.ts"
       ],
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@qq296629801/.+"
       ]
     },
     "packages/host/directory-picker-auto": {
       "ignoreDependencies": [
-        "@deepseek-ai/dsh-client-ui-directory-picker-browse",
-        "@deepseek-ai/dsh-client-ui-directory-picker-native"
+        "@qq296629801/dsh-client-ui-directory-picker-browse",
+        "@qq296629801/dsh-client-ui-directory-picker-native"
       ]
     },
     "packages/extensions/cordis-host-runner": {
@@ -640,8 +640,8 @@
         "tests/**/*.ts"
       ],
       "ignoreDependencies": [
-        "@deepseek-ai/dsh-client-ui-primitives",
-        "@deepseek-ai/dsh-client-ui-slots",
+        "@qq296629801/dsh-client-ui-primitives",
+        "@qq296629801/dsh-client-ui-slots",
         "@types/react",
         "@types/react-dom",
         "react",
@@ -659,7 +659,7 @@
         "tests/**/*.ts"
       ],
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@qq296629801/.+"
       ]
     },
     "packages/subagent/subagent-dsh-sdk": {
@@ -674,17 +674,17 @@
     },
     "packages/bundle/base": {
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@qq296629801/.+"
       ]
     },
     "packages/bundle/headless": {
       "ignoreDependencies": [
-        "@deepseek-ai/dsh-code-runtime-worker-thread"
+        "@qq296629801/dsh-code-runtime-worker-thread"
       ]
     },
     "packages/bundle/web-app": {
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@qq296629801/.+"
       ]
     },
     "packages/examples/builder-employee-template": {
@@ -704,12 +704,12 @@
     },
     "packages/bundle/digital-employee-suite": {
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@qq296629801/.+"
       ]
     },
     "packages/bundle/headless-employee": {
       "ignoreDependencies": [
-        "@deepseek-ai/.+"
+        "@qq296629801/.+"
       ]
     },
     "packages/util/marketplace-core": {

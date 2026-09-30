@@ -1,5 +1,5 @@
-import type { Context } from '@deepseek-ai/cordis'
-import type { NotificationDelivery, NotificationMessage } from '@deepseek-ai/dsh-notification'
+import type { Context } from '@qq296629801/cordis'
+import type { NotificationDelivery, NotificationMessage } from '@qq296629801/dsh-notification'
 
 /** Captured sends through globalThis so the driver reads the same array. */
 const globals = globalThis as unknown as { __employeeAutonomousSent?: Array<{ channel: string; title: string; body: string }> }

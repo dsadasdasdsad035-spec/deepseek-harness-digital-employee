@@ -1,7 +1,7 @@
-import { Context } from '@deepseek-ai/cordis'
-import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
-import { apply as applyGateway, inject as gatewayInject } from '@deepseek-ai/dsh-api-gateway/client'
-import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
+import { Context } from '@qq296629801/cordis'
+import type { ConnectionHandle } from '@qq296629801/dsh-client-connection/client'
+import { apply as applyGateway, inject as gatewayInject } from '@qq296629801/dsh-api-gateway/client'
+import TypertRegistry from '@qq296629801/dsh-typert-registry'
 import { describe, expect, it, vi } from 'vitest'
 import { apply, inject } from '../src/client/index.ts'
 

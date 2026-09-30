@@ -3,10 +3,10 @@
  * vocabulary remains in `./types` so Client programs never import Agent or
  * host Cordis context declarations.
  *
- * @module @deepseek-ai/dsh-workflow
+ * @module @qq296629801/dsh-workflow
  */
 
-import type { Agent } from '@deepseek-ai/dsh-agent'
+import type { Agent } from '@qq296629801/dsh-agent'
 import type {
   WorkflowMeta, WorkflowResult, WorkflowRunId,
 } from './types.ts'

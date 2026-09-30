@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-fs",
+  "name": "@qq296629801/dsh-fs",
   "description": "Abstract filesystem capability seam (ctx.fs) for the DeepSeek Harness — vocabulary types, the FileSystem service (text IO + optional version-guarded atomic mutations), and the fs/* policy event vocabulary",
   "version": "0.1.1-rc.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/dsadasdasdsad035-spec/deepseek-harness-digital-employee.git",
     "directory": "packages/fs/fs"
   },
   "type": "module",
@@ -32,17 +32,17 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-sandbox": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-brand": "workspace:^",
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/dsh-llm": "workspace:^",
+    "@qq296629801/dsh-sandbox": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-llm": "workspace:^",
-    "@deepseek-ai/dsh-sandbox": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-brand": "workspace:^",
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/dsh-llm": "workspace:^",
+    "@qq296629801/dsh-sandbox": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   }
 }

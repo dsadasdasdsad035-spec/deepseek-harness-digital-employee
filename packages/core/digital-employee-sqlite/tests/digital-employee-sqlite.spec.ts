@@ -2,17 +2,17 @@ import { mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import DigitalEmployees, {
   createDigitalEmployeeInstanceId,
   createDigitalEmployeeTemplateId,
   createExpertId,
   type DigitalEmployeeInstance,
   type DigitalEmployeeTemplate,
-} from '@deepseek-ai/dsh-digital-employee'
-import { SessionId } from '@deepseek-ai/dsh-session'
+} from '@qq296629801/dsh-digital-employee'
+import { SessionId } from '@qq296629801/dsh-session'
 import { describe, expect, it } from 'vitest'
-import { SqliteDigitalEmployeeProvider } from '@deepseek-ai/dsh-digital-employee-sqlite'
+import { SqliteDigitalEmployeeProvider } from '@qq296629801/dsh-digital-employee-sqlite'
 
 const template: DigitalEmployeeTemplate = {
   id: createDigitalEmployeeTemplateId('analyst'),

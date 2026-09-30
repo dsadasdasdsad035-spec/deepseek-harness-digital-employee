@@ -6,10 +6,10 @@
  * Delivery failures are reported, never thrown — a failing channel must not
  * crash the task flow that asked for the alert.
  *
- * @module @deepseek-ai/dsh-notification
+ * @module @qq296629801/dsh-notification
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service } from '@qq296629801/cordis'
 import type { NotificationChannel, NotificationCredentialState, NotificationDelivery, NotificationMessage } from './types.ts'
 
 export type { NotificationChannel, NotificationCredentialState, NotificationDelivery, NotificationMessage } from './types.ts'
@@ -20,7 +20,7 @@ export interface NotificationSendRequest extends NotificationMessage {
   readonly channel: string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     notifications: NotificationService
   }

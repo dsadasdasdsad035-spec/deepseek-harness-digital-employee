@@ -3,7 +3,7 @@
  * Build and sign one Tool or MCP marketplace package. stdout carries exactly
  * the trusted-publisher JSON array for `DSH_MARKET_TRUSTED_PUBLISHERS`;
  * diagnostics and the archive path go to stderr.
- * @module @deepseek-ai/dsh-marketplace-core/bin
+ * @module @qq296629801/dsh-marketplace-core/bin
  */
 
 import { runMarketPackageCli } from './cli.ts'

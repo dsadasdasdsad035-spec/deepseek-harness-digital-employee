@@ -1,10 +1,10 @@
 /**
  * Digital employee Service Definition and template registry.
- * @module @deepseek-ai/dsh-digital-employee
+ * @module @qq296629801/dsh-digital-employee
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
+import { Context, Service } from '@qq296629801/cordis'
+import type { SessionEvent } from '@qq296629801/dsh-session/types'
 import type {
   CreateDigitalEmployeeRequest,
   ApplyDigitalEmployeeUpgradeRequest,
@@ -123,7 +123,7 @@ export interface DigitalEmployeeProvider {
  */
 export type DigitalEmployeeTemplateReferenceValidator = (template: DigitalEmployeeTemplate) => void
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     digitalEmployees: DigitalEmployees
   }

@@ -1,19 +1,19 @@
 /** Per-company work groups: a Lead-routed group session driving continuable employee member sessions. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-agent'
-import type { CompanyId, CompanyRecord, DigitalEmployeeInstanceId } from '@deepseek-ai/dsh-company'
-import type {} from '@deepseek-ai/dsh-company'
-import type {} from '@deepseek-ai/dsh-digital-employee-agent'
-import type { TaskLifecycleEvent } from '@deepseek-ai/dsh-digital-employee-file/task-events'
-import { listTaskLifecycleEvents } from '@deepseek-ai/dsh-digital-employee-file/task-events'
-import { readWhereabouts, reportVisit } from '@deepseek-ai/dsh-digital-employee-file/whereabouts'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { SessionId, type Session, type SessionEvent, type UserMessage } from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-session-title'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import type { Agent, AgentHandle } from '@qq296629801/dsh-agent'
+import type {} from '@qq296629801/dsh-agent'
+import type { CompanyId, CompanyRecord, DigitalEmployeeInstanceId } from '@qq296629801/dsh-company'
+import type {} from '@qq296629801/dsh-company'
+import type {} from '@qq296629801/dsh-digital-employee-agent'
+import type { TaskLifecycleEvent } from '@qq296629801/dsh-digital-employee-file/task-events'
+import { listTaskLifecycleEvents } from '@qq296629801/dsh-digital-employee-file/task-events'
+import { readWhereabouts, reportVisit } from '@qq296629801/dsh-digital-employee-file/whereabouts'
+import { createUserMessage } from '@qq296629801/dsh-llm'
+import { SessionId, type Session, type SessionEvent, type UserMessage } from '@qq296629801/dsh-session'
+import type {} from '@qq296629801/dsh-session-title'
+import { Remote, TypertRemoteService } from '@qq296629801/dsh-typert-protocol'
 import type {
   CompanyGroupMember,
   CompanyGroupMessage,
@@ -23,7 +23,7 @@ import type {
   EmployeePresenceRequest,
   EmployeePresenceView,
   ReportEmployeeVisitRequest,
-} from '@deepseek-ai/dsh-host-company-group-chat/types'
+} from '@qq296629801/dsh-host-company-group-chat/types'
 
 /** Task lifecycle poll cadence; the same interval class as busy derivation. */
 const DEFAULT_POLL_INTERVAL_MS = 5_000
@@ -75,7 +75,7 @@ interface QueuedDelivery {
   readonly context: string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     /** Per-company work group gateway. */
     companyGroupChat: CompanyGroupChatGateway

@@ -2,7 +2,7 @@
  * Pure types of the account system: user records, roles, session identity,
  * and the public view that never carries a password hash.
  *
- * @module @deepseek-ai/dsh-user-accounts/types
+ * @module @qq296629801/dsh-user-accounts/types
  */
 
 /** Account role. `owner` is the bootstrap account and cannot be removed or demoted. */

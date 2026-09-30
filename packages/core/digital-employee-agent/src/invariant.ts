@@ -1,9 +1,9 @@
-/** Digital employee Agent Consumer invariants. @module @deepseek-ai/dsh-digital-employee-agent/invariant */
+/** Digital employee Agent Consumer invariants. @module @qq296629801/dsh-digital-employee-agent/invariant */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-digital-employee-agent'
+const PACKAGE_NAME = '@qq296629801/dsh-digital-employee-agent'
 
 /** Cordis companion plugin name. */
 export const name = 'digital-employee-agent-invariant'

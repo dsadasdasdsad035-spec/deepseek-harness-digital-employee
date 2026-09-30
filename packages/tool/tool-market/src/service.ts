@@ -17,12 +17,12 @@ import {
   uninstallManagedPackage,
   verifyPackageFileHashes,
   verifyPublisherSignature,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 import type {
   ArchiveFailure,
   ToolPackageDescriptor,
   TrustedPublisher,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 import type {
   ToolMarketEntry,
   ToolMarketFailure,

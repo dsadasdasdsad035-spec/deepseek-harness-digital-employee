@@ -1,19 +1,19 @@
 /** Session-fork boundaries, lineage, and inherited model routing. */
 
 import { describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry, { agentEvents } from '@deepseek-ai/dsh-agent'
-import type { Agent, AgentHandle, CreateAgentOptions } from '@deepseek-ai/dsh-agent'
-import { createUserMessage, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
-import type { LlmCallConfig } from '@deepseek-ai/dsh-llm'
-import SessionStore from '@deepseek-ai/dsh-session'
-import type { Session, SessionEvent, SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import UserQuestionService from '@deepseek-ai/dsh-user-questions'
-import type { Workspace } from '@deepseek-ai/dsh-workspace'
-import type { RpcRequest } from '@deepseek-ai/dsh-host-apiproxy/api/rpc'
-import { RpcId } from '@deepseek-ai/dsh-host-apiproxy/api/rpc'
-import { createApiProxy } from '@deepseek-ai/dsh-host-apiproxy'
+import { Context } from '@qq296629801/cordis'
+import AgentRegistry, { agentEvents } from '@qq296629801/dsh-agent'
+import type { Agent, AgentHandle, CreateAgentOptions } from '@qq296629801/dsh-agent'
+import { createUserMessage, ReasoningEffortId } from '@qq296629801/dsh-llm'
+import type { LlmCallConfig } from '@qq296629801/dsh-llm'
+import SessionStore from '@qq296629801/dsh-session'
+import type { Session, SessionEvent, SessionHeader, SessionId } from '@qq296629801/dsh-session'
+import SystemPrompt from '@qq296629801/dsh-system-prompt'
+import UserQuestionService from '@qq296629801/dsh-user-questions'
+import type { Workspace } from '@qq296629801/dsh-workspace'
+import type { RpcRequest } from '@qq296629801/dsh-host-apiproxy/api/rpc'
+import { RpcId } from '@qq296629801/dsh-host-apiproxy/api/rpc'
+import { createApiProxy } from '@qq296629801/dsh-host-apiproxy'
 
 const sid = (id: string): SessionId => id as SessionId
 

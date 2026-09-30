@@ -1,10 +1,10 @@
-# `@deepseek-ai/dsh-skill-market`
+# `@qq296629801/dsh-skill-market`
 
 [English](README.md) | 中文
 
 宿主侧参考文档：在用户技能目录中安装、升级、列出和卸载市场管理的技能，并读取其宣传图。
 
-插件通过共享 `/api` 载体公开生成的 `skillMarket` Typert Remote。浏览器代码通过 `@deepseek-ai/dsh-api-remotes` 使用客户端安全类型；压缩包校验、文件系统变更和管理权限仍由本宿主包负责。
+插件通过共享 `/api` 载体公开生成的 `skillMarket` Typert Remote。浏览器代码通过 `@qq296629801/dsh-api-remotes` 使用客户端安全类型；压缩包校验、文件系统变更和管理权限仍由本宿主包负责。
 
 ## 插件
 

@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-repeat-tool-reminder`.
- * @module @deepseek-ai/dsh-repeat-tool-reminder/invariant
+ * Package-owned invariant companion for `@qq296629801/dsh-repeat-tool-reminder`.
+ * @module @qq296629801/dsh-repeat-tool-reminder/invariant
  */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-repeat-tool-reminder'
+const PACKAGE_NAME = '@qq296629801/dsh-repeat-tool-reminder'
 
 /** Cordis companion plugin name. */
 export const name = 'repeat-tool-reminder-invariant'

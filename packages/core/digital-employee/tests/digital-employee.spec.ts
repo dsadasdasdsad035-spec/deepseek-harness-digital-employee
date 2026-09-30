@@ -1,6 +1,6 @@
-import { Context } from '@deepseek-ai/cordis'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
+import { Context } from '@qq296629801/cordis'
+import { credentialRef } from '@qq296629801/dsh-credentials'
+import { Session, SessionId } from '@qq296629801/dsh-session'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import DigitalEmployees, {
   createDigitalEmployeeAuditId,
@@ -18,7 +18,7 @@ import DigitalEmployees, {
   type DigitalEmployeeTaskMemoryRecord,
   type DigitalEmployeeTemplate,
   type DigitalEmployeeTemplateId,
-} from '@deepseek-ai/dsh-digital-employee'
+} from '@qq296629801/dsh-digital-employee'
 
 const template = {
   id: createDigitalEmployeeTemplateId('research-assistant'),

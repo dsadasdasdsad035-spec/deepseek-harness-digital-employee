@@ -10,7 +10,7 @@ Digital employee management and its browser workspace are spread across existing
 
 ## Decision
 
-The repository ships `@deepseek-ai/dsh-digital-employee-suite` as an optional extension over `@deepseek-ai/dsh-base` and `@deepseek-ai/dsh-web-app`. Its patch owns digital employee definition, persistence, agent integration, management, and browser workspace rows. The Web bundle remains the owner of `api-remotes`, Skill/Tool/MCP marketplace rows, and their settings UI.
+The repository ships `@qq296629801/dsh-digital-employee-suite` as an optional extension over `@qq296629801/dsh-base` and `@qq296629801/dsh-web-app`. Its patch owns digital employee definition, persistence, agent integration, management, and browser workspace rows. The Web bundle remains the owner of `api-remotes`, Skill/Tool/MCP marketplace rows, and their settings UI.
 
 All suite-owned durable paths are expressed with `dshHomePath(...)`: employee records use `digital-employees/employees.json`, and Template configuration drafts and publications use `digital-employees/configuration-studio.json`. The package carries no source-machine data, absolute paths, or resolved credential values.
 

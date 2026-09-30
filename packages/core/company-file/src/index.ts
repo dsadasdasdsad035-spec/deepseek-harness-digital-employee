@@ -1,14 +1,14 @@
 /**
  * File-backed company provider.
- * @module @deepseek-ai/dsh-company-file
+ * @module @qq296629801/dsh-company-file
  */
 
 import { randomUUID } from 'node:crypto'
 import { mkdir, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import { withFileLock, writeFileAtomic } from '@qq296629801/dsh-atomic-write'
 import {
   createCompanyId,
   createDepartmentId,
@@ -29,8 +29,8 @@ import {
   type ReorderDepartmentsRequest,
   type UnassignEmployeeRequest,
   type UpdateCompanyRequest,
-} from '@deepseek-ai/dsh-company'
-import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+} from '@qq296629801/dsh-company'
+import { resolveDshHome } from '@qq296629801/dsh-home-paths'
 
 /** Current on-disk company document version. */
 export const SCHEMA_VERSION = 1

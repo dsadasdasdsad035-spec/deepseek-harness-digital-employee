@@ -1,7 +1,7 @@
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
-import DigitalEmployees from '@deepseek-ai/dsh-digital-employee'
+import DigitalEmployees from '@qq296629801/dsh-digital-employee'
 import { describe, expect, it } from 'vitest'
 import { apply, PROJECT_MANAGER_TEMPLATE, PROJECT_MEMORY_SEED, PROJECT_SKILLS } from '../src/index.ts'
 

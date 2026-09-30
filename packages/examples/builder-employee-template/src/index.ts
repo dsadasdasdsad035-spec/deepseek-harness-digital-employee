@@ -1,16 +1,16 @@
 /**
  * Builder digital employee template: interviews users and assembles new
  * digital employees from market assets through scoped authoring tools.
- * @module @deepseek-ai/dsh-builder-employee-template
+ * @module @qq296629801/dsh-builder-employee-template
  */
 
 import { resolve } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 import {
   createDigitalEmployeeTemplateId,
   createExpertId,
   type DigitalEmployeeTemplate,
-} from '@deepseek-ai/dsh-digital-employee'
+} from '@qq296629801/dsh-digital-employee'
 import { registerAuthoringTools } from './authoring-tools.ts'
 
 const ROOT = resolve(import.meta.dirname, '..')

@@ -4,18 +4,18 @@
  * Installs and manages signed hook packages; employee-scoped mounting and the
  * invocable-tool registration live in the employee composition bridge, which
  * reads installed descriptors through {@link HookMarketGateway.installedPackages}.
- * @module @deepseek-ai/dsh-hooks-market
+ * @module @qq296629801/dsh-hooks-market
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import { credentialRef } from '@qq296629801/dsh-credentials'
 import {
   combineTrustedPublisherRecords,
   readTrustedPublisherFileSync,
-} from '@deepseek-ai/dsh-marketplace-core'
-import type { HookPackageDescriptor } from '@deepseek-ai/dsh-marketplace-core'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+} from '@qq296629801/dsh-marketplace-core'
+import type { HookPackageDescriptor } from '@qq296629801/dsh-marketplace-core'
+import { Remote, TypertRemoteService } from '@qq296629801/dsh-typert-protocol'
 import { asHookMarketResult, HookMarketService } from './service.ts'
 import type {
   HookMarketConfigureRequest,
@@ -55,7 +55,7 @@ export interface Config {
   readonly trustedPublishersFile?: string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     /** Host hook marketplace Remote gateway. */
     hookMarket: HookMarketGateway

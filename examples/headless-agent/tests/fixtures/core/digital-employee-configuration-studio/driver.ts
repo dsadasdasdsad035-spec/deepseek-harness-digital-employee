@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import type { Context } from '@deepseek-ai/cordis'
-import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import { createDigitalEmployeeTemplateId } from '@deepseek-ai/dsh-digital-employee'
-import { WorkspaceId } from '@deepseek-ai/dsh-workspace'
+import type { Context } from '@qq296629801/cordis'
+import { boot, resolveConfigPath } from '@qq296629801/dsh-app-boot'
+import { createDigitalEmployeeTemplateId } from '@qq296629801/dsh-digital-employee'
+import { WorkspaceId } from '@qq296629801/dsh-workspace'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('configuration-studio driver requires a config path')

@@ -2,7 +2,7 @@
 
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
+import { bindSnapshotSelector } from '@qq296629801/dsh-client-test-runtime'
 import { SkillMarketSection } from '../src/client/SkillMarketSection.tsx'
 import type { SkillMarketSectionProps } from '../src/client/SkillMarketSection.tsx'
 import { HookMarketStore, McpMarketStore, SimplePackageMarketStore, ToolMarketStore } from '../src/client/package-stores.ts'

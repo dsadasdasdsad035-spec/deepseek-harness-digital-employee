@@ -1,6 +1,6 @@
 /** Sidebar 「组织」 dropdown opening the company console and the employee workspace. */
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Tooltip } from '@qq296629801/dsh-client-ui-primitives'
 import css from './CompanyWorkspace.module.css'
 
 /** One menu item of the organization dropdown. */

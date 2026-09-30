@@ -3,20 +3,20 @@
  *
  * This package owns the Service Definition role of the skill capability seam.
  * Concrete
- * providers such as `@deepseek-ai/dsh-skill-filesystem` decide where skills come
+ * providers such as `@qq296629801/dsh-skill-filesystem` decide where skills come
  * from; this service only merges provider catalogs, resolves the winning skill
  * for a name, and exposes the winning summaries and definitions to consumers.
  *
- * @module @deepseek-ai/dsh-skill
+ * @module @qq296629801/dsh-skill
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import { assertNever } from '@deepseek-ai/dsh-llm'
-import { NamedEntries, ScopedLayers, scopeChainOf, scopeOf } from '@deepseek-ai/dsh-scope'
-import type { ScopeKey, ScopeLayer } from '@deepseek-ai/dsh-scope'
-import type { SessionId } from '@deepseek-ai/dsh-session'
-import z from '@deepseek-ai/schemastery'
-import type Schema from '@deepseek-ai/schemastery'
+import { Context, Service } from '@qq296629801/cordis'
+import { assertNever } from '@qq296629801/dsh-llm'
+import { NamedEntries, ScopedLayers, scopeChainOf, scopeOf } from '@qq296629801/dsh-scope'
+import type { ScopeKey, ScopeLayer } from '@qq296629801/dsh-scope'
+import type { SessionId } from '@qq296629801/dsh-session'
+import z from '@qq296629801/schemastery'
+import type Schema from '@qq296629801/schemastery'
 
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const DEFAULT_COLLECT_CACHE_ENTRIES = 128
@@ -178,7 +178,7 @@ export interface SkillSelection {
   readonly agentId: SessionId
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Events {
     /**
      * A skill body was successfully selected for model-visible use.
@@ -189,7 +189,7 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
-declare module '@deepseek-ai/dsh-llm' {
+declare module '@qq296629801/dsh-llm' {
   interface MessageSourceMap {
     /** A user-explicit skill invocation injected by the host. */
     'skill-invocation': SkillInvocationSource
@@ -318,7 +318,7 @@ export interface Config {
   readonly collectCacheMaxEntries?: number
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     skills: SkillRegistry
   }

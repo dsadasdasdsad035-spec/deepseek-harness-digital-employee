@@ -1,10 +1,10 @@
-# `@deepseek-ai/dsh-digital-employee-suite`
+# `@qq296629801/dsh-digital-employee-suite`
 
 [English](README.md) | 中文
 
-这是一个可安装的 profile bundle 层，在 Web 面之上拥有三个业务域：Skill/Tool/MCP/Hook/Workflow/Subagent 六个市场、带管理与 Template configuration 的数字员工运行时、以及带 3D 园区控制台和群聊的公司模块。将它叠在 `@deepseek-ai/dsh-base` 和 `@deepseek-ai/dsh-web-app` 之上；shipped web profile 模板已经默认叠加它，因此普通的 `dsh web` 部署具备全部能力。
+这是一个可安装的 profile bundle 层，在 Web 面之上拥有三个业务域：Skill/Tool/MCP/Hook/Workflow/Subagent 六个市场、带管理与 Template configuration 的数字员工运行时、以及带 3D 园区控制台和群聊的公司模块。将它叠在 `@qq296629801/dsh-base` 和 `@qq296629801/dsh-web-app` 之上；shipped web profile 模板已经默认叠加它，因此普通的 `dsh web` 部署具备全部能力。
 
-在其他 profile 中执行 `dsh plugin --profile <name> add @deepseek-ai/dsh-digital-employee-suite` 即可安装，或把这个包加入 profile，并放在 `@deepseek-ai/dsh-web-app` 之后（`dsh.profile.bundles`）。该 bundle 拥有全部域 Host 行与浏览器行（`ui-skill-market`、`ui-digital-employees`、`ui-companies`）；这些域的远程调用经由的共享 `api-remotes` 载体仍由 `dsh-web-app` 提供，两个 bundle 同时加载不会重复注册任何 namespace。
+在其他 profile 中执行 `dsh plugin --profile <name> add @qq296629801/dsh-digital-employee-suite` 即可安装，或把这个包加入 profile，并放在 `@qq296629801/dsh-web-app` 之后（`dsh.profile.bundles`）。该 bundle 拥有全部域 Host 行与浏览器行（`ui-skill-market`、`ui-digital-employees`、`ui-companies`）；这些域的远程调用经由的共享 `api-remotes` 载体仍由 `dsh-web-app` 提供，两个 bundle 同时加载不会重复注册任何 namespace。
 
 员工记录、公司数据和市场安装内容都保存于目标工程自己的 `$DSH_HOME`。bundle 不包含用户员工、公司、模板、市场压缩包、开发机绝对路径或已解析凭据。升级或卸载 bundle 不会删除 `$DSH_HOME` 下的用户文件。
 
@@ -26,6 +26,6 @@
 
 ## 已知限制与延期工作
 
-- **依赖 Web bundle**：suite 的远程调用走 Web bundle 挂载的 `api-remotes` 载体与浏览器 roster；使用方 profile 必须提供 `@deepseek-ai/dsh-web-app`。
+- **依赖 Web bundle**：suite 的远程调用走 Web bundle 挂载的 `api-remotes` 载体与浏览器 roster；使用方 profile 必须提供 `@qq296629801/dsh-web-app`。
 - **重启后激活**：新安装的 Tool 和 MCP 包只有通过正常的 Host 激活与重启检查后才可选择。
 - **目标本地配置**：员工记录、公司数据、Template configuration 草稿和市场安装内容不会从 bundle 作者的机器迁移。

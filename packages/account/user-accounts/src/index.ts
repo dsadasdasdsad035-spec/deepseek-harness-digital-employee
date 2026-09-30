@@ -11,16 +11,16 @@
  * - verification codes and reset tokens are single-use with TTLs
  * - login failures lock the email for 15 minutes after 5 consecutive failures
  *
- * @module @deepseek-ai/dsh-user-accounts
+ * @module @qq296629801/dsh-user-accounts
  */
 
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { Context, Service } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+import { Context, Service } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import { resolveDshHome } from '@qq296629801/dsh-home-paths'
 import type { AccountRole, SessionIdentity, UserAccountView } from './types.ts'
 
 export type { AccountRole, SessionIdentity, UserAccount, UserAccountView } from './types.ts'
@@ -68,7 +68,7 @@ interface LockState {
   lockedUntil: number
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     userAccounts: UserAccountService
   }

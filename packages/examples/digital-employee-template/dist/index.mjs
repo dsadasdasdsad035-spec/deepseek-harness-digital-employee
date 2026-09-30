@@ -1,4 +1,4 @@
-import { createDigitalEmployeeTemplateId, createExpertId } from "@deepseek-ai/dsh-digital-employee";
+import { createDigitalEmployeeTemplateId, createExpertId } from "@qq296629801/dsh-digital-employee";
 //#region src/index.ts
 const ROOT = import.meta.dirname;
 const REVIEWER_ID = createExpertId("reviewer");

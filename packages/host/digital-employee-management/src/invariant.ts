@@ -1,9 +1,9 @@
 /** Digital employee management Host invariant companion. */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-host-digital-employee-management'
+const PACKAGE_NAME = '@qq296629801/dsh-host-digital-employee-management'
 
 /** Cordis companion plugin name. */
 export const name = 'host-digital-employee-management-invariant'

@@ -7,8 +7,8 @@
 
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
+import type { Context } from '@qq296629801/cordis'
+import type { SubagentProvider } from '@qq296629801/dsh-subagent'
 import type { InstalledSubagentPackage } from './index.ts'
 
 /** One resolved binding: an installed package plus one of its personas. */

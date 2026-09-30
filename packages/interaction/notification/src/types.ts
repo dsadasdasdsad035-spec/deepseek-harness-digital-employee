@@ -4,7 +4,7 @@
  * interface providers register. Free of host-side value imports so the
  * browser half can reuse it through `./types`.
  *
- * @module @deepseek-ai/dsh-notification/types
+ * @module @qq296629801/dsh-notification/types
  */
 
 /** One alert message a caller asks a channel to deliver. */

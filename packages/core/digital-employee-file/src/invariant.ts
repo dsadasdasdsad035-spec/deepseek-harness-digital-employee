@@ -1,12 +1,12 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-digital-employee-file`.
- * @module @deepseek-ai/dsh-digital-employee-file/invariant
+ * Package-owned invariant companion for `@qq296629801/dsh-digital-employee-file`.
+ * @module @qq296629801/dsh-digital-employee-file/invariant
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-digital-employee-file'
+const PACKAGE_NAME = '@qq296629801/dsh-digital-employee-file'
 
 /** Cordis companion plugin name. */
 export const name = 'digital-employee-file-invariant'

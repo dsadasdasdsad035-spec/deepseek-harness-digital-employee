@@ -10,7 +10,7 @@ Tool 与 MCP 市场包要求描述符由显式受信任的发布者签名，但�
 
 ## Decision
 
-`@deepseek-ai/dsh-marketplace-core` 在校验器旁边拥有生产者侧。`signMarketplacePackage()` 对内存中的描述符和精确文件清单签名；`buildMarketplacePackage()` 读取源目录，要求描述符的 `files` 键与目录内容完全一致，并委托给同一条签名路径。两者在返回字节前都会对自身输出重跑安装端共享的归档、描述符、文件表和签名检查，因此构建器接受与安装器接受不会漂移。
+`@qq296629801/dsh-marketplace-core` 在校验器旁边拥有生产者侧。`signMarketplacePackage()` 对内存中的描述符和精确文件清单签名；`buildMarketplacePackage()` 读取源目录，要求描述符的 `files` 键与目录内容完全一致，并委托给同一条签名路径。两者在返回字节前都会对自身输出重跑安装端共享的归档、描述符、文件表和签名检查，因此构建器接受与安装器接受不会漂移。
 
 `dsh-market-package` bin 包装该构建器。它接收源目录、包类型、真实发布者 id，以及一个既有 Ed25519 私钥或生成密钥的请求（`0600`）。stdout 只输出由签名密钥派生的 `DSH_MARKET_TRUSTED_PUBLISHERS` JSON 数组；私钥字节绝不进入归档、信任记录或 stdout。
 

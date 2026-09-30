@@ -1,6 +1,6 @@
 /** Keyed Chat renderer for one in-flight member delivery with its cancel seat. */
 import type { ReactNode } from 'react'
-import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type { PropsRuntime } from '@qq296629801/dsh-client-ui-slots'
 import type { CompanyGroupTurnChatData } from './group-turn-definition.ts'
 import { groupTurnActions } from './group-turn-actions.ts'
 import css from './CompanyWorkspace.module.css'

@@ -1,9 +1,9 @@
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import { access, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { remoteMethods } from '@deepseek-ai/dsh-typert-protocol'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import { remoteMethods } from '@qq296629801/dsh-typert-protocol'
+import { SessionId } from '@qq296629801/dsh-session'
 import { describe, expect, it, vi } from 'vitest'
 import DigitalEmployeeManagementGateway from '../src/index.ts'
 import { ConfigurationStudioStore } from '../src/configuration-studio.ts'
@@ -600,10 +600,10 @@ describe('DigitalEmployeeManagementGateway', () => {
     const directory = await mkdtemp(join(tmpdir(), 'dsh-configuration-studio-'))
     const studioFile = join(directory, 'studio.json')
     let writes = 0
-    const persist = vi.fn(async (...args: Parameters<typeof import('@deepseek-ai/dsh-atomic-write')['writeFileAtomic']>) => {
+    const persist = vi.fn(async (...args: Parameters<typeof import('@qq296629801/dsh-atomic-write')['writeFileAtomic']>) => {
       writes += 1
       if (writes === 2) throw new Error('disk full')
-      const { writeFileAtomic } = await import('@deepseek-ai/dsh-atomic-write')
+      const { writeFileAtomic } = await import('@qq296629801/dsh-atomic-write')
       await writeFileAtomic(...args)
     })
     try {

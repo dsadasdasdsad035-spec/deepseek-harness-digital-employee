@@ -1,7 +1,7 @@
-import { Context } from '@deepseek-ai/cordis'
-import type { AgentHandle } from '@deepseek-ai/dsh-agent'
-import type { SaveImageAttachment } from '@deepseek-ai/dsh-attachment'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import { Context } from '@qq296629801/cordis'
+import type { AgentHandle } from '@qq296629801/dsh-agent'
+import type { SaveImageAttachment } from '@qq296629801/dsh-attachment'
+import { SessionId } from '@qq296629801/dsh-session'
 import { describe, expect, it, vi } from 'vitest'
 import DigitalEmployeeManagementGateway from '../src/index.ts'
 

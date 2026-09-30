@@ -8,7 +8,7 @@ import {
   launchAcpTestAgent,
   type AgentUnderTest,
   type LaunchedAcpTestAgent,
-} from '@deepseek-ai/dsh-acp-snapshot'
+} from '@qq296629801/dsh-acp-snapshot'
 import { cleanupAcpExampleTest } from './cleanup.ts'
 
 /**

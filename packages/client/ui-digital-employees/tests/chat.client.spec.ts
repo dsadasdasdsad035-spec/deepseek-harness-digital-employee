@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import type {
   DigitalEmployeeInstance, DigitalEmployeeInstanceId, SessionId, WorkspaceId,
-} from '@deepseek-ai/dsh-api-remotes/client'
-import type { RoutingSubmitRequest } from '@deepseek-ai/dsh-client-ui-input-trigger/client'
+} from '@qq296629801/dsh-api-remotes/client'
+import type { RoutingSubmitRequest } from '@qq296629801/dsh-client-ui-input-trigger/client'
 import { DigitalEmployeeChatController } from '../src/client/chat.ts'
 import { DigitalEmployeeStore } from '../src/client/store.ts'
 

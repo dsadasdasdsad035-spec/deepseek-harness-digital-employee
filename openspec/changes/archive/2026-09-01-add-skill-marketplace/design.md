@@ -26,7 +26,7 @@ The current worktree contains an exploratory marketplace implementation using an
 
 ### 1. Use a generated Typert Remote namespace over `/api`
 
-The Host package will expose a `TypertRemoteService` namespace named `skillMarket` with `list`, `install`, `banner`, and `uninstall` methods. Its generated `./typert` Host artifact will be registered by the gateway, and its generated `./remote` client contribution will be mounted by `@deepseek-ai/dsh-api-remotes`. The Web package will call `ctx.remote.skillMarket.*`.
+The Host package will expose a `TypertRemoteService` namespace named `skillMarket` with `list`, `install`, `banner`, and `uninstall` methods. Its generated `./typert` Host artifact will be registered by the gateway, and its generated `./remote` client contribution will be mounted by `@qq296629801/dsh-api-remotes`. The Web package will call `ctx.remote.skillMarket.*`.
 
 Expected business failures will be a closed discriminated union returned by the Remote method, for example `{ ok: false, error: { code: 'managed-upgrade-required', ... } }`. Transport, cancellation, and unexpected implementation failures remain rejected Remote calls. Client-safe request, result, entry, manifest-version, and error types live in the Host package's `./types` export and are re-exported by the Remote assembly, so the browser never imports Host runtime modules.
 

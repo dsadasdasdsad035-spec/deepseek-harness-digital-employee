@@ -1,6 +1,6 @@
 /** Client-safe company group wire types and the group message session event. */
 
-import type { DigitalEmployeeInstanceId } from '@deepseek-ai/dsh-company'
+import type { DigitalEmployeeInstanceId } from '@qq296629801/dsh-company'
 
 /** One group member: a digital employee instance currently bound to the company. */
 export interface CompanyGroupMember {
@@ -108,7 +108,7 @@ export interface CompanyGroupTurnDeliveredEvent {
   readonly queueSeq: number
 }
 
-declare module '@deepseek-ai/dsh-session/types' {
+declare module '@qq296629801/dsh-session/types' {
   interface SessionEventMap {
     /**
      * Creation marker: this session hosts one company's group.

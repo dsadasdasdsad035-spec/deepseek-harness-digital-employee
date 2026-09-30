@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-tool-ask-user
+# @qq296629801/dsh-tool-ask-user
 
 [English](README.md) | 中文
 

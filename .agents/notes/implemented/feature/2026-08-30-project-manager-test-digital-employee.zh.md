@@ -10,7 +10,7 @@ Status: implemented
 
 ## 决策
 
-`@deepseek-ai/dsh-project-manager-test-digital-employee` 提供离线的 `project-manager-test` 模板。模板拥有静态 Atlas skills、project-board 与 project-document 工具、stdio project-data MCP server、项目经理指令和有界种子记忆。
+`@qq296629801/dsh-project-manager-test-digital-employee` 提供离线的 `project-manager-test` 模板。模板拥有静态 Atlas skills、project-board 与 project-document 工具、stdio project-data MCP server、项目经理指令和有界种子记忆。
 
 组装后的 headless 夹具通过现有数字员工 Consumer 启动隔离员工。其确定性 transcript 记录解析出的能力列表、记忆投影、工具和 MCP 使用，以及持久化项目决策结果。
 

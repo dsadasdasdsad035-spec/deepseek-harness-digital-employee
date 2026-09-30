@@ -1,5 +1,5 @@
 /** Trusted workflow package validation and managed lifecycle. */
-import type { TrustedPublisher, WorkflowPackageDescriptor } from '@deepseek-ai/dsh-marketplace-core'
+import type { TrustedPublisher, WorkflowPackageDescriptor } from '@qq296629801/dsh-marketplace-core'
 import type { WorkflowMarketFailure, WorkflowMarketInstallRequest, WorkflowMarketInstallResult, WorkflowMarketListResult, WorkflowMarketPackageId, WorkflowMarketUninstallResult } from './types.ts'
 /** Error carrying the closed marketplace failure that produced it. */
 declare class WorkflowMarketDomainError extends Error {

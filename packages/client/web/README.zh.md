@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-web
+# @qq296629801/dsh-client-web
 
 [English](README.md) | 中文
 

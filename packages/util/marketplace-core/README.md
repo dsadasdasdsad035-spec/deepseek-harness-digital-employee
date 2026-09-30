@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-marketplace-core`
+# `@qq296629801/dsh-marketplace-core`
 
 English | [中文](README.zh.md)
 

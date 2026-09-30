@@ -5,13 +5,13 @@
  * seam's fail-visible rule lives here — every failure path resolves to a
  * closed {@link NotificationDelivery}, never a throw.
  *
- * @module @deepseek-ai/dsh-notification/channels
+ * @module @qq296629801/dsh-notification/channels
  * @internal
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import type { CredentialProvider } from '@deepseek-ai/dsh-credentials'
+import type { Context } from '@qq296629801/cordis'
+import { credentialRef } from '@qq296629801/dsh-credentials'
+import type { CredentialProvider } from '@qq296629801/dsh-credentials'
 import type { NotificationDelivery, NotificationMessage } from './types.ts'
 
 /** JSON value crossing the fetch body boundary. */

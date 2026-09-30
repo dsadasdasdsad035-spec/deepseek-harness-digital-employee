@@ -20,4 +20,4 @@ Status: implemented
 
 ## 影响
 
-树外部署用 `dsh plugin --profile <name> add @deepseek-ai/dsh-digital-employee-suite` 一次安装三个域。仅含 Web 的 profile 启动通用控制台：客户端仍会挂载全部远程 namespace（`api-remotes` 的集合在构建期固定），缺少对应域 Host 行的调用以 `service-unavailable` 失败——与任何未挂载 Host 行的形态一致，而会发起这些调用的域浏览器行同样不存在。既有 web profile 自动归一化到三层模板；回滚时把 suite 从 profile 移除即恢复通用表层，不触碰 `$DSH_HOME` 数据。被取代的 Web bundle 组合测试已删除并重写了 suite 测试，顺带清掉了它们围绕已退役 `digital-employee-file` provider 的存量漂移。
+树外部署用 `dsh plugin --profile <name> add @qq296629801/dsh-digital-employee-suite` 一次安装三个域。仅含 Web 的 profile 启动通用控制台：客户端仍会挂载全部远程 namespace（`api-remotes` 的集合在构建期固定），缺少对应域 Host 行的调用以 `service-unavailable` 失败——与任何未挂载 Host 行的形态一致，而会发起这些调用的域浏览器行同样不存在。既有 web profile 自动归一化到三层模板；回滚时把 suite 从 profile 移除即恢复通用表层，不触碰 `$DSH_HOME` 数据。被取代的 Web bundle 组合测试已删除并重写了 suite 测试，顺带清掉了它们围绕已退役 `digital-employee-file` provider 的存量漂移。

@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@qq296629801/dsh-loader-smoke'
+import type { SessionEvent } from '@qq296629801/dsh-session'
 
 const binScript = fileURLToPath(new URL(
   '../../../../examples/headless-agent/tests/fixtures/core/digital-employee-agent/driver.ts',

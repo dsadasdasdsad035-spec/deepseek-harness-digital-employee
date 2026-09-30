@@ -1,16 +1,16 @@
 /** The `agent-loop` settings section layered over the composition entry. */
 
 import { describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import type { Fiber } from '@deepseek-ai/cordis'
-import LlmRuntime from '@deepseek-ai/dsh-llm'
-import SessionStore from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
-import { SettingsProvider } from '@deepseek-ai/dsh-settings'
-import type { SettingsNamespace } from '@deepseek-ai/dsh-settings'
-import AgentLoop, { AGENT_LOOP_SETTINGS_NAMESPACE } from '@deepseek-ai/dsh-agent-loop'
+import { Context } from '@qq296629801/cordis'
+import type { Fiber } from '@qq296629801/cordis'
+import LlmRuntime from '@qq296629801/dsh-llm'
+import SessionStore from '@qq296629801/dsh-session'
+import SystemPrompt from '@qq296629801/dsh-system-prompt'
+import ToolRuntime from '@qq296629801/dsh-tools'
+import AgentRegistry from '@qq296629801/dsh-agent'
+import { SettingsProvider } from '@qq296629801/dsh-settings'
+import type { SettingsNamespace } from '@qq296629801/dsh-settings'
+import AgentLoop, { AGENT_LOOP_SETTINGS_NAMESPACE } from '@qq296629801/dsh-agent-loop'
 
 /** The smallest real provider: one in-memory document, always writable. */
 class MemorySettings extends SettingsProvider {

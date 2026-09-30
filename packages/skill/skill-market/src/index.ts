@@ -1,14 +1,14 @@
 /**
  * Host-side marketplace operations for persistent user skills.
  *
- * @module @deepseek-ai/dsh-skill-market
+ * @module @qq296629801/dsh-skill-market
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 import { join } from 'node:path'
-import z from '@deepseek-ai/schemastery'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { ArchiveValidationError } from '@deepseek-ai/dsh-marketplace-core'
+import z from '@qq296629801/schemastery'
+import { Remote, TypertRemoteService } from '@qq296629801/dsh-typert-protocol'
+import { ArchiveValidationError } from '@qq296629801/dsh-marketplace-core'
 import { resolveDefaultInstallRoot, SkillMarketService } from './market-service.ts'
 import { SkillMarketError } from './schema.ts'
 import type {
@@ -147,7 +147,7 @@ export interface Config {
   installRoot?: string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     /** Host marketplace service exported through the generated Typert Remote. */
     skillMarket: SkillMarketGateway

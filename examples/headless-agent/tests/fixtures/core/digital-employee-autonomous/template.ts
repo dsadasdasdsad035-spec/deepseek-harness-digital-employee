@@ -1,9 +1,9 @@
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 import {
   createDigitalEmployeeTemplateId,
   createExpertId,
   type DigitalEmployeeTemplate,
-} from '@deepseek-ai/dsh-digital-employee'
+} from '@qq296629801/dsh-digital-employee'
 
 const reviewerId = createExpertId('reviewer')
 

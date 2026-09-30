@@ -1,8 +1,8 @@
 /** Trusted subagent package validation and managed lifecycle. */
 import { lstat, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { KeyedMutex } from '@deepseek-ai/dsh-marketplace-core';
-import { ArchiveValidationError, decodeArchiveBase64, descriptorSignaturePayload, inspectZipArchive, listManagedPackages, parseSubagentPackageDescriptor, preparePackageArchive, publishManagedPackage, readManagedPackage, resolveTrustedPublisher, uninstallManagedPackage, verifyPackageFileHashes, verifyPublisherSignature, } from '@deepseek-ai/dsh-marketplace-core';
+import { KeyedMutex } from '@qq296629801/dsh-marketplace-core';
+import { ArchiveValidationError, decodeArchiveBase64, descriptorSignaturePayload, inspectZipArchive, listManagedPackages, parseSubagentPackageDescriptor, preparePackageArchive, publishManagedPackage, readManagedPackage, resolveTrustedPublisher, uninstallManagedPackage, verifyPackageFileHashes, verifyPublisherSignature, } from '@qq296629801/dsh-marketplace-core';
 class SubagentMarketDomainError extends Error {
     failure;
     constructor(failure) {

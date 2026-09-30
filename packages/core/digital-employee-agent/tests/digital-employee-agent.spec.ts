@@ -1,7 +1,7 @@
 import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import {
   createDigitalEmployeeInstanceId,
   createDigitalEmployeeMemoryId,
@@ -9,17 +9,17 @@ import {
   createExpertId,
   projectDigitalEmployeeOwnership,
   type ResolvedDigitalEmployee,
-} from '@deepseek-ai/dsh-digital-employee'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { createScope } from '@deepseek-ai/dsh-scope'
-import { Session, SessionId } from '@deepseek-ai/dsh-session'
-import SystemPrompt, { renderPrompt } from '@deepseek-ai/dsh-system-prompt'
+} from '@qq296629801/dsh-digital-employee'
+import { credentialRef } from '@qq296629801/dsh-credentials'
+import { createUserMessage } from '@qq296629801/dsh-llm'
+import { createScope } from '@qq296629801/dsh-scope'
+import { Session, SessionId } from '@qq296629801/dsh-session'
+import SystemPrompt, { renderPrompt } from '@qq296629801/dsh-system-prompt'
 import { describe, expect, it, vi } from 'vitest'
 import DigitalEmployeeAgent, {
   digitalEmployeeCompositionId,
   type ResolvedDigitalEmployeeExpert,
-} from '@deepseek-ai/dsh-digital-employee-agent'
+} from '@qq296629801/dsh-digital-employee-agent'
 
 /**
  * A composition context shaped like production: agent-loop exposes the acting

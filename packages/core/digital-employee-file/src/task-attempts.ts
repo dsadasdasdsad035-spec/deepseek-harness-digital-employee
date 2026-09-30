@@ -12,14 +12,14 @@
  * protocol — and strict about the counting fields: a structurally invalid
  * ledger fails loud rather than silently resetting suspension state.
  *
- * @module @deepseek-ai/dsh-digital-employee-file/task-attempts
+ * @module @qq296629801/dsh-digital-employee-file/task-attempts
  */
 
 import { createHash, randomUUID } from 'node:crypto'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
-import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
+import { withFileLock, writeFileAtomic } from '@qq296629801/dsh-atomic-write'
+import { dshHomePath } from '@qq296629801/dsh-home-paths'
 
 /** One autonomous task's attempt-ledger record. */
 export interface TaskAttemptRecord {

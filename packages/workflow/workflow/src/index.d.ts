@@ -1,16 +1,16 @@
 /**
  * Service Definition for the workflow capability seam. Service Providers execute orchestration scripts;
  * observe-only lifecycle events never expose run control.
- * @module @deepseek-ai/dsh-workflow
+ * @module @qq296629801/dsh-workflow
  */
-import { Context, Service } from '@deepseek-ai/cordis'
-import { HarnessError } from '@deepseek-ai/dsh-llm'
+import { Context, Service } from '@qq296629801/cordis'
+import { HarnessError } from '@qq296629801/dsh-llm'
 import type { WorkflowAgentEndInfo, WorkflowAgentInfo, WorkflowResultInfo, WorkflowRunInfo } from './types.ts'
 import type { WorkflowRun, WorkflowStartRequest } from './runtime-types.ts'
 export { WorkflowRunId } from './types.ts'
 export type { WorkflowAgentEndInfo, WorkflowAgentInfo, WorkflowAgentOutcome, WorkflowMeta, WorkflowPhase, WorkflowResult, WorkflowResultInfo, WorkflowRunInfo, WorkflowStopReason } from './types.ts'
 export type { WorkflowRun, WorkflowStartRequest } from './runtime-types.ts'
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     workflowEngine: WorkflowEngine
   }

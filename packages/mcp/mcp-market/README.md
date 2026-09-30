@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-mcp-market`
+# `@qq296629801/dsh-mcp-market`
 
 English | [中文](README.zh.md)
 

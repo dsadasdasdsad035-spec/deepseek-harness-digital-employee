@@ -1,8 +1,8 @@
-# @deepseek-ai/dsh-digital-employee-file
+# @qq296629801/dsh-digital-employee-file
 
 [English](README.md) | 中文
 
-`@deepseek-ai/dsh-digital-employee` 的文件型 Provider。它把员工实例、长期记忆与审计记录存入 `$DSH_HOME/digital-employees` 下一个仅所有者可访问、带版本的 JSON 文档。
+`@qq296629801/dsh-digital-employee` 的文件型 Provider。它把员工实例、长期记忆与审计记录存入 `$DSH_HOME/digital-employees` 下一个仅所有者可访问、带版本的 JSON 文档。
 
 ## 配置
 
@@ -35,4 +35,4 @@ Provider 本身不直接增加 token；Consumer 控制请求中包含的有界�
 
 ## 已知限制与后续工作
 
-- **单个 JSON 文档**：写入在写锁下整体重写文档；多进程共享部署应使用 SQLite Provider（`@deepseek-ai/dsh-digital-employee-sqlite`），它可以在不改动 Consumer 的情况下替换本实现。
+- **单个 JSON 文档**：写入在写锁下整体重写文档；多进程共享部署应使用 SQLite Provider（`@qq296629801/dsh-digital-employee-sqlite`），它可以在不改动 Consumer 的情况下替换本实现。

@@ -9,8 +9,8 @@
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import { internals as ledger, withTaskAttempts } from '@deepseek-ai/dsh-digital-employee-file'
+import { Context } from '@qq296629801/cordis'
+import { internals as ledger, withTaskAttempts } from '@qq296629801/dsh-digital-employee-file'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import DigitalEmployeeManagementGateway from '../src/index.ts'
 

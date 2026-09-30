@@ -1,9 +1,9 @@
 /** Strict replay fold for Agent Teams log-only events. */
 
 import { z } from 'zod'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
-import type { SessionEvent, SessionEventMap } from '@deepseek-ai/dsh-session'
+import type { ContentBlock } from '@qq296629801/dsh-llm'
+import { SessionId } from '@qq296629801/dsh-session'
+import type { SessionEvent, SessionEventMap } from '@qq296629801/dsh-session'
 import type {
   TeamId,
   TeamMemberSnapshot,

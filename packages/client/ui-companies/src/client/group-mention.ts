@@ -1,7 +1,7 @@
 /** Group-session `@` source: employee mention candidates for one company's group composer. */
 import type {
   CandidateRequest, ClientSessionContext, InputTriggerSource, InputTriggerCandidate,
-} from '@deepseek-ai/dsh-client-ui-input-trigger/client'
+} from '@qq296629801/dsh-client-ui-input-trigger/client'
 import type { CompanyGroupMemberView } from './store.ts'
 
 /**

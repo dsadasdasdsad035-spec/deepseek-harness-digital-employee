@@ -3,4 +3,4 @@
 
 - insert:
     - id: subagent-claude-code
-      name: '@deepseek-ai/dsh-subagent-claude-code'
+      name: '@qq296629801/dsh-subagent-claude-code'

@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-user-accounts
+# @qq296629801/dsh-user-accounts
 
 English | [中文](README.zh.md)
 

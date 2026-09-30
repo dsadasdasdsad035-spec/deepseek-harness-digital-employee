@@ -1,6 +1,6 @@
 ## Context
 
-数字员工实例（`DigitalEmployeeInstance`，`packages/core/digital-employee`）持久化于 `~/.dsh/digital-employees/employees.json`，生命周期事件 `digital-employees/instance-change` 与 `digital-employees/before-delete` 已可用。实例没有忙碌字段；会话运行位经 `packages/client/connection` 的 WebSocket downlink 以 status 帧实时到达前端（sessions manager 维护 `activityRows`），自主任务状态只存在于独立 headless 进程写的 `task-attempts.json` 台账。Web 控制台是插槽制无路由架构，宿主↔前端经 Typert `@Remote` 网关；客户端插件由 `packages/client/tsdown.client.ts` 打成 `lib/client.js` 闭包，第三方 npm 依赖内联进插件 bundle（purity 门禁允许非 `@deepseek-ai` 内联）。仓库内目前没有任何 3D 依赖。
+数字员工实例（`DigitalEmployeeInstance`，`packages/core/digital-employee`）持久化于 `~/.dsh/digital-employees/employees.json`，生命周期事件 `digital-employees/instance-change` 与 `digital-employees/before-delete` 已可用。实例没有忙碌字段；会话运行位经 `packages/client/connection` 的 WebSocket downlink 以 status 帧实时到达前端（sessions manager 维护 `activityRows`），自主任务状态只存在于独立 headless 进程写的 `task-attempts.json` 台账。Web 控制台是插槽制无路由架构，宿主↔前端经 Typert `@Remote` 网关；客户端插件由 `packages/client/tsdown.client.ts` 打成 `lib/client.js` 闭包，第三方 npm 依赖内联进插件 bundle（purity 门禁允许非 `@qq296629801` 内联）。仓库内目前没有任何 3D 依赖。
 
 ## Goals / Non-Goals
 

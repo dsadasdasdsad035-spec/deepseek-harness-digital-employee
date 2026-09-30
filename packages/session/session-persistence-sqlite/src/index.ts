@@ -1,17 +1,17 @@
 /**
  * Opt-in SQLite persistence provider. Logical sessions remain unchanged;
  * the physical backend packs eligible chunk runs into schema-17 rows.
- * @module @deepseek-ai/dsh-session-persistence-sqlite
+ * @module @qq296629801/dsh-session-persistence-sqlite
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import { Context, Service } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
 import type {
   SessionEvent,
   SessionHeader,
   SessionId,
   SessionPreparation,
-} from '@deepseek-ai/dsh-session'
+} from '@qq296629801/dsh-session'
 import {
   DEFAULT_PREPARED_SESSION_CACHE_SIZE,
   DEFAULT_WRITE_BATCH_MAX_DELAY_MS,
@@ -21,7 +21,7 @@ import {
   type SessionInspection,
   type SessionLocation,
   type SessionPersistenceSnapshot,
-} from '@deepseek-ai/dsh-session-persistence'
+} from '@qq296629801/dsh-session-persistence'
 import type { JournalMode } from './schema.ts'
 import { SqliteStore } from './store.ts'
 

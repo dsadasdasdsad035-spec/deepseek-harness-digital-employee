@@ -1,10 +1,10 @@
 /**
  * Deterministic project-management skills for the fixture template.
- * @module @deepseek-ai/dsh-project-manager-test-digital-employee/skills
+ * @module @qq296629801/dsh-project-manager-test-digital-employee/skills
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { SkillRegistration } from '@deepseek-ai/dsh-skill'
+import type { Context } from '@qq296629801/cordis'
+import type { SkillRegistration } from '@qq296629801/dsh-skill'
 
 /** Static skills that keep the assembled fixture independent of filesystem discovery. */
 export const PROJECT_SKILLS: readonly SkillRegistration[] = [

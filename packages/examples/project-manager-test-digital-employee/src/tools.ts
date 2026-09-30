@@ -1,10 +1,10 @@
 /**
  * Deterministic project-management tools for the fixture template.
- * @module @deepseek-ai/dsh-project-manager-test-digital-employee/tools
+ * @module @qq296629801/dsh-project-manager-test-digital-employee/tools
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import type { Context } from '@qq296629801/cordis'
+import { defineTool } from '@qq296629801/dsh-tools'
 
 const PROJECT_BOARD = {
   project: 'Atlas',

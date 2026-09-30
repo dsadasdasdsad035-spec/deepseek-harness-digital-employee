@@ -2,7 +2,7 @@
 
 import { mkdir, readFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
+import { withFileLock, writeFileAtomic } from '@qq296629801/dsh-atomic-write'
 import type {
   CreateDigitalEmployeeTemplateDraftRequest,
   DigitalEmployeeConfigurationDiagnostic,

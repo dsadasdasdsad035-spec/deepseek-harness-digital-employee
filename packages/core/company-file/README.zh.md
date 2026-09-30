@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-company-file
+# @qq296629801/dsh-company-file
 
 [English](README.md) | 中文
 

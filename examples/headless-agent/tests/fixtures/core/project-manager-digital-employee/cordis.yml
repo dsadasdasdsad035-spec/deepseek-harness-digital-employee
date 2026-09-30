@@ -2,19 +2,19 @@
   name: './mock-llm.ts'
 
 - id: agent-default-model
-  name: '@deepseek-ai/dsh-agent-default-model'
+  name: '@qq296629801/dsh-agent-default-model'
   config:
     provider: project-manager-mock
     model: project-manager-mock
 
 - id: credentials
-  name: '@deepseek-ai/dsh-credentials-local'
+  name: '@qq296629801/dsh-credentials-local'
   config:
     dshHome: './.dsh-home'
     watch: false
 
 - id: agent-spine
-  name: '@deepseek-ai/dsh-agent-spine-demo'
+  name: '@qq296629801/dsh-agent-spine-demo'
   config:
     agents: []
     workspaceContext: false
@@ -23,7 +23,7 @@
         dshHome: './.dsh-home'
 
 - id: agent-presets
-  name: '@deepseek-ai/dsh-agent-presets'
+  name: '@qq296629801/dsh-agent-presets'
   config:
     default: standard
     includeUserRoot: false
@@ -32,12 +32,12 @@
         trust: system
 
 - id: mcp-client
-  name: '@deepseek-ai/dsh-mcp-client'
+  name: '@qq296629801/dsh-mcp-client'
   config:
     mode: manager
 
 - id: digital-employees
-  name: '@deepseek-ai/dsh-digital-employee'
+  name: '@qq296629801/dsh-digital-employee'
 
 - id: project-manager-template
   name: '../../../../../../packages/examples/project-manager-test-digital-employee/src/index.ts'
@@ -49,12 +49,12 @@
   name: '../../../../../../packages/examples/project-manager-test-digital-employee/src/tools.ts'
 
 - id: digital-employee-file
-  name: '@deepseek-ai/dsh-digital-employee-file'
+  name: '@qq296629801/dsh-digital-employee-file'
   config:
     path: './digital-employees.json'
 
 - id: subagents
-  name: '@deepseek-ai/dsh-subagent'
+  name: '@qq296629801/dsh-subagent'
 
 - id: digital-employee-agent
-  name: '@deepseek-ai/dsh-digital-employee-agent'
+  name: '@qq296629801/dsh-digital-employee-agent'

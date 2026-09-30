@@ -8,7 +8,7 @@ import {
   signMarketplacePackage,
   verifyPackageFileHashes,
   verifyPublisherSignature,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 
 const DESCRIPTOR = {
   format: 1, kind: 'employee', id: 'test-employee', version: '1.0.0',

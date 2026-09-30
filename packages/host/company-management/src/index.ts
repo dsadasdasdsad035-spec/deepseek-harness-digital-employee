@@ -1,12 +1,12 @@
 /** Typed Host management operations for companies over digital employee instances. */
 
 import { stat } from 'node:fs/promises'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-agent'
-import { admitEncodedImages, type ImageAttachmentRef, type ImageMediaType } from '@deepseek-ai/dsh-attachment'
-import type { DigitalEmployeeInstance } from '@deepseek-ai/dsh-digital-employee'
-import type {} from '@deepseek-ai/dsh-session-persistence'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import type {} from '@qq296629801/dsh-agent'
+import { admitEncodedImages, type ImageAttachmentRef, type ImageMediaType } from '@qq296629801/dsh-attachment'
+import type { DigitalEmployeeInstance } from '@qq296629801/dsh-digital-employee'
+import type {} from '@qq296629801/dsh-session-persistence'
 import type {
   AddDepartmentRequest,
   AssignEmployeeRequest,
@@ -31,10 +31,10 @@ import type {
   SetCompanyPromoImageRequest,
   UnassignEmployeeRequest,
   UpdateCompanyRequest,
-} from '@deepseek-ai/dsh-company'
-import { readCompanyWorldState, reportCompanyWorldState } from '@deepseek-ai/dsh-company-file/world-state'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import type { SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
+} from '@qq296629801/dsh-company'
+import { readCompanyWorldState, reportCompanyWorldState } from '@qq296629801/dsh-company-file/world-state'
+import { Remote, TypertRemoteService } from '@qq296629801/dsh-typert-protocol'
+import type { SessionHeader, SessionId } from '@qq296629801/dsh-session'
 
 /** Freshness window during which another process's session writes mark an employee busy. */
 const DEFAULT_TASK_ACTIVE_WINDOW_MS = 60_000
@@ -45,7 +45,7 @@ export interface Config {
   taskActiveWindowMs?: number
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     /** Host company management gateway. */
     companyManagement: CompanyManagementGateway

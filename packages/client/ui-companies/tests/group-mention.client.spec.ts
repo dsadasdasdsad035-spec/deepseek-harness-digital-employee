@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { CandidateRequest, ClientSessionContext } from '@deepseek-ai/dsh-client-ui-input-trigger/client'
-import type { SessionId } from '@deepseek-ai/dsh-api-remotes/client'
-import { createCompanyEmployeeId } from '@deepseek-ai/dsh-company'
+import type { CandidateRequest, ClientSessionContext } from '@qq296629801/dsh-client-ui-input-trigger/client'
+import type { SessionId } from '@qq296629801/dsh-api-remotes/client'
+import { createCompanyEmployeeId } from '@qq296629801/dsh-company'
 import {
   COMPANY_GROUP_SESSION_PREFIX, companyIdOfGroupSession, createCompanyGroupMentionSource,
 } from '../src/client/group-mention.ts'

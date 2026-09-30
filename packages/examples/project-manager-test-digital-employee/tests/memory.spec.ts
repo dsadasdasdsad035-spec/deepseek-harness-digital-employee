@@ -1,13 +1,13 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import DigitalEmployees from '@deepseek-ai/dsh-digital-employee'
+import { Context } from '@qq296629801/cordis'
+import DigitalEmployees from '@qq296629801/dsh-digital-employee'
 import {
   apply as applyDigitalEmployeeFile,
   inject as digitalEmployeeFileInject,
-} from '@deepseek-ai/dsh-digital-employee-file'
-import { SessionId } from '@deepseek-ai/dsh-session'
+} from '@qq296629801/dsh-digital-employee-file'
+import { SessionId } from '@qq296629801/dsh-session'
 import { afterEach, describe, expect, it } from 'vitest'
 import { apply, PROJECT_MANAGER_TEMPLATE, PROJECT_MEMORY_SEED } from '../src/index.ts'
 

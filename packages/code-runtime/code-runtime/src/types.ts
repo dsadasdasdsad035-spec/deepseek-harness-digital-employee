@@ -3,7 +3,7 @@
  * {@link ../index.ts | CodeRuntime} and what it gets back. Pure types — no
  * runtime code lives here.
  *
- * @module @deepseek-ai/dsh-code-runtime/src/types
+ * @module @qq296629801/dsh-code-runtime/src/types
  */
 
 /**

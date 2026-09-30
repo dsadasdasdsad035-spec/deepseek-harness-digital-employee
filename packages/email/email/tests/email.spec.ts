@@ -3,10 +3,10 @@
  * surface (unconfigured references fail visibly before any SMTP connection).
  */
 
-import { Context } from '@deepseek-ai/cordis'
-import type { CredentialProvider } from '@deepseek-ai/dsh-credentials'
-import EmailService from '@deepseek-ai/dsh-email'
-import * as QqSmtp from '@deepseek-ai/dsh-email/qq-smtp'
+import { Context } from '@qq296629801/cordis'
+import type { CredentialProvider } from '@qq296629801/dsh-credentials'
+import EmailService from '@qq296629801/dsh-email'
+import * as QqSmtp from '@qq296629801/dsh-email/qq-smtp'
 import { describe, expect, it } from 'vitest'
 
 /** A credentials provider over a mutable table. */

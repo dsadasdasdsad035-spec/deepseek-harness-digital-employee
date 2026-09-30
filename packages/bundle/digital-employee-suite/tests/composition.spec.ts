@@ -8,7 +8,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import * as yaml from 'js-yaml'
-import { entryListSchema } from '@deepseek-ai/cordis-plugin-include'
+import { entryListSchema } from '@qq296629801/cordis-plugin-include'
 
 interface BundleRow {
   id?: string
@@ -58,26 +58,26 @@ const DOMAIN_ROWS = [
 
 /** The workspace packages that moved from dsh-web-app to this bundle. */
 const DOMAIN_PACKAGES = [
-  '@deepseek-ai/dsh-client-ui-companies',
-  '@deepseek-ai/dsh-client-ui-digital-employees',
-  '@deepseek-ai/dsh-client-ui-skill-market',
-  '@deepseek-ai/dsh-company',
-  '@deepseek-ai/dsh-company-file',
-  '@deepseek-ai/dsh-digital-employee',
-  '@deepseek-ai/dsh-digital-employee-agent',
-  '@deepseek-ai/dsh-digital-employee-example-template',
-  '@deepseek-ai/dsh-digital-employee-sqlite',
-  '@deepseek-ai/dsh-host-company-group-chat',
-  '@deepseek-ai/dsh-host-company-management',
-  '@deepseek-ai/dsh-host-digital-employee-management',
-  '@deepseek-ai/dsh-hooks-market',
-  '@deepseek-ai/dsh-mcp-client',
-  '@deepseek-ai/dsh-mcp-market',
-  '@deepseek-ai/dsh-project-manager-test-digital-employee',
-  '@deepseek-ai/dsh-skill-market',
-  '@deepseek-ai/dsh-subagent-market',
-  '@deepseek-ai/dsh-tool-market',
-  '@deepseek-ai/dsh-workflow-market',
+  '@qq296629801/dsh-client-ui-companies',
+  '@qq296629801/dsh-client-ui-digital-employees',
+  '@qq296629801/dsh-client-ui-skill-market',
+  '@qq296629801/dsh-company',
+  '@qq296629801/dsh-company-file',
+  '@qq296629801/dsh-digital-employee',
+  '@qq296629801/dsh-digital-employee-agent',
+  '@qq296629801/dsh-digital-employee-example-template',
+  '@qq296629801/dsh-digital-employee-sqlite',
+  '@qq296629801/dsh-host-company-group-chat',
+  '@qq296629801/dsh-host-company-management',
+  '@qq296629801/dsh-host-digital-employee-management',
+  '@qq296629801/dsh-hooks-market',
+  '@qq296629801/dsh-mcp-client',
+  '@qq296629801/dsh-mcp-market',
+  '@qq296629801/dsh-project-manager-test-digital-employee',
+  '@qq296629801/dsh-skill-market',
+  '@qq296629801/dsh-subagent-market',
+  '@qq296629801/dsh-tool-market',
+  '@qq296629801/dsh-workflow-market',
 ] as const
 
 const suiteRoot = fileURLToPath(new URL('..', import.meta.url))
@@ -131,8 +131,8 @@ describe('digital employee suite composition', () => {
 
   it('leaves the shared carrier and generic surface to the Web bundle', () => {
     const web = loadBundleRows(webRoot)
-    expect(web.rows.find(row => row.id === 'api-remotes')?.name).toBe('@deepseek-ai/dsh-api-remotes')
-    expect(web.rows.find(row => row.id === 'ui-input-trigger')?.name).toBe('@deepseek-ai/dsh-client-ui-input-trigger')
+    expect(web.rows.find(row => row.id === 'api-remotes')?.name).toBe('@qq296629801/dsh-api-remotes')
+    expect(web.rows.find(row => row.id === 'ui-input-trigger')?.name).toBe('@qq296629801/dsh-client-ui-input-trigger')
     const webIds = new Set(web.rows.map(row => row.id))
     for (const id of DOMAIN_ROWS) {
       expect(webIds.has(id), `web-app must not own ${id}`).toBe(false)

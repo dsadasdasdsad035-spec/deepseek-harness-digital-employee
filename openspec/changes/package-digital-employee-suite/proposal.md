@@ -11,7 +11,7 @@
 - 使目标 Harness 工程安装 bundle 后，通过 profile 配置即可获得数字员工、公司和市场 UI。
 - 明确模板、员工实例、市场安装包和凭据引用保存在目标工程自己的 Harness home，不随 npm bundle 携带。
 - 增加安装、启动、卸载和跨工程数据隔离测试，覆盖 Web 入口、Template configuration、市场入口和 `@数字员工`。
-- 通用 Web 面（不含三个域）仍可直接使用 `@deepseek-ai/dsh-web-app`；三个域作为一个 bundle 安装。
+- 通用 Web 面（不含三个域）仍可直接使用 `@qq296629801/dsh-web-app`；三个域作为一个 bundle 安装。
 
 ## Capabilities
 

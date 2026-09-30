@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-jobs
+# @qq296629801/dsh-jobs
 
 English | [中文](README.zh.md)
 

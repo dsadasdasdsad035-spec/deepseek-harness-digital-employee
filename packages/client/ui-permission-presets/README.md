@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-permission-presets
+# @qq296629801/dsh-client-ui-permission-presets
 
 English | [中文](README.zh.md)
 

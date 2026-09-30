@@ -1,7 +1,7 @@
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import { describe, expect, it, vi } from 'vitest'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-runtime/client'
-import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
+import { SlotRegistry } from '@qq296629801/dsh-client-runtime/client'
+import { LocaleRuntime } from '@qq296629801/dsh-client-locale/client'
 import { apply, inject } from '../src/client/index.ts'
 
 describe('ui-digital-employees apply', () => {

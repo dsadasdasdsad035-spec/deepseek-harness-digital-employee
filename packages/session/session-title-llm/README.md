@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-session-title-llm
+# @qq296629801/dsh-session-title-llm
 
 English | [中文](README.zh.md)
 

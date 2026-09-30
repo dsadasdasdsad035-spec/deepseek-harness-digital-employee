@@ -1,6 +1,6 @@
 /**
  * Branded identifier constructors validated at their owning parser boundaries.
- * @module @deepseek-ai/dsh-digital-employee/ids
+ * @module @qq296629801/dsh-digital-employee/ids
  */
 
 import type {

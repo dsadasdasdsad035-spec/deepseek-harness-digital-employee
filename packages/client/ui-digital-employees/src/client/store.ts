@@ -14,8 +14,8 @@ import type {
   DigitalEmployeeTemplate,
   DigitalEmployeeUpgradePreview,
   SessionId,
-} from '@deepseek-ai/dsh-api-remotes/client'
-import { createSnapshotStore, type SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+} from '@qq296629801/dsh-api-remotes/client'
+import { createSnapshotStore, type SnapshotStore } from '@qq296629801/dsh-client-runtime/client'
 
 /** Generated namespace consumed by the workspace. */
 export type DigitalEmployeeRemote = ClientRemote['digitalEmployees']

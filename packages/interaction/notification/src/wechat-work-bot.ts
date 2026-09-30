@@ -6,11 +6,11 @@
  * 'text'` body with `errcode: 0` proves delivery; text is clipped to the
  * platform's 2048-byte content ceiling.
  *
- * @module @deepseek-ai/dsh-notification/wechat-work-bot
+ * @module @qq296629801/dsh-notification/wechat-work-bot
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
 import { credentialStates, deliverWebhook, renderText, truncateUtf8, type WebhookDialect } from './channels.ts'
 import type { NotificationChannel, NotificationDelivery, NotificationMessage } from './types.ts'
 import type {} from './index.ts'

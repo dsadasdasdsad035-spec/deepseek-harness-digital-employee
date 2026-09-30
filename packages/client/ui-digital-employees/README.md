@@ -1,10 +1,10 @@
-# @deepseek-ai/dsh-client-ui-digital-employees
+# @qq296629801/dsh-client-ui-digital-employees
 
 English | [中文](README.zh.md)
 
 Browser workspace and chat entry integration for durable digital employee instances through the generated `digitalEmployees` Remote namespace.
 
-Its workspace opens through the 数字员工 item of the `sidebar.footer.action` dropdown that `@deepseek-ai/dsh-client-ui-companies` owns, occupies `shell.application` while open, contributes digital employees to the new-task `@` picker, and owns routed employee-chat submission. Lifecycle, task admission, memory, expert, task-tree, audit, upgrade, import, and export authority remains on the Host.
+Its workspace opens through the 数字员工 item of the `sidebar.footer.action` dropdown that `@qq296629801/dsh-client-ui-companies` owns, occupies `shell.application` while open, contributes digital employees to the new-task `@` picker, and owns routed employee-chat submission. Lifecycle, task admission, memory, expert, task-tree, audit, upgrade, import, and export authority remains on the Host.
 
 ## Workspace
 

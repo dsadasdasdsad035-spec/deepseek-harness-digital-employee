@@ -1,6 +1,6 @@
 ## Why
 
-The Web Host cannot start after the skill marketplace Remote is mounted because the generated `skillMarket/install` operation collides with an internal method on Typert's client namespace service. The marketplace must compose through `@deepseek-ai/dsh-api-remotes` without reserving ordinary business operation names before the feature can be used in the assembled application.
+The Web Host cannot start after the skill marketplace Remote is mounted because the generated `skillMarket/install` operation collides with an internal method on Typert's client namespace service. The marketplace must compose through `@qq296629801/dsh-api-remotes` without reserving ordinary business operation names before the feature can be used in the assembled application.
 
 ## What Changes
 
@@ -21,4 +21,4 @@ None.
 
 ## Impact
 
-The change affects the skill marketplace Host and generated Remote contributions, `@deepseek-ai/dsh-api-remotes` client composition, Web Host assembly tests, and generated Typert artifacts. The public marketplace method names and shared `/api` transport remain unchanged.
+The change affects the skill marketplace Host and generated Remote contributions, `@qq296629801/dsh-api-remotes` client composition, Web Host assembly tests, and generated Typert artifacts. The public marketplace method names and shared `/api` transport remain unchanged.

@@ -1,9 +1,9 @@
 /** Client-safe digital employee management requests and results. */
 
-import type { EncodedImageAttachment } from '@deepseek-ai/dsh-attachment'
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { MessageId } from '@deepseek-ai/dsh-llm'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { EncodedImageAttachment } from '@qq296629801/dsh-attachment'
+import type { Branded } from '@qq296629801/dsh-brand'
+import type { MessageId } from '@qq296629801/dsh-llm'
+import type { SessionId } from '@qq296629801/dsh-session/types'
 
 /** Browser-safe employee instance identity, structurally shared with the owning service. */
 export type DigitalEmployeeInstanceId = Branded<'DigitalEmployeeInstanceId'>

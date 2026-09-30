@@ -25,8 +25,8 @@
 ## 接口
 
 ```ts
-import type { Context } from '@deepseek-ai/cordis'
-import { credentialKey, credentialRef } from '@deepseek-ai/dsh-credentials'
+import type { Context } from '@qq296629801/cordis'
+import { credentialKey, credentialRef } from '@qq296629801/dsh-credentials'
 
 declare const ctx: Context
 

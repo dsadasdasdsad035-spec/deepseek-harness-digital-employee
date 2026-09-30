@@ -4,17 +4,17 @@
  * Installs and manages signed workflow packages; employee-scoped mounting
  * lives in the composition bridge, which reads installed descriptors through
  * `installedPackages`.
- * @module @deepseek-ai/dsh-workflow-market
+ * @module @qq296629801/dsh-workflow-market
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import { Remote, TypertRemoteService } from '@qq296629801/dsh-typert-protocol'
 import {
   combineTrustedPublisherRecords,
   readTrustedPublisherFileSync,
   type WorkflowPackageDescriptor,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 import { WorkflowMarketService } from './service.ts'
 import type {
   WorkflowMarketInstallRequest,
@@ -49,7 +49,7 @@ export interface Config {
   readonly trustedPublishersFile?: string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     /** Host workflow marketplace Remote gateway. */
     workflowMarket: WorkflowMarketGateway

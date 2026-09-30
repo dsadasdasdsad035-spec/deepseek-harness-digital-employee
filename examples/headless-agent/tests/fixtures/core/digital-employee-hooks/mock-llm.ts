@@ -1,5 +1,5 @@
-import type { Context } from '@deepseek-ai/cordis'
-import { CallId, LlmAdapter, type StreamChunk } from '@deepseek-ai/dsh-llm'
+import type { Context } from '@qq296629801/cordis'
+import { CallId, LlmAdapter, type StreamChunk } from '@qq296629801/dsh-llm'
 
 /**
  * Round-aware deterministic model: the first request asks for the bound

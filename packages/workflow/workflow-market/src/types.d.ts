@@ -1,5 +1,5 @@
 /** Client-safe workflow marketplace requests, inventory, and declared failures. */
-import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { Branded } from '@qq296629801/dsh-brand'
 /** Stable identity of one managed workflow package. */
 export type WorkflowMarketPackageId = Branded<'WorkflowMarketPackageId'>
 /** One declared workflow entry in a managed package, credential-free. */

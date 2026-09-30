@@ -4,13 +4,13 @@
  * from the last coordinates instead of re-randomizing. Lock + atomic merge
  * follow the whereabouts pattern.
  *
- * @module @deepseek-ai/dsh-company-file/world-state
+ * @module @qq296629801/dsh-company-file/world-state
  */
 
 import { mkdir, readFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
-import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
+import { withFileLock, writeFileAtomic } from '@qq296629801/dsh-atomic-write'
+import { dshHomePath } from '@qq296629801/dsh-home-paths'
 
 /** One car's saved motion state on the road graph. */
 export interface CarWorldState {

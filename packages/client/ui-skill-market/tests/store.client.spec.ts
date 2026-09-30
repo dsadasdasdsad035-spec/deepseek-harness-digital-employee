@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type {
   SkillMarketBannerRequest, SkillMarketFailure, SkillMarketSkillId,
   SkillMarketUninstallRequest,
-} from '@deepseek-ai/dsh-api-remotes/client'
+} from '@qq296629801/dsh-api-remotes/client'
 import {
   arrayBufferToBase64, filterSkills, keyForFailure, MAX_UPLOAD_BYTES,
   SkillMarketStore, validateUploadFile,

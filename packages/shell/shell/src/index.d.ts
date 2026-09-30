@@ -1,11 +1,11 @@
 /**
  * Service Definition for the `ctx.shell` capability seam, covering foreground commands and background process
  * handles. Job ids, ownership, polling, and notices belong to
- * `@deepseek-ai/dsh-jobs`, keeping executors independent of sessions.
- * @module @deepseek-ai/dsh-shell
+ * `@qq296629801/dsh-jobs`, keeping executors independent of sessions.
+ * @module @qq296629801/dsh-shell
  */
-import { Context, Service } from '@deepseek-ai/cordis'
-import type { SandboxMode } from '@deepseek-ai/dsh-sandbox'
+import { Context, Service } from '@qq296629801/cordis'
+import type { SandboxMode } from '@qq296629801/dsh-sandbox'
 import type { ShellExecRequest, ShellExecSpec, ShellProcess, ShellRunResult } from './types.ts'
 /**
  * Settings namespace of this capability, owned here rather than by either
@@ -16,12 +16,12 @@ import type { ShellExecRequest, ShellExecSpec, ShellProcess, ShellRunResult } fr
  * registering it twice, and a settings document carried between platforms
  * keeps resolving on both.
  */
-export declare const SHELL_SETTINGS_NAMESPACE: import('@deepseek-ai/dsh-settings').SettingsNamespace
+export declare const SHELL_SETTINGS_NAMESPACE: import('@qq296629801/dsh-settings').SettingsNamespace
 export { DSH_ENV_PREFIX } from './types.ts'
 export type { ShellExecRequest, ShellExecSpec, ShellProcess, ShellProcessRead, ShellProcessStatus, ShellRunResult, ShellSandboxInfo, CollectedOutput, DshEnvironment, DshEnvironmentKey } from './types.ts'
 export { parseExitStatus } from './render.ts'
 export type { ParsedExitStatus } from './render.ts'
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     shell: ShellExecutor
   }

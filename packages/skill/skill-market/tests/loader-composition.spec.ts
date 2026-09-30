@@ -3,15 +3,15 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
-import Include from '@deepseek-ai/cordis-plugin-include'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import TypertGateway from '@deepseek-ai/dsh-api-gateway'
-import SkillRegistry from '@deepseek-ai/dsh-skill'
-import * as SkillFilesystem from '@deepseek-ai/dsh-skill-filesystem'
+import { Context } from '@qq296629801/cordis'
+import Include from '@qq296629801/cordis-plugin-include'
+import Loader from '@qq296629801/cordis-plugin-loader'
+import TypertGateway from '@qq296629801/dsh-api-gateway'
+import SkillRegistry from '@qq296629801/dsh-skill'
+import * as SkillFilesystem from '@qq296629801/dsh-skill-filesystem'
 import SkillMarket from '../src/index.ts'
-import * as TypertLoader from '@deepseek-ai/dsh-typert-loader'
-import TypertRegistry from '@deepseek-ai/dsh-typert-registry'
+import * as TypertLoader from '@qq296629801/dsh-typert-loader'
+import TypertRegistry from '@qq296629801/dsh-typert-registry'
 import { buildZip, zipBase64 } from './fixtures/zip.ts'
 
 const encoder = new TextEncoder()
@@ -57,21 +57,21 @@ async function boot(): Promise<Context> {
   const dshHome = join(root, 'dsh-home')
   const agentsHome = join(root, 'agents-home')
   const configPath = join(root, 'cordis.yml')
-  const packageLink = join(root, 'node_modules', '@deepseek-ai', 'dsh-skill-market')
+  const packageLink = join(root, 'node_modules', '@qq296629801', 'dsh-skill-market')
   await mkdir(dirname(packageLink), { recursive: true })
   await symlink(packageRoot, packageLink, process.platform === 'win32' ? 'junction' : 'dir')
   vi.stubEnv('DSH_HOME', dshHome)
   await writeFile(configPath, [
-    "- name: '@deepseek-ai/dsh-typert-registry'",
-    "- name: '@deepseek-ai/dsh-typert-loader'",
-    "- name: '@deepseek-ai/dsh-api-gateway'",
-    "- name: '@deepseek-ai/dsh-skill'",
-    "- name: '@deepseek-ai/dsh-skill-filesystem'",
+    "- name: '@qq296629801/dsh-typert-registry'",
+    "- name: '@qq296629801/dsh-typert-loader'",
+    "- name: '@qq296629801/dsh-api-gateway'",
+    "- name: '@qq296629801/dsh-skill'",
+    "- name: '@qq296629801/dsh-skill-filesystem'",
     '  config:',
     `    dshHome: ${JSON.stringify(dshHome)}`,
     `    agentsHome: ${JSON.stringify(agentsHome)}`,
     '    watch: false',
-    "- name: '@deepseek-ai/dsh-skill-market'",
+    "- name: '@qq296629801/dsh-skill-market'",
     '',
   ].join('\n'))
 
@@ -81,12 +81,12 @@ async function boot(): Promise<Context> {
   await ctx.plugin(Loader)
   ctx.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
-    ['@deepseek-ai/dsh-typert-registry', TypertRegistry],
-    ['@deepseek-ai/dsh-typert-loader', TypertLoader],
-    ['@deepseek-ai/dsh-api-gateway', TypertGateway],
-    ['@deepseek-ai/dsh-skill', SkillRegistry],
-    ['@deepseek-ai/dsh-skill-filesystem', SkillFilesystem],
-    ['@deepseek-ai/dsh-skill-market', SkillMarket],
+    ['@qq296629801/dsh-typert-registry', TypertRegistry],
+    ['@qq296629801/dsh-typert-loader', TypertLoader],
+    ['@qq296629801/dsh-api-gateway', TypertGateway],
+    ['@qq296629801/dsh-skill', SkillRegistry],
+    ['@qq296629801/dsh-skill-filesystem', SkillFilesystem],
+    ['@qq296629801/dsh-skill-market', SkillMarket],
   ])
   ctx.loader.internal = {
     version: 'v2',

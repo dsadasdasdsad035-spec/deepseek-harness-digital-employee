@@ -1,6 +1,6 @@
 /** Client-safe marketplace requests, values, and business outcomes. */
 
-import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { Branded } from '@qq296629801/dsh-brand'
 import z from 'zod'
 
 /** Stable kebab-case identity of one user skill. */

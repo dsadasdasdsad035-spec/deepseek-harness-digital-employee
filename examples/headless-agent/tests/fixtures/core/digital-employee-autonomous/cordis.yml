@@ -8,13 +8,13 @@
   name: './mock-llm.ts'
 
 - id: agent-default-model
-  name: '@deepseek-ai/dsh-agent-default-model'
+  name: '@qq296629801/dsh-agent-default-model'
   config:
     provider: employee-autonomous-mock
     model: employee-autonomous-mock
 
 - id: agent-spine
-  name: '@deepseek-ai/dsh-agent-spine-demo'
+  name: '@qq296629801/dsh-agent-spine-demo'
   config:
     agents: []
     workspaceContext: false
@@ -23,12 +23,12 @@
         dshHome: './.dsh-home'
 
 - id: attachment-local
-  name: '@deepseek-ai/dsh-attachment-local'
+  name: '@qq296629801/dsh-attachment-local'
   config:
     dshHome: './.dsh-home'
 
 - id: agent-presets
-  name: '@deepseek-ai/dsh-agent-presets'
+  name: '@qq296629801/dsh-agent-presets'
   config:
     default: digital-employee-minimal
     includeUserRoot: false
@@ -37,38 +37,38 @@
         trust: system
 
 - id: digital-employees
-  name: '@deepseek-ai/dsh-digital-employee'
+  name: '@qq296629801/dsh-digital-employee'
 
 - id: example-template
   name: './template.ts'
 
 - id: digital-employee-file
-  name: '@deepseek-ai/dsh-digital-employee-file'
+  name: '@qq296629801/dsh-digital-employee-file'
   config:
     path: './digital-employees.json'
 
 - id: subagents
-  name: '@deepseek-ai/dsh-subagent'
+  name: '@qq296629801/dsh-subagent'
 
 - id: fixture-subagent-provider
   name: './subagent-provider.ts'
 
 - id: digital-employee-agent
-  name: '@deepseek-ai/dsh-digital-employee-agent'
+  name: '@qq296629801/dsh-digital-employee-agent'
 
 # Goal autonomy: durable goal domain, the round driver, the model-facing tools.
 - id: goal
-  name: '@deepseek-ai/dsh-goal'
+  name: '@qq296629801/dsh-goal'
 
 - id: goal-round-driver
-  name: '@deepseek-ai/dsh-goal-round-driver'
+  name: '@qq296629801/dsh-goal-round-driver'
 
 - id: tool-goal
-  name: '@deepseek-ai/dsh-tool-goal'
+  name: '@qq296629801/dsh-tool-goal'
 
 # Notification seam plus the in-memory channel capturing suspension alerts.
 - id: notification
-  name: '@deepseek-ai/dsh-notification'
+  name: '@qq296629801/dsh-notification'
 
 - id: fixture-channel
   name: './channel.ts'
@@ -76,37 +76,37 @@
 # The real storage + persistence + workspace stack, exactly as the web-app
 # bundle composes it, scoped to the fixture directory.
 - id: storage
-  name: '@deepseek-ai/dsh-storage'
+  name: '@qq296629801/dsh-storage'
 
 - id: storage-json
-  name: '@deepseek-ai/dsh-storage-json'
+  name: '@qq296629801/dsh-storage-json'
   config:
     root: './storages'
 
 - id: storage-domain
-  name: '@deepseek-ai/dsh-storage-domain'
+  name: '@qq296629801/dsh-storage-domain'
   config:
     backend: json
 
 - id: session-persistence-jsonl
-  name: '@deepseek-ai/dsh-session-persistence-jsonl'
+  name: '@qq296629801/dsh-session-persistence-jsonl'
   config:
     root: !!js dshHomePath('sessions')
 
 - id: workspace
-  name: '@deepseek-ai/dsh-workspace'
+  name: '@qq296629801/dsh-workspace'
 
 # The management gateway: the task console remotes (list/resume/discard and
 # the notification describe/test surface) run inside this real assembly.
 - id: digital-employee-management
-  name: '@deepseek-ai/dsh-host-digital-employee-management'
+  name: '@qq296629801/dsh-host-digital-employee-management'
   config:
     administrator: true
     studioFile: './configuration-studio.json'
 
 # The employee task driver over the seeded startup service.
 - id: headless-employee-runner
-  name: '@deepseek-ai/dsh-headless/employee'
+  name: '@qq296629801/dsh-headless/employee'
   config:
     maxGoalRounds: 2
     maxFailedAttempts: 3

@@ -1,16 +1,16 @@
 /**
  * Shipped digital employee example template.
  *
- * @module @deepseek-ai/dsh-digital-employee-example-template
+ * @module @qq296629801/dsh-digital-employee-example-template
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 import { resolve } from 'node:path'
 import {
   createDigitalEmployeeTemplateId,
   createExpertId,
   type DigitalEmployeeTemplate,
-} from '@deepseek-ai/dsh-digital-employee'
+} from '@qq296629801/dsh-digital-employee'
 
 const ROOT = resolve(import.meta.dirname, '..')
 const REVIEWER_ID = createExpertId('reviewer')

@@ -4,12 +4,12 @@ import { createHash, randomUUID } from 'node:crypto'
 import { mkdir, readFile, rm } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
-import type {} from '@deepseek-ai/dsh-agent-default-model'
-import { admitEncodedImages, type ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
-import { createDigitalEmployeeTemplateId, createExpertId } from '@deepseek-ai/dsh-digital-employee'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import type { Agent, AgentHandle } from '@qq296629801/dsh-agent'
+import type {} from '@qq296629801/dsh-agent-default-model'
+import { admitEncodedImages, type ImageAttachmentRef } from '@qq296629801/dsh-attachment'
+import { createDigitalEmployeeTemplateId, createExpertId } from '@qq296629801/dsh-digital-employee'
 import type {
   ApplyDigitalEmployeeUpgradeRequest,
   CreateDigitalEmployeeRequest,
@@ -28,13 +28,13 @@ import type {
   NotificationChannelStatus,
   NotificationChannelTestRequest,
   NotificationChannelTestResult,
-} from '@deepseek-ai/dsh-digital-employee'
-import { createUserMessage, type MessageId } from '@deepseek-ai/dsh-llm'
+} from '@qq296629801/dsh-digital-employee'
+import { createUserMessage, type MessageId } from '@qq296629801/dsh-llm'
 import {
   listTaskAttempts,
   withTaskAttempts,
   type TaskAttemptRecord,
-} from '@deepseek-ai/dsh-digital-employee-file'
+} from '@qq296629801/dsh-digital-employee-file'
 /** Project one ledger record onto its console row with the legacy fallback. */
 function taskEntryOf(key: string, record: TaskAttemptRecord): DigitalEmployeeTaskEntry {
   return {
@@ -47,22 +47,22 @@ function taskEntryOf(key: string, record: TaskAttemptRecord): DigitalEmployeeTas
   }
 }
 
-import type {} from '@deepseek-ai/dsh-digital-employee-agent'
-import type {} from '@deepseek-ai/dsh-notification'
-import type {} from '@deepseek-ai/dsh-credentials'
-import type {} from '@deepseek-ai/dsh-mcp-client'
-import { listMcpServerConfigs } from '@deepseek-ai/dsh-mcp-client'
-import { readTrustedPublisherFileSync } from '@deepseek-ai/dsh-marketplace-core'
-import type {} from '@deepseek-ai/dsh-mcp-market'
-import type { HookMarketGateway } from '@deepseek-ai/dsh-hooks-market'
-import type {} from '@deepseek-ai/dsh-agent-presets'
-import type {} from '@deepseek-ai/dsh-skill'
-import type {} from '@deepseek-ai/dsh-skill-market'
-import type {} from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-tool-market'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { WorkspaceId } from '@deepseek-ai/dsh-workspace'
-import { writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
+import type {} from '@qq296629801/dsh-digital-employee-agent'
+import type {} from '@qq296629801/dsh-notification'
+import type {} from '@qq296629801/dsh-credentials'
+import type {} from '@qq296629801/dsh-mcp-client'
+import { listMcpServerConfigs } from '@qq296629801/dsh-mcp-client'
+import { readTrustedPublisherFileSync } from '@qq296629801/dsh-marketplace-core'
+import type {} from '@qq296629801/dsh-mcp-market'
+import type { HookMarketGateway } from '@qq296629801/dsh-hooks-market'
+import type {} from '@qq296629801/dsh-agent-presets'
+import type {} from '@qq296629801/dsh-skill'
+import type {} from '@qq296629801/dsh-skill-market'
+import type {} from '@qq296629801/dsh-tools'
+import type {} from '@qq296629801/dsh-tool-market'
+import { Remote, TypertRemoteService } from '@qq296629801/dsh-typert-protocol'
+import { WorkspaceId } from '@qq296629801/dsh-workspace'
+import { writeFileAtomic } from '@qq296629801/dsh-atomic-write'
 import { ConfigurationStudioStore, validateDraftBasics } from './configuration-studio.ts'
 import type {
   DigitalEmployeeTemplateDraftIdentityRequest,
@@ -107,7 +107,7 @@ export interface Config {
   memoryProjectionLimit?: number
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     /** Host digital employee management gateway. */
     digitalEmployeeManagement: DigitalEmployeeManagementGateway
@@ -990,7 +990,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     const templateId = createDigitalEmployeeTemplateId(request.templateId)
     const template = this.ctx.digitalEmployees.getTemplate(templateId, request.version)
     if (template === undefined) throw new Error(`template "${request.templateId}@${request.version}" not found`)
-    const { signMarketplacePackage } = await import('@deepseek-ai/dsh-marketplace-core')
+    const { signMarketplacePackage } = await import('@qq296629801/dsh-marketplace-core')
     const { privateKey } = await import('node:crypto').then(m => m.generateKeyPairSync('ed25519'))
     const files: Record<string, Uint8Array> = {}
     const { readFile } = await import('node:fs/promises')
@@ -1035,7 +1035,7 @@ export class DigitalEmployeeManagementGateway extends TypertRemoteService {
     missing: { kind: string; id: string }[]
   }> {
     this.requireAdministrator()
-    const { inspectZipArchive, decodeArchiveBase64, preparePackageArchive, parseEmployeePackageDescriptor, verifyPackageFileHashes, verifyPublisherSignature, descriptorSignaturePayload, resolveTrustedPublisher } = await import('@deepseek-ai/dsh-marketplace-core')
+    const { inspectZipArchive, decodeArchiveBase64, preparePackageArchive, parseEmployeePackageDescriptor, verifyPackageFileHashes, verifyPublisherSignature, descriptorSignaturePayload, resolveTrustedPublisher } = await import('@qq296629801/dsh-marketplace-core')
     const archive = preparePackageArchive(
       await inspectZipArchive(decodeArchiveBase64(request.archiveBase64)),
       'employee-package.json',

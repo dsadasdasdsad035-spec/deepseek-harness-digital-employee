@@ -1,8 +1,8 @@
 /** Raster inspection: full decode at admission, header-only probe on verified reads. */
 
 import sharp, { type Sharp } from 'sharp'
-import { AttachmentError } from '@deepseek-ai/dsh-attachment'
-import type { ImageMediaType } from '@deepseek-ai/dsh-attachment'
+import { AttachmentError } from '@qq296629801/dsh-attachment'
+import type { ImageMediaType } from '@qq296629801/dsh-attachment'
 
 /** Decoded metadata from a supported image. */
 export interface DetectedImage {

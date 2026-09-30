@@ -1,15 +1,15 @@
 /**
  * Host-side declarative MCP package marketplace.
- * @module @deepseek-ai/dsh-mcp-market
+ * @module @qq296629801/dsh-mcp-market
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import type {} from '@deepseek-ai/dsh-mcp-client'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { combineTrustedPublisherRecords, readTrustedPublisherFileSync } from '@deepseek-ai/dsh-marketplace-core'
-import type { McpPackageServer } from '@deepseek-ai/dsh-marketplace-core'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import { credentialRef } from '@qq296629801/dsh-credentials'
+import type {} from '@qq296629801/dsh-mcp-client'
+import { Remote, TypertRemoteService } from '@qq296629801/dsh-typert-protocol'
+import { combineTrustedPublisherRecords, readTrustedPublisherFileSync } from '@qq296629801/dsh-marketplace-core'
+import type { McpPackageServer } from '@qq296629801/dsh-marketplace-core'
 import { asMarketResult, McpMarketService } from './service.ts'
 import type {
   McpDirectConfigDeclaration,
@@ -53,7 +53,7 @@ export interface Config {
   readonly trustedPublishersFile?: string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     /** Host MCP marketplace Remote gateway. */
     mcpMarket: McpMarketGateway

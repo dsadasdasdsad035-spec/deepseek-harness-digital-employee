@@ -2,9 +2,9 @@
  * Pure subagent-lineage aggregation over the retained session-list mirror.
  * Ordinary forks terminate propagation so each visible session owns only its
  * uninterrupted subagent subtree.
- * @module @deepseek-ai/dsh-client-runtime/client/sessions/subagent-lineage
+ * @module @qq296629801/dsh-client-runtime/client/sessions/subagent-lineage
  */
-import type { SessionId } from '@deepseek-ai/dsh-api-remotes/client'
+import type { SessionId } from '@qq296629801/dsh-api-remotes/client'
 import type { SessionSummary } from './service.ts'
 
 /** Descendant counts projected for one possible parent session. */

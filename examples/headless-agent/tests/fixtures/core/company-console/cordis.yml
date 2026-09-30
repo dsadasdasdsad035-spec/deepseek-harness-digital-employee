@@ -5,60 +5,60 @@
 # registry (this process never runs an employee agent).
 
 - id: digital-employees
-  name: '@deepseek-ai/dsh-digital-employee'
+  name: '@qq296629801/dsh-digital-employee'
 
 - id: company-console-template
   name: './template.ts'
 
 - id: digital-employee-file
-  name: '@deepseek-ai/dsh-digital-employee-file'
+  name: '@qq296629801/dsh-digital-employee-file'
   config:
     path: './digital-employees.json'
 
 - id: company
-  name: '@deepseek-ai/dsh-company'
+  name: '@qq296629801/dsh-company'
 
 - id: company-file
-  name: '@deepseek-ai/dsh-company-file'
+  name: '@qq296629801/dsh-company-file'
   config:
     path: './companies.json'
 
 - id: llm
-  name: '@deepseek-ai/dsh-llm'
+  name: '@qq296629801/dsh-llm'
 
 - id: system-prompt
-  name: '@deepseek-ai/dsh-system-prompt'
+  name: '@qq296629801/dsh-system-prompt'
 
 - id: tools
-  name: '@deepseek-ai/dsh-tools'
+  name: '@qq296629801/dsh-tools'
 
 - id: agent
-  name: '@deepseek-ai/dsh-agent'
+  name: '@qq296629801/dsh-agent'
 
 - id: agent-loop
-  name: '@deepseek-ai/dsh-agent-loop'
+  name: '@qq296629801/dsh-agent-loop'
 
 - id: sessions
-  name: '@deepseek-ai/dsh-session'
+  name: '@qq296629801/dsh-session'
 
 - id: session-persistence-jsonl
-  name: '@deepseek-ai/dsh-session-persistence-jsonl'
+  name: '@qq296629801/dsh-session-persistence-jsonl'
   config:
     root: './sessions-root'
     compression: none
 
 - id: attachment-local
-  name: '@deepseek-ai/dsh-attachment-local'
+  name: '@qq296629801/dsh-attachment-local'
   config:
     dshHome: './.dsh-home'
 
 - id: company-management
-  name: '@deepseek-ai/dsh-host-company-management'
+  name: '@qq296629801/dsh-host-company-management'
 
 - id: company-console-group-stub
   name: './group-stub.ts'
 
 - id: company-group-chat
-  name: '@deepseek-ai/dsh-host-company-group-chat'
+  name: '@qq296629801/dsh-host-company-group-chat'
   config:
     pollIntervalMs: 500

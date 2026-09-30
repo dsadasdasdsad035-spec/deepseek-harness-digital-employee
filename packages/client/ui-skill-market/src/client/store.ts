@@ -1,14 +1,14 @@
 /** Cancellable browser state for the generated skill marketplace Remote. */
 
-import type { SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+import type { SnapshotStore } from '@qq296629801/dsh-client-runtime/client'
+import { createSnapshotStore } from '@qq296629801/dsh-client-runtime/client'
 import type {
   ClientRemote,
   SkillMarketBannerMediaType,
   SkillMarketEntry,
   SkillMarketFailure,
   SkillMarketSkillId,
-} from '@deepseek-ai/dsh-api-remotes/client'
+} from '@qq296629801/dsh-api-remotes/client'
 import type { SkillMarketKey } from './locales.ts'
 
 /** Client preflight limit matching the Host's decoded archive limit. */

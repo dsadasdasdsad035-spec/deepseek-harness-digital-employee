@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-client-ui-skill-market`
+# `@qq296629801/dsh-client-ui-skill-market`
 
 English | [中文](README.zh.md)
 
@@ -6,7 +6,7 @@ Browser-side reference for the localized skill marketplace settings section.
 
 ## Composition
 
-The plugin registers locale dictionaries, a settings navigation item, and a settings section through client slots. It calls the generated `ctx.remote.skillMarket` namespace from `@deepseek-ai/dsh-api-remotes`; archive validation, ownership decisions, and filesystem mutation remain on the Host.
+The plugin registers locale dictionaries, a settings navigation item, and a settings section through client slots. It calls the generated `ctx.remote.skillMarket` namespace from `@qq296629801/dsh-api-remotes`; archive validation, ownership decisions, and filesystem mutation remain on the Host.
 
 The section displays only the Host's managed inventory. Filesystem-discovered hand-managed skills are outside this view and cannot be upgraded or uninstalled here.
 

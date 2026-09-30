@@ -1,7 +1,7 @@
 /** Client-safe hook marketplace requests, inventory, and declared failures. */
 
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { HookEvent } from '@deepseek-ai/dsh-marketplace-core'
+import type { Branded } from '@qq296629801/dsh-brand'
+import type { HookEvent } from '@qq296629801/dsh-marketplace-core'
 
 /** Stable identity of one managed hook package. */
 export type HookMarketPackageId = Branded<'HookMarketPackageId'>

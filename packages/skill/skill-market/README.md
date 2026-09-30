@@ -1,10 +1,10 @@
-# `@deepseek-ai/dsh-skill-market`
+# `@qq296629801/dsh-skill-market`
 
 English | [中文](README.zh.md)
 
 Host-side reference for installing, upgrading, listing, serving promotional images for, and uninstalling marketplace-managed skills in the user skill directory.
 
-The plugin exposes the generated `skillMarket` Typert Remote over the shared `/api` carrier. Browser code consumes its client-safe types through `@deepseek-ai/dsh-api-remotes`; this package retains archive validation, filesystem mutation, and management authority on the Host.
+The plugin exposes the generated `skillMarket` Typert Remote over the shared `/api` carrier. Browser code consumes its client-safe types through `@qq296629801/dsh-api-remotes`; this package retains archive validation, filesystem mutation, and management authority on the Host.
 
 ## Plugin
 

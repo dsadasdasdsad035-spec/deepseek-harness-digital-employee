@@ -7,11 +7,11 @@ import type {
   DigitalEmployeeConfigurationMemorySeed,
   DigitalEmployeeInstanceId,
   DigitalEmployeeTemplateDraft,
-} from '@deepseek-ai/dsh-api-remotes/client'
+} from '@qq296629801/dsh-api-remotes/client'
 import {
   Button, IconCloseOutline16, IconPauseOutline16, IconPlayOutline16, IconTrashOutline16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
+} from '@qq296629801/dsh-client-ui-primitives'
+import type { InjectFace } from '@qq296629801/dsh-client-ui-slots'
 import type { DigitalEmployeeStore, DigitalEmployeeView } from './store.ts'
 import type { DigitalEmployeeConfigurationStudioStore } from './configuration-studio.ts'
 import css from './DigitalEmployeeWorkspace.module.css'
@@ -472,13 +472,13 @@ function CapabilitySelectors({
   assets: readonly DigitalEmployeeConfigurationAsset[]
   allowNewSelections: boolean
   value: DigitalEmployeeConfigurationAuthority
-  mcpServers: readonly import('@deepseek-ai/dsh-api-remotes/client').DigitalEmployeeConfigurationMcpServer[]
+  mcpServers: readonly import('@qq296629801/dsh-api-remotes/client').DigitalEmployeeConfigurationMcpServer[]
   hooks: readonly string[]
   workflows: readonly string[]
   subagents: readonly string[]
   onChange: (value: DigitalEmployeeConfigurationAuthority) => void
   onMcpServersChange: (
-    value: readonly import('@deepseek-ai/dsh-api-remotes/client').DigitalEmployeeConfigurationMcpServer[],
+    value: readonly import('@qq296629801/dsh-api-remotes/client').DigitalEmployeeConfigurationMcpServer[],
   ) => void
   onHooksChange: (value: readonly string[]) => void
   onWorkflowsChange: (value: readonly string[]) => void

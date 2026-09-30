@@ -6,9 +6,9 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import { Button } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { NotificationChannelStatus, NotificationChannelTestResult } from '@deepseek-ai/dsh-api-remotes/client'
+import type { InjectFace, PropsLocale, PropsRuntime } from '@qq296629801/dsh-client-ui-slots'
+import { Button } from '@qq296629801/dsh-client-ui-primitives'
+import type { NotificationChannelStatus, NotificationChannelTestResult } from '@qq296629801/dsh-api-remotes/client'
 import css from './NotificationSettingsRow.module.css'
 
 /** Registration-side business face: channel data and the test action. */

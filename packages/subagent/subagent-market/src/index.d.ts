@@ -4,12 +4,12 @@
  * Installs and manages signed subagent packages; employee-scoped mounting
  * lives in the composition bridge, which reads installed descriptors through
  * `installedPackages`.
- * @module @deepseek-ai/dsh-subagent-market
+ * @module @qq296629801/dsh-subagent-market
  */
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import { type SubagentPackageDescriptor } from '@deepseek-ai/dsh-marketplace-core'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import { TypertRemoteService } from '@qq296629801/dsh-typert-protocol'
+import { type SubagentPackageDescriptor } from '@qq296629801/dsh-marketplace-core'
 import { SubagentMarketService } from './service.ts'
 import type { SubagentMarketInstallRequest, SubagentMarketInstallResult, SubagentMarketListResult, SubagentMarketUninstallRequest, SubagentMarketUninstallResult } from './types.ts'
 export type * from './types.ts'
@@ -34,7 +34,7 @@ export interface Config {
   /** Optional persistent trusted-publisher file combined with inline records. */
   readonly trustedPublishersFile?: string
 }
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     /** Host subagent marketplace Remote gateway. */
     subagentMarket: SubagentMarketGateway

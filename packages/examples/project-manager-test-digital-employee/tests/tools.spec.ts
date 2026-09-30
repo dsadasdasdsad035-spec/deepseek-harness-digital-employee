@@ -1,7 +1,7 @@
-import { Context } from '@deepseek-ai/cordis'
-import { CallId } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime from '@deepseek-ai/dsh-tools'
+import { Context } from '@qq296629801/cordis'
+import { CallId } from '@qq296629801/dsh-llm'
+import SystemPrompt from '@qq296629801/dsh-system-prompt'
+import ToolRuntime from '@qq296629801/dsh-tools'
 import { describe, expect, it } from 'vitest'
 import { apply } from '../src/tools.ts'
 

@@ -1,16 +1,16 @@
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import DigitalEmployees, {
   createDigitalEmployeeInstanceId,
   createDigitalEmployeeTemplateId,
   createExpertId,
   type DigitalEmployeeTemplate,
-} from '@deepseek-ai/dsh-digital-employee'
-import { SessionId } from '@deepseek-ai/dsh-session'
+} from '@qq296629801/dsh-digital-employee'
+import { SessionId } from '@qq296629801/dsh-session'
 import { describe, expect, it } from 'vitest'
-import { FileDigitalEmployeeProvider } from '@deepseek-ai/dsh-digital-employee-file'
+import { FileDigitalEmployeeProvider } from '@qq296629801/dsh-digital-employee-file'
 
 const template: DigitalEmployeeTemplate = {
   id: createDigitalEmployeeTemplateId('analyst'),

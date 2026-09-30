@@ -1,6 +1,6 @@
 /** Browser face of the shared Typert runtime registry. */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 import { TypertRegistry } from '../service.ts'
 
 /** Required services: none; this is the Client reflection root. */

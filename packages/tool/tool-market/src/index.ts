@@ -1,14 +1,14 @@
 /**
  * Host-side trusted, restart-bound Tool package marketplace.
- * @module @deepseek-ai/dsh-tool-market
+ * @module @qq296629801/dsh-tool-market
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 import { pathToFileURL } from 'node:url'
-import z from '@deepseek-ai/schemastery'
-import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
-import type {} from '@deepseek-ai/dsh-tools'
-import { combineTrustedPublisherRecords, readTrustedPublisherFileSync } from '@deepseek-ai/dsh-marketplace-core'
+import z from '@qq296629801/schemastery'
+import { Remote, TypertRemoteService } from '@qq296629801/dsh-typert-protocol'
+import type {} from '@qq296629801/dsh-tools'
+import { combineTrustedPublisherRecords, readTrustedPublisherFileSync } from '@qq296629801/dsh-marketplace-core'
 import { ToolMarketService } from './service.ts'
 import type {
   ToolMarketInstallRequest,
@@ -42,7 +42,7 @@ export interface Config {
   readonly trustedPublishersFile?: string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     /** Host Tool marketplace Remote gateway. */
     toolMarket: ToolMarketGateway

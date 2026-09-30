@@ -5,13 +5,13 @@
  * Cross-process safety follows the task-attempts pattern (`withFileLock` +
  * `writeFileAtomic`); reads are strict, a missing file is the empty history.
  *
- * @module @deepseek-ai/dsh-digital-employee-file/whereabouts
+ * @module @qq296629801/dsh-digital-employee-file/whereabouts
  */
 
 import { mkdir, readFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
-import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
+import { withFileLock, writeFileAtomic } from '@qq296629801/dsh-atomic-write'
+import { dshHomePath } from '@qq296629801/dsh-home-paths'
 
 /** One amenity arrival fact. */
 export interface WhereaboutsVisit {

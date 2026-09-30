@@ -6,12 +6,12 @@
  * reference fails visibly as "not configured" without attempting delivery.
  * Connection/auth failures retry a bounded number of times.
  *
- * @module @deepseek-ai/dsh-email/qq-smtp
+ * @module @qq296629801/dsh-email/qq-smtp
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import { credentialRef } from '@qq296629801/dsh-credentials'
 import type { EmailDelivery, EmailMessage } from './types.ts'
 import type {} from './index.ts'
 

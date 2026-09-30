@@ -10,7 +10,7 @@
 ## Decisions
 
 ### D1：CLI 直接 import `digital-employee-file` 的台账模块
-该模块仅依赖 fs + atomic-write + home-paths，无 harness 服务。通过新子路径导出 `@deepseek-ai/dsh-digital-employee-file/task-attempts` 暴露（root 会拖入 provider 依赖链）。apps/cli 增加该 workspace 依赖；bin 在 employee-task 分支先 `loadLayeredEnv('dsh')` 再动态 import（与 profile 模式一致，保证 `.env` 里的 `DSH_HOME` 生效）。
+该模块仅依赖 fs + atomic-write + home-paths，无 harness 服务。通过新子路径导出 `@qq296629801/dsh-digital-employee-file/task-attempts` 暴露（root 会拖入 provider 依赖链）。apps/cli 增加该 workspace 依赖；bin 在 employee-task 分支先 `loadLayeredEnv('dsh')` 再动态 import（与 profile 模式一致，保证 `.env` 里的 `DSH_HOME` 生效）。
 
 ### D2：命令解析与退出码
 `employee-task` 子命令内建独立 commander：`list`、`resume <key>`、`discard <key>`；未知子命令/缺参数 → 用法信息 + 退出码 1；非法目标（未知键、resume 非挂起键）→ stderr 明确错误 + 退出码 1，台账不变。输出为人类可读表格行（不追求机器格式，本期非目标）。

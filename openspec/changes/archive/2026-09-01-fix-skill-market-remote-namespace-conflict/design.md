@@ -1,6 +1,6 @@
 ## Context
 
-See `proposal.md` for motivation. The skill marketplace Host exposes four direct Typert Remote methods under the `skillMarket` namespace, and `@deepseek-ai/dsh-api-remotes` mounts generated client contributions into the shared API client. The assembled Web Host currently fails during plugin application because `RemoteNamespaceService` uses `install` as an internal helper name and rejects a generated operation with that same ordinary business name.
+See `proposal.md` for motivation. The skill marketplace Host exposes four direct Typert Remote methods under the `skillMarket` namespace, and `@qq296629801/dsh-api-remotes` mounts generated client contributions into the shared API client. The assembled Web Host currently fails during plugin application because `RemoteNamespaceService` uses `install` as an internal helper name and rejects a generated operation with that same ordinary business name.
 
 The public namespace and the shared `/api` carrier are already consumed by the marketplace UI. Generated Typert files are artifact-plane outputs and must remain derived from source declarations.
 

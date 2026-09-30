@@ -1,12 +1,12 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-host-company-group-chat`.
- * @module @deepseek-ai/dsh-host-company-group-chat/invariant
+ * Package-owned invariant companion for `@qq296629801/dsh-host-company-group-chat`.
+ * @module @qq296629801/dsh-host-company-group-chat/invariant
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-host-company-group-chat'
+const PACKAGE_NAME = '@qq296629801/dsh-host-company-group-chat'
 
 /** Cordis companion plugin name. */
 export const name = 'company-group-chat-invariant'

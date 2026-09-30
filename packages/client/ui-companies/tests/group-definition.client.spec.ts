@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { companyGroupMessageDefinition } from '../src/client/group-definition.ts'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import type { SessionEvent } from '@qq296629801/dsh-session'
 
 /** @vitest-environment node */
 

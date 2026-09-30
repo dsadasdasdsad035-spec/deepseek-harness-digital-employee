@@ -59,15 +59,15 @@ describe('initProfile', () => {
   it('creates manifest, user patch layer, and pnpm workspace once, never overwriting', () => {
     const home = tmp()
     const dir = resolveProfileDir('tui', home)
-    initProfile(dir, ['@deepseek-ai/dsh-base'])
+    initProfile(dir, ['@qq296629801/dsh-base'])
     const manifest = readProfileManifest('t', dir)
-    expect(manifest.dsh?.profile?.bundles).toEqual(['@deepseek-ai/dsh-base'])
+    expect(manifest.dsh?.profile?.bundles).toEqual(['@qq296629801/dsh-base'])
     expect(readFileSync(join(dir, PROFILE_PATCH_FILENAME), 'utf8')).toContain('[]')
     expect(readFileSync(join(dir, 'pnpm-workspace.yaml'), 'utf8')).toContain('nodeLinker: hoisted')
     // Re-init keeps user edits.
     writeFileSync(join(dir, PROFILE_PATCH_FILENAME), '- id: x\n  config: {}\n')
     initProfile(dir, ['other'])
-    expect(readProfileManifest('t', dir).dsh?.profile?.bundles).toEqual(['@deepseek-ai/dsh-base'])
+    expect(readProfileManifest('t', dir).dsh?.profile?.bundles).toEqual(['@qq296629801/dsh-base'])
     expect(readFileSync(join(dir, PROFILE_PATCH_FILENAME), 'utf8')).toContain('- id: x')
   })
 })
@@ -150,9 +150,9 @@ describe('loadProfile', () => {
       .toThrow('profile "custom" does not exist')
     // The web template auto-initializes on first load. Bundle resolution
     // cannot be asserted to fail here: the source-plane test runner resolves
-    // @deepseek-ai/* through tsconfig paths regardless of the staged anchor.
+    // @qq296629801/* through tsconfig paths regardless of the staged anchor.
     expect(PROFILE_TEMPLATES.web).toEqual([
-      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-digital-employee-suite',
+      '@qq296629801/dsh-base', '@qq296629801/dsh-web-app', '@qq296629801/dsh-digital-employee-suite',
     ])
     try {
       loadProfile('t', 'web', anchor, home)
@@ -165,28 +165,28 @@ describe('loadProfile', () => {
 
   it('normalizes only the exact installation-owned headless bundle tuple', () => {
     const anchor = stageInstallation({
-      '@deepseek-ai/dsh-base': { patch: '[]\n' },
-      '@deepseek-ai/dsh-web-app': { patch: '[]\n' },
-      '@deepseek-ai/dsh-headless': { patch: '[]\n' },
+      '@qq296629801/dsh-base': { patch: '[]\n' },
+      '@qq296629801/dsh-web-app': { patch: '[]\n' },
+      '@qq296629801/dsh-headless': { patch: '[]\n' },
       'custom-bundle': { patch: '[]\n' },
     })
     const home = tmp()
     const stock = resolveProfileDir('headless', home)
     initProfile(stock, [
-      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-headless',
+      '@qq296629801/dsh-base', '@qq296629801/dsh-web-app', '@qq296629801/dsh-headless',
     ])
     loadProfile('t', 'headless', anchor, home)
     expect(readProfileManifest('t', stock).dsh?.profile?.bundles)
-      .toEqual(['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'])
+      .toEqual(['@qq296629801/dsh-base', '@qq296629801/dsh-headless'])
 
     const customHome = tmp()
     const custom = resolveProfileDir('headless', customHome)
     initProfile(custom, [
-      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-headless', 'custom-bundle',
+      '@qq296629801/dsh-base', '@qq296629801/dsh-web-app', '@qq296629801/dsh-headless', 'custom-bundle',
     ])
     loadProfile('t', 'headless', anchor, customHome)
     expect(readProfileManifest('t', custom).dsh?.profile?.bundles).toEqual([
-      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-headless', 'custom-bundle',
+      '@qq296629801/dsh-base', '@qq296629801/dsh-web-app', '@qq296629801/dsh-headless', 'custom-bundle',
     ])
   })
 
@@ -195,25 +195,25 @@ describe('loadProfile', () => {
     // dsh-digital-employee-suite; a web profile from before the split gains
     // the suite layer, while a customized list stays user-owned.
     const anchor = stageInstallation({
-      '@deepseek-ai/dsh-base': { patch: '[]\n' },
-      '@deepseek-ai/dsh-web-app': { patch: '[]\n' },
-      '@deepseek-ai/dsh-digital-employee-suite': { patch: '[]\n' },
+      '@qq296629801/dsh-base': { patch: '[]\n' },
+      '@qq296629801/dsh-web-app': { patch: '[]\n' },
+      '@qq296629801/dsh-digital-employee-suite': { patch: '[]\n' },
       'custom-bundle': { patch: '[]\n' },
     })
     const home = tmp()
     const stock = resolveProfileDir('web', home)
-    initProfile(stock, ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app'])
+    initProfile(stock, ['@qq296629801/dsh-base', '@qq296629801/dsh-web-app'])
     loadProfile('t', 'web', anchor, home)
     expect(readProfileManifest('t', stock).dsh?.profile?.bundles).toEqual([
-      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-digital-employee-suite',
+      '@qq296629801/dsh-base', '@qq296629801/dsh-web-app', '@qq296629801/dsh-digital-employee-suite',
     ])
 
     const customHome = tmp()
     const custom = resolveProfileDir('web', customHome)
-    initProfile(custom, ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', 'custom-bundle'])
+    initProfile(custom, ['@qq296629801/dsh-base', '@qq296629801/dsh-web-app', 'custom-bundle'])
     loadProfile('t', 'web', anchor, customHome)
     expect(readProfileManifest('t', custom).dsh?.profile?.bundles).toEqual([
-      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', 'custom-bundle',
+      '@qq296629801/dsh-base', '@qq296629801/dsh-web-app', 'custom-bundle',
     ])
   })
 

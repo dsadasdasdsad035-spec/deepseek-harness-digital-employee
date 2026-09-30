@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-session-title-all-prompts-llm
+# @qq296629801/dsh-session-title-all-prompts-llm
 
 [English](README.md) | 中文
 

@@ -1,11 +1,11 @@
 /**
  * Service Definition for the `ctx.shell` capability seam, covering foreground commands and background process
  * handles. Job ids, ownership, polling, and notices belong to
- * `@deepseek-ai/dsh-jobs`, keeping executors independent of sessions.
- * @module @deepseek-ai/dsh-shell
+ * `@qq296629801/dsh-jobs`, keeping executors independent of sessions.
+ * @module @qq296629801/dsh-shell
  */
-import { Service } from '@deepseek-ai/cordis';
-import { settingsNamespace } from '@deepseek-ai/dsh-settings';
+import { Service } from '@qq296629801/cordis';
+import { settingsNamespace } from '@qq296629801/dsh-settings';
 /**
  * Settings namespace of this capability, owned here rather than by either
  * executor family because it names the capability, not an implementation: a

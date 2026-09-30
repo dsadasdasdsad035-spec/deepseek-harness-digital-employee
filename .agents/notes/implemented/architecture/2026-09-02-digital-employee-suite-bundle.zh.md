@@ -10,7 +10,7 @@ Status: implemented
 
 ## Decision
 
-仓库交付 `@deepseek-ai/dsh-digital-employee-suite`，作为 `@deepseek-ai/dsh-base` 和 `@deepseek-ai/dsh-web-app` 之上的可选扩展。它的 patch 负责数字员工定义、持久化、Agent 集成、管理和浏览器工作区行；Web bundle 继续负责 `api-remotes`、Skill/Tool/MCP 市场行以及市场设置 UI。
+仓库交付 `@qq296629801/dsh-digital-employee-suite`，作为 `@qq296629801/dsh-base` 和 `@qq296629801/dsh-web-app` 之上的可选扩展。它的 patch 负责数字员工定义、持久化、Agent 集成、管理和浏览器工作区行；Web bundle 继续负责 `api-remotes`、Skill/Tool/MCP 市场行以及市场设置 UI。
 
 suite 自己持有的所有持久化路径都使用 `dshHomePath(...)` 表达：员工记录使用 `digital-employees/employees.json`，Template configuration 草稿与发布记录使用 `digital-employees/configuration-studio.json`。包中不携带源机器数据、绝对路径或已解析凭据值。
 

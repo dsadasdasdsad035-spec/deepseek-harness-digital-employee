@@ -8,12 +8,12 @@
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
-import type { GoalView } from '@deepseek-ai/dsh-goal'
-import type { Agent } from '@deepseek-ai/dsh-agent'
-import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { Context } from '@qq296629801/cordis'
+import type { GoalView } from '@qq296629801/dsh-goal'
+import type { Agent } from '@qq296629801/dsh-agent'
+import type { SessionEvent } from '@qq296629801/dsh-session'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { applyAttemptFailure, attemptKeyOf, digestInternals, internals as ledger, listTaskAttempts, resetAttempt, withTaskAttempts } from '@deepseek-ai/dsh-digital-employee-file'
+import { applyAttemptFailure, attemptKeyOf, digestInternals, internals as ledger, listTaskAttempts, resetAttempt, withTaskAttempts } from '@qq296629801/dsh-digital-employee-file'
 import * as EmployeeRunner from '../src/employee-runner.ts'
 import { HEADLESS_STARTUP_SERVICE } from '../src/startup.ts'
 
@@ -375,7 +375,7 @@ describe('success digest', () => {
     expect(observed.sent).toHaveLength(1)
     expect(observed.sent[0]?.channel).toBe('feishu-bot')
     expect(observed.sent[0]?.title).toBe('[digest] digital employee tasks')
-    const { digestInternals: digest } = await import('@deepseek-ai/dsh-digital-employee-file')
+    const { digestInternals: digest } = await import('@qq296629801/dsh-digital-employee-file')
     const { readFile } = await import('node:fs/promises')
     const state = JSON.parse(await readFile(digest.path, 'utf8')) as { successes: number; lastSentAt?: number }
     expect(state.successes).toBe(0)

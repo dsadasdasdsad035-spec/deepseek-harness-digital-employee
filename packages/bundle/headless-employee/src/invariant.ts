@@ -1,12 +1,12 @@
 /**
  * Package-owned invariant companion for the digital employee suite bundle.
- * @module @deepseek-ai/dsh-headless-employee/invariant
+ * @module @qq296629801/dsh-headless-employee/invariant
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-headless-employee'
+const PACKAGE_NAME = '@qq296629801/dsh-headless-employee'
 
 /** Cordis plugin name. */
 export const name = 'digital-employee-suite-bundle-invariant'

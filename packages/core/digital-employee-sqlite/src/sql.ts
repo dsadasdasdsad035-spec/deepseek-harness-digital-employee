@@ -1,6 +1,6 @@
 /**
  * Closed, package-owned SQL resource loading for the digital employee store.
- * @module @deepseek-ai/dsh-digital-employee-sqlite/sql
+ * @module @qq296629801/dsh-digital-employee-sqlite/sql
  */
 
 import { readFileSync } from 'node:fs'

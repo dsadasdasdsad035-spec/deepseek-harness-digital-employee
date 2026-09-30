@@ -1,8 +1,8 @@
 /**
  * Company Service Definition: durable companies binding digital employee instances.
- * @module @deepseek-ai/dsh-company
+ * @module @qq296629801/dsh-company
  */
-import { Service } from '@deepseek-ai/cordis';
+import { Service } from '@qq296629801/cordis';
 /** Construct a company identifier from its validated string form.
  * @param value - validated company identifier string.
  * @returns branded company identifier.

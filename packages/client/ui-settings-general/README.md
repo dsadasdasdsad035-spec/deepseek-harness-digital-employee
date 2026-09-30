@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-settings-general
+# @qq296629801/dsh-client-ui-settings-general
 
 English | [中文](README.zh.md)
 

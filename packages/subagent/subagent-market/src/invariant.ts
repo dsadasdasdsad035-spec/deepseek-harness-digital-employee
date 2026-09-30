@@ -1,13 +1,13 @@
 /**
  * Package-owned invariant companion for the subagent marketplace.
- * @module @deepseek-ai/dsh-subagent-market/invariant
+ * @module @qq296629801/dsh-subagent-market/invariant
  */
 
 /* jscpd:ignore-start */
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-subagent-market'
+const PACKAGE_NAME = '@qq296629801/dsh-subagent-market'
 
 /** Cordis companion plugin name. */
 export const name = 'subagent-market-invariant'

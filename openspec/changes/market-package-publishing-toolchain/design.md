@@ -22,7 +22,7 @@ Tool and MCP package installation already validates a bounded ZIP, a strict desc
 
 `marketplace-core` gains the package-building counterpart to its validators: read a source directory, validate safe relative paths and file inventory, recompute the descriptor file table, sign the canonical payload through the existing exported `descriptorSignaturePayload()`, and assemble a deterministic ZIP (fixed entry mtimes, matching the current template generator). Before writing, the builder re-validates its own output with the same `preparePackageArchive()`, descriptor parse, and signature verification the installers use, so builder acceptance and installer acceptance cannot drift.
 
-The executable is a `dsh-market-package` bin on `@deepseek-ai/dsh-marketplace-core`, parsing argv with `node:util` `parseArgs` (no new dependency). Alternatives: logic inside the CLI script (untestable and duplicative) or a separate CLI package (over-built for one command while the operation has no independent evolution from the core rules).
+The executable is a `dsh-market-package` bin on `@qq296629801/dsh-marketplace-core`, parsing argv with `node:util` `parseArgs` (no new dependency). Alternatives: logic inside the CLI script (untestable and duplicative) or a separate CLI package (over-built for one command while the operation has no independent evolution from the core rules).
 
 ### Descriptor `files` keys are the author's inventory; hash values are recomputed
 

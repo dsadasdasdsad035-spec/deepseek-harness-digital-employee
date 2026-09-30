@@ -1,12 +1,12 @@
 /**
  * Package-owned invariant companion for the project-manager fixture.
- * @module @deepseek-ai/dsh-project-manager-test-digital-employee/invariant
+ * @module @qq296629801/dsh-project-manager-test-digital-employee/invariant
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { Context } from '@qq296629801/cordis'
+import type { InvariantInstaller } from '@qq296629801/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-project-manager-test-digital-employee'
+const PACKAGE_NAME = '@qq296629801/dsh-project-manager-test-digital-employee'
 
 /** Cordis companion plugin name. */
 export const name = 'project-manager-test-digital-employee-invariant'

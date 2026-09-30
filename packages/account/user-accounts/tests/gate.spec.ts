@@ -10,16 +10,16 @@ import { mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { Context } from '@deepseek-ai/cordis'
-import Loader from '@deepseek-ai/cordis-plugin-loader'
-import Include from '@deepseek-ai/cordis-plugin-include'
+import { Context } from '@qq296629801/cordis'
+import Loader from '@qq296629801/cordis-plugin-loader'
+import Include from '@qq296629801/cordis-plugin-include'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import HttpServer from '@deepseek-ai/dsh-host-webserver'
-import UserAccounts from '@deepseek-ai/dsh-user-accounts'
+import HttpServer from '@qq296629801/dsh-host-webserver'
+import UserAccounts from '@qq296629801/dsh-user-accounts'
 import type { UserAccountService } from '../src/index.ts'
 import * as Gate from '../src/gate.ts'
-import EmailService from '@deepseek-ai/dsh-email'
-import * as QqSmtp from '@deepseek-ai/dsh-email/qq-smtp'
+import EmailService from '@qq296629801/dsh-email'
+import * as QqSmtp from '@qq296629801/dsh-email/qq-smtp'
 
 let context: Context | undefined
 let origin: string
@@ -65,11 +65,11 @@ async function boot(options: { seedOwner?: boolean } = {}): Promise<UserAccountS
   await context.plugin(Loader)
   context.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
-    ['@deepseek-ai/dsh-host-webserver', HttpServer],
-    ['@deepseek-ai/dsh-user-accounts', UserAccounts],
-    ['@deepseek-ai/dsh-user-accounts/gate', Gate],
-    ['@deepseek-ai/dsh-email', EmailService],
-    ['@deepseek-ai/dsh-email/qq-smtp', QqSmtp],
+    ['@qq296629801/dsh-host-webserver', HttpServer],
+    ['@qq296629801/dsh-user-accounts', UserAccounts],
+    ['@qq296629801/dsh-user-accounts/gate', Gate],
+    ['@qq296629801/dsh-email', EmailService],
+    ['@qq296629801/dsh-email/qq-smtp', QqSmtp],
   ])
   context.loader.internal = {
     version: 'v2',
@@ -80,17 +80,17 @@ async function boot(options: { seedOwner?: boolean } = {}): Promise<UserAccountS
   } as unknown as NonNullable<typeof context.loader.internal>
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [
-    "- name: '@deepseek-ai/dsh-host-webserver'",
+    "- name: '@qq296629801/dsh-host-webserver'",
     '  config:',
     "    host: '127.0.0.1'",
     '    port: 0',
-    "- name: '@deepseek-ai/dsh-user-accounts'",
+    "- name: '@qq296629801/dsh-user-accounts'",
     '  config:',
     '    allowRegistration: true',
     '    dbPath: ' + JSON.stringify(join(root, 'users.db')),
-    "- name: '@deepseek-ai/dsh-user-accounts/gate'",
-    "- name: '@deepseek-ai/dsh-email'",
-    "- name: '@deepseek-ai/dsh-email/qq-smtp'",
+    "- name: '@qq296629801/dsh-user-accounts/gate'",
+    "- name: '@qq296629801/dsh-email'",
+    "- name: '@qq296629801/dsh-email/qq-smtp'",
     '  config:',
     '    userRef: SMTP_USER',
     '    passRef: SMTP_PASS',

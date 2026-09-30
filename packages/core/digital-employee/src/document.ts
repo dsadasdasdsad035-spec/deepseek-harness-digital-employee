@@ -1,10 +1,10 @@
 /**
  * The durable `employees.json` document format shared by the file provider
  * and by the SQLite provider's one-time legacy import.
- * @module @deepseek-ai/dsh-digital-employee/document
+ * @module @qq296629801/dsh-digital-employee/document
  */
 
-import { SessionId } from '@deepseek-ai/dsh-session/types'
+import { SessionId } from '@qq296629801/dsh-session/types'
 import type {
   DigitalEmployeeAuditRecord,
   DigitalEmployeeAuthority,

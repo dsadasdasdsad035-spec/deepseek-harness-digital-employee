@@ -4,19 +4,19 @@ import type {
   DigitalEmployeeSubmissionId,
   SessionId,
   WorkspaceId,
-} from '@deepseek-ai/dsh-api-remotes/client'
+} from '@qq296629801/dsh-api-remotes/client'
 import type {
   ClientSessionContext,
   InputTriggerSource,
   ReferenceInsert,
   RoutingSubmitRequest,
   SubmitOutcome,
-} from '@deepseek-ai/dsh-client-ui-input-trigger/client'
-import type { IConversation } from '@deepseek-ai/dsh-client-ui-conversation/client'
+} from '@qq296629801/dsh-client-ui-input-trigger/client'
+import type { IConversation } from '@qq296629801/dsh-client-ui-conversation/client'
 import type {
   ISessions, IWorkspaces,
-} from '@deepseek-ai/dsh-client-runtime/client'
-import type { ILayout } from '@deepseek-ai/dsh-client-ui-layout/client'
+} from '@qq296629801/dsh-client-runtime/client'
+import type { ILayout } from '@qq296629801/dsh-client-ui-layout/client'
 import type { DigitalEmployeeRemote, DigitalEmployeeStore } from './store.ts'
 
 /** Deterministic identity hooks used by tests; production mints browser UUIDs. */

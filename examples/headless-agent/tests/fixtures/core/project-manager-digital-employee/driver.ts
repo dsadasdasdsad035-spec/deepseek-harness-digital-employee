@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-import type { Context } from '@deepseek-ai/cordis'
-import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
+import type { Context } from '@qq296629801/cordis'
+import { boot, resolveConfigPath } from '@qq296629801/dsh-app-boot'
 import {
   createDigitalEmployeeTemplateId,
-} from '@deepseek-ai/dsh-digital-employee'
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { scopeOf } from '@deepseek-ai/dsh-scope'
-import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
+} from '@qq296629801/dsh-digital-employee'
+import { createUserMessage } from '@qq296629801/dsh-llm'
+import { scopeOf } from '@qq296629801/dsh-scope'
+import { SessionId, type SessionEvent } from '@qq296629801/dsh-session'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('project-manager driver requires a config path')

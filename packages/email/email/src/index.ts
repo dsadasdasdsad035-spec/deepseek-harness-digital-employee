@@ -5,10 +5,10 @@
  * plain-text message addressed by transport id and receive a closed delivery
  * outcome. Delivery failures are reported, never thrown.
  *
- * @module @deepseek-ai/dsh-email
+ * @module @qq296629801/dsh-email
  */
 
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service } from '@qq296629801/cordis'
 import type { EmailDelivery, EmailMessage, EmailTransport } from './types.ts'
 
 export type { EmailDelivery, EmailMessage, EmailTransport } from './types.ts'
@@ -19,7 +19,7 @@ export interface EmailSendRequest extends EmailMessage {
   readonly transport: string
 }
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     email: EmailService
   }

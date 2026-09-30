@@ -33,7 +33,7 @@ The distributable package includes the marketplace and company Host and client c
 
 ### Stack the suite in the shipped web profile template
 
-`PROFILE_TEMPLATES.web` composes `[dsh-base, dsh-web-app, dsh-digital-employee-suite]`, so the shipped surface keeps every capability after the row split, and `dsh plugin --profile <name> add @deepseek-ai/dsh-digital-employee-suite` is the out-of-tree entry for everyone else. The pre-split `[dsh-base, dsh-web-app]` tuple is registered as installation-owned, so an existing web profile normalizes to the new template on its next load; any customized list stays user-owned.
+`PROFILE_TEMPLATES.web` composes `[dsh-base, dsh-web-app, dsh-digital-employee-suite]`, so the shipped surface keeps every capability after the row split, and `dsh plugin --profile <name> add @qq296629801/dsh-digital-employee-suite` is the out-of-tree entry for everyone else. The pre-split `[dsh-base, dsh-web-app]` tuple is registered as installation-owned, so an existing web profile normalizes to the new template on its next load; any customized list stays user-owned.
 
 ### Resolve all durable paths from the target Harness home
 

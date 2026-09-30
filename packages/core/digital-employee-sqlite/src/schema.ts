@@ -1,7 +1,7 @@
 /**
  * SQLite schema ownership, connection discipline, and durable-row validation
  * for the digital employee store.
- * @module @deepseek-ai/dsh-digital-employee-sqlite/schema
+ * @module @qq296629801/dsh-digital-employee-sqlite/schema
  */
 
 import { isAbsolute } from 'node:path'
@@ -19,7 +19,7 @@ import {
   type DigitalEmployeeMemoryRecord,
   parseAuditRecord,
   parseMemoryProvenance,
-} from '@deepseek-ai/dsh-digital-employee'
+} from '@qq296629801/dsh-digital-employee'
 import { sql } from './sql.ts'
 
 /** Current physical-record schema; unreleased formats reject older databases. */

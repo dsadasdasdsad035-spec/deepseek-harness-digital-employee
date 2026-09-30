@@ -1,10 +1,10 @@
 /**
  * Service Definition for the workflow capability seam. Service Providers execute orchestration scripts;
  * observe-only lifecycle events never expose run control.
- * @module @deepseek-ai/dsh-workflow
+ * @module @qq296629801/dsh-workflow
  */
-import { Service } from '@deepseek-ai/cordis';
-import { HarnessError } from '@deepseek-ai/dsh-llm';
+import { Service } from '@qq296629801/cordis';
+import { HarnessError } from '@qq296629801/dsh-llm';
 export { WorkflowRunId } from "./types.js";
 /**
  * Typed error for workflow-seam failures. Extends {@link HarnessError}, so the

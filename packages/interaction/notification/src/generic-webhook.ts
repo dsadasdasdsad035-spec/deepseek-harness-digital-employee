@@ -3,11 +3,11 @@
  * document (`title`, `body`, `context`, `timestamp`) to any webhook URL. Any
  * 2xx response proves delivery; there is no signing dialect.
  *
- * @module @deepseek-ai/dsh-notification/generic-webhook
+ * @module @qq296629801/dsh-notification/generic-webhook
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
 import { credentialStates, deliverWebhook, type WebhookDialect } from './channels.ts'
 import type { NotificationChannel, NotificationDelivery, NotificationMessage } from './types.ts'
 import type {} from './index.ts'

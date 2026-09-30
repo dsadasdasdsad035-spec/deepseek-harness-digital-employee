@@ -1,5 +1,5 @@
-import type { Context } from '@deepseek-ai/cordis'
-import { createDigitalEmployeeTemplateId, type DigitalEmployeeTemplate } from '@deepseek-ai/dsh-digital-employee'
+import type { Context } from '@qq296629801/cordis'
+import { createDigitalEmployeeTemplateId, type DigitalEmployeeTemplate } from '@qq296629801/dsh-digital-employee'
 
 const template: DigitalEmployeeTemplate = {
   id: createDigitalEmployeeTemplateId('wf-sa-assistant'),

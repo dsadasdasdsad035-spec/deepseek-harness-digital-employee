@@ -1,12 +1,12 @@
 /**
  * Digital employee composition for existing Agent extension points.
- * @module @deepseek-ai/dsh-digital-employee-agent
+ * @module @qq296629801/dsh-digital-employee-agent
  */
 
 import { readFile } from 'node:fs/promises'
 import { createHash, randomUUID } from 'node:crypto'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
-import { Context, Service } from '@deepseek-ai/cordis'
+import { Context, Service } from '@qq296629801/cordis'
 import type {
   DigitalEmployeeAuthority,
   DigitalEmployeeCompositionId,
@@ -22,18 +22,18 @@ import type {
   DigitalEmployeeMcpServer,
   ExpertId,
   ResolvedDigitalEmployee,
-} from '@deepseek-ai/dsh-digital-employee'
-import { createDigitalEmployeeCompositionId } from '@deepseek-ai/dsh-digital-employee'
+} from '@qq296629801/dsh-digital-employee'
+import { createDigitalEmployeeCompositionId } from '@qq296629801/dsh-digital-employee'
 import type {
   Agent,
   AgentHandle,
   AgentOptions,
   CreateAgentOptions,
   ModelSelection,
-} from '@deepseek-ai/dsh-agent'
-import { installModelSelection } from '@deepseek-ai/dsh-agent'
-import type { ContentBlock, UserMessage } from '@deepseek-ai/dsh-llm'
-import { SessionId } from '@deepseek-ai/dsh-session'
+} from '@qq296629801/dsh-agent'
+import { installModelSelection } from '@qq296629801/dsh-agent'
+import type { ContentBlock, UserMessage } from '@qq296629801/dsh-llm'
+import { SessionId } from '@qq296629801/dsh-session'
 import type {
   ContinuableStart,
   SubagentDescendantListEntry,
@@ -42,22 +42,22 @@ import type {
   SubagentResult,
   SubagentRun,
   SubagentStartRequest,
-} from '@deepseek-ai/dsh-subagent'
-import type {} from '@deepseek-ai/dsh-agent-presets'
-import { scopeOf } from '@deepseek-ai/dsh-scope'
-import { SKILL_LOADER_TOOL_NAME } from '@deepseek-ai/dsh-skill'
-import type {} from '@deepseek-ai/dsh-system-prompt'
-import type {} from '@deepseek-ai/dsh-tools'
-import type { McpServerConfig } from '@deepseek-ai/dsh-mcp-client'
-import type { PostToolDecision, PreToolDecision, ToolExecution } from '@deepseek-ai/dsh-tools'
-import { defineTool } from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-credentials'
-import type {} from '@deepseek-ai/dsh-mcp-client'
-import { mountEmployeeHooks } from '@deepseek-ai/dsh-hooks-market'
-import { mountEmployeeSubagents } from '@deepseek-ai/dsh-subagent-market'
-import { mountEmployeeWorkflows } from '@deepseek-ai/dsh-workflow-market'
+} from '@qq296629801/dsh-subagent'
+import type {} from '@qq296629801/dsh-agent-presets'
+import { scopeOf } from '@qq296629801/dsh-scope'
+import { SKILL_LOADER_TOOL_NAME } from '@qq296629801/dsh-skill'
+import type {} from '@qq296629801/dsh-system-prompt'
+import type {} from '@qq296629801/dsh-tools'
+import type { McpServerConfig } from '@qq296629801/dsh-mcp-client'
+import type { PostToolDecision, PreToolDecision, ToolExecution } from '@qq296629801/dsh-tools'
+import { defineTool } from '@qq296629801/dsh-tools'
+import type {} from '@qq296629801/dsh-credentials'
+import type {} from '@qq296629801/dsh-mcp-client'
+import { mountEmployeeHooks } from '@qq296629801/dsh-hooks-market'
+import { mountEmployeeSubagents } from '@qq296629801/dsh-subagent-market'
+import { mountEmployeeWorkflows } from '@qq296629801/dsh-workflow-market'
 
-declare module '@deepseek-ai/cordis' {
+declare module '@qq296629801/cordis' {
   interface Context {
     digitalEmployeeAgent: DigitalEmployeeAgent
   }
@@ -492,7 +492,7 @@ export class DigitalEmployeeAgent extends Service {
             ? {}
             : { memoryProjection: JSON.parse(JSON.stringify(expert.memoryProjection)) as Record<string, unknown> }),
         },
-      } as unknown as Record<string, import('@deepseek-ai/dsh-session').JsonValue>,
+      } as unknown as Record<string, import('@qq296629801/dsh-session').JsonValue>,
     } satisfies Omit<SubagentStartRequest, 'label' | 'signal'>
     if (expert.delegation.mode === 'one-shot') {
       const run = await this.ctx.subagents.start(request.provider, {
@@ -1329,7 +1329,7 @@ function requireMcpSessionId(agentCtx: Context): SessionId {
 
 async function resolveCredentials(
   ctx: Context,
-  references: Readonly<Record<string, import('@deepseek-ai/dsh-credentials').CredentialRef>>,
+  references: Readonly<Record<string, import('@qq296629801/dsh-credentials').CredentialRef>>,
   serverId: string,
 ): Promise<Record<string, string>> {
   const credentials = ctx.get('credentials')

@@ -3,7 +3,7 @@
  * vocabulary remains in `./types` so Client programs never import Agent or
  * host Cordis context declarations.
  *
- * @module @deepseek-ai/dsh-workflow
+ * @module @qq296629801/dsh-workflow
  */
 export {};
 //# sourceMappingURL=runtime-types.js.map

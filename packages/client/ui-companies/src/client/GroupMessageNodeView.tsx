@@ -1,6 +1,6 @@
 /** Keyed Chat renderer for one quoted company group message. */
 import type { ReactNode } from 'react'
-import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type { PropsRuntime } from '@qq296629801/dsh-client-ui-slots'
 import type { CompanyGroupMessageChatData } from './group-definition.ts'
 import css from './CompanyWorkspace.module.css'
 

@@ -7,7 +7,7 @@ Digital employees already run autonomous tasks in the background, but their work
 ## What Changes
 
 - New capability `company-group-chat`: one durable group conversation per company, membership derived from current bindings (no new employee or group store).
-- Host plugin `@deepseek-ai/dsh-host-company-group-chat`: watches the employee task ledger, converts 领到任务 / 完成 / 失败 transitions into **speaking turns** — a real subagent run carrying that employee's full composition, given only the situation (never a script) — and appends the utterance to the group as a speaker-attributed message. LLM failure degrades to a deterministic one-liner so the group never goes silent.
+- Host plugin `@qq296629801/dsh-host-company-group-chat`: watches the employee task ledger, converts 领到任务 / 完成 / 失败 transitions into **speaking turns** — a real subagent run carrying that employee's full composition, given only the situation (never a script) — and appends the utterance to the group as a speaker-attributed message. LLM failure degrades to a deterministic one-liner so the group never goes silent.
 - User interaction: the owner's group messages land in the conversation; `@displayName` mentions route a speaking turn to that employee with the mention context. No employee-to-employee chains in this change.
 - Client: a 公司群聊 button on the company console floor panel opens the group; the group appears in the session sidebar and renders as a multi-speaker chat (speaker name chips), streaming over the existing WebSocket session events.
 - Speaking-turn model calls live in their child sessions with the group context injected; the group conversation itself is an event-sourced session assembled from typed plugin events (model-visible ⟺ logged holds).

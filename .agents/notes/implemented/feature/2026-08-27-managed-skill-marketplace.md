@@ -14,7 +14,7 @@ The marketplace is a Host-owned capability with a generated client API and a loc
 
 ## Typert Remote
 
-`@deepseek-ai/dsh-skill-market` exposes `list`, `install`, `banner`, and `uninstall` through the generated `skillMarket` Typert Remote over the shared `/api` carrier. Client-safe request, result, inventory, identity, and failure types flow through `@deepseek-ai/dsh-api-remotes`, and the Web package calls `ctx.remote.skillMarket`.
+`@qq296629801/dsh-skill-market` exposes `list`, `install`, `banner`, and `uninstall` through the generated `skillMarket` Typert Remote over the shared `/api` carrier. Client-safe request, result, inventory, identity, and failure types flow through `@qq296629801/dsh-api-remotes`, and the Web package calls `ctx.remote.skillMarket`.
 
 Expected business failures are a closed discriminated outcome union. Carrier failures, cancellation, and unexpected implementation errors remain rejected calls. This distinction keeps localization and control flow independent of diagnostic prose and avoids a second RPC lifecycle beside the generated API.
 

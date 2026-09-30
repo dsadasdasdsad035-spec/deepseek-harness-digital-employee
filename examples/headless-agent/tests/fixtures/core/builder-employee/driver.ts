@@ -4,16 +4,16 @@
  * authoring tools mount behind the management gateway, and a chat task with
  * the builder drives the tool surface through the real agent loop.
  */
-import type { Context } from '@deepseek-ai/cordis'
-import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
+import type { Context } from '@qq296629801/cordis'
+import { boot, resolveConfigPath } from '@qq296629801/dsh-app-boot'
 import {
   createDigitalEmployeeSubmissionId,
   createDigitalEmployeeTemplateId,
   type DigitalEmployeeAuthority,
-} from '@deepseek-ai/dsh-digital-employee'
-import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
-import type {} from '@deepseek-ai/dsh-host-digital-employee-management'
-import { WorkspaceId } from '@deepseek-ai/dsh-workspace'
+} from '@qq296629801/dsh-digital-employee'
+import { SessionId, type SessionEvent } from '@qq296629801/dsh-session'
+import type {} from '@qq296629801/dsh-host-digital-employee-management'
+import { WorkspaceId } from '@qq296629801/dsh-workspace'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('builder employee driver requires a config path')

@@ -14,7 +14,7 @@ Status: implemented
 
 ## Typert Remote
 
-`@deepseek-ai/dsh-skill-market` 通过共享 `/api` 载体上的生成式 `skillMarket` Typert Remote 公开 `list`、`install`、`banner` 和 `uninstall`。客户端安全的请求、结果、清单、标识和失败类型通过 `@deepseek-ai/dsh-api-remotes` 提供，Web 包调用 `ctx.remote.skillMarket`。
+`@qq296629801/dsh-skill-market` 通过共享 `/api` 载体上的生成式 `skillMarket` Typert Remote 公开 `list`、`install`、`banner` 和 `uninstall`。客户端安全的请求、结果、清单、标识和失败类型通过 `@qq296629801/dsh-api-remotes` 提供，Web 包调用 `ctx.remote.skillMarket`。
 
 预期业务失败使用封闭的可辨识结果联合。载体失败、取消和意外实现错误仍表现为被拒绝的调用。这一区分使本地化和控制流不依赖诊断文本，也避免在生成式 API 旁维护第二套 RPC 生命周期。
 

@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-typert-protocol
+# @qq296629801/dsh-typert-protocol
 
 English | [中文](README.zh.md)
 

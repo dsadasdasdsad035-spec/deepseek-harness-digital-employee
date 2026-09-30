@@ -8,8 +8,8 @@
 
 ```ts
 import { readFile } from 'node:fs/promises'
-import type { Context } from '@deepseek-ai/cordis'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import type { Context } from '@qq296629801/cordis'
+import { defineTool } from '@qq296629801/dsh-tools'
 
 export const name = 'my-tool'
 export const inject = ['tools']

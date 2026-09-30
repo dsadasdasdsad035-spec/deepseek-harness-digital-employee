@@ -1,8 +1,8 @@
-# @deepseek-ai/dsh-digital-employee-sqlite
+# @qq296629801/dsh-digital-employee-sqlite
 
 English | [中文](README.zh.md)
 
-SQLite-backed Provider for `@deepseek-ai/dsh-digital-employee`. It stores employee instances, long-term memories, and audit records in one owner-only database at `$DSH_HOME/digital-employees/employees.db`, with the same promotion and retrieval policy as the file Provider.
+SQLite-backed Provider for `@qq296629801/dsh-digital-employee`. It stores employee instances, long-term memories, and audit records in one owner-only database at `$DSH_HOME/digital-employees/employees.db`, with the same promotion and retrieval policy as the file Provider.
 
 ## Configuration
 

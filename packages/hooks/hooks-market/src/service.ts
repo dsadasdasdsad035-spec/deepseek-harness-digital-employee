@@ -2,9 +2,9 @@
 
 import { lstat, mkdir, readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import type { CredentialInfo, CredentialRef } from '@deepseek-ai/dsh-credentials'
+import { withFileLock, writeFileAtomic } from '@qq296629801/dsh-atomic-write'
+import { credentialRef } from '@qq296629801/dsh-credentials'
+import type { CredentialInfo, CredentialRef } from '@qq296629801/dsh-credentials'
 import {
   ArchiveValidationError,
   decodeArchiveBase64,
@@ -20,11 +20,11 @@ import {
   uninstallManagedPackage,
   verifyPackageFileHashes,
   verifyPublisherSignature,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 import type {
   HookPackageDescriptor,
   TrustedPublisher,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 import type {
   HookMarketConfigureRequest,
   HookMarketConfigureResult,

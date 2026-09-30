@@ -1,13 +1,13 @@
 /**
  * File-backed digital employee provider.
- * @module @deepseek-ai/dsh-digital-employee-file
+ * @module @qq296629801/dsh-digital-employee-file
  */
 
 import { mkdir, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
-import type { Context } from '@deepseek-ai/cordis'
-import z from '@deepseek-ai/schemastery'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
+import type { Context } from '@qq296629801/cordis'
+import z from '@qq296629801/schemastery'
+import { withFileLock, writeFileAtomic } from '@qq296629801/dsh-atomic-write'
 import {
   type ApplyDigitalEmployeeUpgradeRequest,
   assertLifecycleTransition,
@@ -41,8 +41,8 @@ import {
   rankMemories,
   requestApplyUpgrade,
   reviewPromotion,
-} from '@deepseek-ai/dsh-digital-employee'
-import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+} from '@qq296629801/dsh-digital-employee'
+import { resolveDshHome } from '@qq296629801/dsh-home-paths'
 
 /** Current on-disk digital employee document version. */
 export const SCHEMA_VERSION = EMPLOYEES_DOCUMENT_SCHEMA_VERSION

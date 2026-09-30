@@ -3,7 +3,7 @@
  *
  * The package's runtime content is `cordis.patch.yml`; this module carries no
  * service of its own.
- * @module @deepseek-ai/dsh-headless-employee
+ * @module @qq296629801/dsh-headless-employee
  */
 
 export {}

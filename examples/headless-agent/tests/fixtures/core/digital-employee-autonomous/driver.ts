@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { readFile } from 'node:fs/promises'
-import type { Context } from '@deepseek-ai/cordis'
-import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
+import type { Context } from '@qq296629801/cordis'
+import { boot, resolveConfigPath } from '@qq296629801/dsh-app-boot'
+import { dshHomePath } from '@qq296629801/dsh-home-paths'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('employee autonomous driver requires a config path')

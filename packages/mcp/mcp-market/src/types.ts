@@ -1,6 +1,6 @@
 /** Client-safe MCP marketplace requests, inventory, and declared failures. */
 
-import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { Branded } from '@qq296629801/dsh-brand'
 
 /** Stable identity of one managed MCP package. */
 export type McpMarketPackageId = Branded<'McpMarketPackageId'>

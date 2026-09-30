@@ -1,6 +1,6 @@
 /**
  * `SandboxedFileSystem`: the sandbox-enforcing implementation of the
- * `@deepseek-ai/dsh-fs` Service Definition. It extends `LocalFileSystem` so all
+ * `@qq296629801/dsh-fs` Service Definition. It extends `LocalFileSystem` so all
  * text-storage mechanics — resolve, stat, read/stream, list, the atomic
  * write and the read-match-write edit critical section — are the local
  * implementation's, verbatim; this package adds only the per-call POLICY fence
@@ -11,7 +11,7 @@
  * NOT a kernel boundary — the operations are the seam's own (open, rename),
  * and only the target path is untrusted, so canonicalize-then-contain is the
  * complete answer to this surface. Kernel-grade isolation of untrusted CODE
- * stays `ctx.shell`'s job (`@deepseek-ai/dsh-bash-sandbox`). This mirrors the
+ * stays `ctx.shell`'s job (`@qq296629801/dsh-bash-sandbox`). This mirrors the
  * `code-runtime` stance: containment, not a security boundary. The residual
  * TOCTOU (an ancestor symlink swapped between the containment re-check and the
  * syscall) is narrowed by re-canonicalizing immediately before delegating and
@@ -24,20 +24,20 @@
  * `danger-full-access` delegates unfenced. A denial throws the structured
  * `FS_SANDBOX_DENIED` — no text inference is needed (unlike bash's kernel
  * stderr), because an in-process fence knows exactly what it refused. The
- * escalation retry lives in the tool layer (`@deepseek-ai/dsh-tool-fs`),
+ * escalation retry lives in the tool layer (`@qq296629801/dsh-tool-fs`),
  * exactly as bash's does.
  *
- * @module @deepseek-ai/dsh-fs-sandbox
+ * @module @qq296629801/dsh-fs-sandbox
  */
 
-import { Context } from '@deepseek-ai/cordis'
-import { LocalFileSystem } from '@deepseek-ai/dsh-fs-local'
-import type { Config as LocalConfig } from '@deepseek-ai/dsh-fs-local'
-import { FsError } from '@deepseek-ai/dsh-fs'
-import type { FsEditOutcome, FsEditRequest, FsTarget, FsVersion, FsWriteIntent, FsWriteOutcome } from '@deepseek-ai/dsh-fs'
-import { writableRoots } from '@deepseek-ai/dsh-sandbox'
-import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandbox'
-import type {} from '@deepseek-ai/dsh-sandbox-policy'
+import { Context } from '@qq296629801/cordis'
+import { LocalFileSystem } from '@qq296629801/dsh-fs-local'
+import type { Config as LocalConfig } from '@qq296629801/dsh-fs-local'
+import { FsError } from '@qq296629801/dsh-fs'
+import type { FsEditOutcome, FsEditRequest, FsTarget, FsVersion, FsWriteIntent, FsWriteOutcome } from '@qq296629801/dsh-fs'
+import { writableRoots } from '@qq296629801/dsh-sandbox'
+import type { SandboxExecutionPolicy, SandboxMode } from '@qq296629801/dsh-sandbox'
+import type {} from '@qq296629801/dsh-sandbox-policy'
 import { isPathUnder } from './containment.ts'
 
 /**

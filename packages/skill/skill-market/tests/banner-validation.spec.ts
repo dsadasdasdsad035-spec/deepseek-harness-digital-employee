@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { inspectZipArchive } from '@deepseek-ai/dsh-marketplace-core'
+import { inspectZipArchive } from '@qq296629801/dsh-marketplace-core'
 import {
   createSkillMarketService,
   MAX_BANNER_BYTES,

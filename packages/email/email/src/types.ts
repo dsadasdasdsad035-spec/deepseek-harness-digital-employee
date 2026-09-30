@@ -3,7 +3,7 @@
  * deliver, the closed delivery outcome, and the transport interface providers
  * register. Free of host-side value imports.
  *
- * @module @deepseek-ai/dsh-email/types
+ * @module @qq296629801/dsh-email/types
  */
 
 /** One plain-text email a caller asks to deliver. */

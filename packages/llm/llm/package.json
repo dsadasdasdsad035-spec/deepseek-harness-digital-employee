@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-llm",
+  "name": "@qq296629801/dsh-llm",
   "description": "Provider-neutral LLM service interface for the DeepSeek Harness",
   "version": "0.1.1-rc.2",
   "publishConfig": {
@@ -7,7 +7,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "url": "git+https://github.com/dsadasdasdsad035-spec/deepseek-harness-digital-employee.git",
     "directory": "packages/llm/llm"
   },
   "type": "module",
@@ -45,20 +45,20 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-attachment": "workspace:^",
+    "@qq296629801/dsh-brand": "workspace:^",
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/dsh-timeout": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "workspace:^"
+    "@qq296629801/schemastery": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-attachment": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-timeout": "workspace:^",
-    "@deepseek-ai/cordis": "workspace:^"
+    "@qq296629801/dsh-attachment": "workspace:^",
+    "@qq296629801/dsh-brand": "workspace:^",
+    "@qq296629801/dsh-invariants": "workspace:^",
+    "@qq296629801/dsh-timeout": "workspace:^",
+    "@qq296629801/cordis": "workspace:^"
   }
 }

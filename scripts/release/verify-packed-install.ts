@@ -99,12 +99,14 @@ function main(): void {
 
     const environment = consumerEnvironment(consumerRoot)
     console.log(`release verify-packed-install: installing ${String(packed.size)} tarball(s) into ${consumerRoot}`)
-    // Optional dependencies are omitted: the Landlock platform packages behind
-    // them need a musl toolchain and one build per architecture, and a consumer
-    // that cannot install them must still start — which is what optional means
-    // here. Their entry package is a plain dependency of dsh-sandbox-local, so
-    // its tarball is supplied through --from.
-    capture('npm', ['install', '--no-audit', '--no-fund', '--package-lock=false', '--omit=optional'],
+    // Optional dependencies install normally: koffi ships its native binaries
+    // as optional platform packages, so omitting optionals breaks its install
+    // script. The Landlock platform packages stay unpublished on this line, and
+    // npm treats a resolution failure inside optionalDependencies as a skip,
+    // not an error — which is exactly the "a consumer without them must still
+    // start" contract. Their entry package is a plain dependency of
+    // dsh-sandbox-local, so its tarball is supplied through --from.
+    capture('npm', ['install', '--no-audit', '--no-fund', '--package-lock=false'],
       { cwd: consumerRoot, env: environment })
 
     const bin = join(consumerRoot, 'node_modules', ...entry.packageName.split('/'), entry.binPath)

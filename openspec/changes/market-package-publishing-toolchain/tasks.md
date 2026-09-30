@@ -3,7 +3,7 @@
 - [x] 1.1 Add safe source-directory reading to `packages/util/marketplace-core`: reject absolute paths, path traversal, symbolic links, and non-regular files; require the non-descriptor inventory to match descriptor `files` keys exactly.
 - [x] 1.2 Implement descriptor completion and signing: recompute SHA-256 hash values into `files`, reject a still-placeholder publisher identity, sign via `descriptorSignaturePayload()`, and support both Tool and MCP descriptor kinds.
 - [x] 1.3 Implement deterministic ZIP assembly with fixed entry mtimes, then self-validate the assembled archive through the installer-shared `preparePackageArchive()`, descriptor parsing, and signature verification before returning bytes.
-- [x] 1.4 Export the build API from `@deepseek-ai/dsh-marketplace-core` with JSDoc contracts, and cover it with unit tests including the build→install-validation round trip and every rejection path.
+- [x] 1.4 Export the build API from `@qq296629801/dsh-marketplace-core` with JSDoc contracts, and cover it with unit tests including the build→install-validation round trip and every rejection path.
 
 ## 2. Publisher CLI
 

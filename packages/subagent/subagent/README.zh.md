@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-subagent
+# @qq296629801/dsh-subagent
 
 [English](README.md) | 中文
 

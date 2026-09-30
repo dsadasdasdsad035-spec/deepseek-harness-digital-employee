@@ -11,14 +11,14 @@
  * serialize. Readers tolerate one torn trailing line (a crash mid-append)
  * by dropping it; anything before it parsed or the read fails loud.
  *
- * @module @deepseek-ai/dsh-digital-employee-file/task-events
+ * @module @qq296629801/dsh-digital-employee-file/task-events
  */
 
 import { mkdir, readFile } from 'node:fs/promises'
 import { appendFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { withFileLock } from '@deepseek-ai/dsh-atomic-write'
-import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
+import { withFileLock } from '@qq296629801/dsh-atomic-write'
+import { dshHomePath } from '@qq296629801/dsh-home-paths'
 
 /** One autonomous task lifecycle fact, appended by the headless driver. */
 export interface TaskLifecycleEventRecord {

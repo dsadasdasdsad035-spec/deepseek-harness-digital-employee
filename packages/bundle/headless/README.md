@@ -1,4 +1,4 @@
-# `@deepseek-ai/dsh-headless`
+# `@qq296629801/dsh-headless`
 
 English | [中文](README.zh.md)
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import type { Context } from '@deepseek-ai/cordis'
-import { boot, resolveConfigPath } from '@deepseek-ai/dsh-app-boot'
-import { createDigitalEmployeeTemplateId } from '@deepseek-ai/dsh-digital-employee'
-import { SessionId } from '@deepseek-ai/dsh-session'
+import type { Context } from '@qq296629801/cordis'
+import { boot, resolveConfigPath } from '@qq296629801/dsh-app-boot'
+import { createDigitalEmployeeTemplateId } from '@qq296629801/dsh-digital-employee'
+import { SessionId } from '@qq296629801/dsh-session'
 
 const configPath = process.argv[2]
 if (configPath === undefined) throw new Error('digital employee sqlite driver requires a config path')

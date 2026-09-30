@@ -3,7 +3,7 @@
  * memory ranking, portable-artifact conversion, and audit redaction. Both the
  * file and SQLite providers implement `DigitalEmployeeProvider` through these
  * functions, so backend behavior stays identical by construction.
- * @module @deepseek-ai/dsh-digital-employee/domain
+ * @module @qq296629801/dsh-digital-employee/domain
  */
 
 import type {

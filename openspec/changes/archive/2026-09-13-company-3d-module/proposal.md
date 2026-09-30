@@ -25,7 +25,7 @@ Digital employee instances exist today as a flat list in the management workspac
 ## Impact
 
 - New packages: a company types/store package (JSON document under `$DSH_HOME/companies/`, file-locked atomic writes, `SCHEMA_VERSION = 1`, following the `digital-employee-file` pattern), a host `company-management` Typert gateway (`@Remote` methods, generated typert client wired into `packages/api/remotes`), and a `packages/client/ui-companies` browser plugin (`sidebar.footer.action` entry + `shell.application` workspace).
-- New third-party dependency: `three` inlined into the `ui-companies` client bundle (proceeds through the client bundle purity gate as a non-`@deepseek-ai` inline).
+- New third-party dependency: `three` inlined into the `ui-companies` client bundle (proceeds through the client bundle purity gate as a non-`@qq296629801` inline).
 - Bundles: host store + gateway rows and the `dsh.client` UI row in the web-app patch layer.
 - No session-log or model-visible surface changes; no agent-loop changes. Busy state is runtime-derived, never persisted.
 - Testing: package tests for the store/gateway/projection, plus a keyless assembled snapshot through the real web console covering company CRUD, binding, and the 3D console output, per repo testing policy.

@@ -1,13 +1,13 @@
-import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import { createUserMessage } from '@qq296629801/dsh-llm'
 import { afterEach, describe, expect, it } from 'vitest'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
-import SqliteSessionPersistence from '@deepseek-ai/dsh-session-persistence-sqlite'
-import SessionTitleService, { foldSessionTitle } from '@deepseek-ai/dsh-session-title'
+import SessionStore, { SessionId } from '@qq296629801/dsh-session'
+import JsonlSessionPersistence from '@qq296629801/dsh-session-persistence-jsonl'
+import SqliteSessionPersistence from '@qq296629801/dsh-session-persistence-sqlite'
+import SessionTitleService, { foldSessionTitle } from '@qq296629801/dsh-session-title'
 
 const CONFIG = {
   fallbackMaxWords: 5,

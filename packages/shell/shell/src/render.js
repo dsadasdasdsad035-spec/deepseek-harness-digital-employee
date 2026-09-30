@@ -2,7 +2,7 @@
  * Shared rendering helpers for the shell tools (`dsh-tool-bash`,
  * `dsh-tool-pwsh`): the exit-status marker contract the tools' renderers
  * emit and the presentation layer parses back.
- * @module @deepseek-ai/dsh-shell/render
+ * @module @qq296629801/dsh-shell/render
  */
 /**
  * Split a rendered shell-tool result string into its output body and the

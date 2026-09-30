@@ -7,7 +7,7 @@
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { Context } from '@deepseek-ai/cordis'
+import { Context } from '@qq296629801/cordis'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { UserAccountService } from '../src/index.ts'
 

@@ -12,9 +12,9 @@ import {
   type DigitalEmployeeInstanceId,
   type DigitalEmployeeAuthority,
   type DigitalEmployeeTemplate,
-} from '@deepseek-ai/dsh-digital-employee'
-import { CallId } from '@deepseek-ai/dsh-llm'
-import type { SessionEvent, SessionId } from '@deepseek-ai/dsh-session'
+} from '@qq296629801/dsh-digital-employee'
+import { CallId } from '@qq296629801/dsh-llm'
+import type { SessionEvent, SessionId } from '@qq296629801/dsh-session'
 import {
   launchWebScaffold, watchConsole, type WebScaffold,
 } from './scaffold.ts'

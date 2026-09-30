@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type {
   DigitalEmployeeInstance, DigitalEmployeeTaskEntry, DigitalEmployeeTemplate,
-} from '@deepseek-ai/dsh-api-remotes/client'
+} from '@qq296629801/dsh-api-remotes/client'
 import { DigitalEmployeeStore } from '../src/client/store.ts'
 
 const employee: DigitalEmployeeInstance = {

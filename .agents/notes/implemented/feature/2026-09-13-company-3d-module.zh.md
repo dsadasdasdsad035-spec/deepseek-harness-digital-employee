@@ -12,10 +12,10 @@ Status: implemented
 
 四个包全部落在现有缝上，不改 loop、不改会话日志：
 
-- **`@deepseek-ai/dsh-company`** — Service Definition（`ctx.companies`）+ client-safe wire 类型。Provider 缝覆盖公司增删改查、部门、绑定与宣传图引用；每次变更发布 `companies/change` 并指明受影响公司。一个实例至多绑定一家公司一个部门；`departmentId: null` 是该公司的未分配集合（删除部门把成员移入而非丢绑定）。
-- **`@deepseek-ai/dsh-company-file`** — `$DSH_HOME/companies/companies.json` JSON 文档，`SCHEMA_VERSION = 1`，`withFileLock` + `writeFileAtomic`（digital-employee-file 模式）。创建时预置部门 总裁/人力/行政/IT/销售；同公司部门重名拒绝；未知 schema 版本直接失败。
-- **`@deepseek-ai/dsh-host-company-management`** — Typert 网关（`companies` 命名空间，17 个 remote），含 `companyFloor`：绑定与实例数据 join，输出每座位忙碌结论。**忙碌是推导值，从不落盘**：`ctx.agents` 里 `status === 'running'` 的实时会话为 `busyKind: 'chat'`；非实时会话工件的 `mtime` 落在 `taskActiveWindowMs`（默认 60 秒）内记为 `busyKind: 'task'`——这是 headless runner 的足迹，它跑在另一个进程里，只有会话写入可观测。网关订阅 `digital-employees/before-delete` 自动解绑。宣传图经 `admitEncodedImages` 入附件库；记录保存完整校验引用（`attachmentId/mediaType/bytes/width/height`），因为 `readImage` 要按它校验字节。
-- **`@deepseek-ai/dsh-client-ui-companies`** — 浏览器插件，占 `sidebar.footer.action`（入口）与 **`shell.overlay`**（全屏表面）。`shell.application` 是被数字员工工作区占用的单座位，第二注册者只能遮蔽它，所以控制台走附加的 overlay 位。Three.js（0.180）连同 `@types/three` 内联进客户端 bundle；几何全部程序化（盒身小房子、分类色屋顶随人数缩放、canvas 精灵中文标注、胶囊员工+发光屏幕+在忙/空闲牌）。会话型忙碌搭现有 WebSocket 会话运行位（sessions list store 已镜像 `host/session-status` 帧），座位翻转无需重取；任务型结论靠控制台打开期间的 5 秒 `companyFloor` 轮询。
+- **`@qq296629801/dsh-company`** — Service Definition（`ctx.companies`）+ client-safe wire 类型。Provider 缝覆盖公司增删改查、部门、绑定与宣传图引用；每次变更发布 `companies/change` 并指明受影响公司。一个实例至多绑定一家公司一个部门；`departmentId: null` 是该公司的未分配集合（删除部门把成员移入而非丢绑定）。
+- **`@qq296629801/dsh-company-file`** — `$DSH_HOME/companies/companies.json` JSON 文档，`SCHEMA_VERSION = 1`，`withFileLock` + `writeFileAtomic`（digital-employee-file 模式）。创建时预置部门 总裁/人力/行政/IT/销售；同公司部门重名拒绝；未知 schema 版本直接失败。
+- **`@qq296629801/dsh-host-company-management`** — Typert 网关（`companies` 命名空间，17 个 remote），含 `companyFloor`：绑定与实例数据 join，输出每座位忙碌结论。**忙碌是推导值，从不落盘**：`ctx.agents` 里 `status === 'running'` 的实时会话为 `busyKind: 'chat'`；非实时会话工件的 `mtime` 落在 `taskActiveWindowMs`（默认 60 秒）内记为 `busyKind: 'task'`——这是 headless runner 的足迹，它跑在另一个进程里，只有会话写入可观测。网关订阅 `digital-employees/before-delete` 自动解绑。宣传图经 `admitEncodedImages` 入附件库；记录保存完整校验引用（`attachmentId/mediaType/bytes/width/height`），因为 `readImage` 要按它校验字节。
+- **`@qq296629801/dsh-client-ui-companies`** — 浏览器插件，占 `sidebar.footer.action`（入口）与 **`shell.overlay`**（全屏表面）。`shell.application` 是被数字员工工作区占用的单座位，第二注册者只能遮蔽它，所以控制台走附加的 overlay 位。Three.js（0.180）连同 `@types/three` 内联进客户端 bundle；几何全部程序化（盒身小房子、分类色屋顶随人数缩放、canvas 精灵中文标注、胶囊员工+发光屏幕+在忙/空闲牌）。会话型忙碌搭现有 WebSocket 会话运行位（sessions list store 已镜像 `host/session-status` 帧），座位翻转无需重取；任务型结论靠控制台打开期间的 5 秒 `companyFloor` 轮询。
 
 ## Alternatives considered
 

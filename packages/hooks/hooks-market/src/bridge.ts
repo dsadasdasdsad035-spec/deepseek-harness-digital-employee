@@ -5,17 +5,17 @@
  * @module
  */
 
-import type { Context } from '@deepseek-ai/cordis'
-import type { HookPackageDescriptor } from '@deepseek-ai/dsh-marketplace-core'
+import type { Context } from '@qq296629801/cordis'
+import type { HookPackageDescriptor } from '@qq296629801/dsh-marketplace-core'
 import {
   matchesMatcher,
   mergeHookOutputs,
   runHook,
-} from '@deepseek-ai/dsh-hook-protocol'
-import type { MergedHookOutcome } from '@deepseek-ai/dsh-hook-protocol'
-import type { PreToolDecision, ToolExecution, ToolExecutionResult } from '@deepseek-ai/dsh-tools'
-import { defineTool } from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-tools'
+} from '@qq296629801/dsh-hook-protocol'
+import type { MergedHookOutcome } from '@qq296629801/dsh-hook-protocol'
+import type { PreToolDecision, ToolExecution, ToolExecutionResult } from '@qq296629801/dsh-tools'
+import { defineTool } from '@qq296629801/dsh-tools'
+import type {} from '@qq296629801/dsh-tools'
 import type { InstalledHookPackage } from './index.ts'
 
 /** One resolved binding: an installed package plus one of its declared hooks. */

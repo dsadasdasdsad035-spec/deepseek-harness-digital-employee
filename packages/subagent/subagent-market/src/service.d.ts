@@ -1,5 +1,5 @@
 /** Trusted subagent package validation and managed lifecycle. */
-import type { TrustedPublisher, SubagentPackageDescriptor } from '@deepseek-ai/dsh-marketplace-core'
+import type { TrustedPublisher, SubagentPackageDescriptor } from '@qq296629801/dsh-marketplace-core'
 import type { SubagentMarketFailure, SubagentMarketInstallRequest, SubagentMarketInstallResult, SubagentMarketListResult, SubagentMarketPackageId, SubagentMarketUninstallResult } from './types.ts'
 /** Error carrying the closed marketplace failure that produced it. */
 declare class SubagentMarketDomainError extends Error {

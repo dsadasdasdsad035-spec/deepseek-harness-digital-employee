@@ -4,10 +4,10 @@ import { randomUUID } from 'node:crypto'
 import { lstat, mkdir, readFile, stat } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { z } from 'zod'
-import { withFileLock, writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import type { CredentialInfo, CredentialRef } from '@deepseek-ai/dsh-credentials'
-import { MCP_SERVER_NAME_PATTERN } from '@deepseek-ai/dsh-mcp-client'
+import { withFileLock, writeFileAtomic } from '@qq296629801/dsh-atomic-write'
+import { credentialRef } from '@qq296629801/dsh-credentials'
+import type { CredentialInfo, CredentialRef } from '@qq296629801/dsh-credentials'
+import { MCP_SERVER_NAME_PATTERN } from '@qq296629801/dsh-mcp-client'
 import {
   ArchiveValidationError,
   decodeArchiveBase64,
@@ -23,12 +23,12 @@ import {
   uninstallManagedPackage,
   verifyPackageFileHashes,
   verifyPublisherSignature,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 import type {
   ArchiveFailure,
   McpPackageDescriptor,
   TrustedPublisher,
-} from '@deepseek-ai/dsh-marketplace-core'
+} from '@qq296629801/dsh-marketplace-core'
 import type {
   McpDirectConfigDeclaration,
   McpDirectConfigDeleteRequest,

@@ -1,4 +1,4 @@
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 
 /**
  * Real agent spine for the fixture: the company group Lead is a true root

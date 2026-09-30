@@ -1,8 +1,8 @@
-# @deepseek-ai/dsh-digital-employee-file
+# @qq296629801/dsh-digital-employee-file
 
 English | [中文](README.zh.md)
 
-File-backed Provider for `@deepseek-ai/dsh-digital-employee`. It stores employee instances, long-term memories, and audit records in one owner-only versioned JSON document under `$DSH_HOME/digital-employees`.
+File-backed Provider for `@qq296629801/dsh-digital-employee`. It stores employee instances, long-term memories, and audit records in one owner-only versioned JSON document under `$DSH_HOME/digital-employees`.
 
 ## Configuration
 
@@ -35,4 +35,4 @@ Changes to resolved identity, authority, or retrieved memory may change Consumer
 
 ## Known Limitations and Deferred Work
 
-- **Single JSON document** - writes rewrite the whole document under a writer lock; shared multi-process deployments should use the SQLite Provider (`@deepseek-ai/dsh-digital-employee-sqlite`), which replaces this backend without changing Consumers.
+- **Single JSON document** - writes rewrite the whole document under a writer lock; shared multi-process deployments should use the SQLite Provider (`@qq296629801/dsh-digital-employee-sqlite`), which replaces this backend without changing Consumers.

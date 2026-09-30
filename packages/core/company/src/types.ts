@@ -1,10 +1,10 @@
 /**
  * Company domain records and client-safe wire vocabulary.
- * @module @deepseek-ai/dsh-company/types
+ * @module @qq296629801/dsh-company/types
  */
 
-import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { Branded } from '@qq296629801/dsh-brand'
+import type { SessionId } from '@qq296629801/dsh-session/types'
 
 /** Stable identifier of one company. */
 export type CompanyId = Branded<'CompanyId'>

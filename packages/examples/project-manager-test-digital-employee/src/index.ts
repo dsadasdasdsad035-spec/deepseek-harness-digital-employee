@@ -1,15 +1,15 @@
 /**
  * Offline deterministic project-manager digital employee template.
- * @module @deepseek-ai/dsh-project-manager-test-digital-employee
+ * @module @qq296629801/dsh-project-manager-test-digital-employee
  */
 
-import type { Context } from '@deepseek-ai/cordis'
+import type { Context } from '@qq296629801/cordis'
 import { resolve } from 'node:path'
 import {
   createDigitalEmployeeTemplateId,
   createExpertId,
   type DigitalEmployeeTemplate,
-} from '@deepseek-ai/dsh-digital-employee'
+} from '@qq296629801/dsh-digital-employee'
 import { PROJECT_SKILLS } from './skills.ts'
 
 const ROOT = resolve(import.meta.dirname, '..')

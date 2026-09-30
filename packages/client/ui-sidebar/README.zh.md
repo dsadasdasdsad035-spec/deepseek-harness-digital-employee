@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-client-ui-sidebar
+# @qq296629801/dsh-client-ui-sidebar
 
 [English](README.md) | 中文
 

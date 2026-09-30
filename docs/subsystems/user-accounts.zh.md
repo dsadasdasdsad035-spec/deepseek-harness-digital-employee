@@ -2,7 +2,7 @@
 
 [English](user-accounts.md) | 中文
 
-[`@deepseek-ai/dsh-user-accounts`](../../packages/account/user-accounts) 是 Web 表面的账户系统（`ctx.userAccounts`）：SQLite 用户存储、argon2id 密码哈希、邮箱验证码、单次重置令牌、HMAC 签名会话 cookie、登录限速。Web 认证门将未认证流量重定向到 `/login`，并保持 `/register`、`/forgot`、`/reset`、`/api/auth/*` 与静态资源公开。
+[`@qq296629801/dsh-user-accounts`](../../packages/account/user-accounts) 是 Web 表面的账户系统（`ctx.userAccounts`）：SQLite 用户存储、argon2id 密码哈希、邮箱验证码、单次重置令牌、HMAC 签名会话 cookie、登录限速。Web 认证门将未认证流量重定向到 `/login`，并保持 `/register`、`/forgot`、`/reset`、`/api/auth/*` 与静态资源公开。
 
 来源：[`packages/account/user-accounts/src/index.ts`](../../packages/account/user-accounts/src/index.ts)
 

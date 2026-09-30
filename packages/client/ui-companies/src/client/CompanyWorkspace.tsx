@@ -1,8 +1,8 @@
 /** Full-screen 3D company campus console rendered as a shell overlay. */
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
-import { Button, IconCloseOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
-import type { InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
-import type { CompanyFloorMember, CompanyId, DepartmentId, DigitalEmployeeInstanceId } from '@deepseek-ai/dsh-api-remotes/client'
+import { Button, IconCloseOutline16 } from '@qq296629801/dsh-client-ui-primitives'
+import type { InjectFace } from '@qq296629801/dsh-client-ui-slots'
+import type { CompanyFloorMember, CompanyId, DepartmentId, DigitalEmployeeInstanceId } from '@qq296629801/dsh-api-remotes/client'
 import { CompanyScene, type FloorDepartment } from './scene.ts'
 import { COMPANY_SKINS, DEFAULT_COMPANY_SKIN } from './skins.ts'
 import type { CompanyGroupStore } from './store.ts'

@@ -1,6 +1,6 @@
 /**
  * Stdio MCP project-data server used only by the project-manager fixture.
- * @module @deepseek-ai/dsh-project-manager-test-digital-employee/project-data-mcp
+ * @module @qq296629801/dsh-project-manager-test-digital-employee/project-data-mcp
  */
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'

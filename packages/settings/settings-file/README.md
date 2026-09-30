@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-settings-file
+# @qq296629801/dsh-settings-file
 
 English | [中文](README.zh.md)
 

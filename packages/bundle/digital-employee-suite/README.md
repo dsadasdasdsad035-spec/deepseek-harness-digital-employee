@@ -1,10 +1,10 @@
-# `@deepseek-ai/dsh-digital-employee-suite`
+# `@qq296629801/dsh-digital-employee-suite`
 
 English | [中文](README.zh.md)
 
-An installable profile bundle layer that owns the three business domains over a Web surface: the Skill/Tool/MCP/Hook/Workflow/Subagent marketplaces, the digital employee runtime with management and Template configuration, and the company module with the 3D campus console and group chat. Apply it over `@deepseek-ai/dsh-base` and `@deepseek-ai/dsh-web-app`; the shipped web profile template already stacks it, so a normal `dsh web` deployment has every capability.
+An installable profile bundle layer that owns the three business domains over a Web surface: the Skill/Tool/MCP/Hook/Workflow/Subagent marketplaces, the digital employee runtime with management and Template configuration, and the company module with the 3D campus console and group chat. Apply it over `@qq296629801/dsh-base` and `@qq296629801/dsh-web-app`; the shipped web profile template already stacks it, so a normal `dsh web` deployment has every capability.
 
-Install it into any other profile with `dsh plugin --profile <name> add @deepseek-ai/dsh-digital-employee-suite`, or add the package to the profile and include it after `@deepseek-ai/dsh-web-app` in `dsh.profile.bundles`. The bundle owns every domain Host row and its browser rows (`ui-skill-market`, `ui-digital-employees`, `ui-companies`); `dsh-web-app` stays the owner of the shared `api-remotes` carrier those domains' remotes travel over, and loading both never duplicates a namespace.
+Install it into any other profile with `dsh plugin --profile <name> add @qq296629801/dsh-digital-employee-suite`, or add the package to the profile and include it after `@qq296629801/dsh-web-app` in `dsh.profile.bundles`. The bundle owns every domain Host row and its browser rows (`ui-skill-market`, `ui-digital-employees`, `ui-companies`); `dsh-web-app` stays the owner of the shared `api-remotes` carrier those domains' remotes travel over, and loading both never duplicates a namespace.
 
 All employee records, company stores, and marketplace installations are target-local. The bundle contains no user employees, companies, templates, marketplace archives, absolute development paths, or resolved credential values. Removing or upgrading the bundle does not remove files under `$DSH_HOME`.
 
@@ -26,6 +26,6 @@ The published template version and stable instruction assets form the reusable p
 
 ## Known Limitations and Deferred Work
 
-- **Web bundle prerequisite** - the suite's remotes travel over the `api-remotes` carrier and browser roster the Web bundle mounts; the consuming profile must provide `@deepseek-ai/dsh-web-app`.
+- **Web bundle prerequisite** - the suite's remotes travel over the `api-remotes` carrier and browser roster the Web bundle mounts; the consuming profile must provide `@qq296629801/dsh-web-app`.
 - **Restart activation** - newly installed Tool and MCP packages become selectable only after their normal Host activation and restart checks succeed.
 - **Target-local configuration** - employee records, company stores, Template configuration drafts, and marketplace installations are intentionally not migrated from the bundle author's machine.

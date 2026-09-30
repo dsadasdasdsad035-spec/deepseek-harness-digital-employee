@@ -1,5 +1,5 @@
-import type { Context } from '@deepseek-ai/cordis'
-import { LlmAdapter, type StreamChunk } from '@deepseek-ai/dsh-llm'
+import type { Context } from '@qq296629801/cordis'
+import { LlmAdapter, type StreamChunk } from '@qq296629801/dsh-llm'
 
 class DigitalEmployeeMockAdapter extends LlmAdapter {
   async * stream(): AsyncIterable<StreamChunk> {

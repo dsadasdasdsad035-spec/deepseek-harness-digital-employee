@@ -5,15 +5,15 @@ import { createPortal } from 'react-dom'
 import {
   indexSubagentDescendants, type SessionId, type SessionListState, type SessionProjectionMap,
   type SessionSummary, type SubagentAddress, type SubagentCatalogSnapshot,
-} from '@deepseek-ai/dsh-client-runtime/client'
+} from '@qq296629801/dsh-client-runtime/client'
 import {
   IconChevronDownOutline14, IconChevronRightOutline14, IconRefreshOutline14, StateDot,
-} from '@deepseek-ai/dsh-client-ui-primitives'
-import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
+} from '@qq296629801/dsh-client-ui-primitives'
+import type { PropsLocale, PropsRuntime, TranslateNS } from '@qq296629801/dsh-client-ui-slots'
 import { NS } from './locales.ts'
-import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
-import type {} from '@deepseek-ai/dsh-subagent/client'
-import type {} from '@deepseek-ai/dsh-token-meter/client'
+import type {} from '@qq296629801/dsh-client-ui-conversation/client'
+import type {} from '@qq296629801/dsh-subagent/client'
+import type {} from '@qq296629801/dsh-token-meter/client'
 import css from './SubagentHeaderLineage.module.css'
 
 type CatalogEntry = SubagentCatalogSnapshot['entries'][number]
